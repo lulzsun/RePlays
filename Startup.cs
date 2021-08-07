@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using System.IO;
 
 namespace RePlays
 {
@@ -22,6 +24,7 @@ namespace RePlays
         {
 
             services.AddControllersWithViews();
+            services.AddDirectoryBrowser();
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -45,7 +48,20 @@ namespace RePlays
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(@"G:\Videos\Plays"),
+                RequestPath = "/Plays"
+            });
+
+            app.UseDirectoryBrowser(new DirectoryBrowserOptions
+            {
+                FileProvider = new PhysicalFileProvider(@"G:\Videos\Plays"),
+                RequestPath = "/Plays"
+            });
+
+
             app.UseSpaStaticFiles();
 
             app.UseRouting();
