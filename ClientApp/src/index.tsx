@@ -9,3 +9,27 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
+
+declare global {
+  interface Window { 
+    chrome: {
+      webview: {
+        postMessage: (message: any) => void
+        addEventListener: (message: string, handler: EventListenerOrEventListenerObject) => void
+        removeEventListener: (message: string, handler: EventListenerOrEventListenerObject) => void
+      }
+    }
+  }
+  interface Webview2Event extends Event {
+    data: {
+      data: string,
+      message: string,
+    }
+  }
+  interface Video {
+    path: string,
+    size: number,
+    date: string,
+    thumbnail: string,
+  }
+}

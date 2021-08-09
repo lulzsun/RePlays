@@ -11,7 +11,35 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ===== Scrollbar CSS ===== */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #676767 #b0b0b0;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #b0b0b0;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #676767;
+  border-radius: 0px;
+  border: 3px none #ffffff;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.dropdown:focus-within .dropdown-menu {
+  opacity:1;
+  transform: translate(0) scale(1);
+  visibility: visible;
 }

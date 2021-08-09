@@ -1,5 +1,7 @@
 import * as cheerio from 'cheerio';
 // https://medium.com/@stefanhyltoft/scraping-html-tables-with-nodejs-request-and-cheerio-e3c6334f661b
+// currently, this is useless since I have decided to fetch files/directories using C# for better performance
+// but, keeping this here just incase for future purposes...
 
 export async function getDirectories(dir: string) {
   let result: { name: string, modified: Date }[] = [];
@@ -38,3 +40,10 @@ export async function getFiles(dir: string) {
 
   return result;
 }
+
+// getDirectories('/Plays').then(dirs => {
+//   console.log('Folders: ', dirs);
+// });
+// getFiles('/Plays/League of Legends').then(files => {
+//   console.log('Files: ', files);
+// });
