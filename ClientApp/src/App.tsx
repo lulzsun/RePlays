@@ -8,20 +8,22 @@ import { postMessage, addEventListener, removeEventListener } from './helpers/me
 function App() {
   const [clips, setClips] = useState<Video[]>([]);
   const [sessions, setSessions] = useState<Video[]>([]);
+  const [clipTotal, setClipTotal] = useState(0);
+  const [sessionTotal, setSessionTotal] = useState(0);
 
   function handleWebViewMessages(event: Event) {
-    console.log(event);
     let eventData = (event as Webview2Event).data;
     let message = eventData.message;
     let data = JSON.parse(eventData.data);
 
-    console.log(eventData);
+    console.log(data);
     switch (message) {
       case 'RetrieveVideos':
         setClips(data.clips);
         setSessions(data.sessions);
 
-        console.log(data.clips, data.sessions);
+        setClipTotal(data.clipsSize);
+        setSessionTotal(data.sessionsSize);
         break;
       default:
         break;
@@ -91,7 +93,7 @@ function App() {
 
           <div className="flex-auto overflow-auto h-full p-7">
             <Switch>
-              <Route exact path="/">         <Sessions videos={sessions}/></Route>
+              <Route exact path="/">         <Sessions videos={sessions} size={sessionTotal}/></Route>
               <Route exact path="/clips">clips</Route>
               <Route exact path="/uploads">uploads</Route>
               <Route exact path="/settings">settings</Route>

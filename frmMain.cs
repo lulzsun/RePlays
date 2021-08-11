@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
-using System.Windows.Forms;
-using System.Text.Json;
+﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System;
+using System.Linq;
+using System.Text.Json;
+using System.Diagnostics;
+using System.Windows.Forms;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace WinFormsApp
 {
@@ -19,13 +20,16 @@ namespace WinFormsApp
         public class VideoList
         {
             public List<Video> sessions { get; set; }
+            public long sessionsSize { get; set; }
             public List<Video> clips { get; set; }
+            public long clipsSize { get; set; }
         }
         public class Video
         {
             public DateTime date { get; set; }
             public string type { get; set; }
             public long size { get; set; }
+            public string game { get; set; }
             public string path { get; set; }
             public string thumbnail { get; set; }
         }
@@ -35,7 +39,8 @@ namespace WinFormsApp
         }
         private static string GetAllVideos()
         {
-            string[] allfiles = Directory.GetFiles(PlaysFolder, "*.mp4*", SearchOption.AllDirectories);
+            var allfiles = Directory.GetFiles(PlaysFolder, "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).CreationTime);
+
             VideoList videoList = new();
             videoList.sessions = new();
             videoList.clips = new();
@@ -46,10 +51,17 @@ namespace WinFormsApp
                 video.size = new FileInfo(file).Length;
                 video.date = new FileInfo(file).CreationTime;
                 video.path = (@"Plays\" + file.Split(@"\Plays\")[1]).Replace('\\', '/');
-                if(file.EndsWith("-ses.mp4"))
+                video.game = Path.GetFileName(Path.GetDirectoryName(file));
+                if (file.EndsWith("-ses.mp4"))
+                {
                     videoList.sessions.Add(video);
+                    videoList.sessionsSize += video.size;
+                }
                 else
+                {
                     videoList.clips.Add(video);
+                    videoList.clipsSize += video.size;
+                }
                 video.thumbnail = (@"Plays\" + GetOrCreateThumbnail(file).Split(@"\Plays\")[1]).Replace('\\', '/');
             }
 

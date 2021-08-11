@@ -27,6 +27,7 @@ declare global {
     }
   }
   interface Video {
+    game: string,
     path: string,
     size: number,
     date: string,

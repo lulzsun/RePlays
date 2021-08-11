@@ -3,12 +3,14 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import DropDownMenu from '../components/DropDownMenu';
 import { VirtuosoGrid } from 'react-virtuoso'
+import { formatBytes } from '../helpers/fileIO';
 
 interface Props {
   videos: Video[];
+  size: number;
 }
 
-export const Sessions: React.FC<Props> = ({videos}) => {
+export const Sessions: React.FC<Props> = ({videos, size}) => {
 	return (
     <div className="flex flex-col h-full border-0 border-b"> 
       <div className="pb-4 flex-initial border-0 border-b">
@@ -34,7 +36,7 @@ export const Sessions: React.FC<Props> = ({videos}) => {
           </svg>
         }/>
         <span className="mt-0.5 inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out rounded-md hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
-          420 GB
+          {formatBytes(size)}
         </span>
         <Button icon={
           <svg className="mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -49,7 +51,13 @@ export const Sessions: React.FC<Props> = ({videos}) => {
         overscan={4}
         listClassName={"gap-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8 mt-4 mb-4"}
         itemClassName={"overflow-hidden shadow-lg rounded-lg h-90 md:w-auto cursor-pointer m-auto"}
-        itemContent={index => <Card key={videos[index].path} url={`${window.location.href}${videos[index].thumbnail}`}/>}
+        itemContent={index => 
+          <Card key={videos[index].path} 
+            game={videos[index].game}
+            date={videos[index].date}
+            size={videos[index].size}
+            url={`${window.location.href}${videos[index].thumbnail}`}/>
+        }
       />
     </div>
 	)
