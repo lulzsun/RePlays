@@ -52,11 +52,12 @@ export const Sessions: React.FC<Props> = ({videos, size}) => {
         listClassName={"gap-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8 mt-4 mb-4"}
         itemClassName={"overflow-hidden shadow-lg rounded-lg h-90 md:w-auto cursor-pointer m-auto"}
         itemContent={index => 
-          <Card key={videos[index].path} 
+          <Card key={videos[index].fileName} 
             game={videos[index].game}
+            video={videos[index].fileName}
             date={videos[index].date}
             size={videos[index].size}
-            url={`${window.location.href}${videos[index].thumbnail}`}/>
+            thumb={videos[index].thumbnail}/>
         }
       />
     </div>

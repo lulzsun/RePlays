@@ -4,6 +4,7 @@ import './App.css';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import Sessions from './pages/Sessions';
 import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
+import Player from './pages/Player';
 
 function App() {
   const [clips, setClips] = useState<Video[]>([]);
@@ -97,6 +98,7 @@ function App() {
               <Route exact path="/clips">clips</Route>
               <Route exact path="/uploads">uploads</Route>
               <Route exact path="/settings">settings</Route>
+              <Route exact path="/player/:game/:video"><Player/></Route>
             </Switch>
           </div>
         </div>

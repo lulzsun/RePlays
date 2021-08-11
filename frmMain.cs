@@ -30,7 +30,7 @@ namespace WinFormsApp
             public string type { get; set; }
             public long size { get; set; }
             public string game { get; set; }
-            public string path { get; set; }
+            public string fileName { get; set; }
             public string thumbnail { get; set; }
         }
         public frmMain()
@@ -50,7 +50,7 @@ namespace WinFormsApp
                 Video video = new();
                 video.size = new FileInfo(file).Length;
                 video.date = new FileInfo(file).CreationTime;
-                video.path = (@"Plays\" + file.Split(@"\Plays\")[1]).Replace('\\', '/');
+                video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
                 if (file.EndsWith("-ses.mp4"))
                 {
@@ -62,7 +62,7 @@ namespace WinFormsApp
                     videoList.clips.Add(video);
                     videoList.clipsSize += video.size;
                 }
-                video.thumbnail = (@"Plays\" + GetOrCreateThumbnail(file).Split(@"\Plays\")[1]).Replace('\\', '/');
+                video.thumbnail = Path.GetFileName(GetOrCreateThumbnail(file));
             }
 
             WebMessage webMessage = new();

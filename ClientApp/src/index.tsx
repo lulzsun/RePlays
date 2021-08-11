@@ -28,7 +28,7 @@ declare global {
   }
   interface Video {
     game: string,
-    path: string,
+    fileName: string,
     size: number,
     date: string,
     thumbnail: string,
