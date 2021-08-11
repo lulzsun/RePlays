@@ -4,6 +4,7 @@ import Card from '../components/Card';
 import DropDownMenu from '../components/DropDownMenu';
 import { VariableSizeGrid as Grid } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { GridComponents, GridItem, GridListProps, VirtuosoGrid } from 'react-virtuoso'
 
 interface Props {
   videos: Video[];
@@ -13,8 +14,8 @@ export const Sessions: React.FC<Props> = ({videos}) => {
 	return (
     <div className="flex flex-col h-full border-0 border-b"> 
       <div className="pb-4 flex-initial border-0 border-b">
-       <p className="pb-2">Sessions</p>
-       <div className="grid grid-flow-col gap-4">
+       Sessions
+       <div className="pt-2 grid grid-flow-col gap-4">
         <DropDownMenu text={"All Games"} 
           items={[{name: 'All Games'}]}/> 
         <DropDownMenu text={"Latest"} 
@@ -45,13 +46,13 @@ export const Sessions: React.FC<Props> = ({videos}) => {
         }/>
        </div>
       </div>
-      <div className="pt-4 flex-auto overflow-y-scroll h-full scrollbar-thin">
-        <div className="gap-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8 pb-4">
-          {videos && videos.map((video) => {
-            return <Card key={video.path} url={`${window.location.href}${video.thumbnail}`}/>
-          })}
-        </div>
-      </div>
+      <VirtuosoGrid
+        totalCount={videos.length}
+        overscan={4}
+        listClassName={"gap-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8 mt-4 mb-4"}
+        itemClassName={"overflow-hidden shadow-lg rounded-lg h-90 md:w-auto cursor-pointer m-auto"}
+        itemContent={index => <Card key={videos[index].path} url={`${window.location.href}${videos[index].thumbnail}`}/>}
+      />
     </div>
 	)
 }
