@@ -1,10 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import DropDownMenu from '../components/DropDownMenu';
-import { VariableSizeGrid as Grid } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { GridComponents, GridItem, GridListProps, VirtuosoGrid } from 'react-virtuoso'
+import { VirtuosoGrid } from 'react-virtuoso'
 
 interface Props {
   videos: Video[];
