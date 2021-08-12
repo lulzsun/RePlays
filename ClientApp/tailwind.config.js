@@ -3,9 +3,18 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {},
+    cursor: {
+      'col-resize': 'col-resize',
+      'ew-resize': 'ew-resize',
+      'grab': 'grab',
+      'grabbing': 'grabbing',
+      'pointer': 'pointer'
+    }
   },
   variants: {
-    extend: {},
+    extend: {
+      cursor: ['active'],
+    }
   },
   plugins: [],
 }
