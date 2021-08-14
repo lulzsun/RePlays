@@ -33,4 +33,9 @@ declare global {
     date: string,
     thumbnail: string,
   }
+  interface Clip {
+    id: number,
+    start: number,
+    duration: number,
+  }
 }

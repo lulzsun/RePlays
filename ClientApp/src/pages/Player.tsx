@@ -1,4 +1,4 @@
-import React, { SyntheticEvent } from 'react';
+import { SyntheticEvent, useEffect } from 'react';
 import { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Clip from '../components/Clip';
@@ -14,8 +14,75 @@ export default function Player () {
   const timelineElement = useRef<HTMLDivElement>(null);
   const seekWindowElement = useRef<HTMLDivElement>(null);
   const seekBarElement = useRef<HTMLDivElement>(null);
-  const [seekDragging, setDragging] = useState(false);
+  
+  var seekDragging = false, clipDragging = -1, clipDragOffset = 0;
   const [zoom, setZoom] = useState(100);
+  const [clips, setClips] = useState<Clip[]>([]);
+  const clipsRef = useRef<HTMLDivElement[]>([]);
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleOnMouseDown);
+    document.addEventListener('mousemove', handleOnMouseMove);
+    document.addEventListener('mouseup', handleOnMouseUp);
+    return () => {
+      document.removeEventListener('mousedown', handleOnMouseDown);
+      document.removeEventListener('mousemove', handleOnMouseMove);
+      document.removeEventListener('mouseup', handleOnMouseUp);
+    }
+  }, []);
+
+  function handleOnMouseDown(e: MouseEvent) {
+    let element = e.target as HTMLDivElement;
+  
+    // seeker handling
+    if(element === seekBarElement.current) {
+      seekDragging = true;
+    }
+    else if(seekWindowElement.current?.contains(element)) {
+      if (e.detail === 1) {
+        if(element === seekWindowElement.current)
+          mouseSeek(e);
+      } else if (e.detail === 2) {
+        mouseSeek(e);
+      }
+    }
+
+    // clips handling
+    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) != -1) {
+      let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
+      clipDragging = index;
+      clipDragOffset = e.clientX - clipsRef.current[clipDragging].getBoundingClientRect().left;
+    }
+  }
+
+  function handleOnMouseMove(e: MouseEvent) {
+    if(seekDragging) {
+      mouseSeek(e);
+    }
+    if(clipDragging !== -1 && seekWindowElement.current && timelineElement.current) {
+      let clickLeft = (e.clientX - clipDragOffset + timelineElement.current.scrollLeft - seekWindowElement.current.offsetLeft);
+      if(clickLeft < 0) clickLeft = 0;
+      if(clickLeft > seekWindowElement.current.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width) 
+        clickLeft = seekWindowElement.current.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width;
+      clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current.clientWidth * 100}%`;
+    }
+  }
+
+  function handleOnMouseUp(e: MouseEvent) {
+    seekDragging = false;
+    clipDragging = -1;
+  }
+
+  function handleAddClip() {
+    if(seekWindowElement.current && seekBarElement.current) {
+      let start = seekBarElement.current.offsetLeft / seekWindowElement.current.clientWidth * 100;
+
+      console.log('add');
+      let newClips = clips.slice();
+      newClips.push({id: Date.now(), start: start, duration: 10});
+      setClips(newClips);
+    }
+  }
 
   function handleVideoLoad(e: SyntheticEvent) {
     console.log((e));
@@ -28,16 +95,7 @@ export default function Player () {
     }
   }
 
-  function onClickSeek(e: React.MouseEvent) {
-    if (e.detail === 1) {
-        if((e.target as HTMLDivElement) === seekWindowElement.current)
-          mouseSeek(e);
-    } else if (e.detail === 2) {
-      mouseSeek(e);
-    }
-  }
-
-  function mouseSeek(e: React.MouseEvent) {
+  function mouseSeek(e: MouseEvent) {
     if(seekBarElement.current && seekWindowElement.current && videoElement.current && timelineElement.current) { 
       let clickLeft = (e.clientX + timelineElement.current.scrollLeft - seekWindowElement.current.offsetLeft);
       if(clickLeft < 0) clickLeft = 0;
@@ -45,11 +103,6 @@ export default function Player () {
       videoElement.current.currentTime = (clickLeft / seekWindowElement.current.clientWidth) * videoElement.current.duration;
       seekBarElement.current.style.left = `${clickLeft - 3}px`;
     }
-  }
-
-  function onSeekDragging(e: React.MouseEvent) {
-    if(seekDragging)
-      mouseSeek(e);
   }
 
   return (
@@ -74,11 +127,11 @@ export default function Player () {
             <div className="border-gray-300 border-r-2"></div>
           </div>
 
-          <div ref={seekWindowElement} style={{ height: 'calc(100% - 1rem)', width: `calc(${zoom}% - 12px)` }} className="mx-1.5 relative bg-gray-300" onMouseDown={onClickSeek} onMouseMove={onSeekDragging}>
-            <div ref={seekBarElement} style={{ zIndex: 999, width: '6px', left: '-3px'}} className="absolute bg-red-500 rounded-lg h-full cursor-ew-resize" 
-              onMouseDown={() => setDragging(true)} onMouseUp={() => setDragging(false)}></div>
-            <Clip start={10} duration={10}/>
-            <Clip start={20} duration={10}/>
+          <div ref={seekWindowElement} style={{ height: 'calc(100% - 1rem)', width: `calc(${zoom}% - 12px)` }} className="mx-1.5 relative bg-gray-300">
+            <div ref={seekBarElement} style={{ zIndex: 999, width: '6px', left: '-3px'}} className="absolute bg-red-500 rounded-lg h-full cursor-ew-resize"/>
+            {clips && clips.map((clip, i) => {
+              return <Clip key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} start={clip.start} duration={clip.duration}/>
+            })}
           </div>
         </div> 
       </div>
@@ -95,7 +148,7 @@ export default function Player () {
             <button className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
               type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
+                  <path fillRule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
                   <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
                 </svg>
             </button>
@@ -135,7 +188,7 @@ export default function Player () {
         <div className="flex justify-end">
           <div className="border-2 rounded-lg">
             <button className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
-              type="button">
+              type="button" onClick={() => handleAddClip()}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
                   <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
                 </svg>
