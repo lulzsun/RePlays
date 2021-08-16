@@ -3,7 +3,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import DropDownMenu from '../components/DropDownMenu';
 import { VirtuosoGrid } from 'react-virtuoso'
-import { formatBytes } from '../helpers/fileIO';
+import { formatBytes } from '../helpers/utils';
 
 interface Props {
   videos: Video[];

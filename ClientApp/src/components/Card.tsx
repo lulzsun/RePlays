@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { formatBytes } from '../helpers/fileIO';
+import { formatBytes } from '../helpers/utils';
 
 interface Props {
   game?: string;

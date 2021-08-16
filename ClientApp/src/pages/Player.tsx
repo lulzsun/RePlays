@@ -2,6 +2,7 @@ import { SyntheticEvent, useEffect } from 'react';
 import { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Clip from '../components/Clip';
+import { secondsToHHMMSS } from '../helpers/utils';
 
 type PlayerParams = {
   game: string;
@@ -9,15 +10,18 @@ type PlayerParams = {
 };
 
 export default function Player () {
+  const ZOOMS = [100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000];
   let { game, video } = useParams<PlayerParams>();
   const videoElement = useRef<HTMLVideoElement>(null);
   const timelineElement = useRef<HTMLDivElement>(null);
   const seekWindowElement = useRef<HTMLDivElement>(null);
   const seekBarElement = useRef<HTMLDivElement>(null);
+  const targetSeekElement = useRef<HTMLDivElement>(null);
   
   var seekDragging = false, clipDragging = -1, clipDragOffset = 0, clipResizeDir = '', clipResizeLimit = 0;
-  const [zoom, setZoom] = useState(100);
   const [clips, setClips] = useState<Clip[]>([]);
+  const [currentZoom, setZoom] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const clipsRef = useRef<HTMLDivElement[]>([]);
 
   useEffect(() => {
@@ -30,6 +34,21 @@ export default function Player () {
       document.removeEventListener('mouseup', handleOnMouseUp);
     }
   }, [clips]);
+
+  useEffect(() => {
+    scrollToSeek();
+  }, [currentZoom]);
+
+  function scrollToSeek() {
+    seekBarElement.current!.style.left = `calc(${currentTime / videoElement.current!.duration * 100}% - 3px)`;
+    targetSeekElement.current!.style.left = seekBarElement.current!.offsetLeft+6 + 'px';
+    targetSeekElement.current!.scrollIntoView({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'center'
+    });
+    timelineElement.current!.scrollTop = 0;
+  }
 
   function handleOnMouseDown(e: MouseEvent) {
     let element = e.target as HTMLDivElement;
@@ -92,9 +111,10 @@ export default function Player () {
     seekDragging = false;
     clipResizeDir = '';
     if(clipDragging !== -1) {
-      // isn't this mutating the state?
-      clips[clipDragging].start = clipsRef.current[clipDragging].offsetLeft / seekWindowElement.current!.clientWidth * 100;
-      clips[clipDragging].duration = clipsRef.current[clipDragging].offsetWidth / seekWindowElement.current!.clientWidth * 100;
+      let clipsCopy = [...clips];
+      clipsCopy[clipDragging].start = clipsRef.current[clipDragging].offsetLeft / seekWindowElement.current!.clientWidth * 100;
+      clipsCopy[clipDragging].duration = clipsRef.current[clipDragging].offsetWidth / seekWindowElement.current!.clientWidth * 100;
+      setClips(clipsCopy);
       clipDragging = -1;
     }
   }
@@ -117,7 +137,9 @@ export default function Player () {
 
   function handleVideoPlaying(e: SyntheticEvent) {
     const videoElement = (e.target as HTMLVideoElement);
+    setCurrentTime(videoElement.currentTime);
     seekBarElement.current!.style.left = `calc(${videoElement.currentTime / videoElement.duration * 100}% - 3px)`;
+    targetSeekElement.current!.style.left = seekBarElement.current!.offsetLeft+6 + 'px';
   }
 
   function mouseSeek(e: MouseEvent) {
@@ -140,8 +162,8 @@ export default function Player () {
       </div>
 
       <div className="flex flex-initial h-20 grid grid-flow-row">
-        <div ref={timelineElement} className="w-full h-full overflow-x-scroll bg-gray-400">
-          <div style={{ height: '1rem', width: `calc(${zoom}% - 12px)` }} className="mx-1.5 grid grid-flow-col bg-gray-400 border-gray-300 border-l-2">
+        <div ref={timelineElement} className="w-full h-full overflow-x-scroll overflow-y-hidden bg-gray-400"> 
+          <div style={{ height: '1rem', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 grid grid-flow-col bg-gray-400 border-gray-300 border-l-2">
             <div className="border-gray-300 border-r-2"></div>
             <div className="border-gray-300 border-r-2"></div>
             <div className="border-gray-300 border-r-2"></div>
@@ -149,17 +171,17 @@ export default function Player () {
             <div className="border-gray-300 border-r-2"></div>
             <div className="border-gray-300 border-r-2"></div>
           </div>
-
-          <div ref={seekWindowElement} style={{ height: 'calc(100% - 1rem)', width: `calc(${zoom}% - 12px)` }} className="mx-1.5 relative bg-gray-300">
+          <div ref={seekWindowElement} style={{ height: 'calc(100% - 1rem)', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 relative bg-gray-300">
             <div ref={seekBarElement} style={{ zIndex: 999, width: '6px', left: '-3px'}} className="absolute bg-red-500 rounded-lg h-full cursor-ew-resize"/>
             {clips && clips.map((clip, i) => {
               return <Clip key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} start={clip.start} duration={clip.duration}/>
             })}
           </div>
+          <div ref={targetSeekElement} style={{ height: 'calc(100% - 1rem)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>
         </div> 
       </div>
 
-      <div className="flex flex-initial grid grid-flow-col grid-cols-3">
+      <div className="flex flex-initial grid grid-flow-col">
         <div className="flex justify-start">
           <div className="border-2 rounded-lg">
             <button className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
@@ -186,18 +208,20 @@ export default function Player () {
                   <path d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z"/>
                 </svg>
             </button>
+            <span className="-mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
+              {`${secondsToHHMMSS(currentTime)} / ${secondsToHHMMSS(videoElement.current?.duration || 0)}`}
+            </span>
           </div>
         </div>
 
         <div className="flex justify-center">
-          <div className="border-2 rounded-lg">
-            
+          {clips.length > 0 && <div className="border-2 rounded-lg">
             <span className="cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="-mt-0.5 align-center mr-2 inline" viewBox="0 0 16 16">
                 <path d="M2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3zm2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1zm2.765 5.576A.5.5 0 0 0 6 7v5a.5.5 0 0 0 .765.424l4-2.5a.5.5 0 0 0 0-.848l-4-2.5z"/>
                 <path d="M1.5 14.5A1.5 1.5 0 0 1 0 13V6a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 16 6v7a1.5 1.5 0 0 1-1.5 1.5h-13zm13-1a.5.5 0 0 0 .5-.5V6a.5.5 0 0 0-.5-.5h-13A.5.5 0 0 0 1 6v7a.5.5 0 0 0 .5.5h13z"/>
               </svg>
-              2 Clips: 0:10
+              {clips.length} Clip{clips.length > 1 && 's'}: {secondsToHHMMSS(clips.map(clip => clip.duration / 100 * videoElement.current!.duration).reduce((prev, next) => prev + next))}
             </span>
             <button className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
               type="button">
@@ -205,7 +229,7 @@ export default function Player () {
                 <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v4.5h2a.5.5 0 0 1 .354.854l-2.5 2.5a.5.5 0 0 1-.708 0l-2.5-2.5A.5.5 0 0 1 5.5 6.5h2V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
               </svg>
             </button>
-          </div>
+          </div>}
         </div>
 
         <div className="flex justify-end">
@@ -216,13 +240,15 @@ export default function Player () {
                   <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
                 </svg>
             </button>
-            <span className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
+            <span className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800"
+              onClick={() => (currentZoom-1 > -1 ? setZoom(currentZoom-1) : scrollToSeek())}>
               -
             </span>
-            <span className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
-              100%
+            <span className="text-center -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
+              {`${ZOOMS[currentZoom]}%`}
             </span>
-            <span className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
+            <span className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800"
+              onClick={() => (currentZoom+1 < ZOOMS.length ? setZoom(currentZoom+1) : scrollToSeek())}>
               +
             </span>
           </div>
