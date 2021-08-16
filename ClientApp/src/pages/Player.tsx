@@ -15,7 +15,7 @@ export default function Player () {
   const seekWindowElement = useRef<HTMLDivElement>(null);
   const seekBarElement = useRef<HTMLDivElement>(null);
   
-  var seekDragging = false, clipDragging = -1, clipDragOffset = 0;
+  var seekDragging = false, clipDragging = -1, clipDragOffset = 0, clipResizeDir = '', clipResizeLimit = 0;
   const [zoom, setZoom] = useState(100);
   const [clips, setClips] = useState<Clip[]>([]);
   const clipsRef = useRef<HTMLDivElement[]>([]);
@@ -29,7 +29,7 @@ export default function Player () {
       document.removeEventListener('mousemove', handleOnMouseMove);
       document.removeEventListener('mouseup', handleOnMouseUp);
     }
-  }, []);
+  }, [clips]);
 
   function handleOnMouseDown(e: MouseEvent) {
     let element = e.target as HTMLDivElement;
@@ -48,10 +48,15 @@ export default function Player () {
     }
 
     // clips handling
-    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) != -1) {
+    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) != -1) { // clip reposition
       let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
       clipDragging = index;
-      clipDragOffset = e.clientX - clipsRef.current[clipDragging].getBoundingClientRect().left;
+      clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
+    } else { // clip resizing
+      let index = clipsRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
+      clipDragging = index;
+      clipResizeDir = (element.parentElement)?.getAttribute('data-side')!;
+      clipResizeLimit = clipsRef.current[clipDragging]?.clientWidth + clipsRef.current[clipDragging]?.offsetLeft;
     }
   }
 
@@ -59,18 +64,39 @@ export default function Player () {
     if(seekDragging) {
       mouseSeek(e);
     }
-    if(clipDragging !== -1 && seekWindowElement.current && timelineElement.current) {
-      let clickLeft = (e.clientX - clipDragOffset + timelineElement.current.scrollLeft - seekWindowElement.current.offsetLeft);
+    if(clipDragging !== -1 && clipResizeDir === '') {
+      let clickLeft = (e.clientX - clipDragOffset + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
       if(clickLeft < 0) clickLeft = 0;
-      if(clickLeft > seekWindowElement.current.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width) 
-        clickLeft = seekWindowElement.current.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width;
-      clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current.clientWidth * 100}%`;
+      else if(clickLeft > seekWindowElement.current!.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width) 
+        clickLeft = seekWindowElement.current!.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width;
+      clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
+    }
+    else if (clipDragging !== -1 && clipResizeDir !== '') {
+      console.log('resizing!', clipResizeDir);
+      if(clipResizeDir === 'right') {
+        let clickLeft = (e.clientX - clipsRef.current[clipDragging]?.offsetLeft + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
+        if(clickLeft > seekWindowElement.current!.offsetWidth) clickLeft = seekWindowElement.current!.offsetWidth;
+        clipsRef.current[clipDragging].style.width = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
+      }
+      else if(clipResizeDir === 'left') {
+        let clickLeft = (e.clientX + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
+        if(clickLeft < 0) clickLeft = 0;
+        if(clickLeft > clipResizeLimit) return;
+        clipsRef.current[clipDragging].style.width = `${(clipsRef.current[clipDragging].offsetWidth + (clipsRef.current[clipDragging].offsetLeft - clickLeft)) / seekWindowElement.current!.clientWidth * 100}%`;
+        clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
+      }
     }
   }
 
   function handleOnMouseUp(e: MouseEvent) {
     seekDragging = false;
-    clipDragging = -1;
+    clipResizeDir = '';
+    if(clipDragging !== -1) {
+      // isn't this mutating the state?
+      clips[clipDragging].start = clipsRef.current[clipDragging].offsetLeft / seekWindowElement.current!.clientWidth * 100;
+      clips[clipDragging].duration = clipsRef.current[clipDragging].offsetWidth / seekWindowElement.current!.clientWidth * 100;
+      clipDragging = -1;
+    }
   }
 
   function handleAddClip() {
@@ -79,7 +105,8 @@ export default function Player () {
 
       console.log('add');
       let newClips = clips.slice();
-      newClips.push({id: Date.now(), start: start, duration: 10});
+      if(videoElement.current)
+        newClips.push({id: Date.now(), start: start, duration: 10 / videoElement.current.duration * 100}); // 10 seconds
       setClips(newClips);
     }
   }
@@ -90,19 +117,15 @@ export default function Player () {
 
   function handleVideoPlaying(e: SyntheticEvent) {
     const videoElement = (e.target as HTMLVideoElement);
-    if(seekBarElement.current) {
-      seekBarElement.current.style.left = `calc(${videoElement.currentTime / videoElement.duration * 100}% - 3px)`;
-    }
+    seekBarElement.current!.style.left = `calc(${videoElement.currentTime / videoElement.duration * 100}% - 3px)`;
   }
 
   function mouseSeek(e: MouseEvent) {
-    if(seekBarElement.current && seekWindowElement.current && videoElement.current && timelineElement.current) { 
-      let clickLeft = (e.clientX + timelineElement.current.scrollLeft - seekWindowElement.current.offsetLeft);
-      if(clickLeft < 0) clickLeft = 0;
-      if(clickLeft > seekWindowElement.current.clientWidth) clickLeft = seekWindowElement.current.clientWidth;
-      videoElement.current.currentTime = (clickLeft / seekWindowElement.current.clientWidth) * videoElement.current.duration;
-      seekBarElement.current.style.left = `${clickLeft - 3}px`;
-    }
+    let clickLeft = (e.clientX + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
+    if(clickLeft < 0) clickLeft = 0;
+    else if(clickLeft > seekWindowElement.current!.clientWidth) clickLeft = seekWindowElement.current!.clientWidth;
+    videoElement.current!.currentTime = (clickLeft / seekWindowElement.current!.clientWidth) * videoElement.current!.duration;
+    seekBarElement.current!.style.left = `${clickLeft - 3}px`;
   }
 
   return (
