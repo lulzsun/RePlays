@@ -9,10 +9,12 @@ type PlayerParams = {
   video: string;
 };
 
+const ZOOMS = [100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000];
+
 export default function Player () {
-  const ZOOMS = [100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000];
   let { game, video } = useParams<PlayerParams>();
   const videoElement = useRef<HTMLVideoElement>(null);
+  const volumeSliderElement = useRef<HTMLInputElement>(null);
   const timelineElement = useRef<HTMLDivElement>(null);
   const seekWindowElement = useRef<HTMLDivElement>(null);
   const seekBarElement = useRef<HTMLDivElement>(null);
@@ -21,14 +23,17 @@ export default function Player () {
   var seekDragging = false, clipDragging = -1, clipDragOffset = 0, clipResizeDir = '', clipResizeLimit = 0;
   const [clips, setClips] = useState<Clip[]>([]);
   const [currentZoom, setZoom] = useState(0);
+  const [currentPlaybackRate, setPlaybackRate] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const clipsRef = useRef<HTMLDivElement[]>([]);
 
   useEffect(() => {
+    document.addEventListener('keydown', handleOnKeyDown);
     document.addEventListener('mousedown', handleOnMouseDown);
     document.addEventListener('mousemove', handleOnMouseMove);
     document.addEventListener('mouseup', handleOnMouseUp);
     return () => {
+      document.removeEventListener('keydown', handleOnKeyDown);
       document.removeEventListener('mousedown', handleOnMouseDown);
       document.removeEventListener('mousemove', handleOnMouseMove);
       document.removeEventListener('mouseup', handleOnMouseUp);
@@ -48,6 +53,12 @@ export default function Player () {
       inline: 'center'
     });
     timelineElement.current!.scrollTop = 0;
+  }
+
+  function handleOnKeyDown(e: KeyboardEvent) {
+    if(e.key === ' ') videoElement.current?.paused ? videoElement.current?.play() : videoElement.current?.pause();
+    if(e.key === 'ArrowLeft') videoElement.current!.currentTime -= 5;
+    if(e.key === 'ArrowRight') videoElement.current!.currentTime += 5;
   }
 
   function handleOnMouseDown(e: MouseEvent) {
@@ -133,6 +144,9 @@ export default function Player () {
 
   function handleVideoLoad(e: SyntheticEvent) {
     console.log((e));
+    if(videoElement.current && volumeSliderElement.current) {
+      videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
+    }
   }
 
   function handleVideoPlaying(e: SyntheticEvent) {
@@ -172,7 +186,7 @@ export default function Player () {
             <div className="border-gray-300 border-r-2"></div>
           </div>
           <div ref={seekWindowElement} style={{ height: 'calc(100% - 1rem)', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 relative bg-gray-300">
-            <div ref={seekBarElement} style={{ zIndex: 999, width: '6px', left: '-3px'}} className="absolute bg-red-500 rounded-lg h-full cursor-ew-resize"/>
+            <div ref={seekBarElement} style={{ width: '6px', left: '-3px'}} className="z-30 absolute bg-red-500 rounded-lg h-full cursor-ew-resize"/>
             {clips && clips.map((clip, i) => {
               return <Clip key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} start={clip.start} duration={clip.duration}/>
             })}
@@ -197,23 +211,59 @@ export default function Player () {
                 </svg>}
             </button>
             <button title="Rewind 5 Seconds" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
-              type="button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
-                  <path fillRule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
-                  <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
-                </svg>
+              type="button" onClick={() => videoElement.current!.currentTime -= 5}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
+                <path fillRule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
+              </svg>
             </button>
-            <span title="Playback Speed" className="cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
-              1x
-            </span>
-            <button title="Volume" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
-              type="button">
+            <div className="relative z-40 inline-block text-left dropdown">
+              <button title="Playback Speed" className="-mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800" 
+              type="button" aria-haspopup="true" aria-expanded="true" aria-controls="headlessui-menu-items-117">
+                {(currentPlaybackRate + '').replace(/^0+/, '')}x
+              </button>
+              <div className="absolute -top-1/3 opacity-0 invisible dropdown-menu transition-all duration-300 transform">
+                <div className="absolute transform -translate-y-full left-0 w-auto origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
+                  <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left" 
+                  onClick={() => {videoElement.current!.playbackRate = 0.25; setPlaybackRate(videoElement.current!.playbackRate);}}>.25x</div>
+                  <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left"
+                  onClick={() => {videoElement.current!.playbackRate = 0.5; setPlaybackRate(videoElement.current!.playbackRate);}}>.5x</div>
+                  <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left"
+                  onClick={() => {videoElement.current!.playbackRate = 0.75; setPlaybackRate(videoElement.current!.playbackRate);}}>.75x</div>
+                  <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left"
+                  onClick={() => {videoElement.current!.playbackRate = 1; setPlaybackRate(videoElement.current!.playbackRate);}}>1x</div>
+                  <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left"
+                  onClick={() => {videoElement.current!.playbackRate = 1.5; setPlaybackRate(videoElement.current!.playbackRate);}}>1.5x</div>
+                  <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left"
+                  onClick={() => {videoElement.current!.playbackRate = 2; setPlaybackRate(videoElement.current!.playbackRate);}}>2x</div>
+                  <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left"
+                  onClick={() => {videoElement.current!.playbackRate = 4; setPlaybackRate(videoElement.current!.playbackRate);}}>4x</div>
+                </div>
+              </div>
+            </div>
+            <div className="relative z-40 inline-block text-left dropdown">
+              <button title="Volume" className="-mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800" 
+              type="button" aria-haspopup="true" aria-expanded="true" aria-controls="headlessui-menu-items-117">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
                   <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
                   <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
                   <path d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z"/>
                 </svg>
-            </button>
+              </button>
+              <div className="absolute -top-1/3 opacity-0 invisible dropdown-menu transition-all duration-300 transform">
+                <div className="absolute transform -translate-y-full left-0 w-auto origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
+                  <div className="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left" role="menuitem">
+                    <input ref={volumeSliderElement} type="range" min="1" max="100" step="1" 
+                    onChange={(e) => {
+                      if(videoElement.current) {
+                        console.log(videoElement.current.volume);
+                        videoElement.current.volume = parseInt((e.target as HTMLInputElement).value) / 100;
+                      }
+                    }}/>
+                  </div>
+                </div>
+              </div>
+            </div>
             <span className="-mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
               {`${secondsToHHMMSS(currentTime)} / ${secondsToHHMMSS(videoElement.current?.duration || 0)}`}
             </span>
