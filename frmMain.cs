@@ -5,43 +5,43 @@ using System.Text.Json;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Replays.Messages;
 
 namespace WinFormsApp
 {
     public partial class frmMain : Form
     {
         public const string PlaysFolder = @"G:\Videos\Plays";
-        public class WebMessage
-        {
-            public string message { get; set; }
-            public string data { get; set; }
-        }
-        public class VideoList
-        {
-            public List<Video> sessions { get; set; }
-            public long sessionsSize { get; set; }
-            public List<Video> clips { get; set; }
-            public long clipsSize { get; set; }
-        }
-        public class Video
-        {
-            public DateTime date { get; set; }
-            public string type { get; set; }
-            public long size { get; set; }
-            public string game { get; set; }
-            public string fileName { get; set; }
-            public string thumbnail { get; set; }
-        }
+
         public frmMain()
         {
             InitializeComponent();
         }
-        private static string GetAllVideos()
+        private static string GetAllVideos(string Game="All Games", string SortBy="Latest")
         {
-            var allfiles = Directory.GetFiles(PlaysFolder, "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).CreationTime);
+            var allfiles = (dynamic)null;
+            switch (SortBy)
+            {
+                case "Latest":
+                    allfiles = Directory.GetFiles(PlaysFolder, "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).CreationTime);
+                    break;
+                case "Oldest":
+                    allfiles = Directory.GetFiles(PlaysFolder, "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).CreationTime);
+                    break;
+                case "Smallest":
+                    allfiles = Directory.GetFiles(PlaysFolder, "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).Length);
+                    break;
+                case "Largest":
+                    allfiles = Directory.GetFiles(PlaysFolder, "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).Length);
+                    break;
+                default:
+                    return "{}";
+            }
 
             VideoList videoList = new();
+            videoList.game = Game;
+            videoList.games = new();
+            videoList.sortBy = SortBy;
             videoList.sessions = new();
             videoList.clips = new();
 
@@ -52,6 +52,11 @@ namespace WinFormsApp
                 video.date = new FileInfo(file).CreationTime;
                 video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
+
+                if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
+
+                if (!Game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !Game.Equals("All Games")) continue;
+
                 if (file.EndsWith("-ses.mp4"))
                 {
                     videoList.sessions.Add(video);
@@ -64,6 +69,8 @@ namespace WinFormsApp
                 }
                 video.thumbnail = Path.GetFileName(GetOrCreateThumbnail(file));
             }
+
+            videoList.games.Sort();
 
             WebMessage webMessage = new();
             webMessage.message = "RetrieveVideos";
@@ -113,7 +120,8 @@ namespace WinFormsApp
             switch (webMessage.message)
             {
                 case "RetrieveVideos":
-                    var t = await Task.Run(() => GetAllVideos());
+                    RetrieveVideos data = JsonSerializer.Deserialize<RetrieveVideos>(webMessage.data);
+                    var t = await Task.Run(() => GetAllVideos(data.game, data.sortBy));
                     webView21.CoreWebView2.PostWebMessageAsJson(t);
                     break;
                 default:

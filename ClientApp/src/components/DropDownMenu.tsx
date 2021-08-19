@@ -16,7 +16,8 @@ export const DropDownMenu: React.FC<Props> = ({text, items}) => {
       <div className="opacity-0 invisible dropdown-menu transition-all duration-300 transform origin-top-right -translate-y-2 scale-95">
         <div className="absolute left-0 w-56 mt-2 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
           {items && items.map((item) => {
-            return <a key={item.name} href="#" tabIndex={0} className="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left" role="menuitem" >{item.name}</a>
+            // @ts-ignore
+            return <div key={item.name} onClick={(e) => {if(item.onClick) item.onClick(); if(document.activeElement) document.activeElement.blur()}} tabIndex={0} className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left">{item.name}</div>
           })}
         </div>
       </div>

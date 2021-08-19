@@ -7,6 +7,9 @@ import { postMessage, addEventListener, removeEventListener } from './helpers/me
 import Player from './pages/Player';
 
 function App() {
+  const [game, setGameSort] = useState("All Games");
+  const [sortBy, setTypeSort] = useState("Latest");
+  const [gameList, setGameList] = useState([]);
   const [clips, setClips] = useState<Video[]>([]);
   const [sessions, setSessions] = useState<Video[]>([]);
   const [clipTotal, setClipTotal] = useState(0);
@@ -20,6 +23,10 @@ function App() {
     console.log(data);
     switch (message) {
       case 'RetrieveVideos':
+        setGameSort(data.game);
+        setTypeSort(data.sortBy);
+        setGameList(data.games);
+
         setClips(data.clips);
         setSessions(data.sessions);
 
@@ -32,7 +39,7 @@ function App() {
   }
   
   useEffect(() => {
-    postMessage('RetrieveVideos');
+    postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
     
     addEventListener('message', handleWebViewMessages);
     return () => {
@@ -94,7 +101,7 @@ function App() {
 
           <div className="flex-auto overflow-auto h-full p-7">
             <Switch>
-              <Route exact path="/">         <Sessions videos={sessions} size={sessionTotal}/></Route>
+              <Route exact path="/">         <Sessions gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
               <Route exact path="/clips">clips</Route>
               <Route exact path="/uploads">uploads</Route>
               <Route exact path="/settings">settings</Route>

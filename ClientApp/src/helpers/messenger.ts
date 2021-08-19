@@ -1,6 +1,7 @@
 export function postMessage(message: string, data?: any) {
   if(window.chrome === undefined) return;
-  window.chrome.webview.postMessage({message, data});
+  console.log({message, data});
+  window.chrome.webview.postMessage({message, data: JSON.stringify(data)});
 }
 
 export function addEventListener(message: string, handler: EventListenerOrEventListenerObject) {

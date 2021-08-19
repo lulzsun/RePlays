@@ -4,26 +4,43 @@ import Card from '../components/Card';
 import DropDownMenu from '../components/DropDownMenu';
 import { VirtuosoGrid } from 'react-virtuoso'
 import { formatBytes } from '../helpers/utils';
+import { postMessage } from '../helpers/messenger';
 
 interface Props {
+  gameList: string[];
+  game: string;
+  sortBy: string;
   videos: Video[];
   size: number;
 }
 
-export const Sessions: React.FC<Props> = ({videos, size}) => {
+export const Sessions: React.FC<Props> = ({gameList, game, sortBy, videos, size}) => {
+
+  function getGamesDDM() {
+    let items = [
+      {name: 'All Games', onClick: () => {postMessage('RetrieveVideos', {game: 'All Games', sortBy: sortBy})}}
+    ];
+    gameList.map(game => {
+      items.push({name: game, onClick: () => {postMessage('RetrieveVideos', {game: game, sortBy: sortBy})}});
+    });
+    return items;
+  }
+
 	return (
     <div className="flex flex-col h-full border-0 border-b"> 
       <div className="pb-4 flex-initial border-0 border-b">
        Sessions
        <div className="pt-2 grid grid-flow-col gap-4">
-        <DropDownMenu text={"All Games"} 
-          items={[{name: 'All Games'}]}/> 
-        <DropDownMenu text={"Latest"} 
+        <DropDownMenu text={game}
+          items={
+            getGamesDDM()
+          }/> 
+        <DropDownMenu text={sortBy}
           items={[
-            {name: 'Latest'}, 
-            {name: 'Oldest'}, 
-            {name: 'Smallest'}, 
-            {name: 'Largest'}, 
+            {name: 'Latest', onClick: () => {postMessage('RetrieveVideos', {game: game, sortBy: 'Latest'})}}, 
+            {name: 'Oldest', onClick: () => {postMessage('RetrieveVideos', {game: game, sortBy: 'Oldest'})}}, 
+            {name: 'Smallest', onClick: () => {postMessage('RetrieveVideos', {game: game, sortBy: 'Smallest'})}}, 
+            {name: 'Largest', onClick: () => {postMessage('RetrieveVideos', {game: game, sortBy: 'Largest'})}}, 
           ]}/>
         <Button icon={
           <svg className="mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -39,7 +56,8 @@ export const Sessions: React.FC<Props> = ({videos, size}) => {
           {formatBytes(size)}
         </span>
         <Button icon={
-          <svg className="mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <svg className="mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" 
+            onClick={() => postMessage('RetrieveVideos', {game: game, sortBy: sortBy})}>
             <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
             <path fillRule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
           </svg>
