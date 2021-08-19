@@ -7,6 +7,7 @@ interface Props {
   size?: number;
   date?: string;
   video?: string;
+  videoType?: string;
   thumb?: string;
 }
 

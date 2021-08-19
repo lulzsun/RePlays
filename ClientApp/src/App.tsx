@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-// import logo from './logo.svg';
 import './App.css';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
-import Sessions from './pages/Sessions';
-import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
 import Player from './pages/Player';
+import VideosPage from './pages/VideosPage';
+import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
 
 function App() {
   const [game, setGameSort] = useState("All Games");
@@ -101,8 +100,8 @@ function App() {
 
           <div className="flex-auto overflow-auto h-full p-7">
             <Switch>
-              <Route exact path="/">         <Sessions gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
-              <Route exact path="/clips">clips</Route>
+              <Route exact path="/">         <VideosPage videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
+              <Route exact path="/clips">    <VideosPage videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
               <Route exact path="/uploads">uploads</Route>
               <Route exact path="/settings">settings</Route>
               <Route exact path="/player/:game/:video"><Player/></Route>
