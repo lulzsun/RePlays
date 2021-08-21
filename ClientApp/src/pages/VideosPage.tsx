@@ -1,7 +1,9 @@
-import React from 'react';
 import Card from '../components/Card';
+import React, { useState } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso'
+import { postMessage } from '../helpers/messenger';
 import VideoSortControls from '../components/VideoSortControls';
+import VideoDeleteControls from '../components/VideoDeleteControls';
 
 interface Props {
   videoType: string;
@@ -13,17 +15,42 @@ interface Props {
 }
 
 export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, videos, size}) => {
+  const [checkedVideos, setCheckedVideos] = useState(Array(videos.length).fill(false));
+  const [checkedLength, setCheckedLength] = useState(0);
+
+  function onVideoSelected(e: React.ChangeEvent<HTMLInputElement>, index:number) {
+    console.log((e.target as HTMLInputElement).checked);
+
+    if((e.target as HTMLInputElement).checked && !checkedVideos[index])
+      checkedVideos[index] = true;
+    else if(!(e.target as HTMLInputElement).checked && checkedVideos[index])
+      checkedVideos[index] = false;
+
+    setCheckedLength(checkedVideos.filter(x => x === true).length);
+  }
+
+  function onVideoDelete() {
+    console.log('delete function');
+    postMessage('DeleteVideos', {});
+    setCheckedVideos(Array(videos.length).fill(false)); setCheckedLength(0);
+  }
+
 	return (
     <div className="flex flex-col h-full border-0 border-b"> 
       <div className="pb-4 flex-initial border-0 border-b">
        {videoType}
        <VideoSortControls gameList={gameList} game={game} sortBy={sortBy} size={size}/>
+       {checkedLength > 0 && 
+       <VideoDeleteControls length={checkedLength} 
+         selectAll={() => {setCheckedVideos(Array(videos.length).fill(true)); setCheckedLength(videos.length);}}
+         unSelectAll={() => {setCheckedVideos(Array(videos.length).fill(false)); setCheckedLength(0);}}
+         deleteSelected={() => onVideoDelete()}/>}
       </div>
       <VirtuosoGrid
         totalCount={videos.length}
         overscan={4}
         listClassName={"gap-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8 mt-4 mb-4"}
-        itemClassName={"overflow-hidden shadow-lg rounded-lg h-90 md:w-auto cursor-pointer m-auto"}
+        itemClassName={"overflow-hidden shadow-lg h-90 md:w-auto cursor-pointer m-auto"}
         itemContent={index => 
           <Card key={videos[index].fileName} 
             game={videos[index].game}
@@ -31,7 +58,9 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
             videoType={videoType}
             date={videos[index].date}
             size={videos[index].size}
-            thumb={videos[index].thumbnail}/>
+            thumb={videos[index].thumbnail}
+            checked={checkedVideos[index]}
+            onChange={(e) => onVideoSelected(e, index)}/>
         }
       />
     </div>

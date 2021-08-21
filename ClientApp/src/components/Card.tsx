@@ -9,22 +9,37 @@ interface Props {
   video?: string;
   videoType?: string;
   thumb?: string;
+  checked?: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, video=""}: Props) => {
+export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, video="", checked, onChange}) => {
 	return (
-    <Link to={`/player/${game}/${video}`} className="w-full block">
-      <div className="relative w-full object-cover overflow-hidden items-center">
-        <img className="absolute z-20 w-full" alt="thumbnail" src={`${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${thumb}`}/>
-        <img className="relative z-10 w-full" alt="thumbnail" src={"video_thumbnail_placeholder.png"}/>
+    <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-blue-500" : "")}>
+      <div className="absolute z-40 w-full flex justify-between">
+        <div className={"m-2 group-hover:opacity-100 " + (checked ? "opacity-100" : "opacity-0")}>
+          <input type="checkbox" className="h-4 w-4" checked={(checked === undefined || checked === false ? false : true)} onChange={(e) => {onChange(e);}}/>
+        </div>
+        <div className="m-1 mr-2 opacity-0 group-hover:opacity-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="h-6 w-6 text-white" viewBox="0 0 16 16">
+            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+          </svg>
+        </div>
       </div>
-      <div className="bg-white dark:bg-gray-800 w-full p-4 text-gray-800 dark:text-white text-xs font-medium mb-2">
-        {game}
-        <p className="text-gray-500 dark:text-gray-300 font-light">
-          {new Date(date).toLocaleDateString()} | {new Date(date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | {formatBytes(size)}
-        </p>
-      </div>
-    </Link>
+      <Link to={`/player/${game}/${video}`}>
+        <div className="relative w-full rounded-t-lg object-cover overflow-hidden items-center">
+          <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
+          <img className="absolute z-20 w-full" alt="" src={`${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${thumb}`}/>
+          <img className="relative z-10 w-full" alt="" src={"video_thumbnail_placeholder.png"}/>
+        </div>
+        <div className="bg-white dark:bg-gray-800 w-full p-4 text-gray-800 dark:text-white text-xs font-medium mb-2">
+          {game}
+          <p className="text-gray-500 dark:text-gray-300 font-light">
+            {new Date(date).toLocaleDateString()} | {new Date(date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | {formatBytes(size)}
+          </p>
+        </div>
+      </Link>
+    </div>
 	)
 }
 

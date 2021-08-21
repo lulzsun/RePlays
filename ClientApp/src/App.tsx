@@ -100,8 +100,8 @@ function App() {
 
           <div className="flex-auto overflow-auto h-full p-7">
             <Switch>
-              <Route exact path="/">         <VideosPage videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
-              <Route exact path="/clips">    <VideosPage videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
+              <Route exact path="/">         <VideosPage key={"Sessions"} videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
+              <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
               <Route exact path="/uploads">uploads</Route>
               <Route exact path="/settings">settings</Route>
               <Route exact path="/player/:game/:video"><Player/></Route>
