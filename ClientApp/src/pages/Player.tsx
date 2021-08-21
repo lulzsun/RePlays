@@ -1,8 +1,7 @@
-import { SyntheticEvent, useEffect } from 'react';
-import { useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import Clip from '../components/Clip';
+import { useParams } from 'react-router-dom';
 import { secondsToHHMMSS } from '../helpers/utils';
+import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 
 type PlayerParams = {
   game: string;
@@ -78,7 +77,7 @@ export default function Player () {
     }
 
     // clips handling
-    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) != -1) { // clip reposition
+    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) { // clip reposition
       let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
       clipDragging = index;
       clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
