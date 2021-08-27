@@ -6,15 +6,22 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using Replays.Messages;
+using Replays.JSONObjects;
+using System.Drawing;
+using Microsoft.WindowsAPICodePack.Shell;
+using System.Drawing.Imaging;
 
 namespace WinFormsApp
 {
     public partial class frmMain : Form
     {
         public const string PlaysFolder = @"G:\Videos\Plays";
+        public VideoSortSettings videoSortSettings = new();
 
         public frmMain()
         {
+            videoSortSettings.game = "All Games";
+            videoSortSettings.sortBy = "Latest";
             InitializeComponent();
         }
         private static string GetAllVideos(string Game="All Games", string SortBy="Latest")
@@ -84,29 +91,34 @@ namespace WinFormsApp
 
             if (File.Exists(thumbnailPath)) return thumbnailPath;
 
-            var startInfo = new ProcessStartInfo
-            {
-                WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                FileName = "ffmpeg.exe",
-                Arguments = "-ss 00:00:01.000 -y -i " + '"' + videoPath + '"' + " -vframes 1 -s 1024x576 " + '"' + thumbnailPath + '"',
-            };
+            //var startInfo = new ProcessStartInfo
+            //{
+            //    WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory,
+            //    CreateNoWindow = true,
+            //    UseShellExecute = false,
+            //    FileName = "ffmpeg.exe",
+            //    Arguments = "-ss 00:00:01.000 -y -i " + '"' + videoPath + '"' + " -vframes 1 -s 1024x576 " + '"' + thumbnailPath + '"',
+            //};
 
-            var process = new Process
-            {
-                StartInfo = startInfo
-            };
-            process.Start();
-            process.WaitForExit();
-            process.Close();
+            //var process = new Process
+            //{
+            //    StartInfo = startInfo
+            //};
+            //process.Start();
+            //process.WaitForExit();
+            //process.Close();
 
+            ShellFile shellFile = ShellFile.FromFilePath(videoPath);
+            Bitmap shellThumb = shellFile.Thumbnail.ExtraLargeBitmap;
+            shellThumb.Save(thumbnailPath, ImageFormat.Png);
             Debug.WriteLine("Created new thumbnail: {0}", thumbnailPath);
+
             return thumbnailPath;
         }
 
         private async void CoreWebView2InitializationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2InitializationCompletedEventArgs e)
         {
+            // if null, webview2 runtime is missing, prompt error?
             await webView21.CoreWebView2.CallDevToolsProtocolMethodAsync("Security.setIgnoreCertificateErrors", "{\"ignore\": true}");
             webView21.CoreWebView2.Settings.IsStatusBarEnabled = false;
             webView21.CoreWebView2.Settings.IsWebMessageEnabled = true;
@@ -120,9 +132,31 @@ namespace WinFormsApp
             switch (webMessage.message)
             {
                 case "RetrieveVideos":
-                    RetrieveVideos data = JsonSerializer.Deserialize<RetrieveVideos>(webMessage.data);
-                    var t = await Task.Run(() => GetAllVideos(data.game, data.sortBy));
-                    webView21.CoreWebView2.PostWebMessageAsJson(t);
+                    {
+                        RetrieveVideos data = JsonSerializer.Deserialize<RetrieveVideos>(webMessage.data);
+                        videoSortSettings.game = data.game;
+                        videoSortSettings.sortBy = data.sortBy;
+                        var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
+                        webView21.CoreWebView2.PostWebMessageAsJson(t);
+                    }
+                    break;
+                case "ShowInFolder":
+                    {
+                        ShowInFolder data = JsonSerializer.Deserialize<ShowInFolder>(webMessage.data);
+                        var filePath = Path.Join(PlaysFolder, data.filePath);
+                        Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
+                    }
+                    break;
+                case "Delete":
+                    {
+                        Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
+                        foreach (var filePath in data.filePaths)
+                        {
+                            File.Delete(Path.Join(PlaysFolder, filePath));
+                        }
+                        var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
+                        webView21.CoreWebView2.PostWebMessageAsJson(t);
+                    }
                     break;
                 default:
                     break;

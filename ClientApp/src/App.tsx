@@ -49,7 +49,7 @@ function App() {
   return (
     <Router>
       <div className="relative min-h-screen lg:flex">
-        <div className="sidebar bg-blue-800 text-blue-100 w-60 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
+        <div className="sidebar bg-blue-800 text-blue-100 w-60 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out" style={{zIndex: 999}}>
           <div className="text-2xl font-extrabold text-white flex items-center space-x-2 px-4 pb-4">
             <svg className="w-10 h-10 pr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 16" stroke="currentColor">
               <path d="M2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3zm2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1zm2.765 5.576A.5.5 0 0 0 6 7v5a.5.5 0 0 0 .765.424l4-2.5a.5.5 0 0 0 0-.848l-4-2.5z"/>

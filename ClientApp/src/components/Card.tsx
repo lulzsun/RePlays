@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatBytes } from '../helpers/utils';
+import { postMessage } from '../helpers/messenger';
 
 interface Props {
   game?: string;
@@ -20,10 +21,20 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
         <div className={"m-2 group-hover:opacity-100 " + (checked ? "opacity-100" : "opacity-0")}>
           <input type="checkbox" className="h-4 w-4" checked={(checked === undefined || checked === false ? false : true)} onChange={(e) => {onChange(e);}}/>
         </div>
-        <div className="m-1 mr-2 opacity-0 group-hover:opacity-100">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="h-6 w-6 text-white" viewBox="0 0 16 16">
-            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-          </svg>
+        <div className="m-1 mr-2 dropdown" style={{zIndex: 50}}>
+          <button type="button" aria-haspopup="true" aria-expanded="true" aria-controls="headlessui-menu-items-117" className="opacity-0 group-hover:opacity-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="h-6 w-6 text-white" viewBox="0 0 16 16">
+              <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+            </svg>
+          </button>
+          <div className="opacity-0 invisible dropdown-menu transition-all duration-300 transform origin-top-right -translate-y-2 scale-95">
+            <div className="absolute right-0 w-auto mt-2 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
+              <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
+              onClick={() => {postMessage("ShowInFolder", {filePath: `${game}/${video}`})}}>Show In Folder</div>
+              <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
+              onClick={() => {postMessage("Delete", {filePaths: [`${game}/${video}`]})}}>Delete</div>
+            </div>
+          </div>
         </div>
       </div>
       <Link to={`/player/${game}/${video}`}>

@@ -14,10 +14,10 @@ export const DropDownMenu: React.FC<Props> = ({text, items}) => {
         <svg className="w-5 h-5 ml-2 -mr-1" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
       </button>
       <div className="opacity-0 invisible dropdown-menu transition-all duration-300 transform origin-top-right -translate-y-2 scale-95">
-        <div className="absolute left-0 w-56 mt-2 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
+        <div className="absolute left-0 w-auto mt-2 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
           {items && items.map((item) => {
             // @ts-ignore
-            return <div key={item.name} onClick={(e) => {if(item.onClick) item.onClick(); if(document.activeElement) document.activeElement.blur()}} tabIndex={0} className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left">{item.name}</div>
+            return <div key={item.name} onClick={(e) => {if(item.onClick) item.onClick(); if(document.activeElement) document.activeElement.blur()}} tabIndex={0} className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left whitespace-nowrap">{item.name}</div>
           })}
         </div>
       </div>

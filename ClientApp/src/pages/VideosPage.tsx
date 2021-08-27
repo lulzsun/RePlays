@@ -30,9 +30,13 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
   }
 
   function onVideoDelete() {
-    console.log('delete function');
-    postMessage('DeleteVideos', {});
+    var filePaths: string[] = [];
+    checkedVideos.forEach((video, i) => {
+      if(video === true)
+        filePaths.push(`${videos[i].game}/${videos[i].fileName}`);
+    });
     setCheckedVideos(Array(videos.length).fill(false)); setCheckedLength(0);
+    postMessage('Delete', {filePaths});
   }
 
 	return (
