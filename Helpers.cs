@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Windows.Forms;
 using Replays.JSONObjects;
 using Replays.Messages;
 
@@ -17,11 +18,20 @@ namespace Replays.Helpers
 
         public static string GetFFmpegFolder()
         {
+
 #if DEBUG
-            return Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #else
-            return Path.Join(Application.StartupPath, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(Application.StartupPath, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #endif
+            if(Directory.Exists(ffmpegFolder))
+            {
+                return ffmpegFolder;
+            }
+            else
+            {
+                throw new DirectoryNotFoundException(ffmpegFolder);
+            }
         }
 
         public static string GetAllVideos(string Game = "All Games", string SortBy = "Latest")
