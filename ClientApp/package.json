@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^9.8.6",
+    "ffmpeg-ffprobe-static": "^4.3.1-rc.6",
     "postcss": "^7.0.36",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.7"
   }

@@ -17,6 +17,15 @@ namespace Replays.Helpers
             return @"G:\Videos\Plays";
         }
 
+        public static string GetFFmpegFolder()
+        {
+#if DEBUG
+            return Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+#else
+            return Path.Join(Application.StartupPath, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+#endif
+        }
+
         public static string GetAllVideos(string Game = "All Games", string SortBy = "Latest")
         {
             var allfiles = (dynamic)null;
