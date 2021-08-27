@@ -1,10 +1,8 @@
+using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using Microsoft.WindowsAPICodePack.Shell;
 using Replays.JSONObjects;
 using Replays.Messages;
 
@@ -87,33 +85,52 @@ namespace Replays.Helpers
             return JsonSerializer.Serialize(webMessage);
         }
 
+        public static double GetVideoDuration(string videoPath)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe.exe"),
+                Arguments = string.Format("-i \"{0}\" -show_entries format=duration -v quiet -of csv=\"p = 0\"", videoPath),
+            };
+
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
+            process.Start();
+            double duration = Convert.ToDouble(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+            process.WaitForExit();
+            process.Close();
+
+            return duration;
+        }
+
         public static string GetOrCreateThumbnail(string videoPath)
         {
             string thumbnailPath = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\", Path.GetFileNameWithoutExtension(videoPath) + ".png");
 
             if (File.Exists(thumbnailPath)) return thumbnailPath;
 
-            //var startInfo = new ProcessStartInfo
-            //{
-            //    WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory,
-            //    CreateNoWindow = true,
-            //    UseShellExecute = false,
-            //    FileName = "ffmpeg.exe",
-            //    Arguments = "-ss 00:00:01.000 -y -i " + '"' + videoPath + '"' + " -vframes 1 -s 1024x576 " + '"' + thumbnailPath + '"',
-            //};
+            var startInfo = new ProcessStartInfo
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", GetVideoDuration(videoPath) / 2, videoPath, thumbnailPath),
+            };
+            
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
+            process.Start();
+            process.WaitForExit();
+            process.Close();
 
-            //var process = new Process
-            //{
-            //    StartInfo = startInfo
-            //};
-            //process.Start();
-            //process.WaitForExit();
-            //process.Close();
-
-            ShellFile shellFile = ShellFile.FromFilePath(videoPath);
-            Bitmap shellThumb = shellFile.Thumbnail.ExtraLargeBitmap;
-            shellThumb.Save(thumbnailPath, ImageFormat.Png);
-            Debug.WriteLine("Created new thumbnail: {0}", thumbnailPath);
+            Debug.WriteLine(string.Format("Created new thumbnail: {0}", thumbnailPath));
 
             return thumbnailPath;
         }
