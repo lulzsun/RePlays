@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
 import ContextMenu from './components/ContextMenu';
 import { useRef } from 'react';
+import Settings from './pages/Settings';
 
 export const ContextMenuContext = createContext<ContextMenuOptions | null>(null);
 
@@ -125,7 +126,7 @@ function App() {
                 <Route exact path="/">         <VideosPage key={"Sessions"} videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
                 <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
                 <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
-                <Route exact path="/settings">Settings</Route>
+                <Route exact path="/settings"> <Settings/></Route>
                 <Route exact path="/player/:game/:video"><Player/></Route>
               </Switch>
             </div>
