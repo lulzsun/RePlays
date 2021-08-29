@@ -16,7 +16,7 @@ export const VideoSortControls: React.FC<Props> = ({gameList, game, sortBy, size
     let items = [
       {name: 'All Games', onClick: () => {postMessage('RetrieveVideos', {game: 'All Games', sortBy: sortBy})}}
     ];
-    gameList.map(game => {
+    gameList.forEach(game => {
       items.push({name: game, onClick: () => {postMessage('RetrieveVideos', {game: game, sortBy: sortBy})}});
     });
     return items;

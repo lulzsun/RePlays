@@ -20,7 +20,6 @@ export default function Player () {
   const seekBarElement = useRef<HTMLDivElement>(null);
   const targetSeekElement = useRef<HTMLDivElement>(null);
   
-  var seekDragging = false, clipDragging = -1, clipDragOffset = 0, clipResizeDir = '', clipResizeLimit = 0;
   const [clips, setClips] = useState<Clip[]>([]);
   const [currentZoom, setZoom] = useState(0);
   const [currentPlaybackRate, setPlaybackRate] = useState(1);
@@ -30,6 +29,95 @@ export default function Player () {
   const contextMenuCtx = useContext(ContextMenuContext);
 
   useEffect(() => {
+    var seekDragging = false, clipDragging = -1, clipDragOffset = 0, clipResizeDir = '', clipResizeLimit = 0;
+    
+    function handleOnKeyDown(e: KeyboardEvent) {
+      if(e.key === ' ') videoElement.current?.paused ? videoElement.current?.play() : videoElement.current?.pause();
+      if(e.key === 'ArrowLeft') videoElement.current!.currentTime -= 5;
+      if(e.key === 'ArrowRight') videoElement.current!.currentTime += 5;
+    }
+  
+    function handleOnMouseDown(e: MouseEvent) {
+      let element = e.target as HTMLDivElement;
+    
+      // seeker handling
+      if(e.button === 0) {
+        if(element === seekBarElement.current) {
+          seekDragging = true;
+        }
+        else if(seekWindowElement.current?.contains(element)) {
+          if (e.detail === 1) {
+            if(element === seekWindowElement.current)
+              mouseSeek(e);
+          } else if (e.detail === 2) {
+            mouseSeek(e);
+          }
+        }
+      }
+  
+      // clips handling
+      if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) {
+        let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
+        if(e.button === 0) { // clip reposition
+          clipDragging = index;
+          clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
+        }
+        else if(e.button === 2) { // context menu / Delete Clip
+          contextMenuCtx?.setItems([{name: 'Delete', onClick: () => { 
+            let newClips = clips.slice();
+            if(videoElement.current)
+              newClips.splice(index, 1);
+            setClips(newClips);
+          }}]);
+          contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
+        }
+      } else { // clip resizing
+        let index = clipsRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
+        clipDragging = index;
+        clipResizeDir = (element.parentElement)?.getAttribute('data-side')!;
+        clipResizeLimit = clipsRef.current[clipDragging]?.clientWidth + clipsRef.current[clipDragging]?.offsetLeft;
+      }
+    }
+  
+    function handleOnMouseMove(e: MouseEvent) {
+      if(seekDragging) {
+        mouseSeek(e);
+      }
+      if(clipDragging !== -1 && clipResizeDir === '') {
+        let clickLeft = (e.clientX - clipDragOffset + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
+        if(clickLeft < 0) clickLeft = 0;
+        else if(clickLeft > seekWindowElement.current!.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width) 
+          clickLeft = seekWindowElement.current!.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width;
+        clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
+      }
+      else if (clipDragging !== -1 && clipResizeDir !== '') {
+        if(clipResizeDir === 'right') {
+          let clickLeft = (e.clientX - clipsRef.current[clipDragging]?.offsetLeft + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
+          if(clickLeft > seekWindowElement.current!.offsetWidth) clickLeft = seekWindowElement.current!.offsetWidth;
+          clipsRef.current[clipDragging].style.width = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
+        }
+        else if(clipResizeDir === 'left') {
+          let clickLeft = (e.clientX + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
+          if(clickLeft < 0) clickLeft = 0;
+          if(clickLeft > clipResizeLimit) return;
+          clipsRef.current[clipDragging].style.width = `${(clipsRef.current[clipDragging].offsetWidth + (clipsRef.current[clipDragging].offsetLeft - clickLeft)) / seekWindowElement.current!.clientWidth * 100}%`;
+          clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
+        }
+      }
+    }
+  
+    function handleOnMouseUp(e: MouseEvent) {
+      seekDragging = false;
+      clipResizeDir = '';
+      if(clipDragging !== -1) {
+        let clipsCopy = [...clips];
+        clipsCopy[clipDragging].start = clipsRef.current[clipDragging].offsetLeft / seekWindowElement.current!.clientWidth * 100;
+        clipsCopy[clipDragging].duration = clipsRef.current[clipDragging].offsetWidth / seekWindowElement.current!.clientWidth * 100;
+        setClips(clipsCopy);
+        clipDragging = -1;
+      }
+    }
+    
     document.addEventListener('keydown', handleOnKeyDown);
     document.addEventListener('mousedown', handleOnMouseDown);
     document.addEventListener('mousemove', handleOnMouseMove);
@@ -40,13 +128,9 @@ export default function Player () {
       document.removeEventListener('mousemove', handleOnMouseMove);
       document.removeEventListener('mouseup', handleOnMouseUp);
     }
-  }, [clips]);
+  }, [clips, contextMenuCtx]);
 
   useEffect(() => {
-    scrollToSeek();
-  }, [currentZoom]);
-
-  function scrollToSeek() {
     seekBarElement.current!.style.left = `calc(${currentTime / videoElement.current!.duration * 100}% - 3px)`;
     targetSeekElement.current!.style.left = seekBarElement.current!.offsetLeft+6 + 'px';
     targetSeekElement.current!.scrollIntoView({
@@ -55,94 +139,8 @@ export default function Player () {
       inline: 'center'
     });
     timelineElement.current!.scrollTop = 0;
-  }
-
-  function handleOnKeyDown(e: KeyboardEvent) {
-    if(e.key === ' ') videoElement.current?.paused ? videoElement.current?.play() : videoElement.current?.pause();
-    if(e.key === 'ArrowLeft') videoElement.current!.currentTime -= 5;
-    if(e.key === 'ArrowRight') videoElement.current!.currentTime += 5;
-  }
-
-  function handleOnMouseDown(e: MouseEvent) {
-    let element = e.target as HTMLDivElement;
-  
-    // seeker handling
-    if(e.button === 0) {
-      if(element === seekBarElement.current) {
-        seekDragging = true;
-      }
-      else if(seekWindowElement.current?.contains(element)) {
-        if (e.detail === 1) {
-          if(element === seekWindowElement.current)
-            mouseSeek(e);
-        } else if (e.detail === 2) {
-          mouseSeek(e);
-        }
-      }
-    }
-
-    // clips handling
-    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) {
-      let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
-      if(e.button === 0) { // clip reposition
-        clipDragging = index;
-        clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
-      }
-      else if(e.button === 2) { // context menu / Delete Clip
-        contextMenuCtx?.setItems([{name: 'Delete', onClick: () => { 
-          let newClips = clips.slice();
-          if(videoElement.current)
-            newClips.splice(index, 1);
-          setClips(newClips);
-        }}]);
-        contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
-      }
-    } else { // clip resizing
-      let index = clipsRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
-      clipDragging = index;
-      clipResizeDir = (element.parentElement)?.getAttribute('data-side')!;
-      clipResizeLimit = clipsRef.current[clipDragging]?.clientWidth + clipsRef.current[clipDragging]?.offsetLeft;
-    }
-  }
-
-  function handleOnMouseMove(e: MouseEvent) {
-    if(seekDragging) {
-      mouseSeek(e);
-    }
-    if(clipDragging !== -1 && clipResizeDir === '') {
-      let clickLeft = (e.clientX - clipDragOffset + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
-      if(clickLeft < 0) clickLeft = 0;
-      else if(clickLeft > seekWindowElement.current!.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width) 
-        clickLeft = seekWindowElement.current!.clientWidth - clipsRef.current[clipDragging].getBoundingClientRect().width;
-      clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
-    }
-    else if (clipDragging !== -1 && clipResizeDir !== '') {
-      if(clipResizeDir === 'right') {
-        let clickLeft = (e.clientX - clipsRef.current[clipDragging]?.offsetLeft + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
-        if(clickLeft > seekWindowElement.current!.offsetWidth) clickLeft = seekWindowElement.current!.offsetWidth;
-        clipsRef.current[clipDragging].style.width = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
-      }
-      else if(clipResizeDir === 'left') {
-        let clickLeft = (e.clientX + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
-        if(clickLeft < 0) clickLeft = 0;
-        if(clickLeft > clipResizeLimit) return;
-        clipsRef.current[clipDragging].style.width = `${(clipsRef.current[clipDragging].offsetWidth + (clipsRef.current[clipDragging].offsetLeft - clickLeft)) / seekWindowElement.current!.clientWidth * 100}%`;
-        clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
-      }
-    }
-  }
-
-  function handleOnMouseUp(e: MouseEvent) {
-    seekDragging = false;
-    clipResizeDir = '';
-    if(clipDragging !== -1) {
-      let clipsCopy = [...clips];
-      clipsCopy[clipDragging].start = clipsRef.current[clipDragging].offsetLeft / seekWindowElement.current!.clientWidth * 100;
-      clipsCopy[clipDragging].duration = clipsRef.current[clipDragging].offsetWidth / seekWindowElement.current!.clientWidth * 100;
-      setClips(clipsCopy);
-      clipDragging = -1;
-    }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentZoom]);
 
   function handleAddClip() {
     if(seekWindowElement.current && seekBarElement.current) {
@@ -290,7 +288,7 @@ export default function Player () {
             <button title={`Save Clip${clips.length > 1 ? 's' : ''}`} type="button" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
               onClick={() => {
                 let convertedClips: Clip[] = [];
-                clips.map(clip => {
+                clips.forEach(clip => {
                   convertedClips.push({
                     id: clip.id, 
                     // now the start & duration are seconds, TODO: maybe have it be this way from the start, instead of having to convert?
@@ -316,14 +314,14 @@ export default function Player () {
                 </svg>
             </button>
             <span title="Zoom Out" className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800"
-              onClick={() => (currentZoom-1 > -1 ? setZoom(currentZoom-1) : scrollToSeek())}>
+              onClick={() => {if (currentZoom-1 > -1) setZoom(currentZoom-1);}}>
               -
             </span>
             <span className="text-center -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
               {`${ZOOMS[currentZoom]}%`}
             </span>
             <span title="Zoom In" className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800"
-              onClick={() => (currentZoom+1 < ZOOMS.length ? setZoom(currentZoom+1) : scrollToSeek())}>
+              onClick={() => {if (currentZoom+1 < ZOOMS.length) setZoom(currentZoom+1);}}>
               +
             </span>
           </div>
