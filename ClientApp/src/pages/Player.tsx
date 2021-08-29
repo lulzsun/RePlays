@@ -1,7 +1,8 @@
 import Clip from '../components/Clip';
 import { useParams } from 'react-router-dom';
 import { secondsToHHMMSS } from '../helpers/utils';
-import { SyntheticEvent, useEffect, useRef, useState } from 'react';
+import { SyntheticEvent, useContext, useEffect, useRef, useState } from 'react';
+import { ContextMenuContext } from '../App';
 
 type PlayerParams = {
   game: string;
@@ -25,6 +26,8 @@ export default function Player () {
   const [currentPlaybackRate, setPlaybackRate] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const clipsRef = useRef<HTMLDivElement[]>([]);
+
+  const contextMenuCtx = useContext(ContextMenuContext);
 
   useEffect(() => {
     document.addEventListener('keydown', handleOnKeyDown);
@@ -64,23 +67,36 @@ export default function Player () {
     let element = e.target as HTMLDivElement;
   
     // seeker handling
-    if(element === seekBarElement.current) {
-      seekDragging = true;
-    }
-    else if(seekWindowElement.current?.contains(element)) {
-      if (e.detail === 1) {
-        if(element === seekWindowElement.current)
+    if(e.button === 0) {
+      if(element === seekBarElement.current) {
+        seekDragging = true;
+      }
+      else if(seekWindowElement.current?.contains(element)) {
+        if (e.detail === 1) {
+          if(element === seekWindowElement.current)
+            mouseSeek(e);
+        } else if (e.detail === 2) {
           mouseSeek(e);
-      } else if (e.detail === 2) {
-        mouseSeek(e);
+        }
       }
     }
 
     // clips handling
-    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) { // clip reposition
+    if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) {
       let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
-      clipDragging = index;
-      clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
+      if(e.button === 0) { // clip reposition
+        clipDragging = index;
+        clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
+      }
+      else if(e.button === 2) { // context menu / Delete Clip
+        contextMenuCtx?.setItems([{name: 'Delete', onClick: () => { 
+          let newClips = clips.slice();
+          if(videoElement.current)
+            newClips.splice(index, 1);
+          setClips(newClips);
+        }}]);
+        contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
+      }
     } else { // clip resizing
       let index = clipsRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
       clipDragging = index;
@@ -101,7 +117,6 @@ export default function Player () {
       clipsRef.current[clipDragging].style.left = `${clickLeft / seekWindowElement.current!.clientWidth * 100}%`;
     }
     else if (clipDragging !== -1 && clipResizeDir !== '') {
-      console.log('resizing!', clipResizeDir);
       if(clipResizeDir === 'right') {
         let clickLeft = (e.clientX - clipsRef.current[clipDragging]?.offsetLeft + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
         if(clickLeft > seekWindowElement.current!.offsetWidth) clickLeft = seekWindowElement.current!.offsetWidth;
@@ -132,9 +147,8 @@ export default function Player () {
   function handleAddClip() {
     if(seekWindowElement.current && seekBarElement.current) {
       let start = seekBarElement.current.offsetLeft / seekWindowElement.current.clientWidth * 100;
-
-      console.log('add');
       let newClips = clips.slice();
+
       if(videoElement.current)
         newClips.push({id: Date.now(), start: start, duration: 10 / videoElement.current.duration * 100}); // 10 seconds
       setClips(newClips);
@@ -253,12 +267,7 @@ export default function Player () {
                 <div className="absolute transform -translate-y-full left-0 w-auto origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
                   <div className="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left" role="menuitem">
                     <input ref={volumeSliderElement} type="range" min="1" max="100" step="1" 
-                    onChange={(e) => {
-                      if(videoElement.current) {
-                        console.log(videoElement.current.volume);
-                        videoElement.current.volume = parseInt((e.target as HTMLInputElement).value) / 100;
-                      }
-                    }}/>
+                    onChange={(e) => { if(videoElement.current) videoElement.current.volume = parseInt((e.target as HTMLInputElement).value) / 100; }}/>
                   </div>
                 </div>
               </div>
@@ -278,8 +287,19 @@ export default function Player () {
               </svg>
               {clips.length} Clip{clips.length > 1 && 's'}: {secondsToHHMMSS(clips.map(clip => clip.duration / 100 * videoElement.current!.duration).reduce((prev, next) => prev + next))}
             </span>
-            <button title={`Save Clip${clips.length > 1 ? 's' : ''}`} className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
-              type="button">
+            <button title={`Save Clip${clips.length > 1 ? 's' : ''}`} type="button" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
+              onClick={() => {
+                let convertedClips: Clip[] = [];
+                clips.map(clip => {
+                  convertedClips.push({
+                    id: clip.id, 
+                    // now the start & duration are seconds, TODO: maybe have it be this way from the start, instead of having to convert?
+                    start: clip.start / 100 * videoElement.current!.duration,
+                    duration: clip.duration / 100 * videoElement.current!.duration
+                  });
+                });
+                console.log(convertedClips);
+              }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
                 <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v4.5h2a.5.5 0 0 1 .354.854l-2.5 2.5a.5.5 0 0 1-.708 0l-2.5-2.5A.5.5 0 0 1 5.5 6.5h2V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
               </svg>

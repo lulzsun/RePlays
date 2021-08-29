@@ -38,4 +38,16 @@ declare global {
     start: number,
     duration: number,
   }
+  interface ContextMenuOptions {
+    setItems: (items: ContextMenuItem[]) => any,
+    setPosition: (position: ContextMenuPosition) => any,
+  }
+  interface ContextMenuItem {
+    name: string, 
+    onClick?: () => any;
+  }
+  interface ContextMenuPosition {
+    x: number, 
+    y: number,
+  }
 }
