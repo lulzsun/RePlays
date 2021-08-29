@@ -16,6 +16,7 @@ namespace WinFormsApp
             await webView21.CoreWebView2.CallDevToolsProtocolMethodAsync("Security.setIgnoreCertificateErrors", "{\"ignore\": true}");
             webView21.CoreWebView2.Settings.IsStatusBarEnabled = false;
             webView21.CoreWebView2.Settings.IsWebMessageEnabled = true;
+            //webView21.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
         }
 
         private void WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)

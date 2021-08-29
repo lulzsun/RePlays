@@ -111,7 +111,16 @@ namespace Replays.Helpers
                 StartInfo = startInfo
             };
             process.Start();
-            double duration = Convert.ToDouble(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+            double duration = 0;
+            try
+            {
+                duration = Convert.ToDouble(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+            }
+            catch (Exception)
+            {
+                // if exception happens, usually means video is not valid
+                Debug.WriteLine(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+            }
             process.WaitForExit();
             process.Close();
 
