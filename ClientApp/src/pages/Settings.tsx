@@ -15,8 +15,8 @@ export const Settings: React.FC<Props> = ({}) => {
 	return (
     <Router>
       <div className="flex flex-col h-full border-0 border-b"> 
-        <div style={{height: "10%"}}>Settings <p className="inline-block px-1">/</p> <div className="inline-block text-base align-bottom">{subPage}</div></div>
-        <div style={{height: "90%"}} className="flex flex-row">
+        <div style={{height: "50px"}}>Settings <p className="inline-block px-1">/</p> <div className="inline-block text-base align-bottom">{subPage}</div></div>
+        <div style={{height: "calc(100% - 50px)"}} className="flex flex-row">
           <div className="w-36 h-full pr-6 border-0 border-r">
             <Link to="/settings/general" onClick={() => setSubPage("General")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               General
