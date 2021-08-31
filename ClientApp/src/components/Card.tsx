@@ -46,7 +46,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
         <div className="bg-white dark:bg-gray-800 w-full p-4 text-gray-800 dark:text-white text-xs font-medium mb-2">
           {game}
           <p className="text-gray-500 dark:text-gray-300 font-light">
-            {new Date(date).toLocaleDateString()} | {new Date(date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | {formatBytes(size)}
+            {new Date(date).toLocaleDateString()} | {new Date(date).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})} | {formatBytes(size)}
           </p>
         </div>
       </Link>
