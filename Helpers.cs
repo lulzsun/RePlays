@@ -11,9 +11,28 @@ namespace Replays.Helpers
 {
     public static class Functions
     {
+        public static string MessageError(string message)
+        {
+            WebMessage webMessage = new();
+            webMessage.message = "MessageError";
+            webMessage.data = "{\"message\": \"" + message + "\"}";
+            return JsonSerializer.Serialize(webMessage);
+        }
+        public static string MessageSuccess(string message)
+        {
+            WebMessage webMessage = new();
+            webMessage.message = "MessageSuccess";
+            webMessage.data = "{\"message\": \"" + message + "\"}";
+            return JsonSerializer.Serialize(webMessage);
+        }
         public static string GetPlaysFolder()
         {
             return @"G:\Videos\Plays";
+        }
+
+        public static string GetTempFolder()
+        {
+            return @"G:\Videos\Plays\.temp";
         }
 
         public static string GetFFmpegFolder()
@@ -64,6 +83,8 @@ namespace Replays.Helpers
 
             foreach (string file in allfiles)
             {
+                if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-clp.mp4"))) continue;
+
                 Video video = new();
                 video.size = new FileInfo(file).Length;
                 video.date = new FileInfo(file).CreationTime;
@@ -152,6 +173,70 @@ namespace Replays.Helpers
             Debug.WriteLine(string.Format("Created new thumbnail: {0}", thumbnailPath));
 
             return thumbnailPath;
+        }
+
+        public static string CreateClip(string videoPath, ClipSegment[] clipSegments, int index=0)
+        {
+            string inputFile = Path.Join(GetPlaysFolder(), videoPath);
+            string outputFile = Path.Combine(Path.GetDirectoryName(inputFile), DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-clp.mp4");
+
+            var startInfo = new ProcessStartInfo
+            {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+            };
+
+            if (clipSegments.Length > 1 && index != clipSegments.Length)
+            {
+                if (index == 0) File.Delete(Path.Join(GetTempFolder(), "list.txt"));
+                outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4");
+                File.AppendAllLines(Path.Join(GetTempFolder(), "list.txt"), new[] { "file '" + outputFile + "'" });
+            }
+            if (clipSegments.Length > 1 && index == clipSegments.Length)
+            {
+                startInfo.Arguments =
+                    "-f concat -safe 0 -i \"" + Path.Join(GetTempFolder(), "list.txt") + "\" -codec copy \"" + outputFile + "\"";
+                Debug.WriteLine(startInfo.Arguments);
+            }
+            else
+            {
+                startInfo.Arguments =
+                    "-ss " + clipSegments[index].start + " " +
+                    "-i \"" + inputFile + "\" " +
+                    "-t " + clipSegments[index].duration + " -codec copy " +
+                    "-y \"" + outputFile + "\"";
+            }
+
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            process.OutputDataReceived += new DataReceivedEventHandler((s, e) =>
+            {
+                Debug.WriteLine("O: " + e.Data);
+            });
+            process.ErrorDataReceived += new DataReceivedEventHandler((s, e) =>
+            {
+                Debug.WriteLine("E: " + e.Data);
+            });
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+            process.Close();
+
+            if (!File.Exists(outputFile)) return null;
+
+            if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(videoPath, clipSegments, index+1);
+            else if (clipSegments.Length > 1 && index == clipSegments.Length) Debug.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
+            else Debug.WriteLine(string.Format("Created new clip: {0}", outputFile));
+
+            return outputFile;
         }
     }
 }

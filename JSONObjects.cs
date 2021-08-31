@@ -29,4 +29,10 @@ namespace Replays.JSONObjects
         public string game { get; set; }
         public string sortBy { get; set; }
     }
+
+    public class ClipSegment
+    {
+        public float start { get; set; }
+        public float duration { get; set; }
+    }
 }

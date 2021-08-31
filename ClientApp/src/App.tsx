@@ -28,7 +28,7 @@ function App() {
     let message = eventData.message;
     let data = JSON.parse(eventData.data);
 
-    console.log(data);
+    console.log(message, data);
     switch (message) {
       case 'RetrieveVideos':
         setGameSort(data.game);

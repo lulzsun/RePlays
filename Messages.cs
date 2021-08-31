@@ -49,6 +49,23 @@ namespace Replays.Messages
         }
     }
 
+    public class CreateClips
+    {
+        private string _videoPath;
+        public string videoPath
+        {
+            get
+            {
+                return _videoPath;
+            }
+            set
+            {
+                _videoPath = value.Replace("/", "\\");
+            }
+        }
+        public ClipSegment[] clipSegments { get; set; }
+    }
+
     public class WebMessage
     {
         public string message { get; set; }
@@ -92,6 +109,22 @@ namespace Replays.Messages
                         }
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                         webView2.CoreWebView2.PostWebMessageAsJson(t);
+                    }
+                    break;
+                case "CreateClips":
+                    {
+                        CreateClips data = JsonSerializer.Deserialize<CreateClips>(webMessage.data);
+                        var t = await Task.Run(() => CreateClip(data.videoPath, data.clipSegments));
+                        if(t == null)
+                        {
+                            webView2.CoreWebView2.PostWebMessageAsJson(MessageError("Failed to create clip"));
+                        }
+                        else
+                        {
+                            webView2.CoreWebView2.PostWebMessageAsJson(MessageSuccess("Successfully created clip"));
+                            t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
+                            webView2.CoreWebView2.PostWebMessageAsJson(t);
+                        }
                     }
                     break;
                 default:
