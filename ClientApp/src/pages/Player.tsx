@@ -25,6 +25,7 @@ export default function Player () {
   const [currentZoom, setZoom] = useState(0);
   const [currentPlaybackRate, setPlaybackRate] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
+  const [playbackClips, setPlaybackClips] = useState(-1);
   const clipsRef = useRef<HTMLDivElement[]>([]);
 
   const contextMenuCtx = useContext(ContextMenuContext);
@@ -156,12 +157,37 @@ export default function Player () {
 
   function handleAddClip() {
     if(seekWindowElement.current && seekBarElement.current) {
-      let start = seekBarElement.current.offsetLeft / seekWindowElement.current.clientWidth * 100;
+      let start = currentTime / videoElement.current!.duration * 100;
       let newClips = clips.slice();
 
       if(videoElement.current)
         newClips.push({id: Date.now(), start: start, duration: 10 / videoElement.current.duration * 100}); // 10 seconds
       setClips(newClips);
+    }
+  }
+
+  function handleSaveClips() {
+    let convertedClips: any[] = [];
+    clips.forEach(clip => {
+      convertedClips.push({
+        // now the start & duration are seconds, TODO: maybe have it be this way from the start, instead of having to convert?
+        start: clip.start / 100 * videoElement.current!.duration,
+        duration: clip.duration / 100 * videoElement.current!.duration
+      });
+    });
+    postMessage("CreateClips", {videoPath: `/${game}/${video}`, clipSegments: convertedClips});
+  }
+
+  function handlePlayClips() {
+    if(videoElement.current) {
+      if(playbackClips === -1) {
+        setClips(clips => clips.sort((a, b) => (a.start > b.start) ? 1 : -1));
+        setPlaybackClips(0);
+        videoElement.current.currentTime = (clips.sort((a, b) => (a.start > b.start) ? 1 : -1)[0].start / 100 * videoElement.current.duration)+0.0001;
+        videoElement.current.play();
+      } else {
+        videoElement.current.pause();
+      }
     }
   }
 
@@ -174,6 +200,36 @@ export default function Player () {
 
   function handleVideoPlaying(e: SyntheticEvent) {
     const videoElement = (e.target as HTMLVideoElement);
+    if(playbackClips !== -1) {
+      let _playbackClips = playbackClips;
+      for (let index = 0; index < clips.length; index++) {
+        const clip = clips[index];
+        const start = clip.start / 100 * videoElement.duration;
+        const duration = clip.duration / 100 * videoElement.duration;
+        if(start < videoElement.currentTime && (start+duration) > videoElement.currentTime) {
+          setPlaybackClips(index);
+          _playbackClips = index;
+          break;
+        }
+      }
+
+      var start = clips[_playbackClips].start / 100 * videoElement.duration;
+      var duration = clips[_playbackClips].duration / 100 * videoElement.duration;
+      if(videoElement.currentTime >= start+duration) {
+        if(clips.length === _playbackClips+1) {
+          videoElement.pause();
+        }
+        else {
+          setPlaybackClips(value => value+1);
+          var nextStart = clips[_playbackClips+1].start / 100 * videoElement.duration;
+          videoElement.currentTime = nextStart;
+        }
+      }
+      else if(videoElement.currentTime < start) {
+        videoElement.currentTime = start+0.0001;
+        videoElement.play();
+      }
+    }
     setCurrentTime(videoElement.currentTime);
     seekBarElement.current!.style.left = `calc(${videoElement.currentTime / videoElement.duration * 100}% - 3px)`;
     targetSeekElement.current!.style.left = seekBarElement.current!.offsetLeft+6 + 'px';
@@ -183,7 +239,8 @@ export default function Player () {
     let clickLeft = (e.clientX + timelineElement.current!.scrollLeft - seekWindowElement.current!.offsetLeft);
     if(clickLeft < 0) clickLeft = 0;
     else if(clickLeft > seekWindowElement.current!.clientWidth) clickLeft = seekWindowElement.current!.clientWidth;
-    videoElement.current!.currentTime = (clickLeft / seekWindowElement.current!.clientWidth) * videoElement.current!.duration;
+    let newCurrentTime = (clickLeft / seekWindowElement.current!.clientWidth) * videoElement.current!.duration;
+    videoElement.current!.currentTime = newCurrentTime;
     seekBarElement.current!.style.left = `${clickLeft - 3}px`;
   }
 
@@ -195,7 +252,8 @@ export default function Player () {
         }}>
         <video ref={videoElement} className="absolute h-full" src={`${window.location.protocol}//${window.location.host}/Plays/${game}/${video}`} 
           onLoadedMetadata={handleVideoLoad} 
-          onTimeUpdate={handleVideoPlaying}/>
+          onTimeUpdate={handleVideoPlaying}
+          onPause={() => setPlaybackClips(-1)}/>
       </div>
 
       <div className="flex flex-initial h-20 grid grid-flow-row">
@@ -290,26 +348,22 @@ export default function Player () {
 
         <div className="flex justify-center">
           {clips.length > 0 && <div className="border-2 rounded-lg">
-            <span title={`Play Clip${clips.length > 1 ? 's' : ''}`} className="cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
+            <span title={`${playbackClips === -1 ? 'Play' : 'Stop'} Clip${clips.length > 1 ? 's' : ''}`} className="cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800"
+              onClick={() => handlePlayClips()}>
+              {(playbackClips === -1 ? 
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="-mt-0.5 align-center mr-2 inline" viewBox="0 0 16 16">
-                <path d="M2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3zm2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1zm2.765 5.576A.5.5 0 0 0 6 7v5a.5.5 0 0 0 .765.424l4-2.5a.5.5 0 0 0 0-.848l-4-2.5z"/>
-                <path d="M1.5 14.5A1.5 1.5 0 0 1 0 13V6a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 16 6v7a1.5 1.5 0 0 1-1.5 1.5h-13zm13-1a.5.5 0 0 0 .5-.5V6a.5.5 0 0 0-.5-.5h-13A.5.5 0 0 0 1 6v7a.5.5 0 0 0 .5.5h13z"/>
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
+              </svg> :
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="-mt-0.5 align-center mr-2 inline" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h3A1.5 1.5 0 0 1 11 6.5v3A1.5 1.5 0 0 1 9.5 11h-3A1.5 1.5 0 0 1 5 9.5v-3z"/>
               </svg>
+              )}
               {clips.length} Clip{clips.length > 1 && 's'}: {secondsToHHMMSS(clips.map(clip => clip.duration / 100 * videoElement.current!.duration).reduce((prev, next) => prev + next))}
             </span>
             <button title={`Save Clip${clips.length > 1 ? 's' : ''}`} type="button" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
-              onClick={() => {
-                let convertedClips: any[] = [];
-                clips.forEach(clip => {
-                  convertedClips.push({
-                    // now the start & duration are seconds, TODO: maybe have it be this way from the start, instead of having to convert?
-                    start: clip.start / 100 * videoElement.current!.duration,
-                    duration: clip.duration / 100 * videoElement.current!.duration
-                  });
-                });
-                console.log(convertedClips);
-                postMessage("CreateClips", {videoPath: `/${game}/${video}`, clipSegments: convertedClips});
-              }}>
+              onClick={() => handleSaveClips()}>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
                 <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v4.5h2a.5.5 0 0 1 .354.854l-2.5 2.5a.5.5 0 0 1-.708 0l-2.5-2.5A.5.5 0 0 1 5.5 6.5h2V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
               </svg>
