@@ -47,6 +47,8 @@ function App() {
   }
   
   useEffect(() => {
+    if(localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{"sessions": {}}');
+
     postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
     
     addEventListener('message', handleWebViewMessages);

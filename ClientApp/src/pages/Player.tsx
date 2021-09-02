@@ -65,13 +65,7 @@ export default function Player () {
           clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
         }
         else if(e.button === 2) { // context menu / Delete Clip
-          contextMenuCtx?.setItems([{name: 'Delete', onClick: () => { 
-            let newClips = clips.slice();
-            if(videoElement.current)
-              newClips.splice(index, 1);
-            setClips(newClips);
-          }}]);
-          contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
+          handleDeleteClip(e, index);
         }
       } else { // clip resizing
         let index = clipsRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
@@ -81,13 +75,7 @@ export default function Player () {
           clipResizeLimit = clipsRef.current[clipDragging]?.clientWidth + clipsRef.current[clipDragging]?.offsetLeft;
         }
         else if(e.button === 2) { // context menu / Delete Clip
-          contextMenuCtx?.setItems([{name: 'Delete', onClick: () => { 
-            let newClips = clips.slice();
-            if(videoElement.current)
-              newClips.splice(index, 1);
-            setClips(newClips);
-          }}]);
-          contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
+          handleDeleteClip(e, index);
         }
       }
     }
@@ -135,6 +123,13 @@ export default function Player () {
     document.addEventListener('mousedown', handleOnMouseDown);
     document.addEventListener('mousemove', handleOnMouseMove);
     document.addEventListener('mouseup', handleOnMouseUp);
+
+    if(clips.length !== 0) {
+      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+      videoMetadata.sessions[`/${game}/${video}`] = {clips};
+      localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
+    }
+
     return () => {
       document.removeEventListener('keydown', handleOnKeyDown);
       document.removeEventListener('mousedown', handleOnMouseDown);
@@ -166,6 +161,20 @@ export default function Player () {
     }
   }
 
+  function handleDeleteClip(e: MouseEvent, index: number) {
+    contextMenuCtx?.setItems([{name: 'Delete', onClick: () => { 
+      let newClips = clips.slice();
+      if(videoElement.current)
+        newClips.splice(index, 1);
+      setClips(newClips);
+
+      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+      videoMetadata.sessions[`/${game}/${video}`] = {clips: newClips};
+      localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
+    }}]);
+    contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
+  }
+
   function handleSaveClips() {
     let convertedClips: any[] = [];
     clips.forEach(clip => {
@@ -192,16 +201,20 @@ export default function Player () {
   }
 
   function handleVideoLoad(e: SyntheticEvent) {
+    let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+
     console.log((e));
     if(videoElement.current && volumeSliderElement.current) {
       videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
       videoElement.current.play();
     }
+    if(videoMetadata.sessions[`/${game}/${video}`])
+      setClips(videoMetadata.sessions[`/${game}/${video}`].clips);
   }
 
   function handleVideoPlaying(e: SyntheticEvent) {
     const videoElement = (e.target as HTMLVideoElement);
-    if(playbackClips !== -1) {
+    if(playbackClips !== -1 && clips) {
       let _playbackClips = playbackClips;
       for (let index = 0; index < clips.length; index++) {
         const clip = clips[index];

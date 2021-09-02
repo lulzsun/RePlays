@@ -4,6 +4,7 @@ import { VirtuosoGrid } from 'react-virtuoso'
 import { postMessage } from '../helpers/messenger';
 import VideoSortControls from '../components/VideoSortControls';
 import VideoDeleteControls from '../components/VideoDeleteControls';
+import { useEffect } from 'react';
 
 interface Props {
   videoType: string;
@@ -18,6 +19,21 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
   const [checkedVideos, setCheckedVideos] = useState(Array(videos.length).fill(false));
   const [checkedLength, setCheckedLength] = useState(0);
   const [videoView, setVideoView] = useState('grid');
+
+  useEffect(() => {
+    if(videoType === "Sessions") { // this purges videoMetadata of sessions that do not exist anymore
+      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+      let updatedVideoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+      updatedVideoMetadata.sessions = {};
+      videos.forEach(video => {
+        if(videoMetadata.sessions[`/${video.game}/${video.fileName}`] !== undefined) {
+          updatedVideoMetadata.sessions[`/${video.game}/${video.fileName}`] = videoMetadata.sessions[`/${video.game}/${video.fileName}`];
+        }
+      });
+      localStorage.setItem("videoMetadata", JSON.stringify(updatedVideoMetadata));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videos]);
 
   function onVideoSelected(e: React.ChangeEvent<HTMLInputElement>, index:number) {
     console.log((e.target as HTMLInputElement).checked);
