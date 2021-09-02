@@ -24,10 +24,10 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
     if(videoType === "Sessions") { // this purges videoMetadata of sessions that do not exist anymore
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
       let updatedVideoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      updatedVideoMetadata.sessions = {};
+      updatedVideoMetadata = {};
       videos.forEach(video => {
-        if(videoMetadata.sessions[`/${video.game}/${video.fileName}`] !== undefined) {
-          updatedVideoMetadata.sessions[`/${video.game}/${video.fileName}`] = videoMetadata.sessions[`/${video.game}/${video.fileName}`];
+        if(videoMetadata[`/${video.game}/${video.fileName}`] !== undefined) {
+          updatedVideoMetadata[`/${video.game}/${video.fileName}`] = videoMetadata[`/${video.game}/${video.fileName}`];
         }
       });
       localStorage.setItem("videoMetadata", JSON.stringify(updatedVideoMetadata));

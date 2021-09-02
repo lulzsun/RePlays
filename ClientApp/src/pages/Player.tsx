@@ -126,7 +126,7 @@ export default function Player () {
 
     if(clips.length !== 0) {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      videoMetadata.sessions[`/${game}/${video}`] = {clips};
+      videoMetadata[`/${game}/${video}`] = {clips};
       localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
     }
 
@@ -169,7 +169,7 @@ export default function Player () {
       setClips(newClips);
 
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      videoMetadata.sessions[`/${game}/${video}`] = {clips: newClips};
+      videoMetadata[`/${game}/${video}`] = {clips: newClips};
       localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
     }}]);
     contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
@@ -208,8 +208,8 @@ export default function Player () {
       videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
       videoElement.current.play();
     }
-    if(videoMetadata.sessions[`/${game}/${video}`])
-      setClips(videoMetadata.sessions[`/${game}/${video}`].clips);
+    if(videoMetadata[`/${game}/${video}`])
+      setClips(videoMetadata[`/${game}/${video}`].clips);
   }
 
   function handleVideoPlaying(e: SyntheticEvent) {

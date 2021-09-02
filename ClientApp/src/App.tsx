@@ -47,7 +47,7 @@ function App() {
   }
   
   useEffect(() => {
-    if(localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{"sessions": {}}');
+    if(localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{}');
 
     postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
     
