@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using Replays.JSONObjects;
 using Replays.Messages;
@@ -236,6 +238,27 @@ namespace Replays.Helpers
             else Console.WriteLine(string.Format("Created new clip: {0}", outputFile));
 
             return outputFile;
+        }
+
+        public static void PurgeTempVideos()
+        {
+            var tempVideos = Directory.GetFiles(GetTempFolder(), "*.mp4*", SearchOption.AllDirectories);
+
+            if (tempVideos.Length == 0) return;
+
+            Console.WriteLine("Purging temporary video files");
+
+            foreach (string video in tempVideos)
+            {
+                try
+                {
+                    File.Delete(video);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Failed to delete video {0} : {1}", video, e);
+                }
+            }
         }
     }
 }
