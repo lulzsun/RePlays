@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -80,7 +81,7 @@ namespace Replays.Messages
         public static async void RecieveMessage(Microsoft.Web.WebView2.WinForms.WebView2 webView2, string message)
         {
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
-            Debug.WriteLine($"{webMessage.message} ::: {webMessage.data}");
+            Console.WriteLine($"{webMessage.message} ::: {webMessage.data}");
 
             switch (webMessage.message)
             {

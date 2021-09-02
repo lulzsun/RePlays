@@ -195,6 +195,7 @@ export default function Player () {
     console.log((e));
     if(videoElement.current && volumeSliderElement.current) {
       videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
+      videoElement.current.play();
     }
   }
 
@@ -289,7 +290,7 @@ export default function Player () {
                 </svg> : 
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
                   <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
-                </svg>}
+                </svg> }
             </button>
             <button title="Rewind 5 Seconds" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
               type="button" onClick={() => videoElement.current!.currentTime -= 5}>

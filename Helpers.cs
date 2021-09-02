@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Windows.Forms;
 using Replays.JSONObjects;
 using Replays.Messages;
 
@@ -140,7 +139,7 @@ namespace Replays.Helpers
             catch (Exception)
             {
                 // if exception happens, usually means video is not valid
-                Debug.WriteLine(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+                Console.WriteLine(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
             }
             process.WaitForExit();
             process.Close();
@@ -170,7 +169,7 @@ namespace Replays.Helpers
             process.WaitForExit();
             process.Close();
 
-            Debug.WriteLine(string.Format("Created new thumbnail: {0}", thumbnailPath));
+            Console.WriteLine(string.Format("Created new thumbnail: {0}", thumbnailPath));
 
             return thumbnailPath;
         }
@@ -199,7 +198,7 @@ namespace Replays.Helpers
             {
                 startInfo.Arguments =
                     "-f concat -safe 0 -i \"" + Path.Join(GetTempFolder(), "list.txt") + "\" -codec copy \"" + outputFile + "\"";
-                Debug.WriteLine(startInfo.Arguments);
+                Console.WriteLine(startInfo.Arguments);
             }
             else
             {
@@ -217,11 +216,11 @@ namespace Replays.Helpers
 
             process.OutputDataReceived += new DataReceivedEventHandler((s, e) =>
             {
-                Debug.WriteLine("O: " + e.Data);
+                Console.WriteLine("O: " + e.Data);
             });
             process.ErrorDataReceived += new DataReceivedEventHandler((s, e) =>
             {
-                Debug.WriteLine("E: " + e.Data);
+                Console.WriteLine("E: " + e.Data);
             });
 
             process.Start();
@@ -233,8 +232,8 @@ namespace Replays.Helpers
             if (!File.Exists(outputFile)) return null;
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(videoPath, clipSegments, index+1);
-            else if (clipSegments.Length > 1 && index == clipSegments.Length) Debug.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
-            else Debug.WriteLine(string.Format("Created new clip: {0}", outputFile));
+            else if (clipSegments.Length > 1 && index == clipSegments.Length) Console.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
+            else Console.WriteLine(string.Format("Created new clip: {0}", outputFile));
 
             return outputFile;
         }

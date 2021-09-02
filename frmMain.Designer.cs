@@ -56,8 +56,8 @@ namespace WinFormsApp
             this.Controls.Add(this.webView21);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "frmMain";
-            this.ShowIcon = false;
-            this.Text = "Desktop React App";
+            this.ShowIcon = true;
+            this.Text = "RePlays";
             ((System.ComponentModel.ISupportInitialize)(this.webView21)).EndInit();
             this.ResumeLayout(false);
 
