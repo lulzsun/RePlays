@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
+using System.Windows.Forms; // exists for Application.StartupPath
 using Replays.JSONObjects;
 using Replays.Messages;
 
@@ -51,6 +50,24 @@ namespace Replays.Helpers
             else
             {
                 throw new DirectoryNotFoundException(ffmpegFolder);
+            }
+        }
+
+                public static string Get7zipFolder()
+        {
+
+#if DEBUG
+            string _7zipFolder = Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\7zip-bin\win\x64\");
+#else
+            string _7zipFolder = Path.Join(Application.StartupPath, @"ClientApp\node_modules\7zip-bin\win\x64\");
+#endif
+            if(Directory.Exists(_7zipFolder))
+            {
+                return _7zipFolder;
+            }
+            else
+            {
+                throw new DirectoryNotFoundException(_7zipFolder);
             }
         }
 

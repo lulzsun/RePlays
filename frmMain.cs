@@ -14,7 +14,7 @@ namespace WinFormsApp
             InitializeComponent();
             InitializeWebView2();
             PurgeTempVideos();
-            CheckForUpdates();
+            //CheckForUpdates();
         }
         private async Task CheckForUpdates()
         {
