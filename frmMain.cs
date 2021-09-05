@@ -1,6 +1,8 @@
-﻿using System.Windows.Forms;
+﻿using System.Threading.Tasks;
+using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Replays.Messages;
+using Squirrel;
 using static Replays.Helpers.Functions;
 
 namespace WinFormsApp
@@ -9,9 +11,17 @@ namespace WinFormsApp
     {
         public frmMain()
         {
-            PurgeTempVideos();
             InitializeComponent();
             InitializeWebView2();
+            PurgeTempVideos();
+            CheckForUpdates();
+        }
+        private async Task CheckForUpdates()
+        {
+            using (var manager = UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays"))
+            {
+                await manager.Result.UpdateApp();
+            }
         }
 
         private async void InitializeWebView2()

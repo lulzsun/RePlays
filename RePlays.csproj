@@ -11,11 +11,15 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon />
     <StartupObject />
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.9" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.902.49" />
+    <PackageReference Include="squirrel.windows" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +27,15 @@
     <Content Remove="$(SpaRoot)**" />
     <None Remove="$(SpaRoot)**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="NuGet.Squirrel">
+      <HintPath>packages\squirrel.windows\2.0.1\lib\Net45\NuGet.Squirrel.dll</HintPath>
+    </Reference>
+    <Reference Include="Squirrel">
+      <HintPath>packages\squirrel.windows\2.0.1\lib\Net45\Squirrel.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
