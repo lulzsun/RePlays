@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="frmMain.cs">
+    <Compile Update="Classes\frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
