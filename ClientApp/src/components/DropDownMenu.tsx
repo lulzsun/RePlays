@@ -6,6 +6,7 @@ interface Props {
   items?: { name: string, onClick?: () => any }[];
 }
 
+// TODO: Make use of headlessui instead of hacky css props
 export const DropDownMenu: React.FC<Props> = ({text, items, width="full"}) => {
 	return (
     <div className="relative inline-block text-left dropdown" style={{zIndex: 50}}>
