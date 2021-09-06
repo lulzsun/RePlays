@@ -2,7 +2,11 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Forms; // exists for Application.StartupPath
 using Replays.JSONObjects;
 using Replays.Messages;
@@ -18,6 +22,7 @@ namespace Replays.Helpers
             webMessage.data = "{\"message\": \"" + message + "\"}";
             return JsonSerializer.Serialize(webMessage);
         }
+
         public static string MessageSuccess(string message)
         {
             WebMessage webMessage = new();
@@ -25,6 +30,7 @@ namespace Replays.Helpers
             webMessage.data = "{\"message\": \"" + message + "\"}";
             return JsonSerializer.Serialize(webMessage);
         }
+
         public static string GetPlaysFolder()
         {
             return @"G:\Videos\Plays";
@@ -53,7 +59,7 @@ namespace Replays.Helpers
             }
         }
 
-                public static string Get7zipFolder()
+        public static string Get7zipFolder()
         {
 
 #if DEBUG
@@ -68,6 +74,50 @@ namespace Replays.Helpers
             else
             {
                 throw new DirectoryNotFoundException(_7zipFolder);
+            }
+        }
+
+        public static async Task<bool> DownloadPlaysSetupAsync()
+        {
+            var playsSetupDir = Path.Join(GetTempFolder() + "\\PlaysSetup.exe");
+            var correctHash = "e12c1740e7ff672fcbb33c2d35cfb4f557b53f37b94653cf8170af2e074e1622";
+
+            if (File.Exists(playsSetupDir))
+                if (SHA256Compare(playsSetupDir, correctHash)) return true;
+
+            Console.WriteLine("PlaysSetup.exe missing or failed checksum, starting download");
+            using (var client = new WebClient())
+            {
+                client.DownloadProgressChanged += (o, args) => {
+                    Console.WriteLine("Downloading PlaysSetup.exe @ web.archive.org: " + args.BytesReceived + " / 145310344 Bytes");
+                };
+                client.DownloadFileCompleted += (o, args) => {
+                    Console.WriteLine("Finished downloading PlaysSetup.exe, doing a checksum");
+                };
+                await client.DownloadFileTaskAsync(
+                    new Uri("https://web.archive.org/web/20191212211927if_/https://app-updates.plays.tv/builds/PlaysSetup.exe"),
+                    playsSetupDir);
+            }
+            return File.Exists(playsSetupDir) && SHA256Compare(playsSetupDir, correctHash);
+        }
+
+        public static bool SHA256Compare(string filePath, string compare)
+        {
+            using (SHA256 SHA256 = SHA256Managed.Create())
+            {
+                using (FileStream fileStream = File.OpenRead(filePath))
+                {
+                    byte[] bytes = SHA256.ComputeHash(fileStream);
+
+                    // Convert byte array to a string   
+                    StringBuilder builder = new StringBuilder();
+                    for (int i = 0; i < bytes.Length; i++)
+                    {
+                        builder.Append(bytes[i].ToString("x2"));
+                    }
+                    Console.WriteLine(builder.ToString());
+                    return builder.ToString().Equals(compare);
+                }
             }
         }
 
