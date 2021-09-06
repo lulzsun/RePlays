@@ -21,15 +21,16 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
   const [videoView, setVideoView] = useState('grid');
 
   useEffect(() => {
-    if(videoType === "Sessions") { // this purges videoMetadata of sessions that do not exist anymore
-      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      let updatedVideoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      updatedVideoMetadata = {};
+    if(videoType === "Sessions" && localStorage.getItem("videoMetadata") !== null) { // this purges videoMetadata of sessions that do not exist anymore
+      let json = localStorage.getItem("videoMetadata") || '{}';
+      let videoMetadata = JSON.parse(json);
+      let updatedVideoMetadata: any = {};
       videos.forEach(video => {
         if(videoMetadata[`/${video.game}/${video.fileName}`] !== undefined) {
           updatedVideoMetadata[`/${video.game}/${video.fileName}`] = videoMetadata[`/${video.game}/${video.fileName}`];
         }
       });
+      if(JSON.stringify(updatedVideoMetadata) === JSON.stringify({})) return;
       localStorage.setItem("videoMetadata", JSON.stringify(updatedVideoMetadata));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

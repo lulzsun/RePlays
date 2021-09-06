@@ -280,13 +280,13 @@ export default function Player () {
             <div className="border-gray-300 border-r-2"></div>
             <div className="border-gray-300 border-r-2"></div>
           </div>
-          <div ref={seekWindowElement} style={{ height: 'calc(100% - 1rem)', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 relative bg-gray-300">
+          <div ref={seekWindowElement} style={{ height: '45px', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 relative bg-gray-300">
             <div ref={seekBarElement} style={{ width: '6px', left: '-3px'}} className="z-30 absolute bg-red-500 rounded-lg h-full cursor-ew-resize"/>
             {clips && clips.map((clip, i) => {
               return <Clip key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} start={clip.start} duration={clip.duration}/>
             })}
           </div>
-          <div ref={targetSeekElement} style={{ height: 'calc(100% - 1rem)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>
+          <div ref={targetSeekElement} style={{ height: 'calc(100%)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>
         </div> 
       </div>
 
