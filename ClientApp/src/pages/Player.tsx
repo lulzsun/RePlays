@@ -227,21 +227,23 @@ export default function Player () {
         }
       }
 
-      var start = clips[_playbackClips].start / 100 * videoElement.duration;
-      var duration = clips[_playbackClips].duration / 100 * videoElement.duration;
-      if(videoElement.currentTime >= start+duration) {
-        if(clips.length === _playbackClips+1) {
-          videoElement.pause();
+      if(clips[_playbackClips] !== undefined) {
+        var start = clips[_playbackClips].start / 100 * videoElement.duration;
+        var duration = clips[_playbackClips].duration / 100 * videoElement.duration;
+        if(videoElement.currentTime >= start+duration) {
+          if(clips.length === _playbackClips+1) {
+            videoElement.pause();
+          }
+          else {
+            setPlaybackClips(value => value+1);
+            var nextStart = clips[_playbackClips+1].start / 100 * videoElement.duration;
+            videoElement.currentTime = nextStart;
+          }
         }
-        else {
-          setPlaybackClips(value => value+1);
-          var nextStart = clips[_playbackClips+1].start / 100 * videoElement.duration;
-          videoElement.currentTime = nextStart;
+        else if(videoElement.currentTime < start) {
+          videoElement.currentTime = start+0.0001;
+          videoElement.play();
         }
-      }
-      else if(videoElement.currentTime < start) {
-        videoElement.currentTime = start+0.0001;
-        videoElement.play();
       }
     }
     setCurrentTime(videoElement.currentTime);
