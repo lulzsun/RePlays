@@ -1,28 +1,27 @@
-import { Fragment, useRef, useState } from 'react'
+import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 
 interface Props {
   title?: string;
   context?: string;
-  icon?: ModalIcon;
+  icon?: ModalIcon | 'none';
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onConfirm?: () => any;
 }
-
-type ModalIcon = 'none' | 'info' | 'warning' | 'question';
 
 const iconColors = {
   'none': 'blue',
   'info': 'blue',
   'warning': 'red',
   'question': 'blue',
+  'success': 'green',
 };
 
-export const Modal: React.FC<Props> = ({title="Modal Title", context="Modal Context", icon="info"}) => {
-  const [open, setOpen] = useState(true);
-  const cancelButtonRef = useRef(null)
-
+export const Modal: React.FC<Props> = ({title="Modal Title", context="Modal Context", icon="info", open=false, setOpen, onConfirm}) => {
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" style={{zIndex: 99999}} className="fixed inset-0 overflow-y-auto" initialFocus={cancelButtonRef} onClose={setOpen}>
+      <Dialog as="div" style={{zIndex: 99999}} className="fixed inset-0 overflow-y-auto" onClose={setOpen}>
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <Transition.Child
             as={Fragment}
@@ -57,15 +56,19 @@ export const Modal: React.FC<Props> = ({title="Modal Title", context="Modal Cont
                     <div className={`h-6 w-6 text-${iconColors[icon]}-600`} aria-hidden="true">
                       {icon === "info" && 
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>}
                       {icon === "warning" && 
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>}
                       {icon === "question" && 
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>}
+                      {icon === "success" && 
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                       </svg>}
                     </div> 
                   </div>
@@ -86,18 +89,18 @@ export const Modal: React.FC<Props> = ({title="Modal Title", context="Modal Cont
                 <button
                   type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={() => setOpen(false)}
+                  onClick={() => { setOpen(false); if(onConfirm !== undefined) onConfirm();}}
                 >
                   Confirm
                 </button>
+                {icon === 'question' &&
                 <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   onClick={() => setOpen(false)}
-                  ref={cancelButtonRef}
                 >
                   Cancel
-                </button>
+                </button>}
               </div>
             </div>
           </Transition.Child>

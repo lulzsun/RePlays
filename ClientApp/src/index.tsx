@@ -11,6 +11,7 @@ ReactDOM.render(
 );
 
 declare global {
+  type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success';
   interface Window { 
     chrome: {
       webview: {

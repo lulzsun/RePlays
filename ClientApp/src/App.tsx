@@ -7,6 +7,7 @@ import { postMessage, addEventListener, removeEventListener } from './helpers/me
 import ContextMenu from './components/ContextMenu';
 import { useRef } from 'react';
 import Settings from './pages/Settings';
+import Modal from './components/Modal';
 
 export const ContextMenuContext = createContext<ContextMenuOptions | null>(null);
 
@@ -22,6 +23,12 @@ function App() {
   const [sessions, setSessions] = useState<Video[]>([]);
   const [clipTotal, setClipTotal] = useState(0);
   const [sessionTotal, setSessionTotal] = useState(0);
+
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalContext, setModalContext] = useState("");
+  const [modalIcon, setModalIcon] = useState();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfirm, setModalConfirm] = useState(() => () => {});
 
   function handleWebViewMessages(event: Event) {
     let eventData = (event as Webview2Event).data;
@@ -41,6 +48,15 @@ function App() {
         setClipTotal(data.clipsSize);
         setSessionTotal(data.sessionsSize);
         break;
+      case 'DisplayModal':
+        if(data.title === "Missing Recorder") {
+          setModalConfirm(() => () => postMessage('InstallPlaysLTC'));
+        } else setModalConfirm(() => () => {});
+        setModalTitle(data.title);
+        setModalContext(data.message);
+        setModalIcon(data.icon);
+        setModalOpen(true);
+        break;
       default:
         break;
     }
@@ -49,6 +65,7 @@ function App() {
   useEffect(() => {
     if(localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{}');
 
+    postMessage('Initialize');
     postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
     
     addEventListener('message', handleWebViewMessages);
@@ -66,6 +83,7 @@ function App() {
             setContextMenuPosition(position);
           }, 1);
         }}}>
+        <Modal title={modalTitle} context={modalContext} icon={modalIcon} open={modalOpen} setOpen={setModalOpen} onConfirm={modalConfirm}/>
         <div className="relative min-h-screen lg:flex">
           <div className="absolute inline-block text-left dropdown" style={{zIndex: 9999}}>
             <input tabIndex={-1} ref={contextMenuFocusEle} className="w-0"/>

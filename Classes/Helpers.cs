@@ -15,20 +15,18 @@ namespace Replays.Helpers
 {
     public static class Functions
     {
-        public static string MessageError(string message)
+        public static string DisplayModal(string message, string title="Title", string icon="none")
         {
             WebMessage webMessage = new();
-            webMessage.message = "MessageError";
-            webMessage.data = "{\"message\": \"" + message + "\"}";
+            webMessage.message = "DisplayModal";
+            webMessage.data = "{\"message\": \"" + message + "\", \"title\": \"" + title + "\", \"icon\": \"" + icon + "\"}";
             return JsonSerializer.Serialize(webMessage);
         }
 
-        public static string MessageSuccess(string message)
+        public static string GetPlaysLtcFolder()
         {
-            WebMessage webMessage = new();
-            webMessage.message = "MessageSuccess";
-            webMessage.data = "{\"message\": \"" + message + "\"}";
-            return JsonSerializer.Serialize(webMessage);
+            var path = Path.Join(Application.StartupPath, @"Plays-ltc\0.54.7\");
+            return path;
         }
 
         public static string GetPlaysFolder()
@@ -115,7 +113,6 @@ namespace Replays.Helpers
                     {
                         builder.Append(bytes[i].ToString("x2"));
                     }
-                    Console.WriteLine(builder.ToString());
                     return builder.ToString().Equals(compare);
                 }
             }
@@ -305,6 +302,42 @@ namespace Replays.Helpers
             else Console.WriteLine(string.Format("Created new clip: {0}", outputFile));
 
             return outputFile;
+        }
+
+        public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+
+            // If the destination directory doesn't exist, create it.       
+            Directory.CreateDirectory(destDirName);
+
+            // Get the files in the directory and copy them to the new location.
+            FileInfo[] files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string tempPath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(tempPath, false);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string tempPath = Path.Combine(destDirName, subdir.Name);
+                    DirectoryCopy(subdir.FullName, tempPath, copySubDirs);
+                }
+            }
         }
 
         public static void PurgeTempVideos()

@@ -85,6 +85,39 @@ namespace Replays.Messages
 
             switch (webMessage.message)
             {
+                case "Initialize":
+                    {
+                        if (!File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe")))
+                        {
+                            // path to old plays/replaystv's plays-ltc
+                            //var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
+                            //if (File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe")))
+                            //{
+                            //    Console.WriteLine("Found Plays-ltc existing on local disk");
+                            //    DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
+                            //    Console.WriteLine("Copied Plays-ltc to recorders folder");
+                            //    break;
+                            //}
+
+                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Did not detect a recording software. Would you like to RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
+                            break;
+                        }
+                        Console.WriteLine("Ready to record with PlaysLTC");
+                    }
+                    break;
+                case "InstallPlaysLTC":
+                    {
+                        var downloadSuccess = await DownloadPlaysSetupAsync();
+                        if (downloadSuccess)
+                        {
+                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("PlaysLTC successfully installed!", "Install Success", "success"));
+                        }
+                        else
+                        {
+                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning"));
+                        }
+                    }
+                    break;
                 case "RetrieveVideos":
                     {
                         RetrieveVideos data = JsonSerializer.Deserialize<RetrieveVideos>(webMessage.data);
@@ -118,11 +151,11 @@ namespace Replays.Messages
                         var t = await Task.Run(() => CreateClip(data.videoPath, data.clipSegments));
                         if(t == null)
                         {
-                            webView2.CoreWebView2.PostWebMessageAsJson(MessageError("Failed to create clip"));
+                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Failed to create clip", "Error", "warning"));
                         }
                         else
                         {
-                            webView2.CoreWebView2.PostWebMessageAsJson(MessageSuccess("Successfully created clip"));
+                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Successfully created clip", "Success", "success"));
                             t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                             webView2.CoreWebView2.PostWebMessageAsJson(t);
                         }
