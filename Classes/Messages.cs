@@ -90,27 +90,30 @@ namespace Replays.Messages
                         if (!File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe")))
                         {
                             // path to old plays/replaystv's plays-ltc
-                            //var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
-                            //if (File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe")))
-                            //{
-                            //    Console.WriteLine("Found Plays-ltc existing on local disk");
-                            //    DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
-                            //    Console.WriteLine("Copied Plays-ltc to recorders folder");
-                            //    break;
-                            //}
+                            var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
+                            if (File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe")))
+                            {
+                                Console.WriteLine("Found Plays-ltc existing on local disk");
+                                DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
+                                Console.WriteLine("Copied Plays-ltc to recorders folder");
+                                InitializePlaysLTC();
+                                break;
+                            }
 
-                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Did not detect a recording software. Would you like to RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
+                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
                             break;
                         }
-                        Console.WriteLine("Ready to record with PlaysLTC");
+                        InitializePlaysLTC();
                     }
                     break;
                 case "InstallPlaysLTC":
                     {
-                        var downloadSuccess = await DownloadPlaysSetupAsync();
-                        if (downloadSuccess)
+                        bool downloadSuccess = await DownloadPlaysSetupAsync(webView2.CoreWebView2);
+                        bool installSuccess = await InstallPlaysSetup();
+                        if (downloadSuccess && installSuccess)
                         {
                             webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("PlaysLTC successfully installed!", "Install Success", "success"));
+                            InitializePlaysLTC();
                         }
                         else
                         {

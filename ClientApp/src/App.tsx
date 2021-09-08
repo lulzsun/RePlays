@@ -24,9 +24,7 @@ function App() {
   const [clipTotal, setClipTotal] = useState(0);
   const [sessionTotal, setSessionTotal] = useState(0);
 
-  const [modalTitle, setModalTitle] = useState("");
-  const [modalContext, setModalContext] = useState("");
-  const [modalIcon, setModalIcon] = useState();
+  const [displayModal, setDisplayModal] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [modalConfirm, setModalConfirm] = useState(() => () => {});
 
@@ -35,7 +33,9 @@ function App() {
     let message = eventData.message;
     let data = JSON.parse(eventData.data);
 
-    console.log(message, data);
+    if(data && data.title !== "Downloading") 
+      console.log(message, data);
+
     switch (message) {
       case 'RetrieveVideos':
         setGameSort(data.game);
@@ -49,12 +49,12 @@ function App() {
         setSessionTotal(data.sessionsSize);
         break;
       case 'DisplayModal':
+        setDisplayModal(data);
         if(data.title === "Missing Recorder") {
           setModalConfirm(() => () => postMessage('InstallPlaysLTC'));
+        } else if(data.title === "Downloading") {
+          setModalConfirm(() => () => {});
         } else setModalConfirm(() => () => {});
-        setModalTitle(data.title);
-        setModalContext(data.message);
-        setModalIcon(data.icon);
         setModalOpen(true);
         break;
       default:
@@ -83,7 +83,7 @@ function App() {
             setContextMenuPosition(position);
           }, 1);
         }}}>
-        <Modal title={modalTitle} context={modalContext} icon={modalIcon} open={modalOpen} setOpen={setModalOpen} onConfirm={modalConfirm}/>
+        <Modal displayModal={displayModal} open={modalOpen} setOpen={setModalOpen} onConfirm={modalConfirm}/>
         <div className="relative min-h-screen lg:flex">
           <div className="absolute inline-block text-left dropdown" style={{zIndex: 9999}}>
             <input tabIndex={-1} ref={contextMenuFocusEle} className="w-0"/>

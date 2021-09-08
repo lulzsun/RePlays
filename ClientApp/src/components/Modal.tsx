@@ -1,13 +1,19 @@
-import { Fragment } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 
 interface Props {
-  title?: string;
-  context?: string;
-  icon?: ModalIcon | 'none';
+  displayModal: DisplayModal;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onConfirm?: () => any;
+}
+
+interface DisplayModal {
+  title?: string;
+  context?: string | any;
+  icon?: ModalIcon | 'none';
+  progress?: number;
+  progressMax?: number;
 }
 
 const iconColors = {
@@ -18,10 +24,16 @@ const iconColors = {
   'success': 'green',
 };
 
-export const Modal: React.FC<Props> = ({title="Modal Title", context="Modal Context", icon="info", open=false, setOpen, onConfirm}) => {
+export const Modal: React.FC<Props> = ({displayModal, open, setOpen, onConfirm}) => {
+  const title = displayModal.title;
+  const context = displayModal.context;
+  const icon = displayModal.icon;
+  const progress = displayModal.progress;
+  const progressMax = displayModal.progressMax;
+  
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" style={{zIndex: 99999}} className="fixed inset-0 overflow-y-auto" onClose={setOpen}>
+      <Dialog static as="div" style={{zIndex: 99999}} className="fixed inset-0 overflow-y-auto" onClose={() => null}>
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <Transition.Child
             as={Fragment}
@@ -52,8 +64,8 @@ export const Modal: React.FC<Props> = ({title="Modal Title", context="Modal Cont
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   {icon !== "none" && 
-                  <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 bg-${iconColors[icon]}-100`}>
-                    <div className={`h-6 w-6 text-${iconColors[icon]}-600`} aria-hidden="true">
+                  <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 bg-${iconColors[icon!]}-100`}>
+                    <div className={`h-6 w-6 text-${iconColors[icon!]}-600`} aria-hidden="true">
                       {icon === "info" && 
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -73,26 +85,32 @@ export const Modal: React.FC<Props> = ({title="Modal Title", context="Modal Cont
                     </div> 
                   </div>
                   }
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:mr-4 sm:text-left w-full">
                     <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
                       {title}
                     </Dialog.Title>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500">
                         {context}
-                      </p>
+                        {progressMax !== 0 &&
+                          <div className="w-full bg-gray-200 rounded">
+                            <div style={{width: `${(progress!/progressMax!) * 100}%`}} className="absolute top-0 h-4 rounded shim-blue"></div>
+                          </div>
+                        }
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                {title !== "Downloading" &&
                 <button
                   type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={() => { setOpen(false); if(onConfirm !== undefined) onConfirm();}}
+                  onClick={() => { setOpen(false); if(onConfirm !== undefined) onConfirm(); }}
                 >
                   Confirm
-                </button>
+                </button>}
                 {icon === 'question' &&
                 <button
                   type="button"

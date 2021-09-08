@@ -15,11 +15,16 @@ namespace Replays.Helpers
 {
     public static class Functions
     {
-        public static string DisplayModal(string message, string title="Title", string icon="none")
+        public static string DisplayModal(string context, string title="Title", string icon="none", long progress=0, long progressMax=0)
         {
             WebMessage webMessage = new();
             webMessage.message = "DisplayModal";
-            webMessage.data = "{\"message\": \"" + message + "\", \"title\": \"" + title + "\", \"icon\": \"" + icon + "\"}";
+            webMessage.data = "{" +
+                "\"context\": \"" + context + "\", " +
+                "\"title\": \"" + title + "\", " +
+                "\"progress\": " + progress + ", " +
+                "\"progressMax\": " + progressMax + ", " +
+                "\"icon\": \"" + icon + "\"}";
             return JsonSerializer.Serialize(webMessage);
         }
 
@@ -57,46 +62,104 @@ namespace Replays.Helpers
             }
         }
 
-        public static string Get7zipFolder()
+        public static string Get7zipExecutable()
         {
-
 #if DEBUG
-            string _7zipFolder = Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\7zip-bin\win\x64\");
+            string _7zipExecutable = Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #else
-            string _7zipFolder = Path.Join(Application.StartupPath, @"ClientApp\node_modules\7zip-bin\win\x64\");
+            string _7zipExecutable = Path.Join(Application.StartupPath, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #endif
-            if(Directory.Exists(_7zipFolder))
+            if (File.Exists(_7zipExecutable))
             {
-                return _7zipFolder;
+                return _7zipExecutable;
             }
             else
             {
-                throw new DirectoryNotFoundException(_7zipFolder);
+                throw new FileNotFoundException(_7zipExecutable);
             }
         }
 
-        public static async Task<bool> DownloadPlaysSetupAsync()
+        public static async Task<bool> DownloadPlaysSetupAsync(Microsoft.Web.WebView2.Core.CoreWebView2 coreWebView2)
         {
-            var playsSetupDir = Path.Join(GetTempFolder() + "\\PlaysSetup.exe");
+            var playsSetupDir = Path.Join(GetTempFolder() + @"\PlaysSetup.exe");
             var correctHash = "e12c1740e7ff672fcbb33c2d35cfb4f557b53f37b94653cf8170af2e074e1622";
 
             if (File.Exists(playsSetupDir))
                 if (SHA256Compare(playsSetupDir, correctHash)) return true;
 
             Console.WriteLine("PlaysSetup.exe missing or failed checksum, starting download");
+            coreWebView2.PostWebMessageAsJson(DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", 0, 145310344));
             using (var client = new WebClient())
             {
                 client.DownloadProgressChanged += (o, args) => {
-                    Console.WriteLine("Downloading PlaysSetup.exe @ web.archive.org: " + args.BytesReceived + " / 145310344 Bytes");
+                    coreWebView2.PostWebMessageAsJson(DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", args.BytesReceived, 145310344)); 
                 };
                 client.DownloadFileCompleted += (o, args) => {
-                    Console.WriteLine("Finished downloading PlaysSetup.exe, doing a checksum");
+                    Console.WriteLine("Finished downloading PlaysSetup.exe");
+                    coreWebView2.PostWebMessageAsJson(DisplayModal("Finished downloading PlaysSetup.exe, doing a checksum", "Downloading", "info"));
                 };
                 await client.DownloadFileTaskAsync(
                     new Uri("https://web.archive.org/web/20191212211927if_/https://app-updates.plays.tv/builds/PlaysSetup.exe"),
                     playsSetupDir);
             }
             return File.Exists(playsSetupDir) && SHA256Compare(playsSetupDir, correctHash);
+        }
+
+        public static async Task<bool> InstallPlaysSetup()
+        {
+            bool install = false; bool result = true;
+            string playsSetup = Path.Join(GetTempFolder() + @"\PlaysSetup.exe");
+
+            var startInfo = new ProcessStartInfo
+            {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                FileName = Path.Join(Get7zipExecutable()),
+            };
+
+            startInfo.Arguments = "e \"" + Path.Join(GetTempFolder(), @"\Plays-3.0.0-full.nupkg") + "\" -o\"" + GetPlaysLtcFolder() + "\" lib\\net45\\resources\\ltc\\*.*";
+
+            if (File.Exists(playsSetup) && !File.Exists(Path.Join(GetTempFolder(), @"\Plays-3.0.0-full.nupkg"))) {
+                startInfo.Arguments = "e \"" + playsSetup + "\" -o\"" + GetTempFolder() + "\" Plays-3.0.0-full.nupkg";
+                install = true;
+            }
+
+            Console.WriteLine(startInfo.Arguments);
+
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            process.OutputDataReceived += new DataReceivedEventHandler((s, e) =>
+            {
+                Console.WriteLine("O: " + e.Data);
+            });
+            process.ErrorDataReceived += new DataReceivedEventHandler((s, e) =>
+            {
+                if(e.Data != null && e.Data.Trim() != String.Empty)
+                {
+                    Console.WriteLine("E: " + e.Data);
+                    result = false;
+                }
+            });
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+            process.Close();
+
+            if (install && File.Exists(Path.Join(GetTempFolder(), @"\Plays-3.0.0-full.nupkg"))) InstallPlaysSetup();
+            return result;
+        }
+
+        public static bool InitializePlaysLTC()
+        {
+            Console.WriteLine("Ready to record with PlaysLTC");
+            return true;
         }
 
         public static bool SHA256Compare(string filePath, string compare)
