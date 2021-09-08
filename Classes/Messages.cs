@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Replays.JSONObjects;
+using RePlays.Logger;
 using static Replays.Helpers.Functions;
 
 namespace Replays.Messages
@@ -81,7 +82,8 @@ namespace Replays.Messages
         public static async void RecieveMessage(Microsoft.Web.WebView2.WinForms.WebView2 webView2, string message)
         {
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
-            Console.WriteLine($"{webMessage.message} ::: {webMessage.data}");
+            if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
+            Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
 
             switch (webMessage.message)
             {
@@ -93,9 +95,9 @@ namespace Replays.Messages
                             var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
                             if (File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe")))
                             {
-                                Console.WriteLine("Found Plays-ltc existing on local disk");
+                                Logger.WriteLine("Found Plays-ltc existing on local disk");
                                 DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
-                                Console.WriteLine("Copied Plays-ltc to recorders folder");
+                                Logger.WriteLine("Copied Plays-ltc to recorders folder");
                                 InitializePlaysLTC();
                                 break;
                             }

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms; // exists for Application.StartupPath
 using Replays.JSONObjects;
 using Replays.Messages;
+using RePlays.Logger;
 
 namespace Replays.Helpers
 {
@@ -87,7 +88,7 @@ namespace Replays.Helpers
             if (File.Exists(playsSetupDir))
                 if (SHA256Compare(playsSetupDir, correctHash)) return true;
 
-            Console.WriteLine("PlaysSetup.exe missing or failed checksum, starting download");
+            Logger.WriteLine("PlaysSetup.exe missing or failed checksum, starting download");
             coreWebView2.PostWebMessageAsJson(DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", 0, 145310344));
             using (var client = new WebClient())
             {
@@ -95,7 +96,7 @@ namespace Replays.Helpers
                     coreWebView2.PostWebMessageAsJson(DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", args.BytesReceived, 145310344)); 
                 };
                 client.DownloadFileCompleted += (o, args) => {
-                    Console.WriteLine("Finished downloading PlaysSetup.exe");
+                    Logger.WriteLine("Finished downloading PlaysSetup.exe");
                     coreWebView2.PostWebMessageAsJson(DisplayModal("Finished downloading PlaysSetup.exe, doing a checksum", "Downloading", "info"));
                 };
                 await client.DownloadFileTaskAsync(
@@ -126,7 +127,7 @@ namespace Replays.Helpers
                 install = true;
             }
 
-            Console.WriteLine(startInfo.Arguments);
+            Logger.WriteLine(startInfo.Arguments);
 
             var process = new Process
             {
@@ -135,13 +136,13 @@ namespace Replays.Helpers
 
             process.OutputDataReceived += new DataReceivedEventHandler((s, e) =>
             {
-                Console.WriteLine("O: " + e.Data);
+                Logger.WriteLine("O: " + e.Data);
             });
             process.ErrorDataReceived += new DataReceivedEventHandler((s, e) =>
             {
                 if(e.Data != null && e.Data.Trim() != String.Empty)
                 {
-                    Console.WriteLine("E: " + e.Data);
+                    Logger.WriteLine("E: " + e.Data);
                     result = false;
                 }
             });
@@ -158,7 +159,7 @@ namespace Replays.Helpers
 
         public static bool InitializePlaysLTC()
         {
-            Console.WriteLine("Ready to record with PlaysLTC");
+            Logger.WriteLine("Ready to record with PlaysLTC");
             return true;
         }
 
@@ -268,7 +269,7 @@ namespace Replays.Helpers
             catch (Exception)
             {
                 // if exception happens, usually means video is not valid
-                Console.WriteLine(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+                Logger.WriteLine(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
             }
             process.WaitForExit();
             process.Close();
@@ -298,7 +299,7 @@ namespace Replays.Helpers
             process.WaitForExit();
             process.Close();
 
-            Console.WriteLine(string.Format("Created new thumbnail: {0}", thumbnailPath));
+            Logger.WriteLine(string.Format("Created new thumbnail: {0}", thumbnailPath));
 
             return thumbnailPath;
         }
@@ -327,7 +328,7 @@ namespace Replays.Helpers
             {
                 startInfo.Arguments =
                     "-f concat -safe 0 -i \"" + Path.Join(GetTempFolder(), "list.txt") + "\" -codec copy \"" + outputFile + "\"";
-                Console.WriteLine(startInfo.Arguments);
+                Logger.WriteLine(startInfo.Arguments);
             }
             else
             {
@@ -345,11 +346,11 @@ namespace Replays.Helpers
 
             process.OutputDataReceived += new DataReceivedEventHandler((s, e) =>
             {
-                Console.WriteLine("O: " + e.Data);
+                Logger.WriteLine("O: " + e.Data);
             });
             process.ErrorDataReceived += new DataReceivedEventHandler((s, e) =>
             {
-                Console.WriteLine("E: " + e.Data);
+                Logger.WriteLine("E: " + e.Data);
             });
 
             process.Start();
@@ -361,8 +362,8 @@ namespace Replays.Helpers
             if (!File.Exists(outputFile)) return null;
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(videoPath, clipSegments, index+1);
-            else if (clipSegments.Length > 1 && index == clipSegments.Length) Console.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
-            else Console.WriteLine(string.Format("Created new clip: {0}", outputFile));
+            else if (clipSegments.Length > 1 && index == clipSegments.Length) Logger.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
+            else Logger.WriteLine(string.Format("Created new clip: {0}", outputFile));
 
             return outputFile;
         }
@@ -409,7 +410,7 @@ namespace Replays.Helpers
 
             if (tempVideos.Length == 0) return;
 
-            Console.WriteLine("Purging temporary video files");
+            Logger.WriteLine("Purging temporary video files");
 
             foreach (string video in tempVideos)
             {
@@ -419,7 +420,7 @@ namespace Replays.Helpers
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Failed to delete video {0} : {1}", video, e);
+                    Logger.WriteLine(string.Format("Failed to delete video {0} : {1}", video, e));
                 }
             }
         }
