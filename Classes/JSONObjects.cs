@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace Replays.JSONObjects
-{
-
-    public class VideoList
-    {
+namespace Replays.JSONObjects {
+    public class VideoList {
         public string game { get; set; }
         public List<string> games { get; set; }
         public string sortBy { get; set; }
@@ -14,8 +11,8 @@ namespace Replays.JSONObjects
         public List<Video> clips { get; set; }
         public long clipsSize { get; set; }
     }
-    public class Video
-    {
+
+    public class Video {
         public DateTime date { get; set; }
         public string type { get; set; }
         public long size { get; set; }
@@ -24,14 +21,12 @@ namespace Replays.JSONObjects
         public string thumbnail { get; set; }
     }
 
-    public class VideoSortSettings
-    {
+    public class VideoSortSettings {
         public string game { get; set; }
         public string sortBy { get; set; }
     }
 
-    public class ClipSegment
-    {
+    public class ClipSegment {
         public float start { get; set; }
         public float duration { get; set; }
     }
