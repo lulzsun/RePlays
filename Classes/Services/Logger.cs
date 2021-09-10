@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace RePlays.Logger {
+namespace RePlays.Services {
     public static class Logger {
         public static void WriteLine(string message,
                 [CallerFilePath] string file = null,

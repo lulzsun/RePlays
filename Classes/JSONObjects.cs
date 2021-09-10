@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Replays.JSONObjects {
+namespace RePlays.JSONObjects {
     public class VideoList {
         public string game { get; set; }
         public List<string> games { get; set; }
@@ -29,5 +29,14 @@ namespace Replays.JSONObjects {
     public class ClipSegment {
         public float start { get; set; }
         public float duration { get; set; }
+    }
+
+    public class GameDvrSettings {
+        private int _bitRate = 50;
+        public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
+        private int _frameRate = 60;
+        public int frameRate { get { return _frameRate; } set { _frameRate = value; } }
+        private int _resolution = 1080;
+        public int resolution { get { return _resolution; } set { _resolution = value; } }
     }
 }

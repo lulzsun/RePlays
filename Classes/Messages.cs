@@ -3,11 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Replays.JSONObjects;
-using RePlays.Logger;
-using static Replays.Helpers.Functions;
+using RePlays.JSONObjects;
+using RePlays.Recorders;
+using RePlays.Services;
+using static RePlays.Helpers.Functions;
 
-namespace Replays.Messages {
+namespace RePlays.Messages {
     public class RetrieveVideos {
         public string game { get; set; }
         public string sortBy { get; set; }
@@ -72,18 +73,17 @@ namespace Replays.Messages {
                         if (!File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
                             // path to old plays/replaystv's plays-ltc
                             var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
-                            if (File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe"))) {
-                                Logger.WriteLine("Found Plays-ltc existing on local disk");
-                                DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
-                                Logger.WriteLine("Copied Plays-ltc to recorders folder");
-                                InitializePlaysLTC();
+
+                            if (!File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe"))) {
+                                webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
                                 break;
                             }
 
-                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
-                            break;
+                            Logger.WriteLine("Found Plays-ltc existing on local disk");
+                            DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
+                            Logger.WriteLine("Copied Plays-ltc to recorders folder");
                         }
-                        InitializePlaysLTC();
+                        PlaysLTC.Start();
                     }
                     break;
                 case "InstallPlaysLTC": {
@@ -91,7 +91,7 @@ namespace Replays.Messages {
                         bool installSuccess = await InstallPlaysSetup();
                         if (downloadSuccess && installSuccess) {
                             webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("PlaysLTC successfully installed!", "Install Success", "success"));
-                            InitializePlaysLTC();
+                            PlaysLTC.Start();
                         }
                         else {
                             webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning"));

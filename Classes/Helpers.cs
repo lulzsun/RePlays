@@ -8,11 +8,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms; // exists for Application.StartupPath
-using Replays.JSONObjects;
-using Replays.Messages;
-using RePlays.Logger;
+using RePlays.JSONObjects;
+using RePlays.Messages;
+using RePlays.Services;
 
-namespace Replays.Helpers {
+namespace RePlays.Helpers {
     public static class Functions {
         public static string DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
             WebMessage webMessage = new();
@@ -32,11 +32,17 @@ namespace Replays.Helpers {
         }
 
         public static string GetPlaysFolder() {
-            return @"G:\Videos\Plays";
+            var videoSaveDir = SettingsService.Settings.videoSaveDir;
+            if (!Directory.Exists(videoSaveDir))
+                Directory.CreateDirectory(videoSaveDir);
+            return videoSaveDir;
         }
 
         public static string GetTempFolder() {
-            return @"G:\Videos\Plays\.temp";
+            var tempSaveDir = SettingsService.Settings.tempSaveDir;
+            if (!Directory.Exists(tempSaveDir))
+                Directory.CreateDirectory(tempSaveDir);
+            return tempSaveDir;
         }
 
         public static string GetFFmpegFolder() {
@@ -135,11 +141,6 @@ namespace Replays.Helpers {
 
             if (install && File.Exists(Path.Join(GetTempFolder(), @"\Plays-3.0.0-full.nupkg"))) InstallPlaysSetup();
             return result;
-        }
-
-        public static bool InitializePlaysLTC() {
-            Logger.WriteLine("Ready to record with PlaysLTC");
-            return true;
         }
 
         public static bool SHA256Compare(string filePath, string compare) {
