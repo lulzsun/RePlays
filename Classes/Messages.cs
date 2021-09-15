@@ -63,7 +63,7 @@ namespace RePlays.Messages {
             sortBy = "Latest"
         };
 
-        public static async void RecieveMessage(Microsoft.Web.WebView2.WinForms.WebView2 webView2, string message) {
+        public static async Task<WebMessage> RecieveMessage(Microsoft.Web.WebView2.WinForms.WebView2 webView2, string message) {
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
             Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
@@ -137,6 +137,8 @@ namespace RePlays.Messages {
                 default:
                     break;
             }
+
+            return webMessage;
         }
     }
 }
