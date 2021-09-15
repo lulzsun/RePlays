@@ -245,9 +245,11 @@ namespace RePlays.Helpers {
         }
 
         public static string GetOrCreateThumbnail(string videoPath) {
-            string thumbnailPath = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\", Path.GetFileNameWithoutExtension(videoPath) + ".png");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".png");
 
             if (File.Exists(thumbnailPath)) return thumbnailPath;
+            if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
             var startInfo = new ProcessStartInfo {
                 CreateNoWindow = true,

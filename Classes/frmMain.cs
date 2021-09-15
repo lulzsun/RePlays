@@ -18,7 +18,7 @@ namespace WinFormsApp {
             InitializeComponent();
             InitializeWebView2();
             PurgeTempVideos();
-            notifyIcon1.Icon = SystemIcons.Application;
+            notifyIcon1.Icon = this.Icon;
             //CheckForUpdates();
         }
 
