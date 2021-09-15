@@ -231,6 +231,38 @@ namespace PlaysLTCWrapper {
             Emit("LTC:setGameDVRCaptureEngine", data);
         }
 
+        public void SetGameAudioVolume(int recordVolume) {
+            int volume = Math.Min(100, Math.Max(recordVolume, 0));
+            float fVolume = 100;
+            string data =
+            "{" +
+                "'isPlaybackDevice': true, " +
+                "'recordVolume': " + volume / fVolume +
+            "}";
+            Emit("LTC:setAudioRecordingVolume", data);
+        }
+
+        public void SetMicAudioVolume(int recordVolume) {
+            int volume = Math.Min(100, Math.Max(recordVolume, 0));
+            float fVolume = 100;
+            string data =
+            "{" +
+                "'isPlaybackDevice': false, " +
+                "'recordVolume': " + volume / fVolume +
+            "}";
+            Emit("LTC:setAudioRecordingVolume", data);
+        }
+
+        // setMicRecordingDevice accepts two empty string parameters for default setting
+        public void SetMicRecordingDevice(string deviceId="", string deviceLabel="") {
+            string data =
+            "{" +
+                "'deviceId': '" + deviceId + "', " +
+                "'deviceLabel': '" + deviceLabel + "'" +
+            "}";
+            Emit("LTC:setMicRecordingDevice", data);
+        }
+
         public void SetKeyBinds(string keyBinds = "[]") {
             string data =
             "{" +

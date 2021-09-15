@@ -10,6 +10,8 @@ namespace RePlays.Recorders {
         public static bool Connected { get; private set; }
 
         public static void Start() {
+            if (Connected) return;
+
             RecordingService recordingService = new RecordingService();
             DetectionService detectionService = new DetectionService();
             detectionService.DownloadGameDetections();
@@ -27,6 +29,7 @@ namespace RePlays.Recorders {
                     SettingsService.Settings.gameDvrSettings.frameRate,
                     SettingsService.Settings.gameDvrSettings.resolution
                 );
+                ltc.SetMicAudioVolume(50);
                 ltc.SetCaptureMode(49152); //ORB_GAMEDVR_SET_CAPTURE_MODE ?????
                 ltc.SetGameDVRCaptureEngine(1); //1 = nvidia ?????
             };

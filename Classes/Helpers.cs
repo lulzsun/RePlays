@@ -27,7 +27,8 @@ namespace RePlays.Helpers {
         }
 
         public static string GetPlaysLtcFolder() {
-            var path = Path.Join(Application.StartupPath, @"Plays-ltc\0.54.7\");
+            //var path = Path.Join(Application.StartupPath, @"Plays-ltc\0.54.7\"); this doesnt work for some reason, plays-ltc has to be in the localappdata folder
+            var path = Environment.GetEnvironmentVariable("LocalAppData") + @"\Plays-ltc\0.54.7\";
             return path;
         }
 
