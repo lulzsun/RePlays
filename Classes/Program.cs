@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using RePlays.Services;
 using WinFormsApp;
 
 namespace RePlays {
@@ -15,7 +17,11 @@ namespace RePlays {
         public static void Main(string[] args) {
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
-            AttachConsole(ATTACH_PARENT_PROCESS);
+            string debugArg = "-debug";
+            if (args.Any(debugArg.Contains)) {
+                Logger.IsConsole = true;
+                AttachConsole(ATTACH_PARENT_PROCESS);
+            }
 
             CreateHostBuilder(args).Build().RunAsync();
 

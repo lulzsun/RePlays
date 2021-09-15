@@ -32,11 +32,15 @@ namespace WinFormsApp {
             }
         }
 
-        private async void InitializeWebView2() {
+        private void RefreshLoader() {
             pictureBox1.Size = new Size(pictureBox1.Image.Width, pictureBox1.Image.Height);
             pictureBox1.Location = new Point((pictureBox1.Parent.ClientSize.Width / 2) - (pictureBox1.Image.Width / 2),
                                             (pictureBox1.Parent.ClientSize.Height / 2) - (pictureBox1.Image.Height / 2));
             pictureBox1.Refresh();
+        }
+
+        private async void InitializeWebView2() {
+            RefreshLoader();
 
             if (webView2 == null || webView2.IsDisposed) {
                 webView2 = new Microsoft.Web.WebView2.WinForms.WebView2();
@@ -50,6 +54,18 @@ namespace WinFormsApp {
                 CoreWebView2Environment environment = await CoreWebView2Environment.CreateAsync(null, null, environmentOptions);
                 await webView2.EnsureCoreWebView2Async(environment);
             }
+        }
+
+        private void DisposeWebView2() {
+            if (webView2 != null && !webView2.IsDisposed) {
+                webView2.CoreWebView2InitializationCompleted -= CoreWebView2InitializationCompleted;
+                webView2.WebMessageReceived -= WebMessageReceivedAsync;
+                webView2.Dispose();
+                webView2 = null;
+            }
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            System.GC.Collect();
         }
 
         private async void CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e) {
@@ -90,21 +106,19 @@ namespace WinFormsApp {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
                 this.ShowInTaskbar = false;
-                if (!webView2.IsDisposed) {
-                    webView2.Dispose();
-                }
+                DisposeWebView2();
             }
         }
 
         FormWindowState _PreviousWindowState;
         private void frmMain_Resize(object sender, System.EventArgs e) {
+            RefreshLoader();
+
             if (this.WindowState != FormWindowState.Minimized)
                 _PreviousWindowState = WindowState;
 
             if (this.WindowState != FormWindowState.Minimized) {
-                if (webView2.IsDisposed) {
-                    InitializeWebView2();
-                }
+                InitializeWebView2();
                 this.ShowInTaskbar = true;
             }
         }

@@ -6,6 +6,16 @@ namespace RePlays.Services {
         JsonElement[] gameDetectionsJson;
         JsonElement[] nonGameDetectionsJson;
 
+        public void DisposeDetections() {
+            gameDetectionsJson = null;
+            nonGameDetectionsJson = null;
+        }
+
+        public void LoadDetections() {
+            DownloadGameDetections();
+            DownloadNonGameDetections();
+        }
+
         public void DownloadGameDetections() {
             var result = string.Empty;
             using (var webClient = new System.Net.WebClient()) {

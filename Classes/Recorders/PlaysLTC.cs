@@ -14,8 +14,7 @@ namespace RePlays.Recorders {
 
             RecordingService recordingService = new RecordingService();
             DetectionService detectionService = new DetectionService();
-            detectionService.DownloadGameDetections();
-            detectionService.DownloadNonGameDetections();
+            detectionService.LoadDetections();
 
             ltc.Log += (sender, msg) => {
                 Logger.WriteLine(string.Format("{0}: {1}", msg.Title, msg.Message), msg.File, msg.Line);
@@ -77,6 +76,7 @@ namespace RePlays.Recorders {
                     ltc.SetKeyBinds();
                     ltc.StartRecording();
                     recordingService.StartRecording();
+                    detectionService.DisposeDetections();
                 }
             };
 
@@ -85,6 +85,7 @@ namespace RePlays.Recorders {
                     if (recordingService.GetCurrentSession().Pid == msg.Pid) {
                         ltc.StopRecording();
                         recordingService.StopRecording();
+                        detectionService.LoadDetections();
                     }
                 }
             };
