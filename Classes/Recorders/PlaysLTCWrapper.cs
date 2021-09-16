@@ -148,16 +148,26 @@ namespace PlaysLTCWrapper {
                     case "LTC:gameScreenSizeChanged":
                         WriteToLog("INFO", string.Format("Game screen size changed, {0}x{1}", data.GetProperty("width").GetInt32(), data.GetProperty("height").GetInt32()));
                         break;
+                    case "LTC:fullscreenStateChanged":
+                        break;
                     case "LTC:saveStarted":
                         WriteToLog("INFO", string.Format("Started saving recording to file, {0}", data.GetProperty("filename").GetString()));
                         break;
                     case "LTC:saveFinished":
+                        SaveFinishedArgs saveFinishedArgs = new SaveFinishedArgs {
+                            FileName = data.GetProperty("fileName").GetString(),
+                            Width = data.GetProperty("width").GetInt32(),
+                            Height = data.GetProperty("height").GetInt32(),
+                            Duration = data.GetProperty("duration").GetInt32(),
+                            RecMode = data.GetProperty("recMode").GetInt32(),
+                        };
+                        OnSaveFinished(saveFinishedArgs);
                         WriteToLog("INFO", string.Format("Finished saving recording to file, {0}, {1}x{2}, {3}, {4}",
-                                            data.GetProperty("fileName"),
-                                            data.GetProperty("width"),
-                                            data.GetProperty("height"),
-                                            data.GetProperty("duration"),
-                                            data.GetProperty("recMode")));
+                                            saveFinishedArgs.FileName,
+                                            saveFinishedArgs.Width,
+                                            saveFinishedArgs.Height,
+                                            saveFinishedArgs.Duration,
+                                            saveFinishedArgs.RecMode));
                         break;
                     default:
                         WriteToLog("WARNING", string.Format("WAS SENT AN EVENT THAT DOES NOT MATCH CASE: {0}", msg));
@@ -415,6 +425,20 @@ namespace PlaysLTCWrapper {
         public event EventHandler<VideoCaptureReadyArgs> VideoCaptureReady;
         protected virtual void OnVideoCaptureReady(VideoCaptureReadyArgs e) {
             VideoCaptureReady?.Invoke(this, e);
+        }
+        #endregion
+
+        #region SaveFinished
+        public class SaveFinishedArgs : EventArgs {
+            public string FileName { get; internal set; }
+            public int Width { get; internal set; }
+            public int Height { get; internal set; }
+            public int Duration { get; internal set; }
+            public int RecMode { get; internal set; }
+        }
+        public event EventHandler<SaveFinishedArgs> SaveFinished;
+        protected virtual void OnSaveFinished(SaveFinishedArgs e) {
+            SaveFinished?.Invoke(this, e);
         }
         #endregion
     }

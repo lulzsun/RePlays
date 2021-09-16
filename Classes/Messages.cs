@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using RePlays;
 using RePlays.JSONObjects;
 using RePlays.Recorders;
 using RePlays.Services;
@@ -63,7 +64,11 @@ namespace RePlays.Messages {
             sortBy = "Latest"
         };
 
-        public static async Task<WebMessage> RecieveMessage(Microsoft.Web.WebView2.WinForms.WebView2 webView2, string message) {
+        public static void SendMessage(string message) {
+            frmMain.PostWebMessageAsJson(message);
+        }
+
+        public static async Task<WebMessage> RecieveMessage(string message) {
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
             Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
@@ -75,7 +80,7 @@ namespace RePlays.Messages {
                             var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
 
                             if (!File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe"))) {
-                                webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
+                                SendMessage(DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
                                 break;
                             }
 
@@ -87,14 +92,14 @@ namespace RePlays.Messages {
                     }
                     break;
                 case "InstallPlaysLTC": {
-                        bool downloadSuccess = await DownloadPlaysSetupAsync(webView2.CoreWebView2);
+                        bool downloadSuccess = await DownloadPlaysSetupAsync(frmMain.webView2.CoreWebView2);
                         bool installSuccess = await InstallPlaysSetup();
                         if (downloadSuccess && installSuccess) {
-                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("PlaysLTC successfully installed!", "Install Success", "success"));
+                            SendMessage(DisplayModal("PlaysLTC successfully installed!", "Install Success", "success"));
                             PlaysLTC.Start();
                         }
                         else {
-                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning"));
+                            SendMessage(DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning"));
                         }
                     }
                     break;
@@ -103,7 +108,7 @@ namespace RePlays.Messages {
                         videoSortSettings.game = data.game;
                         videoSortSettings.sortBy = data.sortBy;
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
-                        webView2.CoreWebView2.PostWebMessageAsJson(t);
+                        SendMessage(t);
                     }
                     break;
                 case "ShowInFolder": {
@@ -115,22 +120,25 @@ namespace RePlays.Messages {
                 case "Delete": {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
-                            File.Delete(Path.Join(GetPlaysFolder(), filePath));
+                            var realFilePath = Path.Join(GetPlaysFolder(), filePath);
+                            var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
+                            File.Delete(thumbPath);
+                            File.Delete(realFilePath);
                         }
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
-                        webView2.CoreWebView2.PostWebMessageAsJson(t);
+                        SendMessage(t);
                     }
                     break;
                 case "CreateClips": {
                         CreateClips data = JsonSerializer.Deserialize<CreateClips>(webMessage.data);
                         var t = await Task.Run(() => CreateClip(data.videoPath, data.clipSegments));
                         if (t == null) {
-                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Failed to create clip", "Error", "warning"));
+                            SendMessage(DisplayModal("Failed to create clip", "Error", "warning"));
                         }
                         else {
-                            webView2.CoreWebView2.PostWebMessageAsJson(DisplayModal("Successfully created clip", "Success", "success"));
+                            SendMessage(DisplayModal("Successfully created clip", "Success", "success"));
                             t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
-                            webView2.CoreWebView2.PostWebMessageAsJson(t);
+                            SendMessage(t);
                         }
                     }
                     break;

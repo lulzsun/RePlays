@@ -1,5 +1,5 @@
 ﻿
-namespace WinFormsApp
+namespace RePlays
 {
     partial class frmMain
     {

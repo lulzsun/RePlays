@@ -1,4 +1,5 @@
 ﻿using PlaysLTCWrapper;
+using RePlays.Messages;
 using RePlays.Services;
 using System.IO;
 using System.Threading.Tasks;
@@ -88,6 +89,11 @@ namespace RePlays.Recorders {
                         detectionService.LoadDetections();
                     }
                 }
+            };
+
+            ltc.SaveFinished += async (sender, msg) => {
+                var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+                WebMessage.SendMessage(t);
             };
 
             Task.Run(() => ltc.Connect(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe")));

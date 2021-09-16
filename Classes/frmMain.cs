@@ -9,17 +9,18 @@ using RePlays.Services;
 using Squirrel;
 using static RePlays.Helpers.Functions;
 
-namespace WinFormsApp {
+namespace RePlays {
     public partial class frmMain : Form {
-        Microsoft.Web.WebView2.WinForms.WebView2 webView2;
+        public static Microsoft.Web.WebView2.WinForms.WebView2 webView2;
+
         public frmMain() {
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
             InitializeComponent();
             InitializeWebView2();
             PurgeTempVideos();
-            notifyIcon1.Icon = this.Icon;
             //CheckForUpdates();
+            notifyIcon1.Icon = this.Icon;
         }
 
         private void frmMain_Load(object sender, System.EventArgs e) {
@@ -84,9 +85,19 @@ namespace WinFormsApp {
             //webView21.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
         }
 
+        public static void PostWebMessageAsJson(string message) {
+            if (webView2.InvokeRequired) {
+                // Call this same method but make sure it is on UI thread
+                System.Action safeWrite = delegate { PostWebMessageAsJson(message); };
+                webView2.Invoke(safeWrite);
+            }
+            else
+                webView2.CoreWebView2.PostWebMessageAsJson(message);
+        }
+
         bool firstTime = true;
         private async void WebMessageReceivedAsync(object sender, CoreWebView2WebMessageReceivedEventArgs e) {
-            var webMessage = await WebMessage.RecieveMessage(webView2, e.WebMessageAsJson);
+            var webMessage = await WebMessage.RecieveMessage(e.WebMessageAsJson);
             if (!this.Controls.Contains(webView2) && webMessage.message == "Initialize") {
                 this.Controls.Add(webView2);
                 webView2.BringToFront();

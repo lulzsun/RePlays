@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using RePlays.Services;
-using WinFormsApp;
+using RePlays;
 
 namespace RePlays {
     public class Program {
