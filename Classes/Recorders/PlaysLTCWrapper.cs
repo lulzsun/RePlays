@@ -49,8 +49,14 @@ namespace PlaysLTCWrapper {
             TcpClient client = server.AcceptTcpClient();
             ns = client.GetStream();
 
+            int streamByte;
+            string msg;
+            JsonElement jsonElement;
+            JsonElement data;
+            string type;
+
             while (client.Connected || !ltcProcess.HasExited) {
-                int streamByte = ns.ReadByte();
+                streamByte = ns.ReadByte();
                 stringBuilder = new StringBuilder();
 
                 while (streamByte != 12)
@@ -59,12 +65,12 @@ namespace PlaysLTCWrapper {
                     streamByte = ns.ReadByte();
                 }
 
-                string msg = stringBuilder.ToString().Replace("\n", "").Replace("\r", "").Trim();
+                msg = stringBuilder.ToString().Replace("\n", "").Replace("\r", "").Trim();
                 WriteToLog("RECEIVED", msg);
 
-                JsonElement jsonElement = GetDataType(msg);
-                string type = jsonElement.GetProperty("type").GetString();
-                var data = jsonElement.GetProperty("data");
+                jsonElement = GetDataType(msg);
+                data = jsonElement.GetProperty("data");
+                type = jsonElement.GetProperty("type").GetString();
 
                 switch (type) {
                     case "LTC:handshake": {
