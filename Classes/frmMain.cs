@@ -86,6 +86,7 @@ namespace RePlays {
         }
 
         public static void PostWebMessageAsJson(string message) {
+            if (webView2 == null || webView2.IsDisposed == true) return;
             if (webView2.InvokeRequired) {
                 // Call this same method but make sure it is on UI thread
                 System.Action safeWrite = delegate { PostWebMessageAsJson(message); };
