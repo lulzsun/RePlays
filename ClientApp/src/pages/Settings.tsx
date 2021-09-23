@@ -6,12 +6,20 @@ import Capture from "./Settings/Capture";
 import General from "./Settings/General";
 import Help from "./Settings/Help";
 import Upload from "./Settings/Upload";
+import { postMessage } from '../helpers/messenger';
 
 interface Props {
+  userSettings: UserSettings | undefined
+  setUserSettings: React.Dispatch<React.SetStateAction<UserSettings | undefined>>
 }
 
-export const Settings: React.FC<Props> = ({}) => {
+export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
   const [subPage, setSubPage] = useState("General");
+  function updateSettings() {
+    postMessage("UpdateSettings", userSettings);
+    let newSettings = Object.assign({}, userSettings);
+    setUserSettings(newSettings);
+  }
 	return (
     <Router>
       <div className="flex flex-col h-full border-0 border-b"> 
@@ -24,9 +32,9 @@ export const Settings: React.FC<Props> = ({}) => {
             <Link to="/settings/capture" onClick={() => setSubPage("Capture")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Capture
             </Link>
-            <Link to="/settings/upload" onClick={() => setSubPage("Upload")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            {/* <Link to="/settings/upload" onClick={() => setSubPage("Upload")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Upload
-            </Link>
+            </Link> */}
             <Link to="/settings/advanced" onClick={() => setSubPage("Advanced")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Advanced
             </Link>
@@ -39,9 +47,9 @@ export const Settings: React.FC<Props> = ({}) => {
           </div>
           <div className="flex-auto overflow-auto h-full p-7 pt-0">
             <Switch>
-              <Route exact path="/settings">         <General/></Route>
-              <Route exact path="/settings/general"> <General/></Route>
-              <Route exact path="/settings/capture"> <Capture/></Route>
+              <Route exact path="/settings">         <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
+              <Route exact path="/settings/general"> <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
+              <Route exact path="/settings/capture"> <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings}/></Route>
               <Route exact path="/settings/upload">  <Upload/></Route>
               <Route exact path="/settings/advanced"><Advanced/></Route>
               <Route exact path="/settings/help">    <Help/></Route>

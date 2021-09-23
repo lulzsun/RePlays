@@ -51,4 +51,23 @@ declare global {
     x: number, 
     y: number,
   }
+
+  // userSettings
+  interface UserSettings {
+    generalSettings: GeneralSettings
+    captureSettings: CaptureSettings
+  }
+  interface GeneralSettings {
+    launchStartup: boolean, startMinimized: boolean, theme: string, update: string
+  }
+  interface CaptureSettings {
+    recordingMode: string,
+    resolution: number, frameRate: number, bitRate: number,
+
+    gameAudioVolume: number,
+    micAudioVolume: number,
+
+    tempSaveDir: string,
+    videoSaveDir: string
+  }
 }

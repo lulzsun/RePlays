@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
 using RePlays.JSONObjects;
@@ -11,23 +10,24 @@ namespace RePlays.Services {
         private static string settingsFile = Path.Join(Application.StartupPath, "userSettings.json");
 
         public class SettingsJson {
-            private string _videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
-            public string videoSaveDir { get { return _videoSaveDir; } set { _videoSaveDir = value; } }
+            private GeneralSettings _generalSettings = new();
+            public GeneralSettings generalSettings { get { return _generalSettings; } set { _generalSettings = value; } }
 
-            private string _tempSaveDir = Path.Join(Path.GetTempPath(), "Plays");
-            public string tempSaveDir { get { return _tempSaveDir; } set { _tempSaveDir = value; } }
-
-            private string _recordingMode = "automatic";
-            public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
-
-            private GameDvrSettings _gameDvrSettings = new();
-            public GameDvrSettings gameDvrSettings { get { return _gameDvrSettings; } set { _gameDvrSettings = value; } }
+            private CaptureSettings _captureSettings = new();
+            public CaptureSettings captureSettings { get { return _captureSettings; } set { _captureSettings = value; } }
         }
 
         public static void LoadSettings() {
             if (File.Exists(settingsFile)) {
-                _Settings = JsonSerializer.Deserialize<SettingsJson>(File.ReadAllText(settingsFile));
-                Logger.WriteLine("Loaded userSettings.json");
+                try {
+                    _Settings = JsonSerializer.Deserialize<SettingsJson>(File.ReadAllText(settingsFile));
+                    Logger.WriteLine("Loaded userSettings.json");
+                }
+                catch (JsonException ex) {
+                    Logger.WriteLine(ex.Message);
+                    File.Delete(settingsFile);
+                    LoadSettings();
+                }
             }
             else {
                 Logger.WriteLine(string.Format("{0} did not exist, using default values", settingsFile));

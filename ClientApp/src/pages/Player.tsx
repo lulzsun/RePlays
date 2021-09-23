@@ -245,7 +245,7 @@ export default function Player () {
           videoElement.play();
         }
       }
-    }
+    } 
     setCurrentTime(videoElement.currentTime);
     seekBarElement.current!.style.left = `calc(${videoElement.currentTime / videoElement.duration * 100}% - 3px)`;
     targetSeekElement.current!.style.left = seekBarElement.current!.offsetLeft+6 + 'px';
@@ -350,7 +350,7 @@ export default function Player () {
               <div className="absolute -top-1/3 opacity-0 invisible dropdown-menu transition-all duration-300 transform">
                 <div className="absolute transform -translate-y-full left-0 w-auto origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
                   <div className="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left" role="menuitem">
-                    <input ref={volumeSliderElement} type="range" min="1" max="100" step="1" 
+                    <input ref={volumeSliderElement} type="range" min="0" max="100" step="1" 
                     onChange={(e) => { if(videoElement.current) {videoElement.current.volume = parseInt((e.target as HTMLInputElement).value) / 100;} }}/>
                   </div>
                 </div>

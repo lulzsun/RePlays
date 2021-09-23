@@ -8,6 +8,7 @@ using RePlays.JSONObjects;
 using RePlays.Recorders;
 using RePlays.Services;
 using static RePlays.Helpers.Functions;
+using static RePlays.Services.SettingsService;
 
 namespace RePlays.Messages {
     public class RetrieveVideos {
@@ -71,10 +72,17 @@ namespace RePlays.Messages {
         public static async Task<WebMessage> RecieveMessage(string message) {
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
-            Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
+            if (webMessage.message == "UpdateSettings")
+                Logger.WriteLine($"{webMessage.message} ::: {"{Object too large to log}"}");
+            else
+                Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
 
             switch (webMessage.message) {
                 case "Initialize": {
+                        // INIT USER SETTINGS
+                        SendMessage(GetUserSettings());
+
+                        // INIT RECORDER API
                         if (!File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
                             // path to old plays/replaystv's plays-ltc
                             var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
@@ -101,6 +109,11 @@ namespace RePlays.Messages {
                         else {
                             SendMessage(DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning"));
                         }
+                    }
+                    break;
+                case "UpdateSettings": {
+                        SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data);
+                        SaveSettings(data);
                     }
                     break;
                 case "RetrieveVideos": {

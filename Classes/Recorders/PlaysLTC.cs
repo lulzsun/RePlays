@@ -25,11 +25,16 @@ namespace RePlays.Recorders {
                 ltc.GetEncoderSupportLevel();
                 ltc.SetSavePaths(GetPlaysFolder().Replace('\\', '/'), GetTempFolder().Replace('\\', '/'));
                 ltc.SetGameDVRQuality(
-                    SettingsService.Settings.gameDvrSettings.bitRate,
-                    SettingsService.Settings.gameDvrSettings.frameRate,
-                    SettingsService.Settings.gameDvrSettings.resolution
+                    SettingsService.Settings.captureSettings.bitRate,
+                    SettingsService.Settings.captureSettings.frameRate,
+                    SettingsService.Settings.captureSettings.resolution
                 );
-                ltc.SetMicAudioVolume(50);
+                ltc.SetGameAudioVolume(
+                    SettingsService.Settings.captureSettings.gameAudioVolume
+                );
+                ltc.SetMicAudioVolume(
+                    SettingsService.Settings.captureSettings.micAudioVolume
+                );
                 ltc.SetCaptureMode(49152); //ORB_GAMEDVR_SET_CAPTURE_MODE ?????
                 ltc.SetGameDVRCaptureEngine(1); //1 = nvidia ?????
             };

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace RePlays.JSONObjects {
     public class VideoList {
@@ -31,12 +32,36 @@ namespace RePlays.JSONObjects {
         public float duration { get; set; }
     }
 
-    public class GameDvrSettings {
-        private int _bitRate = 50;
-        public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
-        private int _frameRate = 60;
-        public int frameRate { get { return _frameRate; } set { _frameRate = value; } }
+    // Settings Objects
+    public class GeneralSettings {
+        private bool _launchStartup = true;
+        public bool launchStartup { get { return _launchStartup; } set { _launchStartup = value; } }
+        private bool _startMinimized = false;
+        public bool startMinimized { get { return _startMinimized; } set { _startMinimized = value; } }
+        private string _theme = "System";
+        public string theme { get { return _theme; } set { _theme = value; } }
+        private string _update = "automatic"; // ??? why is there a warning
+        public string update { get { return _update; } set { _update = value; } }
+    }
+
+    public class CaptureSettings {
+        private string _recordingMode = "automatic";
+        public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
         private int _resolution = 1080;
         public int resolution { get { return _resolution; } set { _resolution = value; } }
+        private int _frameRate = 60;
+        public int frameRate { get { return _frameRate; } set { _frameRate = value; } }
+        private int _bitRate = 50;
+        public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
+
+        private int _gameAudioVolume = 100;
+        public int gameAudioVolume { get { return _gameAudioVolume; } set { _gameAudioVolume = value; } }
+        private int _micAudioVolume = 50;
+        public int micAudioVolume { get { return _micAudioVolume; } set { _micAudioVolume = value; } }
+
+        private string _videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
+        public string videoSaveDir { get { return _videoSaveDir; } set { _videoSaveDir = value; } }
+        private string _tempSaveDir = Path.Join(Path.GetTempPath(), "Plays");
+        public string tempSaveDir { get { return _tempSaveDir; } set { _tempSaveDir = value; } }
     }
 }

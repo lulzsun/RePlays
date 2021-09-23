@@ -33,14 +33,14 @@ namespace RePlays.Helpers {
         }
 
         public static string GetPlaysFolder() {
-            var videoSaveDir = SettingsService.Settings.videoSaveDir;
+            var videoSaveDir = SettingsService.Settings.captureSettings.videoSaveDir;
             if (!Directory.Exists(videoSaveDir))
                 Directory.CreateDirectory(videoSaveDir);
             return videoSaveDir;
         }
 
         public static string GetTempFolder() {
-            var tempSaveDir = SettingsService.Settings.tempSaveDir;
+            var tempSaveDir = SettingsService.Settings.captureSettings.tempSaveDir;
             if (!Directory.Exists(tempSaveDir))
                 Directory.CreateDirectory(tempSaveDir);
             return tempSaveDir;
@@ -157,6 +157,15 @@ namespace RePlays.Helpers {
                     return builder.ToString().Equals(compare);
                 }
             }
+        }
+
+        public static string GetUserSettings() {
+            SettingsService.LoadSettings();
+
+            WebMessage webMessage = new();
+            webMessage.message = "UserSettings";
+            webMessage.data = JsonSerializer.Serialize(SettingsService.Settings);
+            return JsonSerializer.Serialize(webMessage);
         }
 
         public static string GetAllVideos(string Game = "All Games", string SortBy = "Latest") {
