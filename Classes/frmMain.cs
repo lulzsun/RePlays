@@ -17,14 +17,23 @@ namespace RePlays {
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
             InitializeComponent();
-            InitializeWebView2();
             PurgeTempVideos();
             //CheckForUpdates();
             notifyIcon1.Icon = this.Icon;
         }
 
         private void frmMain_Load(object sender, System.EventArgs e) {
-            InitializeWebView2();
+            if(SettingsService.Settings.generalSettings.startMinimized) {
+                this.Size = new Size(1080, 600);
+                this.FormBorderStyle = FormBorderStyle.Sizable;
+                CenterToScreen();
+                this.WindowState = FormWindowState.Minimized;
+                this.ShowInTaskbar = false;
+                firstTime = false;
+            }
+            else {
+                InitializeWebView2();
+            }
         }
 
         private async Task CheckForUpdates() {
@@ -130,7 +139,7 @@ namespace RePlays {
                 _PreviousWindowState = WindowState;
 
             if (this.WindowState != FormWindowState.Minimized) {
-                InitializeWebView2();
+                if(!firstTime) InitializeWebView2();
                 this.ShowInTaskbar = true;
             }
         }
