@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Net.Http.Headers;
 using System.IO;
 
 namespace RePlays {
@@ -40,15 +41,15 @@ namespace RePlays {
 
             app.UseHttpsRedirection();
 
-            app.UseStaticFiles(new StaticFileOptions {
-                FileProvider = new PhysicalFileProvider(@"G:\Videos\Plays"),
-                RequestPath = "/Plays"
-            });
+            //app.UseStaticFiles(new StaticFileOptions {
+            //    FileProvider = new PhysicalFileProvider(@"G:\Videos\Plays"),
+            //    RequestPath = "/Plays"
+            //});
 
-            app.UseDirectoryBrowser(new DirectoryBrowserOptions {
-                FileProvider = new PhysicalFileProvider(@"G:\Videos\Plays"),
-                RequestPath = "/Plays"
-            });
+            //app.UseDirectoryBrowser(new DirectoryBrowserOptions {
+            //    FileProvider = new PhysicalFileProvider(@"G:\Videos\Plays"),
+            //    RequestPath = "/Plays"
+            //});
 
             app.UseSpaStaticFiles();
 

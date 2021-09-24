@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using RePlays;
+using RePlays.Controllers;
 using RePlays.JSONObjects;
 using RePlays.Recorders;
 using RePlays.Services;
@@ -135,8 +135,11 @@ namespace RePlays.Messages {
                         foreach (var filePath in data.filePaths) {
                             var realFilePath = Path.Join(GetPlaysFolder(), filePath);
                             var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
-                            File.Delete(thumbPath);
+
+                            VideoController.DisposeOpenStreams();
+
                             File.Delete(realFilePath);
+                            File.Delete(thumbPath);
                         }
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                         SendMessage(t);
