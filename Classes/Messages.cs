@@ -95,8 +95,8 @@ namespace RePlays.Messages {
                             Logger.WriteLine("Found Plays-ltc existing on local disk");
                             DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
                             Logger.WriteLine("Copied Plays-ltc to recorders folder");
+                            PlaysLTC.Start();
                         }
-                        PlaysLTC.Start();
                     }
                     break;
                 case "InstallPlaysLTC": {

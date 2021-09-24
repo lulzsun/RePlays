@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using RePlays.Messages;
+using RePlays.Recorders;
 using RePlays.Services;
 using Squirrel;
 using static RePlays.Helpers.Functions;
@@ -34,6 +35,7 @@ namespace RePlays {
             else {
                 InitializeWebView2();
             }
+            if(!PlaysLTC.Connected) PlaysLTC.Start();
         }
 
         private async Task CheckForUpdates() {
