@@ -44,6 +44,13 @@ namespace RePlays.JSONObjects {
         public string update { get { return _update; } set { _update = value; } }
     }
 
+    public class MicDevice {
+        private string _deviceId = "";
+        public string deviceId { get { return _deviceId; } set { _deviceId = value; } }
+        private string _deviceLabel = "";
+        public string deviceLabel { get { return _deviceLabel; } set { _deviceLabel = value; } }
+    }
+
     public class CaptureSettings {
         private string _recordingMode = "automatic";
         public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
@@ -58,6 +65,9 @@ namespace RePlays.JSONObjects {
         public int gameAudioVolume { get { return _gameAudioVolume; } set { _gameAudioVolume = value; } }
         private int _micAudioVolume = 50;
         public int micAudioVolume { get { return _micAudioVolume; } set { _micAudioVolume = value; } }
+
+        private MicDevice _micDevice = new();
+        public MicDevice micDevice { get { return _micDevice; } set { _micDevice = value; } }
 
         private string _videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
         public string videoSaveDir { get { return _videoSaveDir; } set { _videoSaveDir = value; } }

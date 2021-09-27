@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DropDownMenu from "../../components/DropDownMenu";
 
 interface Props {
@@ -10,6 +10,42 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
   const [gameAudioVolume, setGameAudioVolume] = useState(settings!.gameAudioVolume);
   const [micAudioVolume, setMicAudioVolume] = useState(settings!.micAudioVolume);
+  const [micAudioDevices, setMicAudioDevices] = useState<any[]>();
+
+  useEffect(() => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices)
+      console.error('enumerateDevices() not supported');
+    else {
+      // the purpose of getUserMedia is to allow permissions to access audio devices
+      navigator.mediaDevices.getUserMedia({ audio: true }).catch((err) => {return err;});
+      // after getting permissions, lets list audio devices
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
+        const rawAudioDevices = devices.filter(item => item.kind === "audioinput");
+        console.log(rawAudioDevices);
+        // this is bad typescript, but it makes things easier...
+        let ddmItems: any[] = [];
+        rawAudioDevices.forEach((device) => {
+          if(settings == null) return;
+
+          if(device.deviceId === "default" && settings.micDevice.deviceId === "") {
+            settings.micDevice.deviceId = device.deviceId; 
+            settings.micDevice.deviceLabel = device.label;
+            updateSettings();
+          }
+
+          ddmItems.push({name: device.label, onClick: () => {
+            settings!.micDevice.deviceId = device.deviceId; 
+            settings!.micDevice.deviceLabel = device.label; 
+            updateSettings();
+          }});
+        });
+        setMicAudioDevices(ddmItems);
+      }).catch(function(err) {
+        console.error(err.name + ": " + err.message);
+      });
+
+    }
+  }, [setMicAudioDevices]);
 
 	return (
     <div className="flex flex-col gap-2 font-medium text-base"> 
@@ -94,7 +130,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         </div>
         <div className="flex flex-col">
           Bitrate
-          <DropDownMenu text={(settings === undefined ? "50 MB/s" : settings.bitRate + " MB/s")} width={"auto"}
+          <DropDownMenu text={(settings === undefined ? "50 MB/s" : settings.bitRate + " MB/s")} width={"auto"} zIndex={51}
           items={[
             {name: "5 MB/s", onClick: () => {settings!.bitRate = 5; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "10 MB/s", onClick: () => {settings!.bitRate = 10; customVideoQuality.current!.checked = true; updateSettings();}},
@@ -135,10 +171,8 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
       </div>
       <div className="flex flex-col">
         Input Source
-        <DropDownMenu text={(settings === undefined ? "Default Device" : "Default Device")} width={"auto"}
-        items={[
-          {name: "Default Device", onClick: () => {settings!.bitRate = 5; customVideoQuality.current!.checked = true; updateSettings();}},
-        ]}/> 
+        <DropDownMenu text={(settings === undefined ? "Default Device" : settings.micDevice.deviceLabel)} width={"auto"}
+        items={micAudioDevices}/> 
       </div>
     </div>
 	)

@@ -66,6 +66,10 @@ declare global {
 
     gameAudioVolume: number,
     micAudioVolume: number,
+    micDevice: {
+      deviceId: string,
+      deviceLabel: string,
+    }
 
     tempSaveDir: string,
     videoSaveDir: string

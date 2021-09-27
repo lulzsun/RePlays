@@ -35,6 +35,10 @@ namespace RePlays.Recorders {
                 ltc.SetMicAudioVolume(
                     SettingsService.Settings.captureSettings.micAudioVolume
                 );
+                ltc.SetMicRecordingDevice(
+                    SettingsService.Settings.captureSettings.micDevice.deviceId,
+                    SettingsService.Settings.captureSettings.micDevice.deviceLabel
+                );
                 ltc.SetCaptureMode(49152); //ORB_GAMEDVR_SET_CAPTURE_MODE ?????
                 ltc.SetGameDVRCaptureEngine(1); //1 = nvidia ?????
             };

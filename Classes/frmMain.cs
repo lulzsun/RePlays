@@ -70,6 +70,7 @@ namespace RePlays {
 
         private void DisposeWebView2() {
             if (webView2 != null && !webView2.IsDisposed) {
+                webView2.CoreWebView2.PermissionRequested -= CoreWebView2PermissionRequested;
                 webView2.CoreWebView2InitializationCompleted -= CoreWebView2InitializationCompleted;
                 webView2.WebMessageReceived -= WebMessageReceivedAsync;
                 webView2.Dispose();
@@ -93,7 +94,12 @@ namespace RePlays {
             await webView2.CoreWebView2.CallDevToolsProtocolMethodAsync("Security.setIgnoreCertificateErrors", "{\"ignore\": true}");
             webView2.CoreWebView2.Settings.IsStatusBarEnabled = false;
             webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
+            webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;
             //webView21.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+        }
+
+        private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {
+            e.State = CoreWebView2PermissionState.Allow;
         }
 
         public static void PostWebMessageAsJson(string message) {
