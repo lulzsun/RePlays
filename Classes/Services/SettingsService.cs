@@ -1,13 +1,13 @@
 ﻿using System.IO;
 using System.Text.Json;
-using System.Windows.Forms;
 using RePlays.JSONObjects;
+using static RePlays.Helpers.Functions;
 
 namespace RePlays.Services {
     public static class SettingsService {
         private static SettingsJson _Settings = new();
         public static SettingsJson Settings { get { return _Settings; } }
-        private static string settingsFile = Path.Join(Application.StartupPath, "userSettings.json");
+        private static string settingsFile = Path.Join(GetCfgFolder(), "userSettings.json");
 
         public class SettingsJson {
             private GeneralSettings _generalSettings = new();

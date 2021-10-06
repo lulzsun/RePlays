@@ -1,10 +1,14 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using System.Text.Json;
+using static RePlays.Helpers.Functions;
 
 namespace RePlays.Services {
     public class DetectionService {
         JsonElement[] gameDetectionsJson;
         JsonElement[] nonGameDetectionsJson;
+        private static string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
+        private static string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
 
         public void DisposeDetections() {
             gameDetectionsJson = null;
@@ -12,24 +16,26 @@ namespace RePlays.Services {
         }
 
         public void LoadDetections() {
-            DownloadGameDetections();
-            DownloadNonGameDetections();
+            gameDetectionsJson = DownloadDetections(gameDetectionsFile, "game_detections.json");
+            nonGameDetectionsJson = DownloadDetections(nonGameDetectionsFile, "nongame_detections.json");
         }
 
-        public void DownloadGameDetections() {
+        public JsonElement[] DownloadDetections(string dlPath, string file) {
             var result = string.Empty;
-            using (var webClient = new System.Net.WebClient()) {
-                result = webClient.DownloadString("https://raw.githubusercontent.com/lulzsun/RePlaysTV/master/detections/game_detections.json");
+            try {
+                using (var webClient = new System.Net.WebClient()) {
+                    result = webClient.DownloadString("https://raw.githubusercontent.com/lulzsun/RePlaysTV/master/detections/" + file);
+                }
+                File.WriteAllText(dlPath, result);
             }
-            gameDetectionsJson = JsonDocument.Parse(result).RootElement.EnumerateArray().ToArray();
-        }
+            catch (System.Exception e) {
+                Logger.WriteLine(e.Message);
 
-        public void DownloadNonGameDetections() {
-            var result = string.Empty;
-            using (var webClient = new System.Net.WebClient()) {
-                result = webClient.DownloadString("https://raw.githubusercontent.com/lulzsun/RePlaysTV/master/detections/nongame_detections.json");
+                if(File.Exists(dlPath)) {
+                    return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
+                }
             }
-            nonGameDetectionsJson = JsonDocument.Parse(result).RootElement.EnumerateArray().ToArray();
+            return JsonDocument.Parse(result).RootElement.EnumerateArray().ToArray();
         }
 
         public bool IsMatchedGame(string exeFile) {

@@ -46,6 +46,13 @@ namespace RePlays.Helpers {
             return tempSaveDir;
         }
 
+        public static string GetCfgFolder() {
+            var cfgDir = Path.Join(Application.StartupPath, @"cfg\");
+            if (!Directory.Exists(cfgDir))
+                Directory.CreateDirectory(cfgDir);
+            return cfgDir;
+        }
+
         public static string GetFFmpegFolder() {
 
 #if DEBUG
