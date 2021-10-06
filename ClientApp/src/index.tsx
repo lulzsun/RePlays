@@ -56,6 +56,8 @@ declare global {
   interface UserSettings {
     generalSettings: GeneralSettings
     captureSettings: CaptureSettings
+    //uploadSettings: UploadSettings
+    advancedSettings: AdvancedSettings
   }
   interface GeneralSettings {
     launchStartup: boolean, startMinimized: boolean, theme: string, update: string
@@ -70,8 +72,19 @@ declare global {
       deviceId: string,
       deviceLabel: string,
     }
-
+  }
+  interface UploadSettings {
+    streamableUser: string,
+    streamablePass: string,
+  }
+  interface AdvancedSettings {
+    videoSaveDir: string,
     tempSaveDir: string,
-    videoSaveDir: string
+    extraVideoSaveDir: string[],
+    autoManageSpace: boolean,
+    manageSpaceLimit: number,
+    manageTimeLimit: number,
+    //customWhiteList: string[],
+    //customBlackList: string[],
   }
 }

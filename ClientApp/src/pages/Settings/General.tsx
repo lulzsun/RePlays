@@ -51,8 +51,8 @@ export const General: React.FC<Props> = ({settings, updateSettings}) => {
       </div>
 
       <h1 className="font-bold text-2xl mt-4">Version</h1>
-      <span className="ml-2 text-gray-700">Current Version: 0.0.?</span>
-      <span className="ml-2 text-gray-700">Latest Version: 0.0.?</span>
+      <span className="text-gray-700">Current Version: 0.0.?</span>
+      <span className="text-gray-700">Latest Version: 0.0.?</span>
       <Button text="Change logs" width={"auto"}/>
     </div>
 	)

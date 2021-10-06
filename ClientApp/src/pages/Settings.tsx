@@ -25,7 +25,7 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
       <div className="flex flex-col h-full border-0 border-b"> 
         <div style={{height: "50px"}}>Settings <p className="inline-block px-1">/</p> <div className="inline-block text-base align-bottom">{subPage}</div></div>
         <div style={{height: "calc(100% - 50px)"}} className="flex flex-row">
-          <div className="w-36 h-full pr-6 border-0 border-r">
+          <div className="w-40 h-full pr-6 border-0 border-r">
             <Link to="/settings/general" onClick={() => setSubPage("General")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               General
             </Link>
@@ -45,13 +45,13 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
               About
             </Link>
           </div>
-          <div className="flex-auto overflow-auto h-full p-7 pt-0">
+          <div className="flex-auto overflow-auto h-full w-full p-7 pt-0">
             <Switch>
               <Route exact path="/settings">         <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
               <Route exact path="/settings/general"> <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
               <Route exact path="/settings/capture"> <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings}/></Route>
               <Route exact path="/settings/upload">  <Upload/></Route>
-              <Route exact path="/settings/advanced"><Advanced/></Route>
+              <Route exact path="/settings/advanced"><Advanced updateSettings={updateSettings} settings={userSettings?.advancedSettings}/></Route>
               <Route exact path="/settings/help">    <Help/></Route>
               <Route exact path="/settings/about">   <About/></Route>
             </Switch>

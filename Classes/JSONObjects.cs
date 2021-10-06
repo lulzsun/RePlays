@@ -68,10 +68,21 @@ namespace RePlays.JSONObjects {
 
         private MicDevice _micDevice = new();
         public MicDevice micDevice { get { return _micDevice; } set { _micDevice = value; } }
+    }
 
+    public class AdvancedSettings {
         private string _videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
         public string videoSaveDir { get { return _videoSaveDir; } set { _videoSaveDir = value; } }
         private string _tempSaveDir = Path.Join(Path.GetTempPath(), "Plays");
         public string tempSaveDir { get { return _tempSaveDir; } set { _tempSaveDir = value; } }
+        public List<string> _extraVideoSaveDir = new();
+        public List<string> extraVideoSaveDir { get { return _extraVideoSaveDir; } set { _extraVideoSaveDir = value; } }
+
+        public bool _autoManageSpace = true;
+        public bool autoManageSpace { get { return _autoManageSpace; } set { _autoManageSpace = value; } }
+        public int _manageSpaceLimit = -1;
+        public int manageSpaceLimit { get { return _manageSpaceLimit; } set { _manageSpaceLimit = value; } }
+        public int _manageTimeLimit = -1;
+        public int manageTimeLimit { get { return _manageTimeLimit; } set { _manageTimeLimit = value; } }
     }
 }

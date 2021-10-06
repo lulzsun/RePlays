@@ -15,6 +15,9 @@ namespace RePlays.Services {
 
             private CaptureSettings _captureSettings = new();
             public CaptureSettings captureSettings { get { return _captureSettings; } set { _captureSettings = value; } }
+
+            private AdvancedSettings _advancedSettings = new();
+            public AdvancedSettings advancedSettings { get { return _advancedSettings; } set { _advancedSettings = value; } }
         }
 
         public static void LoadSettings() {

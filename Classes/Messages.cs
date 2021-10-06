@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using RePlays.Controllers;
 using RePlays.JSONObjects;
 using RePlays.Recorders;
@@ -122,6 +123,35 @@ namespace RePlays.Messages {
                         videoSortSettings.sortBy = data.sortBy;
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                         SendMessage(t);
+                    }
+                    break;
+                case "SelectFolder": {
+                        var type = webMessage.data.Replace("\"", "");
+                        switch (type) {
+                            case "videoSaveDir":
+                            case "tempSaveDir":
+                                using (var fbd = new FolderBrowserDialog()) {
+                                    DialogResult result = fbd.ShowDialog();
+
+                                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
+                                        if (type == "videoSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
+                                        else if (type == "tempSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
+                                        SaveSettings();
+                                        SendMessage(GetUserSettings());
+                                    }
+                                }
+                                break;
+                            case "extraSaveDir":
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    break;
+                case "ShowFolder": {
+                        var path = webMessage.data.Replace("\"", "").Replace("\\\\", "\\");
+                        Logger.WriteLine(path);
+                        Process.Start("explorer.exe", path);
                     }
                     break;
                 case "ShowInFolder": {
