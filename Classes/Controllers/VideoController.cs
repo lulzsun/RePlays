@@ -24,9 +24,11 @@ namespace RePlays.Controllers {
         }
 
         public static void DisposeOpenStreams() {
-            videoStream.Dispose();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            if(videoStream != null) {
+                videoStream.Dispose();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
         }
     }
 }
