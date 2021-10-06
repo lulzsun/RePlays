@@ -6,13 +6,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 namespace PlaysLTCWrapper {
     public class LTCProcess {
         TcpListener server;
         NetworkStream ns;
         Process ltcProcess;
-        StringBuilder stringBuilder;
+        List<byte> stringBuilder;
 
         ConnectionHandshakeArgs connectionHandshakeArgs;
         ProcessCreatedArgs processCreatedArgs;
@@ -57,15 +58,15 @@ namespace PlaysLTCWrapper {
 
             while (client.Connected || !ltcProcess.HasExited) {
                 streamByte = ns.ReadByte();
-                stringBuilder = new StringBuilder();
+                stringBuilder = new List<byte>();
 
                 while (streamByte != 12)
                 {
-                    stringBuilder.Append((char)streamByte);
+                    stringBuilder.Add(Convert.ToByte(streamByte));
                     streamByte = ns.ReadByte();
                 }
 
-                msg = stringBuilder.ToString().Replace("\n", "").Replace("\r", "").Trim();
+                msg = Encoding.UTF8.GetString(stringBuilder.ToArray()).Replace("\n", "").Replace("\r", "").Trim();
                 WriteToLog("RECEIVED", msg);
 
                 jsonElement = GetDataType(msg);
@@ -329,7 +330,7 @@ namespace PlaysLTCWrapper {
             string json = "{ \"type\": \"" + type + "\", \"data\": " + data + " }\f";
 
             if(ns != null && server != null) {
-                byte[] jsonBytes = Encoding.Default.GetBytes(json);
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
                 ns.Write(jsonBytes, 0, jsonBytes.Length);     //sending the message
                 WriteToLog("SENT", json);
             }
