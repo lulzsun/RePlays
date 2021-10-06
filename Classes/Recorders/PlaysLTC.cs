@@ -59,7 +59,7 @@ namespace RePlays.Recorders {
                     else if (!isGame && !isNonGame) {
                         Logger.WriteLine(string.Format("This process [{0}] is an unknown application, lets try to ScanForGraphLib", msg.Pid));
 
-                        recordingService.SetCurrentSession(msg.Pid, "Game Unknown");
+                        recordingService.SetCurrentSession(msg.Pid, detectionService.GetGameTitle(msg.ExeFile, true));
                         ltc.ScanForGraphLib(msg.Pid); // the response will be sent to GraphicsLibLoaded if successful
                     }
                     else {
@@ -72,7 +72,7 @@ namespace RePlays.Recorders {
             };
 
             ltc.GraphicsLibLoaded += (sender, msg) => {
-                ltc.SetGameName("Game Unknown");
+                ltc.SetGameName(recordingService.GetCurrentSession().GameTitle);
                 ltc.LoadGameModule(msg.Pid);
             };
 

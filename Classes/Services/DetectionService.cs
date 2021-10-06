@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using static RePlays.Helpers.Functions;
 
@@ -58,23 +59,30 @@ namespace RePlays.Services {
             return false;
         }
 
-        public string GetGameTitle(string exeFile) {
-            for (int x = 0; x < gameDetectionsJson.Length; x++) {
-                JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
+        public string GetGameTitle(string exeFile, bool isUnknown=false) {
+            if(isUnknown == false) {
+                for (int x = 0; x < gameDetectionsJson.Length; x++) {
+                    JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
-                for (int y = 0; y < gameDetections.Length; y++) {
+                    for (int y = 0; y < gameDetections.Length; y++) {
 
-                    if (gameDetections[y].TryGetProperty("gameexe", out JsonElement detection)) {
-                        string[] jsonExeStr = detection.GetString().ToLower().Split('|');
+                        if (gameDetections[y].TryGetProperty("gameexe", out JsonElement detection)) {
+                            string[] jsonExeStr = detection.GetString().ToLower().Split('|');
 
-                        for (int z = 0; z < jsonExeStr.Length; z++) {
-                            if (exeFile.ToLower().Contains(jsonExeStr[z]) && jsonExeStr[z].Length > 0) {
-                                return gameDetectionsJson[x].GetProperty("title").ToString();
+                            for (int z = 0; z < jsonExeStr.Length; z++) {
+                                if (exeFile.ToLower().Contains(jsonExeStr[z]) && jsonExeStr[z].Length > 0) {
+                                    return gameDetectionsJson[x].GetProperty("title").ToString();
+                                }
                             }
                         }
                     }
                 }
+                return "Game Unknown";
             }
+
+            // if isUnknown (if not on detection.json), check to see if path is a steam game, and parse name
+            if(exeFile.Contains("\\steamapps\\common\\"))
+                return exeFile.Split("\\steamapps\\common\\")[1].Split('\\')[0];
             return "Game Unknown";
         }
 
