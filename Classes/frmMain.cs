@@ -17,6 +17,7 @@ namespace RePlays {
         public frmMain() {
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
+            StorageService.ManageStorage();
             InitializeComponent();
             PurgeTempVideos();
             //CheckForUpdates();

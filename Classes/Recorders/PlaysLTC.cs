@@ -93,6 +93,7 @@ namespace RePlays.Recorders {
                     if (RecordingService.GetCurrentSession().Pid == msg.Pid) {
                         ltc.StopRecording();
                         RecordingService.StopRecording();
+                        StorageService.ManageStorage();
                         DetectionService.LoadDetections();
                     }
                 }

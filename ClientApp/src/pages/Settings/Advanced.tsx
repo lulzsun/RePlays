@@ -43,7 +43,7 @@ export const Advanced: React.FC<Props> = ({settings, updateSettings}) => {
           <span className="font-normal text-sm">
             Your oldest session recordings will be automatically deleted as new sessions are recorded. 
             <br/>
-            Recordings will be deleted when they surpass 90% of available space when one of the fields below are empty.
+            Recordings will be deleted when they surpass 90% of available space if one of the fields below are empty.
           </span>
           <div className="flex flex-row gap-2 text-sm">
             <div className="flex flex-col">
