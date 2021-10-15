@@ -176,6 +176,15 @@ namespace RePlays.Helpers {
         }
 
         public static string GetAllVideos(string Game = "All Games", string SortBy = "Latest") {
+            VideoList videoList = GetAllVideos(Game, SortBy, true);
+            if (videoList == null) return "{}";
+            WebMessage webMessage = new();
+            webMessage.message = "RetrieveVideos";
+            webMessage.data = JsonSerializer.Serialize(videoList);
+            return JsonSerializer.Serialize(webMessage);
+        }
+
+        public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
             var allfiles = (dynamic)null;
             switch (SortBy) {
                 case "Latest":
@@ -191,7 +200,7 @@ namespace RePlays.Helpers {
                     allfiles = Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).Length);
                     break;
                 default:
-                    return "{}";
+                    return null;
             }
 
             VideoList videoList = new();
@@ -227,10 +236,7 @@ namespace RePlays.Helpers {
 
             videoList.games.Sort();
 
-            WebMessage webMessage = new();
-            webMessage.message = "RetrieveVideos";
-            webMessage.data = JsonSerializer.Serialize(videoList);
-            return JsonSerializer.Serialize(webMessage);
+            return videoList;
         }
 
         public static double GetVideoDuration(string videoPath) {
