@@ -5,23 +5,23 @@ using System.Text.Json;
 using static RePlays.Helpers.Functions;
 
 namespace RePlays.Services {
-    public class DetectionService {
-        JsonElement[] gameDetectionsJson;
-        JsonElement[] nonGameDetectionsJson;
+    public static class DetectionService {
+        static JsonElement[] gameDetectionsJson;
+        static JsonElement[] nonGameDetectionsJson;
         private static string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         private static string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
 
-        public void DisposeDetections() {
+        public static void DisposeDetections() {
             gameDetectionsJson = null;
             nonGameDetectionsJson = null;
         }
 
-        public void LoadDetections() {
+        public static void LoadDetections() {
             gameDetectionsJson = DownloadDetections(gameDetectionsFile, "game_detections.json");
             nonGameDetectionsJson = DownloadDetections(nonGameDetectionsFile, "nongame_detections.json");
         }
 
-        public JsonElement[] DownloadDetections(string dlPath, string file) {
+        public static JsonElement[] DownloadDetections(string dlPath, string file) {
             var result = string.Empty;
             try {
                 using (var webClient = new System.Net.WebClient()) {
@@ -39,7 +39,7 @@ namespace RePlays.Services {
             return JsonDocument.Parse(result).RootElement.EnumerateArray().ToArray();
         }
 
-        public bool IsMatchedGame(string exeFile) {
+        public static bool IsMatchedGame(string exeFile) {
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
@@ -59,7 +59,7 @@ namespace RePlays.Services {
             return false;
         }
 
-        public string GetGameTitle(string exeFile, bool isUnknown=false) {
+        public static string GetGameTitle(string exeFile, bool isUnknown=false) {
             if(isUnknown == false) {
                 for (int x = 0; x < gameDetectionsJson.Length; x++) {
                     JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
@@ -86,7 +86,7 @@ namespace RePlays.Services {
             return "Game Unknown";
         }
 
-        public bool IsMatchedNonGame(string exeFile) {
+        public static bool IsMatchedNonGame(string exeFile) {
             for (int x = 0; x < nonGameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = nonGameDetectionsJson[x].GetProperty("detections").EnumerateArray().ToArray();
 

@@ -1,9 +1,9 @@
 ﻿using System;
 
 namespace RePlays.Services {
-    public class RecordingService {
-        private Session currentSession = new Session(0, "Game Unknown");
-        public bool IsRecording { get; internal set; }
+    public static class RecordingService {
+        private static Session currentSession = new Session(0, "Game Unknown");
+        public static bool IsRecording { get; internal set; }
 
         public class Session {
             public int Pid { get; internal set; }
@@ -14,20 +14,20 @@ namespace RePlays.Services {
             }
         }
 
-        public void SetCurrentSession(int _Pid, string _GameTitle = "Game Unknown") {
+        public static void SetCurrentSession(int _Pid, string _GameTitle = "Game Unknown") {
             currentSession = new Session(_Pid, _GameTitle);
         }
 
-        public Session GetCurrentSession() {
+        public static Session GetCurrentSession() {
             return currentSession;
         }
 
-        public void StartRecording() {
+        public static void StartRecording() {
             Logger.WriteLine(string.Format("Start Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
             IsRecording = true;
         }
 
-        public void StopRecording() {
+        public static void StopRecording() {
             Logger.WriteLine(string.Format("Stop Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
             IsRecording = false;
         }

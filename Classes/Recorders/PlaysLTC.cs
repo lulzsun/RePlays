@@ -13,9 +13,7 @@ namespace RePlays.Recorders {
         public static void Start() {
             if (Connected) return;
 
-            RecordingService recordingService = new RecordingService();
-            DetectionService detectionService = new DetectionService();
-            detectionService.LoadDetections();
+            DetectionService.LoadDetections();
 
             ltc.Log += (sender, msg) => {
                 Logger.WriteLine(string.Format("{0}: {1}", msg.Title, msg.Message), msg.File, msg.Line);
@@ -44,22 +42,22 @@ namespace RePlays.Recorders {
             };
 
             ltc.ProcessCreated += (sender, msg) => {
-                if (!recordingService.IsRecording) { // If we aren't already recording something, lets look for a process to record
-                    bool isGame = detectionService.IsMatchedGame(msg.ExeFile);
-                    bool isNonGame = detectionService.IsMatchedNonGame(msg.ExeFile);
+                if (!RecordingService.IsRecording) { // If we aren't already recording something, lets look for a process to record
+                    bool isGame = DetectionService.IsMatchedGame(msg.ExeFile);
+                    bool isNonGame = DetectionService.IsMatchedNonGame(msg.ExeFile);
 
                     if (isGame && !isNonGame) {
                         Logger.WriteLine(string.Format("This process [{0}] is a recordable game, preparing to LoadGameModule", msg.Pid));
 
-                        string gameTitle = detectionService.GetGameTitle(msg.ExeFile);
-                        recordingService.SetCurrentSession(msg.Pid, gameTitle);
+                        string gameTitle = DetectionService.GetGameTitle(msg.ExeFile);
+                        RecordingService.SetCurrentSession(msg.Pid, gameTitle);
                         ltc.SetGameName(gameTitle);
                         ltc.LoadGameModule(msg.Pid);
                     }
                     else if (!isGame && !isNonGame) {
                         Logger.WriteLine(string.Format("This process [{0}] is an unknown application, lets try to ScanForGraphLib", msg.Pid));
 
-                        recordingService.SetCurrentSession(msg.Pid, detectionService.GetGameTitle(msg.ExeFile, true));
+                        RecordingService.SetCurrentSession(msg.Pid, DetectionService.GetGameTitle(msg.ExeFile, true));
                         ltc.ScanForGraphLib(msg.Pid); // the response will be sent to GraphicsLibLoaded if successful
                     }
                     else {
@@ -72,7 +70,7 @@ namespace RePlays.Recorders {
             };
 
             ltc.GraphicsLibLoaded += (sender, msg) => {
-                ltc.SetGameName(recordingService.GetCurrentSession().GameTitle);
+                ltc.SetGameName(RecordingService.GetCurrentSession().GameTitle);
                 ltc.LoadGameModule(msg.Pid);
             };
 
@@ -82,20 +80,20 @@ namespace RePlays.Recorders {
 
             ltc.VideoCaptureReady += (sender, msg) => {
                 //if (AutomaticRecording == true)
-                if (!recordingService.IsRecording) {
+                if (!RecordingService.IsRecording) {
                     ltc.SetKeyBinds();
                     ltc.StartRecording();
-                    recordingService.StartRecording();
-                    detectionService.DisposeDetections();
+                    RecordingService.StartRecording();
+                    DetectionService.DisposeDetections();
                 }
             };
 
             ltc.ProcessTerminated += (sender, msg) => {
-                if (recordingService.IsRecording) {
-                    if (recordingService.GetCurrentSession().Pid == msg.Pid) {
+                if (RecordingService.IsRecording) {
+                    if (RecordingService.GetCurrentSession().Pid == msg.Pid) {
                         ltc.StopRecording();
-                        recordingService.StopRecording();
-                        detectionService.LoadDetections();
+                        RecordingService.StopRecording();
+                        DetectionService.LoadDetections();
                     }
                 }
             };
