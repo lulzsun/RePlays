@@ -19,7 +19,7 @@ namespace RePlays.Controllers {
         [HttpGet("/Plays/{game}/.thumbs/{fileName}")]
         public IActionResult GetThumb(string game, string fileName) {
             string filePath = Path.Join(GetPlaysFolder(), game + "\\.thumbs\\", fileName);
-            if (!System.IO.File.Exists(filePath)) return null;
+            if (!System.IO.File.Exists(filePath)) return this.NotFound();
             FileStream stream = new(filePath, FileMode.Open, FileAccess.Read);
             FileStreamResult file = File(stream, "image/png", true);
             return file;
