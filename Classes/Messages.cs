@@ -57,6 +57,11 @@ namespace RePlays.Messages {
         public ClipSegment[] clipSegments { get; set; }
     }
 
+    public class RemoveProgram {
+        public string list { get; set; }
+        public string exe { get; set; }
+    }
+
     public class WebMessage {
         public string message { get; set; }
         public string data { get; set; }
@@ -186,6 +191,51 @@ namespace RePlays.Messages {
                             t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                             SendMessage(t);
                         }
+                    }
+                    break;
+                case "AddProgram": {
+                        var list = webMessage.data.Replace("\"", "");
+                        switch (list) {
+                            case "blacklist":
+                            case "whitelist":
+                                using (var fbd = new OpenFileDialog()) {
+                                    fbd.Filter = "Executable files (*.exe)|*.exe";
+                                    DialogResult result = fbd.ShowDialog();
+
+                                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.FileName)) {
+                                        if (list == "blacklist") {
+                                            Settings.advancedSettings.blacklist.Add(fbd.FileName.ToLower());
+                                            Logger.WriteLine($"Added {fbd.FileName} to blacklist");
+                                        }
+                                        else if (list == "whitelist") {
+                                            Settings.advancedSettings.whitelist.Add(fbd.FileName.ToLower());
+                                            Logger.WriteLine($"Added {fbd.FileName} to whitelist");
+                                        }
+                                        SaveSettings();
+                                        SendMessage(GetUserSettings());
+                                    }
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    break;
+                case "RemoveProgram": {
+                        RemoveProgram data = JsonSerializer.Deserialize<RemoveProgram>(webMessage.data);
+                        Logger.WriteLine($"{data.exe} | {data.list}");
+                        switch (data.list) {
+                            case "blacklist":
+                                Settings.advancedSettings.blacklist.Remove(data.exe.ToLower());
+                                break;
+                            case "whitelist":
+                                Settings.advancedSettings.whitelist.Remove(data.exe.ToLower());
+                                break;
+                            default:
+                                break;
+                        }
+                        SaveSettings();
+                        SendMessage(GetUserSettings());
                     }
                     break;
                 default:

@@ -84,7 +84,7 @@ declare global {
     autoManageSpace: boolean,
     manageSpaceLimit: number,
     manageTimeLimit: number,
-    //customWhiteList: string[],
-    //customBlackList: string[],
+    whitelist: string[],
+    blacklist: string[],
   }
 }

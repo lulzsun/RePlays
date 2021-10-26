@@ -84,5 +84,10 @@ namespace RePlays.JSONObjects {
         public int manageSpaceLimit { get { return _manageSpaceLimit; } set { _manageSpaceLimit = value; } }
         public int _manageTimeLimit = -1;
         public int manageTimeLimit { get { return _manageTimeLimit; } set { _manageTimeLimit = value; } }
+
+        public List<string> _blacklist = new();
+        public List<string> blacklist { get { return _blacklist; } set { _blacklist = value; } }
+        public List<string> _whitelist = new();
+        public List<string> whitelist { get { return _whitelist; } set { _whitelist = value; } }
     }
 }

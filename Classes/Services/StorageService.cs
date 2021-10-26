@@ -14,7 +14,6 @@ namespace RePlays.Services {
             double folderSizeGb = DirectorySize(new DirectoryInfo(folderPath)) / 1024f / 1024f / 1024f;
 
             Logger.WriteLine(string.Format("VideoSaveDir size is {0} gbs", folderSizeGb));
-            Logger.WriteLine($"{SettingsService.Settings.advancedSettings.manageSpaceLimit} {SettingsService.Settings.advancedSettings.manageTimeLimit}");
 
             if(SettingsService.Settings.advancedSettings.manageSpaceLimit == -1 || SettingsService.Settings.advancedSettings.manageTimeLimit == -1) {
                 Logger.WriteLine("Automatically managing space if exceeds 90% of folder's disk");
@@ -42,7 +41,9 @@ namespace RePlays.Services {
 
                 string filePath = Path.Join(SettingsService.Settings.advancedSettings.videoSaveDir, session.game, "\\", session.fileName);
                 if (File.Exists(filePath)) {
-                    //File.Delete(filePath);
+                    var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(filePath) + ".png");
+                    File.Delete(filePath);
+                    File.Delete(thumbPath);
                     Logger.WriteLine(filePath + " deleted due to being over spaceLimit");
                     bytesAlreadyDeleted += session.size;
                 }
@@ -57,7 +58,9 @@ namespace RePlays.Services {
                 if (maxAgeInDays < (DateTime.Now - session.date).TotalDays) {
                     string filePath = Path.Join(SettingsService.Settings.advancedSettings.videoSaveDir, session.game, "\\", session.fileName);
                     if (File.Exists(filePath)) {
+                        var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(filePath) + ".png");
                         File.Delete(filePath);
+                        File.Delete(thumbPath);
                         Logger.WriteLine(filePath + " deleted due to being over maxAge");
                     }
                 } else {

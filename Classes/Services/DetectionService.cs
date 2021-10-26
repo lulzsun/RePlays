@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using static RePlays.Helpers.Functions;
 
@@ -40,6 +39,9 @@ namespace RePlays.Services {
         }
 
         public static bool IsMatchedGame(string exeFile) {
+            if (SettingsService.Settings.advancedSettings.whitelist.Contains(exeFile.ToLower())) {
+                return true;
+            }
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
@@ -87,6 +89,9 @@ namespace RePlays.Services {
         }
 
         public static bool IsMatchedNonGame(string exeFile) {
+            if(SettingsService.Settings.advancedSettings.blacklist.Contains(exeFile.ToLower())) {
+                return true;
+            }
             for (int x = 0; x < nonGameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = nonGameDetectionsJson[x].GetProperty("detections").EnumerateArray().ToArray();
 

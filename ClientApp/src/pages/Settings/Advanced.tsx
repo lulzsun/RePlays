@@ -91,9 +91,22 @@ export const Advanced: React.FC<Props> = ({settings, updateSettings}) => {
 
       <h1 className="font-bold text-2xl mt-4">Manage Games</h1>
       <span className="font-normal text-sm">Add .exe files to these lists to manage what is and isn't recorded.</span>
-      {/* Custom Recorded Games
-      Indicate which games you'd like to try to record. In some cases, this will solve recording issues.
-      Never Record These Games The list of games that Plays will never record. */}
+      <span className="text-gray-700">Custom Recorded Games</span>
+      <span className="font-normal text-sm">Indicate which games you'd like to try to record. In some cases, this will solve recording issues.</span>
+      <div className="flex flex-row gap-2">
+        {settings !== undefined && settings.whitelist.map((item) => {
+          return <Button text={item.replace(/^.*[\\\/]/, '')} width={"auto"} onClick={(e) => {postMessage("RemoveProgram", {"list": "whitelist", "exe": item})}}/>
+        })}
+        <Button text="Add Program" width={"auto"} onClick={(e) => {postMessage("AddProgram", "whitelist")}}/>
+      </div>
+      <span className="text-gray-700">Never Record These Games</span>
+      <span className="font-normal text-sm">The list of games that Plays will never record.</span>
+      <div className="flex flex-row gap-2">
+        {settings !== undefined && settings.blacklist.map((item) => {
+          return <Button text={item.replace(/^.*[\\\/]/, '')} width={"auto"} onClick={(e) => {postMessage("RemoveProgram", {"list": "blacklist", "exe": item})}}/>
+        })}
+        <Button text="Add Program" width={"auto"} onClick={(e) => {postMessage("AddProgram", "blacklist")}}/>
+      </div>
     </div>
 	)
 }
