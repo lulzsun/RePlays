@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
@@ -107,8 +106,9 @@ namespace RePlays {
             if (webView2 == null || webView2.IsDisposed == true) return;
             if (webView2.InvokeRequired) {
                 // Call this same method but make sure it is on UI thread
-                System.Action safeWrite = delegate { PostWebMessageAsJson(message); };
-                webView2.Invoke(safeWrite);
+                webView2.BeginInvoke((MethodInvoker)delegate {
+                    PostWebMessageAsJson(message);
+                });
             }
             else
                 webView2.CoreWebView2.PostWebMessageAsJson(message);
@@ -130,9 +130,7 @@ namespace RePlays {
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e) {
-            if (e.CloseReason == CloseReason.WindowsShutDown) return;
-
-            if (!new StackTrace().GetFrames().Any(x => x.GetMethod().Name == "Close")) {
+            if (e.CloseReason == CloseReason.UserClosing) {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
                 this.ShowInTaskbar = false;
