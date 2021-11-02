@@ -16,8 +16,8 @@ namespace RePlays.Services {
             Logger.WriteLine(string.Format("VideoSaveDir size is {0} gbs", folderSizeGb));
 
             if(SettingsService.Settings.advancedSettings.manageSpaceLimit == -1 || SettingsService.Settings.advancedSettings.manageTimeLimit == -1) {
-                Logger.WriteLine("Automatically managing space if exceeds 90% of folder's disk");
-                if(percentOfUsedDisk > 90) {
+                Logger.WriteLine($"Automatically managing space if exceeds 90% of folder's disk. Currently at {percentOfUsedDisk}%");
+                if (percentOfUsedDisk > 90) {
                     Logger.WriteLine("Disk is over 90% capacity, purging sessions");
                     DeleteSessionsOverSpaceLimit((int)(dInfo.TotalSize * 90 * .01 / 1024f / 1024f / 1024f), (int)((dInfo.TotalSize - dInfo.TotalFreeSpace) / 1024f / 1024f / 1024f));
                 }

@@ -160,6 +160,7 @@ namespace RePlays {
         private void exitToolStripMenuItem_Click(object sender, System.EventArgs e) {
             notifyIcon1.Visible = false;
             this.Close();
+            Application.Exit();
         }
 
         private void checkForUpdatesToolStripMenuItem_Click(object sender, System.EventArgs e) {
