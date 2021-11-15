@@ -8,11 +8,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms; // exists for Application.StartupPath
-using RePlays.JSONObjects;
-using RePlays.Messages;
 using RePlays.Services;
 
-namespace RePlays.Helpers {
+namespace RePlays.Utils {
     public static class Functions {
         public static string DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
             WebMessage webMessage = new();

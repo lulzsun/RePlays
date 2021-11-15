@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
-using static RePlays.Helpers.Functions;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Controllers {
     [ApiController]

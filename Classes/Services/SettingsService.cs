@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text.Json;
-using RePlays.JSONObjects;
-using static RePlays.Helpers.Functions;
+using RePlays.Utils;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class SettingsService {

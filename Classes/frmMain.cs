@@ -1,13 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
-using RePlays.Messages;
 using RePlays.Recorders;
 using RePlays.Services;
 using Squirrel;
-using static RePlays.Helpers.Functions;
+using RePlays.Utils;
+using static RePlays.Utils.Functions;
 
 namespace RePlays {
     public partial class frmMain : Form {
@@ -19,7 +18,7 @@ namespace RePlays {
             StorageService.ManageStorage();
             InitializeComponent();
             PurgeTempVideos();
-            //CheckForUpdates();
+            CheckForUpdates();
             notifyIcon1.Icon = this.Icon;
         }
 
@@ -38,9 +37,22 @@ namespace RePlays {
             if(!PlaysLTC.Connected) PlaysLTC.Start();
         }
 
-        private async Task CheckForUpdates() {
-            using (var manager = UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays")) {
-                await manager.Result.UpdateApp();
+        private async void CheckForUpdates() {
+            if (SettingsService.Settings.generalSettings.update == "none") return;
+            return;
+
+            var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays");
+            var updateInfo = await manager.CheckForUpdate();
+
+            if(updateInfo.ReleasesToApply.Count > 0) {
+                if (SettingsService.Settings.generalSettings.update == "automatic") {
+                    Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
+                    await manager.UpdateApp();
+                    Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
+                }
+                else { // manual
+
+                }
             }
         }
 

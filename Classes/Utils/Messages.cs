@@ -5,13 +5,11 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RePlays.Controllers;
-using RePlays.JSONObjects;
 using RePlays.Recorders;
-using RePlays.Services;
-using static RePlays.Helpers.Functions;
+using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
 
-namespace RePlays.Messages {
+namespace RePlays.Utils {
     public class RetrieveVideos {
         public string game { get; set; }
         public string sortBy { get; set; }

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace RePlays.JSONObjects {
+namespace RePlays.Utils {
     public class VideoList {
         public string game { get; set; }
         public List<string> games { get; set; }

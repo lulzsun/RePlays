@@ -1,9 +1,9 @@
 ﻿using PlaysLTCWrapper;
-using RePlays.Messages;
 using RePlays.Services;
 using System.IO;
 using System.Threading.Tasks;
-using static RePlays.Helpers.Functions;
+using RePlays.Utils;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Recorders {
     public static class PlaysLTC {
@@ -84,7 +84,7 @@ namespace RePlays.Recorders {
                     ltc.SetKeyBinds();
                     ltc.StartRecording();
                     RecordingService.StartRecording();
-                    DetectionService.DisposeDetections();
+                    //DetectionService.DisposeDetections();
                 }
             };
 
@@ -94,14 +94,19 @@ namespace RePlays.Recorders {
                         ltc.StopRecording();
                         RecordingService.StopRecording();
                         StorageService.ManageStorage();
-                        DetectionService.LoadDetections();
+                        //DetectionService.LoadDetections();
                     }
                 }
             };
 
             ltc.SaveFinished += async (sender, msg) => {
-                var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
-                WebMessage.SendMessage(t);
+                try {
+                    var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+                    WebMessage.SendMessage(t);
+                }
+                catch (System.Exception e) {
+                    Logger.WriteLine(e.Message);
+                }
             };
 
             Task.Run(() => ltc.Connect(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe")));

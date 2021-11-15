@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
-namespace RePlays.Services {
+namespace RePlays.Utils {
     public static class Logger {
         public static bool IsConsole = false;
         public static void WriteLine(string message,

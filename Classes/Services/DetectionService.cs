@@ -1,7 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Text.Json;
-using static RePlays.Helpers.Functions;
+using RePlays.Utils;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class DetectionService {
