@@ -15,10 +15,21 @@
     <PackageReleaseNotes></PackageReleaseNotes>
     <RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
+    <SquirrelTools>$(Pkgsquirrel_windows)\tools</SquirrelTools>
+    <Version>1.0.0</Version>
+    <NuspecFile>RePlays.nuspec</NuspecFile>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.9" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.902.49" />
+    <PackageReference Include="NuGet.CommandLine" Version="5.11.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="squirrel.windows" Version="2.0.1" />
   </ItemGroup>
 
@@ -100,6 +111,13 @@
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       </ResolvedFileToPublish>
     </ItemGroup>
+	
+	<XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
+		<Output TaskParameter="Result" ItemName="ID" />
+    </XmlPeek>
+
+    <Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
+    <Exec Command="$(SquirrelTools)\Squirrel.exe --releasify $(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases" />
   </Target>
 
 </Project>

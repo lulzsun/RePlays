@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>RePlays</id>
+    <version>0.0.0</version>
+    <title>RePlays</title>
+    <authors>lulzsun</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/lulzsun/RePlays</projectUrl>
+    <iconUrl>https://github.com/lulzsun/RePlays/raw/main/Resources/logo.png</iconUrl>
+    <description>Open-source game recording management software</description>
+    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
+    <copyright>$copyright$</copyright>
+    <tags>Tag1 Tag2</tags>
+  </metadata>
+  
+  <files>
+	<file src="bin\Publish\net5.0-windows\**" target="lib\net45"/>
+  </files>
+</package>
