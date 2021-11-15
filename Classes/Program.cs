@@ -4,8 +4,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using RePlays.Services;
-using RePlays;
+using RePlays.Utils;
 using System.Threading;
 
 namespace RePlays {
