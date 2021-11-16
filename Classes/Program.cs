@@ -15,8 +15,6 @@ namespace RePlays {
 
         [STAThread]
         public static void Main(string[] args) {
-            const string mutexName = @"Global\RePlays";
-
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
             string debugArg = "-debug";
@@ -25,9 +23,15 @@ namespace RePlays {
                 AttachConsole(ATTACH_PARENT_PROCESS);
             }
 
-            var mutex = new Mutex(true, mutexName, out var createdNew);
+            // log all exceptions
+            AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => {
+                Logger.WriteLine(eventArgs.Exception.ToString());
+            };
+
+            // prevent multiple instances
+            var mutex = new Mutex(true, @"Global\RePlays", out var createdNew);
             if (!createdNew) {
-                Logger.WriteLine(mutexName + " is already running! Exiting the application.");
+                Logger.WriteLine("RePlays is already running! Exiting the application.");
                 return;
             }
 

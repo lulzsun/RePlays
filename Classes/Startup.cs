@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
+using RePlays.Utils;
 using System.IO;
 
 namespace RePlays {
@@ -25,6 +27,9 @@ namespace RePlays {
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => {
                 configuration.RootPath = "ClientApp/build";
+            });
+            services.AddMvc(options => {
+                options.Filters.Add(new ErrorHandlingFilter());
             });
         }
 
@@ -68,6 +73,13 @@ namespace RePlays {
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
+        }
+
+        public class ErrorHandlingFilter : ExceptionFilterAttribute {
+            public override void OnException(ExceptionContext context) {
+                Logger.WriteLine(context.Exception.ToString());
+                context.ExceptionHandled = true; //optional 
+            }
         }
     }
 }
