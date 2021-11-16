@@ -10,11 +10,16 @@ import Settings from './pages/Settings';
 import Modal from './components/Modal';
 
 export const ContextMenuContext = createContext<ContextMenuOptions | null>(null);
+export const ModalContext = createContext<ModalOptions | null>(null);
 
 function App() {
   const [contextMenuItems, setContextMenuItems] = useState<ContextMenuItem[]>();
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition>({x: -100, y: -100});
   const contextMenuFocusEle = useRef<HTMLInputElement | null>(null);
+
+  const [modalData, setModalData] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfirm, setModalConfirm] = useState(() => () => {});
 
   const [game, setGameSort] = useState("All Games");
   const [sortBy, setTypeSort] = useState("Latest");
@@ -24,10 +29,6 @@ function App() {
   const [clipTotal, setClipTotal] = useState(0);
   const [sessionTotal, setSessionTotal] = useState(0);
   const [userSettings, setUserSettings] = useState<UserSettings>();
-
-  const [displayModal, setDisplayModal] = useState({});
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalConfirm, setModalConfirm] = useState(() => () => {});
 
   function handleWebViewMessages(event: Event) {
     let eventData = (event as Webview2Event).data;
@@ -50,7 +51,7 @@ function App() {
         setSessionTotal(data.sessionsSize);
         break;
       case 'DisplayModal':
-        setDisplayModal(data);
+        setModalData(data);
         if(data.title === "Missing Recorder") {
           setModalConfirm(() => () => postMessage('InstallPlaysLTC'));
         } else if(data.title === "Downloading") {
@@ -80,14 +81,14 @@ function App() {
 
   return (
     <Router>
-      <ContextMenuContext.Provider value={{setItems: (items) => {setContextMenuItems(items)}, 
-        setPosition: (position) => {
+      <ModalContext.Provider value={{setData: (data) => {setModalData(data)}, setOpen: (open) => {setModalOpen(open)}, isOpen: modalOpen, setConfirm: (confirm) => {setModalConfirm(() => confirm)}}}>
+      <ContextMenuContext.Provider value={{setItems: (items) => {setContextMenuItems(items)}, setPosition: (position) => {
           setTimeout(() => {
             contextMenuFocusEle.current!.focus(); 
             setContextMenuPosition(position);
           }, 1);
         }}}>
-        <Modal displayModal={displayModal} open={modalOpen} setOpen={setModalOpen} onConfirm={modalConfirm}/>
+        <Modal modalData={modalData} open={modalOpen} setOpen={setModalOpen} onConfirm={modalConfirm}/>
         <div className="relative min-h-screen lg:flex">
           <div className="absolute inline-block text-left dropdown" style={{zIndex: 9999}}>
             <input tabIndex={-1} ref={contextMenuFocusEle} className="w-0"/>
@@ -151,12 +152,13 @@ function App() {
                 <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
                 <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
                 <Route exact path="/settings"> <Settings userSettings={userSettings} setUserSettings={setUserSettings}/></Route>
-                <Route exact path="/player/:game/:video"><Player/></Route>
+                <Route exact path="/player/:game/:video/:videoType"><Player/></Route>
               </Switch>
             </div>
           </div>
         </div>
       </ContextMenuContext.Provider>
+      </ModalContext.Provider>
     </Router>
   );
 }

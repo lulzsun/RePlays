@@ -43,6 +43,20 @@ declare global {
     setItems: (items: ContextMenuItem[]) => any,
     setPosition: (position: ContextMenuPosition) => any,
   }
+  interface ModalOptions {
+    setData: (data: ModalData) => any,
+    setOpen: (open: boolean) => any,
+    isOpen: boolean,
+    setConfirm: (confirm: () => any) => any,
+  }
+  interface ModalData {
+    title?: string | "Title";
+    context?: string | any;
+    icon?: ModalIcon | 'none';
+    progress?: number | 0;
+    progressMax?: number | 0;
+    cancel?: boolean | false;
+  }
   interface ContextMenuItem {
     name: string, 
     onClick?: () => any;

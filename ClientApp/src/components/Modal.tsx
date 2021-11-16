@@ -2,18 +2,10 @@ import { Fragment, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 
 interface Props {
-  displayModal: DisplayModal;
+  modalData: ModalData;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onConfirm?: () => any;
-}
-
-interface DisplayModal {
-  title?: string;
-  context?: string | any;
-  icon?: ModalIcon | 'none';
-  progress?: number;
-  progressMax?: number;
 }
 
 const iconColors = {
@@ -24,12 +16,13 @@ const iconColors = {
   'success': 'green',
 };
 
-export const Modal: React.FC<Props> = ({displayModal, open, setOpen, onConfirm}) => {
-  const title = displayModal.title;
-  const context = displayModal.context;
-  const icon = displayModal.icon;
-  const progress = displayModal.progress;
-  const progressMax = displayModal.progressMax;
+export const Modal: React.FC<Props> = ({modalData, open, setOpen, onConfirm}) => {
+  const title = modalData.title;
+  const context = modalData.context;
+  const icon = modalData.icon;
+  const progress = modalData.progress;
+  const progressMax = modalData.progressMax;
+  const cancel = modalData.cancel;
   
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -63,7 +56,7 @@ export const Modal: React.FC<Props> = ({displayModal, open, setOpen, onConfirm})
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
-                  {icon !== "none" && 
+                  {(icon !== "none" && icon !== undefined) && 
                   <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 bg-${iconColors[icon!]}-100`}>
                     <div className={`h-6 w-6 text-${iconColors[icon!]}-600`} aria-hidden="true">
                       {icon === "info" && 
@@ -92,7 +85,7 @@ export const Modal: React.FC<Props> = ({displayModal, open, setOpen, onConfirm})
                     <div className="mt-2">
                       <div className="text-sm text-gray-500">
                         {context}
-                        {progressMax !== 0 &&
+                        {(progressMax !== 0 && progressMax !== undefined) &&
                           <div className="w-full bg-gray-200 rounded">
                             <div style={{width: `${(progress!/progressMax!) * 100}%`}} className="absolute top-0 h-4 rounded shim-blue"></div>
                           </div>
@@ -111,7 +104,7 @@ export const Modal: React.FC<Props> = ({displayModal, open, setOpen, onConfirm})
                 >
                   Confirm
                 </button>}
-                {icon === 'question' &&
+                {(icon === 'question' || cancel) &&
                 <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
