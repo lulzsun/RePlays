@@ -41,18 +41,15 @@ const Streamable: React.FC<Props> = ({settings, updateSettings}) => {
       <div className="font-bold">Streamable</div>
       <div className="flex flex-col">
         Email
-        <div className="flex flex-row">
-          <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
-            type="email" defaultValue={settings === undefined ? "" : settings.streamableSettings.email} onBlur={(e) => {
-              if(settings !== undefined)
-              settings.streamableSettings.email = e.target.value;
-              updateSettings();
-            }}/>
-        </div>
+        <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
+          type="email" defaultValue={settings === undefined ? "" : settings.streamableSettings.email} onBlur={(e) => {
+            if(settings !== undefined)
+            settings.streamableSettings.email = e.target.value;
+            updateSettings();
+          }}/>
       </div>
       <div className="flex flex-col">
         Password
-        <div className="flex flex-row">
           <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
             type="password" defaultValue={settings === undefined ? "" : settings.streamableSettings.password}
             onFocus={(e) => {
@@ -63,7 +60,6 @@ const Streamable: React.FC<Props> = ({settings, updateSettings}) => {
               settings.streamableSettings.password = e.target.value;
               updateSettings();
             }}/>
-        </div>
       </div>
     </div>
 	)
