@@ -209,7 +209,7 @@ namespace RePlays.Utils {
             videoList.clips = new();
 
             foreach (string file in allfiles) {
-                if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-clp.mp4"))) continue;
+                if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-clp.mp4")) || !File.Exists(file)) continue;
 
                 Video video = new();
                 video.size = new FileInfo(file).Length;
