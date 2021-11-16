@@ -9,7 +9,7 @@ interface Props {
 
 export const Advanced: React.FC<Props> = ({settings, updateSettings}) => {
 	return (
-    <div className="flex flex-col gap-2 font-medium text-base"> 
+    <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
       <h1 className="font-bold text-2xl">Save Locations</h1>
       <div className="flex flex-col">
         <span className="text-gray-700">Game Recordings Directory</span>

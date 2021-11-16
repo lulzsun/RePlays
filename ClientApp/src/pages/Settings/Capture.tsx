@@ -48,7 +48,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
   }, [setMicAudioDevices]);
 
 	return (
-    <div className="flex flex-col gap-2 font-medium text-base"> 
+    <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
       <h1 className="font-bold text-2xl">Capture Mode</h1>
       <div onChange={e => {if(settings) settings.recordingMode = (e?.target as HTMLInputElement).value; updateSettings();}}>
         <label className="inline-flex items-center">
