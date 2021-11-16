@@ -116,8 +116,7 @@ namespace RePlays.Utils {
                     }
                     break;
                 case "UpdateSettings": {
-                        SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data);
-                        SaveSettings(data);
+                        SaveSettings(webMessage);
                     }
                     break;
                 case "RetrieveVideos": {

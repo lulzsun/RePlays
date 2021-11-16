@@ -18,6 +18,9 @@ namespace RePlays.Services {
 
             private AdvancedSettings _advancedSettings = new();
             public AdvancedSettings advancedSettings { get { return _advancedSettings; } set { _advancedSettings = value; } }
+
+            private UploadSettings _uploadSettings = new();
+            public UploadSettings uploadSettings { get { return _uploadSettings; } set { _uploadSettings = value; } }
         }
 
         public static void LoadSettings() {
@@ -35,6 +38,12 @@ namespace RePlays.Services {
             else {
                 Logger.WriteLine(string.Format("{0} did not exist, using default values", settingsFile));
             }
+        }
+
+        public static void SaveSettings(WebMessage webMessage) {
+            SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data);
+            data.uploadSettings.streamableSettings.password = EncryptString(data.uploadSettings.streamableSettings.password);
+            SaveSettings(data);
         }
 
         public static void SaveSettings(SettingsJson settings=null) {

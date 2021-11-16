@@ -32,9 +32,9 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
             <Link to="/settings/capture" onClick={() => setSubPage("Capture")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Capture
             </Link>
-            {/* <Link to="/settings/upload" onClick={() => setSubPage("Upload")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            <Link to="/settings/upload" onClick={() => setSubPage("Upload")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Upload
-            </Link> */}
+            </Link>
             <Link to="/settings/advanced" onClick={() => setSubPage("Advanced")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Advanced
             </Link>
@@ -45,12 +45,12 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
               About
             </Link>
           </div>
-          <div className="flex-auto overflow-auto h-full w-full p-7 pt-0">
+          <div className="flex-auto overflow-auto h-full w-full p-7 pt-0 pb-0">
             <Switch>
               <Route exact path="/settings">         <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
               <Route exact path="/settings/general"> <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
               <Route exact path="/settings/capture"> <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings}/></Route>
-              <Route exact path="/settings/upload">  <Upload/></Route>
+              <Route exact path="/settings/upload">  <Upload updateSettings={updateSettings} settings={userSettings?.uploadSettings}/></Route>
               <Route exact path="/settings/advanced"><Advanced updateSettings={updateSettings} settings={userSettings?.advancedSettings}/></Route>
               <Route exact path="/settings/help">    <Help/></Route>
               <Route exact path="/settings/about">   <About/></Route>

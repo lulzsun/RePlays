@@ -393,5 +393,21 @@ namespace RePlays.Utils {
                 }
             }
         }
+
+        public static string EncryptString(string stringToEncrypt, string optionalEntropy = null) {
+            return Convert.ToBase64String(
+                ProtectedData.Protect(
+                    Encoding.UTF8.GetBytes(stringToEncrypt)
+                    , optionalEntropy != null ? Encoding.UTF8.GetBytes(optionalEntropy) : null
+                    , DataProtectionScope.CurrentUser));
+        }
+
+        public static string DecryptString(string encryptedString, string optionalEntropy = null) {
+            return Encoding.UTF8.GetString(
+                ProtectedData.Unprotect(
+                    Convert.FromBase64String(encryptedString)
+                    , optionalEntropy != null ? Encoding.UTF8.GetBytes(optionalEntropy) : null
+                    , DataProtectionScope.CurrentUser));
+        }
     }
 }

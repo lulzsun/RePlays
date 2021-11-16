@@ -56,7 +56,7 @@ declare global {
   interface UserSettings {
     generalSettings: GeneralSettings
     captureSettings: CaptureSettings
-    //uploadSettings: UploadSettings
+    uploadSettings: UploadSettings
     advancedSettings: AdvancedSettings
   }
   interface GeneralSettings {
@@ -74,8 +74,13 @@ declare global {
     }
   }
   interface UploadSettings {
-    streamableUser: string,
-    streamablePass: string,
+    streamableSettings: {
+      email: string,
+      password: string,
+    },
+    youtubeSettings: {
+      token: string,
+    }
   }
   interface AdvancedSettings {
     videoSaveDir: string,
