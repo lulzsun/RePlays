@@ -12,7 +12,11 @@ using RePlays.Services;
 
 namespace RePlays.Utils {
     public static class Functions {
-        public static string DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
+        public static void SendMessage(string message) {
+            frmMain.PostWebMessageAsJson(message);
+        }
+
+        public static void DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
             WebMessage webMessage = new();
             webMessage.message = "DisplayModal";
             webMessage.data = "{" +
@@ -21,7 +25,19 @@ namespace RePlays.Utils {
                 "\"progress\": " + progress + ", " +
                 "\"progressMax\": " + progressMax + ", " +
                 "\"icon\": \"" + icon + "\"}";
-            return JsonSerializer.Serialize(webMessage);
+            SendMessage(JsonSerializer.Serialize(webMessage));
+        }
+
+        public static void DisplayToast(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
+            WebMessage webMessage = new();
+            webMessage.message = "DisplayToast";
+            webMessage.data = "{" +
+                "\"context\": \"" + context + "\", " +
+                "\"title\": \"" + title + "\", " +
+                "\"progress\": " + progress + ", " +
+                "\"progressMax\": " + progressMax + ", " +
+                "\"icon\": \"" + icon + "\"}";
+            SendMessage(JsonSerializer.Serialize(webMessage));
         }
 
         public static string GetPlaysLtcFolder() {
@@ -80,7 +96,7 @@ namespace RePlays.Utils {
             }
         }
 
-        public static async Task<bool> DownloadPlaysSetupAsync(Microsoft.Web.WebView2.Core.CoreWebView2 coreWebView2) {
+        public static async Task<bool> DownloadPlaysSetupAsync() {
             var playsSetupDir = Path.Join(GetTempFolder() + @"\PlaysSetup.exe");
             var correctHash = "e12c1740e7ff672fcbb33c2d35cfb4f557b53f37b94653cf8170af2e074e1622";
 
@@ -88,14 +104,14 @@ namespace RePlays.Utils {
                 if (SHA256Compare(playsSetupDir, correctHash)) return true;
 
             Logger.WriteLine("PlaysSetup.exe missing or failed checksum, starting download");
-            coreWebView2.PostWebMessageAsJson(DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", 0, 145310344));
+            DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", 0, 145310344);
             using (var client = new WebClient()) {
                 client.DownloadProgressChanged += (o, args) => {
-                    coreWebView2.PostWebMessageAsJson(DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", args.BytesReceived, 145310344));
+                    DisplayModal("Downloading PlaysSetup.exe from web.archive.org", "Downloading", "none", args.BytesReceived, 145310344);
                 };
                 client.DownloadFileCompleted += (o, args) => {
                     Logger.WriteLine("Finished downloading PlaysSetup.exe");
-                    coreWebView2.PostWebMessageAsJson(DisplayModal("Finished downloading PlaysSetup.exe, doing a checksum", "Downloading", "info"));
+                    DisplayModal("Finished downloading PlaysSetup.exe, doing a checksum", "Downloading", "info");
                 };
                 await client.DownloadFileTaskAsync(
                     new Uri("https://web.archive.org/web/20191212211927if_/https://app-updates.plays.tv/builds/PlaysSetup.exe"),
