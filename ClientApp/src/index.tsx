@@ -50,6 +50,7 @@ declare global {
     setConfirm: (confirm: () => any) => any,
   }
   interface ModalData {
+    id?: string | "none";
     title?: string | "Title";
     context?: string | any;
     icon?: ModalIcon | 'none';
@@ -88,6 +89,7 @@ declare global {
     }
   }
   interface UploadSettings {
+    recentLinks: string[],
     streamableSettings: {
       email: string,
       password: string,

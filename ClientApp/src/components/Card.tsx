@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { formatBytes } from '../helpers/utils';
 import { postMessage } from '../helpers/messenger';
+import { ModalContext } from '../App';
+import UploadModal from '../pages/UploadModal';
 
 interface Props {
   game?: string;
@@ -14,8 +16,19 @@ interface Props {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, video="", checked, onChange}) => {
-	return (
+export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, video="", videoType="", checked, onChange}) => {
+  const modalCtx = useContext(ModalContext);
+  
+  function handleUpload() {
+    console.log(`${game} ${video} ${videoType} to upload`);
+    var thumb = `${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${video}`;
+    thumb = thumb.substr(0, thumb.lastIndexOf('.')) + ".png" || thumb + ".png";
+
+    modalCtx?.setData({title: "Upload", context: <UploadModal video={video} game={game} thumb={thumb}/>, cancel: true});
+    modalCtx?.setOpen(true);
+  }
+  
+  return (
     <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-blue-500" : "")}>
       <div className="absolute z-40 w-full flex justify-between">
         <div className={"m-2 group-hover:opacity-100 " + (checked ? "opacity-100" : "opacity-0")}>
@@ -33,11 +46,13 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
               onClick={() => {postMessage("ShowInFolder", {filePath: `${game}/${video}`})}}>Show In Folder</div>
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
               onClick={() => {postMessage("Delete", {filePaths: [`${game}/${video}`]})}}>Delete</div>
+              {videoType === "Clips" && <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
+              onClick={() => {handleUpload()}}>Upload</div> }
             </div>
           </div>
         </div>
       </div>
-      <Link to={`/player/${game}/${video}`}>
+      <Link to={`/player/${game}/${video}/${videoType}`}>
         <div className="relative w-full rounded-t-lg object-cover overflow-hidden items-center">
           <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
           <img className="absolute z-20 w-full" alt="" src={`${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${thumb}`}/>

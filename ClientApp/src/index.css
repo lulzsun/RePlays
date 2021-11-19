@@ -88,3 +88,9 @@ code {
   animation: shimmer 2.5s ease-out infinite;
   content: "";
 }
+
+.progress-ring__circle {
+  transition: 0.35s stroke-dashoffset;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}

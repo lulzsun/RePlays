@@ -11,8 +11,11 @@ using static RePlays.Utils.Functions;
 namespace RePlays {
     public partial class frmMain : Form {
         public static Microsoft.Web.WebView2.WinForms.WebView2 webView2;
+        public ContextMenuStrip recentLinksMenu;
+        public static frmMain Instance;
 
         public frmMain() {
+            Instance = this;
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
             StorageService.ManageStorage();
@@ -23,7 +26,10 @@ namespace RePlays {
         }
 
         private void frmMain_Load(object sender, System.EventArgs e) {
-            if(SettingsService.Settings.generalSettings.startMinimized) {
+            recentLinksMenu = new();
+            recentLinksMenu.Items.Add("Left click to copy to clipboard. Right click to open URL.").Enabled = false;
+
+            if (SettingsService.Settings.generalSettings.startMinimized) {
                 this.Size = new Size(1080, 600);
                 this.FormBorderStyle = FormBorderStyle.Sizable;
                 CenterToScreen();
@@ -123,7 +129,8 @@ namespace RePlays {
                 });
             }
             else
-                webView2.CoreWebView2.PostWebMessageAsJson(message);
+                if(webView2 != null && webView2.CoreWebView2 != null)
+                    webView2.CoreWebView2.PostWebMessageAsJson(message);
         }
 
         bool firstTime = true;
@@ -202,6 +209,36 @@ namespace RePlays {
         private void frmMain_MouseUp(object sender, MouseEventArgs e) {
             moving = false;
             this.Capture = false;
+        }
+
+        private void recentLinks_ToolStripMenuItem_DropDownOpening(object sender, System.EventArgs e) {
+            PopulateRecentLinks(recentLinksToolStripMenuItem.DropDown.Items);
+        }
+
+        public void PopulateRecentLinks(ToolStripItemCollection itemCollection=null) {
+            if (itemCollection == null) {
+                PopulateRecentLinks(recentLinksMenu.Items);
+                recentLinksMenu.Show(Cursor.Position);
+                return;
+            }
+
+            for (int i = 1; i < itemCollection.Count; i++) {
+                itemCollection.RemoveAt(i);
+            }
+            foreach (var url in SettingsService.Settings.uploadSettings.recentLinks) {
+                itemCollection.Add(url).MouseDown += (s, e) => {
+                    if (e.Button == MouseButtons.Right) {
+                        Process.Start(new ProcessStartInfo(url.Split("] ")[1]) { UseShellExecute = true });
+                    }
+                    else if (e.Button == MouseButtons.Left) {
+                        Clipboard.SetText(url.Split("] ")[1]);
+                    }
+                };
+            }
+        }
+
+        public void HideRecentLinks() {
+            recentLinksMenu.Hide();
         }
     }
 }

@@ -92,6 +92,9 @@ namespace RePlays.Utils {
     }
 
     public class UploadSettings {
+        public List<string> _recentLinks = new();
+        public List<string> recentLinks { get { return _recentLinks; } set { _recentLinks = value; } }
+
         public class StreamableSettings {
             private string _email = "";
             public string email { get { return _email; } set { _email = value; } }

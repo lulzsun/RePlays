@@ -4,8 +4,10 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Collections.Generic;
 using RePlays.Controllers;
 using RePlays.Recorders;
+using RePlays.Services;
 using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
 
@@ -55,6 +57,36 @@ namespace RePlays.Utils {
         public ClipSegment[] clipSegments { get; set; }
     }
 
+    public class UploadVideo {
+        private string _destination;
+        public string destination {
+            get {
+                return _destination;
+            }
+            set {
+                _destination = value;
+            }
+        }
+        private string _title;
+        public string title {
+            get {
+                return _title;
+            }
+            set {
+                _title = value;
+            }
+        }
+        private string _file;
+        public string file {
+            get {
+                return _file;
+            }
+            set {
+                _file = value;
+            }
+        }
+    }
+
     public class RemoveProgram {
         public string list { get; set; }
         public string exe { get; set; }
@@ -64,6 +96,7 @@ namespace RePlays.Utils {
         public string message { get; set; }
         public string data { get; set; }
 
+        public static Dictionary<string, WebMessage> toastList = new();
         public static VideoSortSettings videoSortSettings = new() {
             game = "All Games",
             sortBy = "Latest"
@@ -92,7 +125,7 @@ namespace RePlays.Utils {
                             var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
 
                             if (!File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe"))) {
-                                SendMessage(DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question"));
+                                DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question");
                                 break;
                             }
 
@@ -101,17 +134,22 @@ namespace RePlays.Utils {
                             Logger.WriteLine("Copied Plays-ltc to recorders folder");
                             PlaysLTC.Start();
                         }
+
+                        Logger.WriteLine(toastList.Count + " Initialized List");
+                        foreach (var toast in toastList) {
+                            SendMessage(JsonSerializer.Serialize(toast.Value));
+                        }
                     }
                     break;
                 case "InstallPlaysLTC": {
-                        bool downloadSuccess = await DownloadPlaysSetupAsync(frmMain.webView2.CoreWebView2);
+                        bool downloadSuccess = await DownloadPlaysSetupAsync();
                         bool installSuccess = await InstallPlaysSetup();
                         if (downloadSuccess && installSuccess) {
-                            SendMessage(DisplayModal("PlaysLTC successfully installed!", "Install Success", "success"));
+                            DisplayModal("PlaysLTC successfully installed!", "Install Success", "success");
                             PlaysLTC.Start();
                         }
                         else {
-                            SendMessage(DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning"));
+                            DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning");
                         }
                     }
                     break;
@@ -181,13 +219,31 @@ namespace RePlays.Utils {
                         CreateClips data = JsonSerializer.Deserialize<CreateClips>(webMessage.data);
                         var t = await Task.Run(() => CreateClip(data.videoPath, data.clipSegments));
                         if (t == null) {
-                            SendMessage(DisplayModal("Failed to create clip", "Error", "warning"));
+                            DisplayModal("Failed to create clip", "Error", "warning");
                         }
                         else {
-                            SendMessage(DisplayModal("Successfully created clip", "Success", "success"));
+                            DisplayModal("Successfully created clip", "Success", "success");
                             t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                             SendMessage(t);
                         }
+                    }
+                    break;
+                case "UploadVideo": {
+                        UploadVideo data = JsonSerializer.Deserialize<UploadVideo>(webMessage.data);
+                        var filePath = Path.Join(GetPlaysFolder(), data.file);
+                        if(File.Exists(filePath)) {
+                            Logger.WriteLine($"Preparing to upload {filePath} to {data.destination}");
+                            UploadService.Upload(data.destination, data.title, filePath);
+                        }
+                        //DisplayModal($"{data.title} {data.destination}", "Error", "warning"));
+                    }
+                    break;
+                case "ShowRecentLinks": {
+                        frmMain.Instance.PopulateRecentLinks();
+                    }
+                    break;
+                case "HideRecentLinks": {
+                        frmMain.Instance.HideRecentLinks();
                     }
                     break;
                 case "AddProgram": {
@@ -240,6 +296,51 @@ namespace RePlays.Utils {
             }
 
             return webMessage;
+        }
+
+        public static void DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
+            WebMessage webMessage = new();
+            webMessage.message = "DisplayModal";
+            webMessage.data = "{" +
+                "\"context\": \"" + context + "\", " +
+                "\"title\": \"" + title + "\", " +
+                "\"progress\": " + progress + ", " +
+                "\"progressMax\": " + progressMax + ", " +
+                "\"icon\": \"" + icon + "\"}";
+            if (frmMain.Instance.WindowState != FormWindowState.Minimized)
+                SendMessage(JsonSerializer.Serialize(webMessage));
+        }
+
+        public static void DisplayToast(string id, string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
+            WebMessage webMessage = new();
+            webMessage.message = "DisplayToast";
+            webMessage.data = "{" +
+                "\"id\": \"" + id + "\", " +
+                "\"context\": \"" + context + "\", " +
+                "\"title\": \"" + title + "\", " +
+                "\"progress\": " + progress + ", " +
+                "\"progressMax\": " + progressMax + ", " +
+                "\"icon\": \"" + icon + "\"}";
+
+            if (toastList.ContainsKey(id)) {
+                if (toastList[id].data == webMessage.data) return; // prevents message flooding if toast is identical
+                toastList[id] = webMessage;
+            }
+            else toastList.Add(id, webMessage);
+
+            if (frmMain.Instance.WindowState != FormWindowState.Minimized)
+                SendMessage(JsonSerializer.Serialize(webMessage));
+        }
+
+        public static void DestroyToast(string id) {
+            if (toastList.ContainsKey(id))
+                toastList.Remove(id);
+
+            WebMessage webMessage = new();
+            webMessage.message = "DestroyToast";
+            webMessage.data = "{" +
+                "\"id\": \"" + id + "\"}";
+            SendMessage(JsonSerializer.Serialize(webMessage));
         }
     }
 }

@@ -2,18 +2,20 @@ import Clip from '../components/Clip';
 import { useParams } from 'react-router-dom';
 import { secondsToHHMMSS } from '../helpers/utils';
 import { SyntheticEvent, useContext, useEffect, useRef, useState } from 'react';
-import { ContextMenuContext } from '../App';
+import { ContextMenuContext, ModalContext } from '../App';
 import { postMessage } from '../helpers/messenger';
+import UploadModal from './UploadModal';
 
 type PlayerParams = {
   game: string;
   video: string;
+  videoType: string;
 };
 
 const ZOOMS = [100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000];
 
 export default function Player () {
-  let { game, video } = useParams<PlayerParams>();
+  let { game, video, videoType } = useParams<PlayerParams>();
   const videoElement = useRef<HTMLVideoElement>(null);
   const volumeSliderElement = useRef<HTMLInputElement>(null);
   const timelineElement = useRef<HTMLDivElement>(null);
@@ -29,11 +31,13 @@ export default function Player () {
   const clipsRef = useRef<HTMLDivElement[]>([]);
 
   const contextMenuCtx = useContext(ContextMenuContext);
+  const modalCtx = useContext(ModalContext);
 
   useEffect(() => {
     var seekDragging = false, clipDragging = -1, clipDragOffset = 0, clipResizeDir = '', clipResizeLimit = 0;
     
     function handleOnKeyDown(e: KeyboardEvent) {
+      if(modalCtx?.isOpen) return;
       if(e.key === ' ') videoElement.current?.paused ? videoElement.current?.play() : videoElement.current?.pause();
       if(e.key === 'ArrowLeft') videoElement.current!.currentTime -= 5;
       if(e.key === 'ArrowRight') videoElement.current!.currentTime += 5;
@@ -149,6 +153,15 @@ export default function Player () {
     timelineElement.current!.scrollTop = 0;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentZoom]);
+
+  function handleUpload() {
+    console.log(`${game} ${video} ${videoType} to upload`);
+    var thumb = `${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${video}`;
+    thumb = thumb.substr(0, thumb.lastIndexOf('.')) + ".png" || thumb + ".png";
+
+    modalCtx?.setData({title: "Upload", context: <UploadModal video={video} game={game} thumb={thumb}/>, cancel: true});
+    modalCtx?.setOpen(true);
+  }
 
   function handleAddClip() {
     if(seekWindowElement.current && seekBarElement.current) {
@@ -389,12 +402,21 @@ export default function Player () {
 
         <div className="flex justify-end">
           <div className="border-2 rounded-lg">
+            {(videoType === "Clips" ? 
+            <button title="Upload" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-white transition duration-150 ease-in-out bg-blue-400 hover:bg-blue-300 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
+              type="button" onClick={() => handleUpload()}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
+                  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                  <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                </svg>
+            </button> :
             <button title="Clip" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
               type="button" onClick={() => handleAddClip()}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
                   <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
                 </svg>
             </button>
+            )}
             <span title="Zoom Out" className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-500 active:bg-gray-50 active:text-gray-800"
               onClick={() => {if (currentZoom-1 > -1) setZoom(currentZoom-1);}}>
               -

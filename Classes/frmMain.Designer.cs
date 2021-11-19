@@ -34,6 +34,8 @@ namespace RePlays
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.recentLinksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -50,9 +52,10 @@ namespace RePlays
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.checkForUpdatesToolStripMenuItem,
-            this.exitToolStripMenuItem});
+            this.exitToolStripMenuItem,
+            this.recentLinksToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(171, 48);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(171, 70);
             // 
             // checkForUpdatesToolStripMenuItem
             // 
@@ -67,6 +70,22 @@ namespace RePlays
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // recentLinksToolStripMenuItem
+            // 
+            this.recentLinksToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem});
+            this.recentLinksToolStripMenuItem.Name = "recentLinksToolStripMenuItem";
+            this.recentLinksToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
+            this.recentLinksToolStripMenuItem.Text = "Recent Links";
+            this.recentLinksToolStripMenuItem.DropDownOpening += new System.EventHandler(this.recentLinks_ToolStripMenuItem_DropDownOpening);
+            // 
+            // leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem
+            // 
+            this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem.Enabled = false;
+            this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem.Name = "leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem";
+            this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem.Size = new System.Drawing.Size(363, 22);
+            this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem.Text = "Left click to copy to clipboard. Right click to open URL.";
             // 
             // pictureBox1
             // 
@@ -107,6 +126,8 @@ namespace RePlays
         private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ToolStripMenuItem recentLinksToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem;
     }
 }
 

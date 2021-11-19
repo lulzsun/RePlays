@@ -25,9 +25,13 @@ namespace RePlays {
 
             // log all exceptions
             AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => {
-                if (eventArgs.Exception.GetType() == typeof(System.Threading.Tasks.TaskCanceledException))
-                if (eventArgs.Exception.GetType() == typeof(System.OperationCanceledException))
-                    return;
+                switch (eventArgs.Exception.GetType().ToString()) {
+                    case "System.Threading.Tasks.TaskCanceledException":
+                    case "System.OperationCanceledException":
+                        return;
+                    default:
+                        break;
+                }
                 Logger.WriteLine(eventArgs.Exception.ToString());
             };
 
