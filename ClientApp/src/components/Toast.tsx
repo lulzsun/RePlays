@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { secondsToHHMMSS } from "../helpers/utils";
 
 interface Props {
   toastData: ModalData;
@@ -21,16 +22,18 @@ export const Toast: React.FC<Props> = ({toastData, onClick}) => {
 
 	return (
     <div className="flex w-full overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
-      <div className="p-1.5 flex items-center justify-center bg-blue-500">
+      {toastData.progressMax !== 0 && <div className="p-1.5 flex items-center justify-center bg-blue-500">
         <svg className="progress-ring" width="30" height="30">
           <circle ref={circle} className="progress-ring__circle" stroke="white" strokeWidth="2" fill="transparent" r="12" cx="15" cy="15"/>
         </svg>
-      </div>
+      </div>}
       <div className="p-1.5">
         <span className="text-sm font-semibold text-blue-500 dark:text-blue-400">
           {toastData.title}</span>
-        <p className="h-4 w-28 text-xs text-gray-600 dark:text-gray-200 truncate">
-          {toastData.context}</p>
+        <p className={`h-auto ${toastData.progressMax !== 0 ? "w-28" : "w-40"} text-xs text-gray-600 dark:text-gray-200 truncate`}>
+          {toastData.id === "Recording" && secondsToHHMMSS(toastData.progress!) + " "}
+          {toastData.context}
+        </p>
       </div>
     </div>
 	)

@@ -215,6 +215,10 @@ namespace RePlays.Utils {
 
                 if (!Game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !Game.Equals("All Games")) continue;
 
+                var thumb = GetOrCreateThumbnail(file);
+                if (!File.Exists(thumb)) continue;
+                video.thumbnail = Path.GetFileName(thumb);
+
                 if (file.EndsWith("-ses.mp4")) {
                     videoList.sessions.Add(video);
                     videoList.sessionsSize += video.size;
@@ -223,7 +227,6 @@ namespace RePlays.Utils {
                     videoList.clips.Add(video);
                     videoList.clipsSize += video.size;
                 }
-                video.thumbnail = Path.GetFileName(GetOrCreateThumbnail(file));
             }
 
             videoList.games.Sort();
