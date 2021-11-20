@@ -14,6 +14,8 @@ export const ContextMenuContext = createContext<ContextMenuOptions | null>(null)
 export const ModalContext = createContext<ModalOptions | null>(null);
 
 function App() {
+  const sideBarEle = useRef<HTMLDivElement | null>(null);
+
   const [contextMenuItems, setContextMenuItems] = useState<ContextMenuItem[]>();
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition>({x: -100, y: -100});
   const contextMenuFocusEle = useRef<HTMLInputElement | null>(null);
@@ -139,7 +141,7 @@ function App() {
             </div>
           </div>
 
-          <div className="sidebar bg-blue-800 text-blue-100 w-auto py-2 px-2 absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out" style={{zIndex: 999}}>
+          <div ref={sideBarEle} className="bg-blue-800 text-blue-100 w-auto py-2 px-2 absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out" style={{zIndex: 999}}>
             {/* Header & Side Buttons Container */}
             <div style={{height: "calc(80% - 50px)"}} className="w-full">
               <div className="text-2xl font-extrabold text-white flex items-center space-x-2 px-4 pb-4 pt-3">
@@ -150,13 +152,19 @@ function App() {
                 RePlays
               </div>
 
-              <Link to="/" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">
+              <Link to="/" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white"
+              onClick={() => {
+                sideBarEle.current!.classList.toggle("-translate-x-full");
+              }}>
                 <svg className="w-10 h-10 pr-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M0 1a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V1zm4 0v6h8V1H4zm8 8H4v6h8V9zM1 1v2h2V1H1zm2 3H1v2h2V4zM1 7v2h2V7H1zm2 3H1v2h2v-2zm-2 3v2h2v-2H1zM15 1h-2v2h2V1zm-2 3v2h2V4h-2zm2 3h-2v2h2V7zm-2 3v2h2v-2h-2zm2 3h-2v2h2v-2z"/>
                 </svg>
                 Sessions
               </Link>
-              <Link to="/clips" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">
+              <Link to="/clips" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white"
+              onClick={() => {
+                sideBarEle.current!.classList.toggle("-translate-x-full");
+              }}>
                 <svg className="w-10 h-10 pr-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
                 </svg>
@@ -216,7 +224,10 @@ function App() {
                   })}
                 </select>
               </div> */}
-              <Link title="Settings" to="/settings" className="p-2 px-4 flex items-center rounded transition duration-200 hover:bg-blue-700 hover:text-white cursor-pointer">
+              <Link title="Settings" to="/settings" className="p-2 px-4 flex items-center rounded transition duration-200 hover:bg-blue-700 hover:text-white cursor-pointer"
+              onClick={() => {
+                sideBarEle.current!.classList.toggle("-translate-x-full");
+              }}>
                 <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
                 </svg>
@@ -228,7 +239,10 @@ function App() {
             <div className="flex-initial">
               <div className="bg-gray-800 text-gray-100 flex justify-between lg:hidden">
                 <div className="block p-4 text-white font-bold">RePlays</div>
-                <button className="mobile-menu-button p-4 focus:outline-none focus:bg-gray-700">
+                  <button className="p-4 focus:outline-none focus:bg-gray-700" 
+                  onClick={() => {
+                    sideBarEle.current!.classList.toggle("-translate-x-full");
+                  }}>
                   <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
