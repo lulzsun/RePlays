@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
@@ -21,6 +22,11 @@ namespace RePlays.Services {
 
             private UploadSettings _uploadSettings = new();
             public UploadSettings uploadSettings { get { return _uploadSettings; } set { _uploadSettings = value; } }
+
+            private Dictionary<string, string[]> _keybindings = new Dictionary<string, string[]>() { 
+                { "StartStopRecording", new string[] { "Control", "F9" } } 
+            };
+            public Dictionary<string, string[]> keybindings { get { return _keybindings; } set { _keybindings = value; } }
         }
 
         public static void LoadSettings() {
@@ -48,9 +54,10 @@ namespace RePlays.Services {
 
         public static void SaveSettings(SettingsJson settings=null) {
             if (settings == null) settings = Settings;
-            Logger.WriteLine("Saved userSettings.json");
+            _Settings = settings;
             var options = new JsonSerializerOptions { WriteIndented = true };
             File.WriteAllText(settingsFile, JsonSerializer.Serialize(settings, options));
+            Logger.WriteLine("Saved userSettings.json");
         }
     }
 }

@@ -7,6 +7,7 @@ using RePlays.Services;
 using Squirrel;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
+using System.Collections.Generic;
 
 namespace RePlays {
     public partial class frmMain : Form {
@@ -19,6 +20,7 @@ namespace RePlays {
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
             StorageService.ManageStorage();
+            HotkeyService.Start();
             InitializeComponent();
             PurgeTempVideos();
             CheckForUpdates();
@@ -40,7 +42,8 @@ namespace RePlays {
             else {
                 InitializeWebView2();
             }
-            if(!PlaysLTC.Connected) PlaysLTC.Start();
+
+            RecordingService.Start(typeof(PlaysLTC));
         }
 
         private async void CheckForUpdates() {
@@ -237,8 +240,47 @@ namespace RePlays {
             }
         }
 
+        public void DisplayNotification(string title, string context) {
+            notifyIcon1.BalloonTipText = context;
+            notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
+            notifyIcon1.BalloonTipTitle = title;
+            notifyIcon1.ShowBalloonTip(500);
+        }
+
         public void HideRecentLinks() {
             recentLinksMenu.Hide();
+        }
+
+        private List<Keys> PressedKeys = new();
+        private void button1_KeyDown(object sender, KeyEventArgs e) {
+            Keys k = e.KeyCode;
+            if (k.ToString().Contains(e.Modifiers.ToString())) k = e.Modifiers;
+
+            if (!PressedKeys.Contains(k)) {
+                PressedKeys.Add(k);
+            }
+            PressedKeys.Sort();
+            PressedKeys.Reverse();
+            Logger.WriteLine(string.Join(" | ", PressedKeys.ToArray()));
+        }
+
+        private void button1_KeyUp(object sender, KeyEventArgs e) {
+            if(HotkeyService.EditId != null && SettingsService.Settings.keybindings.ContainsKey(HotkeyService.EditId)) {
+                SettingsService.Settings.keybindings[HotkeyService.EditId] = string.Join(" | ", PressedKeys.ToArray()).Split(" | ");
+                SettingsService.SaveSettings();
+                WebMessage.SendMessage(GetUserSettings());
+                HotkeyService.Start();
+            }
+            if (webView2 != null) webView2.Focus();
+            else pictureBox1.Focus();
+            PressedKeys.Clear();
+        }
+
+        public void EditKeybind(string id) {
+            HotkeyService.EditId = id;
+            HotkeyService.Stop();
+            //button1 is a hacky way of logging keypresses
+            this.button1.Focus();
         }
     }
 }

@@ -33,11 +33,12 @@ namespace RePlays
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.recentLinksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -57,28 +58,21 @@ namespace RePlays
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 98);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(171, 76);
             // 
             // checkForUpdatesToolStripMenuItem
             // 
             this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
-            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.checkForUpdatesToolStripMenuItem.Text = "Check for updates";
             this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
-            // 
-            // exitToolStripMenuItem
-            // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // recentLinksToolStripMenuItem
             // 
             this.recentLinksToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem});
             this.recentLinksToolStripMenuItem.Name = "recentLinksToolStripMenuItem";
-            this.recentLinksToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.recentLinksToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.recentLinksToolStripMenuItem.Text = "Recent Links";
             this.recentLinksToolStripMenuItem.DropDownOpening += new System.EventHandler(this.recentLinks_ToolStripMenuItem_DropDownOpening);
             // 
@@ -89,6 +83,18 @@ namespace RePlays
             this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem.Size = new System.Drawing.Size(363, 22);
             this.leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem.Text = "Left click to copy to clipboard. Right click to open URL.";
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(167, 6);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
             // pictureBox1
             // 
             this.pictureBox1.Image = global::RePlays.Properties.Resources._91;
@@ -98,10 +104,17 @@ namespace RePlays
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
             // 
-            // toolStripSeparator1
+            // button1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.button1.Location = new System.Drawing.Point(0, 0);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(0, 0);
+            this.button1.TabIndex = 2;
+            this.button1.Text = "this button is used for logging keypresses for EditKeybind functions, pretty hack" +
+    "y";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.button1_KeyDown);
+            this.button1.KeyUp += new System.Windows.Forms.KeyEventHandler(this.button1_KeyUp);
             // 
             // frmMain
             // 
@@ -109,6 +122,7 @@ namespace RePlays
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(300, 360);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.pictureBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -136,6 +150,7 @@ namespace RePlays
         private System.Windows.Forms.ToolStripMenuItem recentLinksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem leftClickToCopyToClipboardRightClickToOpenURLToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.Button button1;
     }
 }
 

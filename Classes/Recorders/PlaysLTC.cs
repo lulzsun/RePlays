@@ -6,14 +6,12 @@ using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Recorders {
-    public static class PlaysLTC {
-        private static LTCProcess ltc = new LTCProcess();
-        public static bool Connected { get; private set; }
+    public class PlaysLTC : BaseRecorder {
+        private LTCProcess ltc = new LTCProcess();
+        public bool Connected { get; private set; }
 
-        public static void Start() {
+        public override void Start() {
             if (Connected) return;
-
-            DetectionService.LoadDetections();
 
             ltc.Log += (sender, msg) => {
                 Logger.WriteLine(string.Format("{0}: {1}", msg.Title, msg.Message), msg.File, msg.Line);
@@ -37,7 +35,7 @@ namespace RePlays.Recorders {
                     SettingsService.Settings.captureSettings.micDevice.deviceId,
                     SettingsService.Settings.captureSettings.micDevice.deviceLabel
                 );
-                ltc.SetCaptureMode(49152); //ORB_GAMEDVR_SET_CAPTURE_MODE ?????
+                ltc.SetCaptureMode(1); //0 = auto, 1 = manual (we choose manual and "automate" it)
                 ltc.SetGameDVRCaptureEngine(1); //1 = nvidia ?????
             };
 
@@ -57,7 +55,7 @@ namespace RePlays.Recorders {
                     else if (!isGame && !isNonGame) {
                         Logger.WriteLine(string.Format("This process [{0}] is an unknown application, lets try to ScanForGraphLib", msg.Pid));
 
-                        RecordingService.SetCurrentSession(msg.Pid, DetectionService.GetGameTitle(msg.ExeFile, true));
+                        RecordingService.SetCurrentSession(0, DetectionService.GetGameTitle(msg.ExeFile, true));
                         ltc.ScanForGraphLib(msg.Pid); // the response will be sent to GraphicsLibLoaded if successful
                     }
                     else {
@@ -70,6 +68,7 @@ namespace RePlays.Recorders {
             };
 
             ltc.GraphicsLibLoaded += (sender, msg) => {
+                RecordingService.GetCurrentSession().Pid = msg.Pid;
                 ltc.SetGameName(RecordingService.GetCurrentSession().GameTitle);
                 ltc.LoadGameModule(msg.Pid);
             };
@@ -79,24 +78,14 @@ namespace RePlays.Recorders {
             };
 
             ltc.VideoCaptureReady += (sender, msg) => {
-                //if (AutomaticRecording == true)
-                if (!RecordingService.IsRecording) {
-                    ltc.SetKeyBinds();
-                    ltc.StartRecording();
+                RecordingService.GetCurrentSession().Pid = msg.Pid;
+                if (SettingsService.Settings.captureSettings.recordingMode == "automatic")
                     RecordingService.StartRecording();
-                    //DetectionService.DisposeDetections();
-                }
             };
 
-            ltc.ProcessTerminated += (sender, msg) => {
-                if (RecordingService.IsRecording) {
-                    if (RecordingService.GetCurrentSession().Pid == msg.Pid) {
-                        ltc.StopRecording();
-                        RecordingService.StopRecording();
-                        StorageService.ManageStorage();
-                        //DetectionService.LoadDetections();
-                    }
-                }
+            ltc.ProcessTerminated += (sender, msg) => {                
+                if (RecordingService.GetCurrentSession().Pid == msg.Pid)
+                    RecordingService.StopRecording();
             };
 
             ltc.SaveFinished += async (sender, msg) => {
@@ -112,6 +101,19 @@ namespace RePlays.Recorders {
             Task.Run(() => ltc.Connect(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe")));
             Connected = true;
             Logger.WriteLine("Successfully started Plays-Ltc!");
+        }
+
+        public override void Stop() {
+            throw new System.NotImplementedException();
+        }
+
+        public override void StartRecording() {
+            ltc.SetKeyBinds();
+            ltc.StartRecording();
+        }
+
+        public override void StopRecording() {
+            ltc.StopRecording();
         }
     }
 }

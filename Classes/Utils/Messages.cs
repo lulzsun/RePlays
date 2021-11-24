@@ -132,7 +132,7 @@ namespace RePlays.Utils {
                             Logger.WriteLine("Found Plays-ltc existing on local disk");
                             DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
                             Logger.WriteLine("Copied Plays-ltc to recorders folder");
-                            PlaysLTC.Start();
+                            RecordingService.Start(typeof(PlaysLTC));
                         }
 
                         Logger.WriteLine(toastList.Count + " Initialized List");
@@ -146,7 +146,7 @@ namespace RePlays.Utils {
                         bool installSuccess = await InstallPlaysSetup();
                         if (downloadSuccess && installSuccess) {
                             DisplayModal("PlaysLTC successfully installed!", "Install Success", "success");
-                            PlaysLTC.Start();
+                            RecordingService.Start(typeof(PlaysLTC));
                         }
                         else {
                             DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning");
@@ -163,6 +163,11 @@ namespace RePlays.Utils {
                         videoSortSettings.sortBy = data.sortBy;
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                         SendMessage(t);
+                    }
+                    break;
+                case "EditKeybind": {
+                        var id = webMessage.data.Replace("\"", "");
+                        frmMain.Instance.EditKeybind(id);
                     }
                     break;
                 case "SelectFolder": {

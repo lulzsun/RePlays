@@ -252,6 +252,12 @@ namespace PlaysLTCWrapper {
         }
 
         public void SetCaptureMode(int mode) {
+            if (mode == 1) { // manual
+                mode = 0x4000;
+            }
+            else { // auto
+                mode = 0x4000 | 0x8000;
+            }
             string data =
             "{" +
                 "'captureMode': " + mode +

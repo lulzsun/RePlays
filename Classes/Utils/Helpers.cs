@@ -203,7 +203,7 @@ namespace RePlays.Utils {
             videoList.clips = new();
 
             foreach (string file in allfiles) {
-                if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-clp.mp4")) || !File.Exists(file)) continue;
+                if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-man.mp4") || file.EndsWith("-clp.mp4")) || !File.Exists(file)) continue;
 
                 Video video = new();
                 video.size = new FileInfo(file).Length;
@@ -219,7 +219,7 @@ namespace RePlays.Utils {
                 if (!File.Exists(thumb)) continue;
                 video.thumbnail = Path.GetFileName(thumb);
 
-                if (file.EndsWith("-ses.mp4")) {
+                if (file.EndsWith("-ses.mp4") || file.EndsWith("-man.mp4")) {
                     videoList.sessions.Add(video);
                     videoList.sessionsSize += video.size;
                 }

@@ -94,3 +94,7 @@ code {
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
 }
+
+*{ /* hides the black tab focus outline */
+  outline: rgba(0, 0, 0, 0);  
+}

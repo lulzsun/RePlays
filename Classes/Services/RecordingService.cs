@@ -1,9 +1,12 @@
-﻿using RePlays.Utils;
-using System;
+﻿using RePlays.Recorders;
+using RePlays.Utils;
 using System.Timers;
+using System;
 
 namespace RePlays.Services {
     public static class RecordingService {
+        public static BaseRecorder ActiveRecorder = null;
+
         private static Timer recordingTimer = new Timer(1000);
         private static int recordingElapsed = 0;
         private static Session currentSession = new Session(0, "Game Unknown");
@@ -18,6 +21,15 @@ namespace RePlays.Services {
             }
         }
 
+        public static void Start(Type type) {
+            DetectionService.LoadDetections();
+
+            if (ActiveRecorder == null && type == typeof(PlaysLTC)) {
+                ActiveRecorder = new PlaysLTC();
+                ActiveRecorder.Start();
+            }
+        }
+
         public static void SetCurrentSession(int _Pid, string _GameTitle = "Game Unknown") {
             currentSession = new Session(_Pid, _GameTitle);
         }
@@ -27,10 +39,17 @@ namespace RePlays.Services {
         }
 
         public static void StartRecording() {
-            recordingTimer.Elapsed += OnTimedEvent;
-            recordingTimer.Start();
-            Logger.WriteLine(string.Format("Start Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
-            IsRecording = true;
+            if (!IsRecording) {
+                ActiveRecorder.StartRecording();
+                if(currentSession.Pid != 0) {
+                    recordingTimer.Elapsed += OnTimedEvent;
+                    recordingTimer.Start();
+                    Logger.WriteLine(string.Format("Start Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
+                    IsRecording = true;
+                    frmMain.Instance.DisplayNotification("Recording Started", $"Currently recording {currentSession.GameTitle}");
+                }
+                //DetectionService.DisposeDetections();
+            }
         }
 
         private static void OnTimedEvent(object source, ElapsedEventArgs e) {
@@ -39,12 +58,20 @@ namespace RePlays.Services {
         }
 
         public static void StopRecording() {
-            recordingElapsed = 0;
-            recordingTimer.Elapsed -= OnTimedEvent;
-            recordingTimer.Stop();
-            Logger.WriteLine(string.Format("Stop Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
-            WebMessage.DestroyToast("Recording");
-            IsRecording = false;
+            if (IsRecording) {
+                ActiveRecorder.StopRecording();
+                if(currentSession.Pid != 0) {
+                    recordingElapsed = 0;
+                    recordingTimer.Elapsed -= OnTimedEvent;
+                    recordingTimer.Stop();
+                    Logger.WriteLine(string.Format("Stop Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
+                    currentSession.Pid = 0;
+                    WebMessage.DestroyToast("Recording");
+                    IsRecording = false;
+                    StorageService.ManageStorage();
+                }
+                //DetectionService.LoadDetections();
+            }
         }
     }
 }

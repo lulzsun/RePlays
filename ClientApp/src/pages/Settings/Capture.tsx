@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import DropDownMenu from "../../components/DropDownMenu";
+import HotkeySelector from "../../components/HotkeySelector";
 
 interface Props {
   updateSettings: () => void;
   settings: CaptureSettings | undefined;
+  keybindings: Keybindings | undefined;
 }
 
-export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
+export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}) => {
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
   const [gameAudioVolume, setGameAudioVolume] = useState(settings!.gameAudioVolume);
   const [micAudioVolume, setMicAudioVolume] = useState(settings!.micAudioVolume);
@@ -66,6 +68,10 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
             defaultChecked={(settings?.recordingMode === "off" ? true : false)}/>
           <span className="px-2 text-gray-700">Off</span>
         </label>
+      </div>
+      <div className="flex flex-col">
+        Toggle Recording Keybind
+        <HotkeySelector id="StartStopRecording" width="auto" keybind={keybindings?.StartStopRecording}/> 
       </div>
 
       <h1 className="font-bold text-2xl mt-4">Video Quality</h1>

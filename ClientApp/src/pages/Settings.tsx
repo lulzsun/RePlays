@@ -49,7 +49,7 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
             <Switch>
               <Route exact path="/settings">         <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
               <Route exact path="/settings/general"> <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
-              <Route exact path="/settings/capture"> <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings}/></Route>
+              <Route exact path="/settings/capture"> <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} keybindings={userSettings?.keybindings}/></Route>
               <Route exact path="/settings/upload">  <Upload updateSettings={updateSettings} settings={userSettings?.uploadSettings}/></Route>
               <Route exact path="/settings/advanced"><Advanced updateSettings={updateSettings} settings={userSettings?.advancedSettings}/></Route>
               <Route exact path="/settings/help">    <Help/></Route>

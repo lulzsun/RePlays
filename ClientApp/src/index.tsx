@@ -73,6 +73,7 @@ declare global {
     captureSettings: CaptureSettings
     uploadSettings: UploadSettings
     advancedSettings: AdvancedSettings
+    keybindings: Keybindings
   }
   interface GeneralSettings {
     launchStartup: boolean, startMinimized: boolean, theme: string, update: string
@@ -107,5 +108,8 @@ declare global {
     manageTimeLimit: number,
     whitelist: string[],
     blacklist: string[],
+  }
+  interface Keybindings {
+    StartStopRecording: string[],
   }
 }

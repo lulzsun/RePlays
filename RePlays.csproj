@@ -26,6 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.9" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.902.49" />
+    <PackageReference Include="NHotkey.WindowsForms" Version="2.1.0" />
     <PackageReference Include="NuGet.CommandLine" Version="5.11.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
