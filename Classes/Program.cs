@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using RePlays.Utils;
 using System.Threading;
+using Squirrel;
+using System.Threading.Tasks;
 
 namespace RePlays {
     public class Program {
@@ -40,6 +42,21 @@ namespace RePlays {
             if (!createdNew) {
                 Logger.WriteLine("RePlays is already running! Exiting the application.");
                 return;
+            }
+
+            // squirrel configuration
+            try {
+                using (var manager = new UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
+                    SquirrelAwareApp.HandleEvents(
+                        onInitialInstall: v => manager.CreateShortcutForThisExe(),
+                        onAppUpdate: v => manager.CreateShortcutForThisExe(),
+                        onAppUninstall: v => manager.RemoveShortcutForThisExe(),
+                        onFirstRun: () => Logger.WriteLine("First launch")
+                    );
+                }
+            }
+            catch (Exception exception) {
+                Logger.WriteLine(exception.ToString());
             }
 
             CreateHostBuilder(args).Build().RunAsync();

@@ -48,20 +48,25 @@ namespace RePlays {
 
         private async void CheckForUpdates() {
             if (SettingsService.Settings.generalSettings.update == "none") return;
-            return;
 
-            var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays");
-            var updateInfo = await manager.CheckForUpdate();
+            try {
+                var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays");
+                var updateInfo = await manager.CheckForUpdate();
 
-            if(updateInfo.ReleasesToApply.Count > 0) {
-                if (SettingsService.Settings.generalSettings.update == "automatic") {
-                    Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
-                    await manager.UpdateApp();
-                    Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
+                if (updateInfo.ReleasesToApply.Count > 0) {
+                    if (SettingsService.Settings.generalSettings.update == "automatic") {
+                        Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
+                        await manager.UpdateApp();
+                        Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
+                    }
+                    else { // manual
+                        WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
+                    }
+                    Logger.WriteLine($"Found no updates higher than current version {updateInfo.CurrentlyInstalledVersion.Version}");
                 }
-                else { // manual
-
-                }
+            }
+            catch (System.Exception exception) {
+                Logger.WriteLine("Error: Issue fetching update releases: " + exception.ToString());
             }
         }
 
