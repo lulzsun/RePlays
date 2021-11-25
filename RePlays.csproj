@@ -78,47 +78,35 @@
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
   </Target>
 
-  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
-    <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+  <Target Name="GenerateRelease" AfterTargets="AfterBuild" Condition="$(Configuration) == Release">
+	  <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+	  <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+	  <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
 
-    <!-- Include the newly-built files in the publish output -->
-    <ItemGroup>
-      <DistFiles Include="$(SpaRoot)build\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-        <RelativePath>%(DistFiles.Identity)</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      </ResolvedFileToPublish>
-    </ItemGroup>
-	
-	<!-- Include ffmpeg binaries in the publish output -->
-	<ItemGroup>
-	  <DistFiles Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-        <RelativePath>%(DistFiles.Identity)</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      </ResolvedFileToPublish>
-    </ItemGroup>
-  
-  	<!-- Include 7zip binaries in the publish output -->
-	<ItemGroup>
-	  <DistFiles Include="$(SpaRoot)node_modules\7zip-bin\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-        <RelativePath>%(DistFiles.Identity)</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      </ResolvedFileToPublish>
-    </ItemGroup>
-	
-	<XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
-		<Output TaskParameter="Result" ItemName="ID" />
-    </XmlPeek>
+	  <!-- Include the newly-built files in the publish output -->
+	  <ItemGroup>
+		  <SpaFiles Include="$(SpaRoot)build\**" />
+	  </ItemGroup>
+	  <Copy SourceFiles="@(SpaFiles)" DestinationFolder="$(SolutionDir)bin\Release\net5.0-windows\ClientApp\build\%(RecursiveDir)"/>
 
-    <Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
-    <Exec Command="$(SquirrelTools)\Squirrel.exe --releasify $(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases" />
+	  <!-- Include ffmpeg binaries in the publish output -->
+	  <ItemGroup>
+		  <ffmpegFiles Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
+	  </ItemGroup>
+	  <Copy SourceFiles="@(ffmpegFiles)" DestinationFolder="$(SolutionDir)bin\Release\net5.0-windows\ClientApp\node_modules\ffmpeg-ffprobe-static\%(RecursiveDir)"/>
+
+	  <!-- Include 7zip binaries in the publish output -->
+	  <ItemGroup>
+		  <_7zipFiles Include="$(SpaRoot)node_modules\7zip-bin\**" />
+	  </ItemGroup>
+	  <Copy SourceFiles="@(_7zipFiles)" DestinationFolder="$(SolutionDir)bin\Release\net5.0-windows\ClientApp\node_modules\7zip-bin\%(RecursiveDir)"/>
+	  
+	  <XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
+		  <Output TaskParameter="Result" ItemName="ID" />
+	  </XmlPeek>
+
+	  <Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
+	  <Exec Command="$(SquirrelTools)\Squirrel.exe --releasify $(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases" />
   </Target>
 
 </Project>
