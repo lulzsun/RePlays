@@ -35,7 +35,9 @@ namespace RePlays.Recorders {
                     SettingsService.Settings.captureSettings.micDevice.deviceId,
                     SettingsService.Settings.captureSettings.micDevice.deviceLabel
                 );
-                ltc.SetCaptureMode(1); //0 = auto, 1 = manual (we choose manual and "automate" it)
+                ltc.SetCaptureMode(
+                    SettingsService.Settings.captureSettings.recordingMode
+                );
                 ltc.SetGameDVRCaptureEngine(1); //1 = nvidia ?????
             };
 

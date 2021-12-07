@@ -251,16 +251,14 @@ namespace PlaysLTCWrapper {
             Emit("LTC:loadGameModule", data);
         }
 
-        public void SetCaptureMode(int mode) {
-            if (mode == 1) { // manual
-                mode = 0x4000;
-            }
-            else { // auto
-                mode = 0x4000 | 0x8000;
+        public void SetCaptureMode(string mode) {
+            int result = 0x4000; // manual or off
+            if (mode == "automatic") {
+                result = 0x4000 | 0x8000; // automatic
             }
             string data =
             "{" +
-                "'captureMode': " + mode +
+                "'captureMode': " + result +
             "}";
             Emit("LTC:setCaptureMode", data);
         }

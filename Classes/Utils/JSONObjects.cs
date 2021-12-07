@@ -1,3 +1,4 @@
+using Squirrel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +36,22 @@ namespace RePlays.Utils {
     // Settings Objects
     public class GeneralSettings {
         private bool _launchStartup = true;
-        public bool launchStartup { get { return _launchStartup; } set { _launchStartup = value; } }
+        public bool launchStartup { get { return _launchStartup; } 
+            set { 
+                _launchStartup = value;
+                try {
+                    using (var manager = new UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
+                        if (_launchStartup == true)
+                            manager.CreateShortcutsForExecutable("RePlays.exe", ShortcutLocation.Startup, false);
+                        else
+                            manager.RemoveShortcutsForExecutable("RePlays.exe", ShortcutLocation.Startup);
+                    }
+                }
+                catch (Exception exception) {
+                    Logger.WriteLine("Error: Issue editing program startup setting: " + exception.ToString());
+                }
+            }
+        }
         private bool _startMinimized = false;
         public bool startMinimized { get { return _startMinimized; } set { _startMinimized = value; } }
         private string _theme = "System";
