@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 241.88976 241.88977"
+   width="64mm"
+   height="64mm"
+   version="1.1"
+   id="svg1038"
+   sodipodi:docname="replays logo 2.svg"
+   inkscape:version="1.1 (c68e22c387, 2021-05-23)"
+   inkscape:export-filename="G:\Downloads\replays tray idle.png"
+   inkscape:export-xdpi="101.6"
+   inkscape:export-ydpi="101.6"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1040"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     units="mm"
+     inkscape:zoom="2.8284272"
+     inkscape:cx="163.87199"
+     inkscape:cy="124.80434"
+     inkscape:window-width="1920"
+     inkscape:window-height="1020"
+     inkscape:window-x="1272"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g1036"
+     inkscape:document-units="mm"
+     inkscape:lockguides="true" />
+  <desc
+     id="desc976">replays logo v1.dxf - scale = 1.0, origin = (0.0, 0.0), method = auto</desc>
+  <defs
+     id="defs990">
+    <marker
+       id="DistanceX"
+       orient="auto"
+       refX="0"
+       refY="0"
+       style="overflow:visible">
+      <path
+         d="M 3,-3 -3,3 M 0,-5 V 5"
+         style="stroke:#000000;stroke-width:0.5"
+         id="path978" />
+    </marker>
+    <pattern
+       id="Hatch"
+       patternUnits="userSpaceOnUse"
+       width="8"
+       height="8"
+       x="0"
+       y="0">
+      <path
+         d="M8 4 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path981" />
+      <path
+         d="M6 2 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path983" />
+      <path
+         d="M4 0 l-4,4"
+         stroke="#000000"
+         stroke-width="0.25"
+         linecap="square"
+         id="path985" />
+    </pattern>
+    <symbol
+       id="*MODEL_SPACE" />
+    <symbol
+       id="*PAPER_SPACE" />
+  </defs>
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="0"
+     id="g1036">
+    <path
+       d="m 207.81683,120.65076 a 86.810397,86.810323 0 1 0 -173.620785,0 86.810397,86.810323 0 1 0 173.620785,0 z"
+       style="fill:#343444;fill-opacity:1;stroke:none;stroke-width:5.3208;stroke-miterlimit:4;stroke-dasharray:none"
+       id="path996" />
+    <path
+       d="m 190.36682,120.58998 a 69.448331,69.448269 0 1 0 -138.896646,0 69.448332,69.448268 0 1 0 138.896646,0 z"
+       style="fill:#45455a;fill-opacity:1;stroke:#45455a;stroke-width:1.83749"
+       id="path1002" />
+    <path
+       d="M 170.0361,120.58998 91.84893,75.448612 v 90.282708 z"
+       style="fill:#17b2b0;fill-opacity:1;stroke:#17b2b0;stroke-width:5.10394;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path1010" />
+    <g
+       id="g862"
+       transform="matrix(6.1040545,0,0,6.1040545,-617.50575,-736.1812)">
+      <path
+         d="m 112.08939,145.50317 -4.97661,0.50546 -4.97658,0.50548 4.10103,-9.12515 z"
+         style="fill:#17b2b0;fill-opacity:1;stroke:#17b2b0;stroke-width:1.9461;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="path1028" />
+      <path
+         d="m 135.71692,143.14279 -5.85216,-8.11419 4.97661,-0.50549 4.97657,-0.50557 z"
+         style="fill:#17b2b0;fill-opacity:1;stroke:#17b2b0;stroke-width:1.9461;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="path1030" />
+      <path
+         d="m 134.84137,134.52311 a 15.006593,15.00658 0 0 0 -25.76984,-3.39268"
+         style="fill:none;stroke:#17b2b0;stroke-width:3.20707;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="path1032" />
+      <path
+         d="m 107.11278,146.00863 a 15.006593,15.00658 0 0 0 25.76982,3.39271"
+         style="fill:none;stroke:#17b2b0;stroke-width:3.20707;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="path1034" />
+    </g>
+  </g>
+</svg>
