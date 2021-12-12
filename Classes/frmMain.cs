@@ -14,6 +14,8 @@ namespace RePlays {
         public static Microsoft.Web.WebView2.WinForms.WebView2 webView2;
         public ContextMenuStrip recentLinksMenu;
         public static frmMain Instance;
+        public static string currentVersion = "?";
+        public static string latestVersion = "Offline";
 
         public frmMain() {
             Instance = this;
@@ -47,11 +49,13 @@ namespace RePlays {
         }
 
         private async void CheckForUpdates() {
-            if (SettingsService.Settings.generalSettings.update == "none") return;
-
             try {
                 var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays");
+                currentVersion = manager.CurrentlyInstalledVersion().ToString();
                 var updateInfo = await manager.CheckForUpdate();
+                latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();
+
+                if (SettingsService.Settings.generalSettings.update == "none") return;
 
                 if (updateInfo.ReleasesToApply.Count > 0) {
                     if (SettingsService.Settings.generalSettings.update == "automatic") {
@@ -121,7 +125,7 @@ namespace RePlays {
             webView2.CoreWebView2.Settings.IsStatusBarEnabled = false;
             webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
             webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;
-            //webView21.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+            webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
         }
 
         private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {

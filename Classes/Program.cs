@@ -8,6 +8,7 @@ using RePlays.Utils;
 using System.Threading;
 using Squirrel;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace RePlays {
     public class Program {
@@ -34,7 +35,8 @@ namespace RePlays {
                     default:
                         break;
                 }
-                Logger.WriteLine(eventArgs.Exception.ToString());
+                var st = new StackTrace(eventArgs.Exception, true);
+                Logger.WriteLine(eventArgs.Exception.Message, st.GetFrame(0).GetFileName(), st.GetFrame(0).GetFileLineNumber());
             };
 
             // prevent multiple instances
