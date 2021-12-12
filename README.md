@@ -9,7 +9,7 @@
 RePlays is a free and open source program that automatically manages recording of detected running games, with a clip editor that allows for quick video sharing.
 
 ## Development
-RePlays is powered by C# (ASP.NET Core, .NET) and Typescript. Typescript is used for the interface (frontend), while C# is the core of the program (backend).
+RePlays is powered by C# (ASP.NET Core, .NET) and Typescript (React). Typescript is used for the interface (frontend), while C# is the core of the program (backend).
 
 The interface is displayed using Microsoft Edge WebView2. It was chosen over Electron in favor of performance, while still allowing for a web-powered interface.
 
