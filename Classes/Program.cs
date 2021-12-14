@@ -36,7 +36,7 @@ namespace RePlays {
                         break;
                 }
                 var st = new StackTrace(eventArgs.Exception, true);
-                Logger.WriteLine(eventArgs.Exception.Message, st.GetFrame(0).GetFileName(), st.GetFrame(0).GetFileLineNumber());
+                Logger.WriteLine(eventArgs.Exception.Message.ToString(), st.GetFrame(0).GetFileName(), st.GetFrame(0).GetFileLineNumber());
             };
 
             // prevent multiple instances
