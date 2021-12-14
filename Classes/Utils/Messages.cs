@@ -205,6 +205,10 @@ namespace RePlays.Utils {
                         Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
                     }
                     break;
+                case "ShowLicense": {
+                        Process.Start("notepad.exe", Path.Join(Application.StartupPath, @"LICENSE"));
+                    }
+                    break;
                 case "Delete": {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
