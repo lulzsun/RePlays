@@ -17,6 +17,10 @@ export const Help: React.FC<Props> = ({}) => {
       <span className="text-gray-700 mt-4">Join Our Community Discord</span>
       <span className="font-normal text-sm">Get help from the RePlays community.</span>
       <Button text="Discord" width={"auto"} onClick={(e) => {postMessage("ShowFolder", "https://discordapp.com/invite/Qj2BmZX")}}/>
+
+      <span className="text-gray-700 mt-4">Retrieve the logs</span>
+      <span className="font-normal text-sm">Locate the file location of the logs.</span>
+      <Button text="Show logs" width={"auto"} onClick={(e) => {postMessage("ShowLogs")}}/>
     </div>
 	)
 }

@@ -9,6 +9,11 @@ module.exports = {
       'grab': 'grab',
       'grabbing': 'grabbing',
       'pointer': 'pointer'
+    },
+    colors: {
+      'primary': 'white',
+      'secondary': '#4B5563',
+      'ternary': 'white'
     }
   },
   variants: {
