@@ -8,7 +8,7 @@
 
 RePlays is a free and open source program that automatically manages recording of detected running games, with a clip editor that allows for quick video sharing.
 
-![Preview](/resources/preview.png)
+![Preview](/Resources/preview.png)
 
 ## Installation
 1. Download the [latest Setup.exe from releases](https://github.com/lulzsun/RePlays/releases)
