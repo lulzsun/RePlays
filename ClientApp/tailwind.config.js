@@ -1,6 +1,6 @@
 module.exports = {
   purge: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
-  darkMode: false, // or 'media' or 'class'
+  darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {},
     cursor: {
@@ -10,11 +10,6 @@ module.exports = {
       'grabbing': 'grabbing',
       'pointer': 'pointer'
     },
-    colors: {
-      'primary': 'white',
-      'secondary': '#4B5563',
-      'ternary': 'white'
-    }
   },
   variants: {
     extend: {

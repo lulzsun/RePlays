@@ -51,22 +51,22 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
 
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
-      <h1 className="font-bold text-2xl">Capture Mode</h1>
+      <h1 className="font-semibold text-2xl">Capture Mode</h1>
       <div onChange={e => {if(settings) settings.recordingMode = (e?.target as HTMLInputElement).value; updateSettings();}}>
         <label className="inline-flex items-center">
           <input type="radio" name="recordMode" className="form-checkbox h-4 w-4 text-gray-600" value="automatic"
             defaultChecked={(settings?.recordingMode === "automatic" ? true : false)}/>
-          <span className="px-2 text-gray-700">Automatic</span>
+          <span className="px-2 text-gray-700 dark:text-gray-400">Automatic</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="recordMode" className="form-checkbox h-4 w-4 text-gray-600" value="manual"
             defaultChecked={(settings?.recordingMode === "manual" ? true : false)}/>
-          <span className="px-2 text-gray-700">Manual</span>
+          <span className="px-2 text-gray-700 dark:text-gray-400">Manual</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="recordMode" className="form-checkbox h-4 w-4 text-gray-600" value="off"
             defaultChecked={(settings?.recordingMode === "off" ? true : false)}/>
-          <span className="px-2 text-gray-700">Off</span>
+          <span className="px-2 text-gray-700 dark:text-gray-400">Off</span>
         </label>
       </div>
       <div className="flex flex-col">
@@ -74,7 +74,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         <HotkeySelector id="StartStopRecording" width="auto" keybind={keybindings?.StartStopRecording}/> 
       </div>
 
-      <h1 className="font-bold text-2xl mt-4">Video Quality</h1>
+      <h1 className="font-semibold text-2xl mt-4">Video Quality</h1>
       <div className="flex gap-4" 
         onChange={e => {
           let value = (e?.target as HTMLInputElement).value;
@@ -97,21 +97,21 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="low"
             defaultChecked={(settings?.resolution === 480 && settings?.frameRate === 15 && settings?.bitRate === 5 ? true : false)}/>
-          <span className="px-2 text-gray-700">Low</span>
+          <span className="px-2 text-gray-700 dark:text-gray-400">Low</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="medium"
             defaultChecked={(settings?.resolution === 720 && settings?.frameRate === 30 && settings?.bitRate === 25 ? true : false)}/>
-          <span className="px-2 text-gray-700">Medium</span>
+          <span className="px-2 text-gray-700 dark:text-gray-400">Medium</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="high"
             defaultChecked={(settings?.resolution === 1080 && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)}/>
-          <span className="px-2 text-gray-700">High</span>
+          <span className="px-2 text-gray-700 dark:text-gray-400">High</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality}/>
-          <span className="px-2 text-gray-700">Custom</span>
+          <span className="px-2 text-gray-700 dark:text-gray-400">Custom</span>
         </label>
       </div>
       <div className="flex gap-8">
@@ -152,7 +152,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         </div>
       </div>
 
-      <h1 className="font-bold text-2xl mt-4">Game Audio Settings</h1>
+      <h1 className="font-semibold text-2xl mt-4">Game Audio Settings</h1>
       <div className="flex gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
           <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
@@ -164,7 +164,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         {gameAudioVolume + "%"}
       </div>
       
-      <h1 className="font-bold text-2xl mt-4">Microphone Audio Settings</h1>
+      <h1 className="font-semibold text-2xl mt-4">Microphone Audio Settings</h1>
       <div className="flex gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
           <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>

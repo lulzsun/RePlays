@@ -29,7 +29,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
   }
   
   return (
-    <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-blue-500" : "")}>
+    <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-blue-500" : "border-gray-500")}>
       <div className="absolute z-40 w-full flex justify-between">
         <div className={"m-2 group-hover:opacity-100 " + (checked ? "opacity-100" : "opacity-0")}>
           <input type="checkbox" className="h-4 w-4" checked={(checked === undefined || checked === false ? false : true)} onChange={(e) => {onChange(e);}}/>
@@ -41,7 +41,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
             </svg>
           </button>
           <div className="opacity-0 invisible dropdown-menu transition-all duration-300 transform origin-top-right -translate-y-2 scale-95">
-            <div className="absolute right-0 w-auto mt-2 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
+            <div className="absolute right-0 w-auto mt-2 origin-top-right bg-white border border-gray-500 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
               onClick={() => {postMessage("ShowInFolder", {filePath: `${game}/${video}`})}}>Show In Folder</div>
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
@@ -58,9 +58,9 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
           <img className="absolute z-20 w-full" alt="" src={`${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${thumb}`}/>
           <img className="relative z-10 w-full" alt="" src={"video_thumbnail_placeholder.png"}/>
         </div>
-        <div className="bg-white dark:bg-gray-800 w-full p-4 text-gray-800 dark:text-white text-xs font-medium mb-2">
+        <div className="bg-white dark:bg-gray-900 text-gray-800 dark:text-white w-full rounded-b-lg p-4 text-xs font-medium">
           {game}
-          <p className="text-gray-500 dark:text-gray-300 font-light">
+          <p className="text-gray-700 dark:text-gray-400 font-light">
             {new Date(date).toLocaleDateString()} | {new Date(date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | {formatBytes(size)}
           </p>
         </div>

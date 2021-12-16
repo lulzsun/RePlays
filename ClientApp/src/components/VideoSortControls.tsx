@@ -46,7 +46,7 @@ export const VideoSortControls: React.FC<Props> = ({gameList, game, sortBy, size
           <path d="M3 4.5h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H3zM1 2a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 2zm0 12a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 14z"/>
         </svg>
       } onClick={() => {setVideoView('row')}}/>
-      <span className="mt-0.5 inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out rounded-md hover:text-gray-500 active:bg-gray-50 active:text-gray-800">
+      <span className="text-gray-700 dark:text-gray-400 hover:text-gray-700 active:bg-gray-50 active:text-gray-800 mt-0.5 inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-5 transition duration-150 ease-in-out rounded-md">
         {formatBytes(size)}
       </span>
       <Button onClick={() => window.location.reload()} icon={

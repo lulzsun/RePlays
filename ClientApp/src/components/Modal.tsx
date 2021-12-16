@@ -83,7 +83,7 @@ export const Modal: React.FC<Props> = ({modalData, open, setOpen, onConfirm}) =>
                       {title}
                     </Dialog.Title>
                     <div className="mt-2">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-700">
                         {context}
                         {(progressMax !== 0 && progressMax !== undefined) &&
                           <div className="w-full bg-gray-200 rounded">

@@ -26,22 +26,22 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
         <div style={{height: "50px"}}>Settings <p className="inline-block px-1">/</p> <div className="inline-block text-base align-bottom">{subPage}</div></div>
         <div style={{height: "calc(100% - 50px)"}} className="flex flex-row">
           <div className="w-40 h-full pr-6 border-0 border-r">
-            <Link to="/settings/general" onClick={() => setSubPage("General")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            <Link to="/settings/general" onClick={() => setSubPage("General")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               General
             </Link>
-            <Link to="/settings/capture" onClick={() => setSubPage("Capture")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            <Link to="/settings/capture" onClick={() => setSubPage("Capture")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Capture
             </Link>
-            <Link to="/settings/upload" onClick={() => setSubPage("Upload")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            <Link to="/settings/upload" onClick={() => setSubPage("Upload")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Upload
             </Link>
-            <Link to="/settings/advanced" onClick={() => setSubPage("Advanced")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            <Link to="/settings/advanced" onClick={() => setSubPage("Advanced")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Advanced
             </Link>
-            <Link to="/settings/help" onClick={() => setSubPage("Help")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            <Link to="/settings/help" onClick={() => setSubPage("Help")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Help
             </Link>
-            <Link to="/settings/about" onClick={() => setSubPage("About")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            <Link to="/settings/about" onClick={() => setSubPage("About")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               About
             </Link>
           </div>

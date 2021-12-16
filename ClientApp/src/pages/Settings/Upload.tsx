@@ -14,7 +14,7 @@ export const Upload: React.FC<Props> = ({settings, updateSettings}) => {
       <div className="flex flex-col h-full gap-2 font-medium text-base"> 
         <div className="flex flex-row" style={{height: "calc(100%)"}}>
           <div className="w-40 h-full pr-6 border-0 border-r">
-            <div className="inline-block text-base align-bottom pb-2 font-bold">Destinations</div>
+            <div className="inline-block text-base align-bottom pb-2 font-semibold">Destinations</div>
             <Link to="/settings/upload/streamable" onClick={() => setSubPage("Streamable")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Streamable
             </Link>
@@ -38,10 +38,10 @@ export const Upload: React.FC<Props> = ({settings, updateSettings}) => {
 const Streamable: React.FC<Props> = ({settings, updateSettings}) => {
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7">
-      <div className="font-bold">Streamable</div>
+      <div className="font-semibold">Streamable</div>
       <div className="flex flex-col">
         Email
-        <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
+        <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
           type="email" defaultValue={settings === undefined ? "" : settings.streamableSettings.email} onBlur={(e) => {
             if(settings !== undefined)
             settings.streamableSettings.email = e.target.value;
@@ -50,7 +50,7 @@ const Streamable: React.FC<Props> = ({settings, updateSettings}) => {
       </div>
       <div className="flex flex-col">
         Password
-          <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
+          <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
             type="password" defaultValue={settings === undefined ? "" : settings.streamableSettings.password}
             onFocus={(e) => {
               e.target.value = "";
@@ -68,7 +68,7 @@ const Streamable: React.FC<Props> = ({settings, updateSettings}) => {
 const Youtube: React.FC<Props> = ({settings, updateSettings}) => {
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7">
-      <div className="font-bold">Youtube</div>
+      <div className="font-semibold">Youtube</div>
     </div>
 	)
 }
@@ -76,7 +76,7 @@ const Youtube: React.FC<Props> = ({settings, updateSettings}) => {
 const SMB: React.FC<Props> = ({settings, updateSettings}) => {
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7">
-      <div className="font-bold">SMB</div>
+      <div className="font-semibold">SMB</div>
     </div>
 	)
 }
