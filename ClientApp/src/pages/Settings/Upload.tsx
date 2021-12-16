@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Route, BrowserRouter as Router, Switch } from "react-router-dom";
+import { Link, Route, HashRouter as Router, Switch } from "react-router-dom";
 
 interface Props {
   updateSettings: () => void;

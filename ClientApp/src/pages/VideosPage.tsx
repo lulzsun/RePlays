@@ -83,6 +83,7 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
             game={videos[index].game}
             video={videos[index].fileName}
             videoType={videoType}
+            folder={videos[index].folder}
             date={videos[index].date}
             size={videos[index].size}
             thumb={videos[index].thumbnail}

@@ -33,6 +33,7 @@ declare global {
     size: number,
     date: string,
     thumbnail: string,
+    folder: string,
   }
   interface Clip {
     id: number,

@@ -11,17 +11,18 @@ interface Props {
   date?: string;
   video?: string;
   videoType?: string;
+  folder?: string;
   thumb?: string;
   checked?: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, video="", videoType="", checked, onChange}) => {
+export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, video="", videoType="", folder="", checked, onChange}) => {
   const modalCtx = useContext(ModalContext);
   
   function handleUpload() {
     console.log(`${game} ${video} ${videoType} to upload`);
-    var thumb = `${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${video}`;
+    var thumb = `${folder}/${game}/.thumbs/${video}`;
     thumb = thumb.substr(0, thumb.lastIndexOf('.')) + ".png" || thumb + ".png";
 
     modalCtx?.setData({title: "Upload", context: <UploadModal video={video} game={game} thumb={thumb}/>, cancel: true});
@@ -52,10 +53,10 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
           </div>
         </div>
       </div>
-      <Link to={`/player/${game}/${video}/${videoType}`}>
+      <Link to={`/player/${game}/${video}/${videoType}/${folder}`}>
         <div className="relative w-full rounded-t-lg object-cover overflow-hidden items-center">
           <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
-          <img className="absolute z-20 w-full" alt="" src={`${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${thumb}`}/>
+          <img className="absolute z-20 w-full" alt="" src={`${folder}/${game}/.thumbs/${thumb}`}/>
           <img className="relative z-10 w-full" alt="" src={"video_thumbnail_placeholder.png"}/>
         </div>
         <div className="bg-white dark:bg-gray-900 text-gray-800 dark:text-white w-full rounded-b-lg p-4 text-xs font-medium">

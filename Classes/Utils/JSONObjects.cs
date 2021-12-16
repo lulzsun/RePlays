@@ -16,11 +16,11 @@ namespace RePlays.Utils {
 
     public class Video {
         public DateTime date { get; set; }
-        public string type { get; set; }
         public long size { get; set; }
         public string game { get; set; }
         public string fileName { get; set; }
         public string thumbnail { get; set; }
+        public string folder { get; set; }
     }
 
     public class VideoSortSettings {

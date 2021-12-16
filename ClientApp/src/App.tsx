@@ -2,7 +2,7 @@ import Logo from './logo.svg';
 import Player from './pages/Player';
 import VideosPage from './pages/VideosPage';
 import { createContext, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import { HashRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
 import ContextMenu from './components/ContextMenu';
 import { useRef } from 'react';
@@ -226,7 +226,7 @@ function App() {
                     })}
                   </select>
                 </div> */}
-                <Link title="Settings" to="/settings" className="p-2 px-4 flex items-center rounded transition duration-200 hover:bg-gray-700 hover:text-white cursor-pointer"
+                <Link title="Settings" to="/settings/General" className="p-2 px-4 flex items-center rounded transition duration-200 hover:bg-gray-700 hover:text-white cursor-pointer"
                 onClick={() => {
                   sideBarEle.current!.classList.toggle("-translate-x-full");
                 }}>
@@ -257,8 +257,8 @@ function App() {
                   <Route exact path="/">         <VideosPage key={"Sessions"} videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
                   <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
                   <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
-                  <Route exact path="/settings"> <Settings userSettings={userSettings} setUserSettings={setUserSettings}/></Route>
-                  <Route exact path="/player/:game/:video/:videoType"><Player/></Route>
+                  <Route exact path="/settings/:page"> <Settings userSettings={userSettings} setUserSettings={setUserSettings}/></Route>
+                  <Route exact path="/player/:game/:video/:videoType/*:folder"><Player/></Route>
                 </Switch>
               </div>
             </div>

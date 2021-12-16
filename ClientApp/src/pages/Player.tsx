@@ -10,12 +10,13 @@ type PlayerParams = {
   game: string;
   video: string;
   videoType: string;
+  folder: string;
 };
 
 const ZOOMS = [100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000];
 
 export default function Player () {
-  let { game, video, videoType } = useParams<PlayerParams>();
+  let { game, video, videoType, folder } = useParams<PlayerParams>();
   const videoElement = useRef<HTMLVideoElement>(null);
   const volumeSliderElement = useRef<HTMLInputElement>(null);
   const timelineElement = useRef<HTMLDivElement>(null);
@@ -156,7 +157,7 @@ export default function Player () {
 
   function handleUpload() {
     console.log(`${game} ${video} ${videoType} to upload`);
-    var thumb = `${window.location.protocol}//${window.location.host}/Plays/${game}/.thumbs/${video}`;
+    var thumb = `${folder}/${game}/.thumbs/${video}`;
     thumb = thumb.substr(0, thumb.lastIndexOf('.')) + ".png" || thumb + ".png";
 
     modalCtx?.setData({title: "Upload", context: <UploadModal video={video} game={game} thumb={thumb}/>, cancel: true});
@@ -279,7 +280,7 @@ export default function Player () {
         onClick={() => {
           (videoElement.current?.paused ? videoElement.current?.play() : videoElement.current?.pause())
         }}>
-        <video ref={videoElement} className="absolute h-full" src={`${window.location.protocol}//${window.location.host}/Plays/${game}/${video}`} 
+        <video ref={videoElement} className="absolute h-full" src={`${folder}/${game}/${video}`} 
           onLoadedMetadata={handleVideoLoad} 
           onTimeUpdate={handleVideoPlaying}
           onPause={() => setPlaybackClips(-1)}/>

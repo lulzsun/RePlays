@@ -2,22 +2,21 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
 using RePlays.Utils;
 using System.Threading;
 using Squirrel;
-using System.Threading.Tasks;
 using System.Diagnostics;
+using System.IO;
+using System.Net;
 
 namespace RePlays {
-    public class Program {
+    static class Program {
         [DllImport("kernel32.dll")]
         static extern bool AttachConsole(int dwProcessId);
         private const int ATTACH_PARENT_PROCESS = -1;
 
         [STAThread]
-        public static void Main(string[] args) {
+        static void Main(string[] args) {
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
             string debugArg = "-debug";
@@ -61,18 +60,30 @@ namespace RePlays {
                 Logger.WriteLine(exception.ToString());
             }
 
-            CreateHostBuilder(args).Build().RunAsync();
+#if (DEBUG) // this will run our react app if its not already running
+            var startInfo = new ProcessStartInfo {
+                FileName = "cmd.exe",
+                Arguments = "/c npm run start",
+                WorkingDirectory = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp")
+            };
+            Process process = null;
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:3000/");
+            request.AllowAutoRedirect = false;
+            request.Method = "HEAD";
+
+            try {
+                request.GetResponse();
+            }
+            catch (WebException) {
+                if(process == null) process = Process.Start(startInfo);
+            }
+#endif
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmMain());
         }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder => {
-                    webBuilder.UseStartup<Startup>();
-                });
     }
 }

@@ -87,14 +87,19 @@ namespace RePlays {
             if (webView2 == null || webView2.IsDisposed) {
                 webView2 = new Microsoft.Web.WebView2.WinForms.WebView2();
                 webView2.Dock = DockStyle.Fill;
-                webView2.Source = new System.Uri("https://localhost:5001/");
                 webView2.CoreWebView2InitializationCompleted += CoreWebView2InitializationCompleted;
                 webView2.WebMessageReceived += WebMessageReceivedAsync;
                 CoreWebView2EnvironmentOptions environmentOptions = new CoreWebView2EnvironmentOptions() {
-                    AdditionalBrowserArguments = "--unlimited-storage"
+                    AdditionalBrowserArguments = "--unlimited-storage --disable-web-security --allow-file-access-from-files --allow-file-access"
                 };
                 CoreWebView2Environment environment = await CoreWebView2Environment.CreateAsync(null, null, environmentOptions);
                 await webView2.EnsureCoreWebView2Async(environment);
+#if (DEBUG)
+                webView2.CoreWebView2.Navigate("http://localhost:3000/#/");
+#elif (RELEASE)
+                webView2.CoreWebView2.Navigate("file://D:/Documents/GitHub/RePlays/ClientApp/build/index.html");
+#endif
+
             }
         }
 
@@ -126,6 +131,7 @@ namespace RePlays {
             webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
             webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+            //webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.local", GetPlaysFolder(), CoreWebView2HostResourceAccessKind.Allow);
         }
 
         private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {

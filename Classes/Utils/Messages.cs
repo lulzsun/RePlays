@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using RePlays.Controllers;
 using RePlays.Recorders;
 using RePlays.Services;
 using static RePlays.Utils.Functions;
@@ -218,8 +217,6 @@ namespace RePlays.Utils {
                         foreach (var filePath in data.filePaths) {
                             var realFilePath = Path.Join(GetPlaysFolder(), filePath);
                             var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
-
-                            VideoController.DisposeOpenStreams();
 
                             File.Delete(realFilePath);
                             File.Delete(thumbPath);

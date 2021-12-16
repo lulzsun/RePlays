@@ -210,6 +210,7 @@ namespace RePlays.Utils {
                 video.date = new FileInfo(file).CreationTime;
                 video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
+                video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 

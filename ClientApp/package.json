@@ -2,6 +2,7 @@
   "name": "client-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
   "dependencies": {
     "7zip-bin": "^5.1.1",
     "@craco/craco": "^6.2.0",
