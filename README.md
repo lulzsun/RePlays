@@ -8,6 +8,13 @@
 
 RePlays is a free and open source program that automatically manages recording of detected running games, with a clip editor that allows for quick video sharing.
 
+![Preview](/resources/preview.png)
+
+## Installation
+1. Download the [latest Setup.exe from releases](https://github.com/lulzsun/RePlays/releases)
+2. Open Setup.exe
+3.  ...profit!
+
 ## Development
 RePlays is powered by C# (ASP.NET Core, .NET) and Typescript (React). Typescript is used for the interface (frontend), while C# is the core of the program (backend).
 
