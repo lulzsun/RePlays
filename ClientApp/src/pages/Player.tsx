@@ -6,17 +6,22 @@ import { ContextMenuContext, ModalContext } from '../App';
 import { postMessage } from '../helpers/messenger';
 import UploadModal from './UploadModal';
 
+interface Props {
+  videos: Video[];
+}
+
 type PlayerParams = {
   game: string;
-  video: string;
   videoType: string;
-  folder: string;
+  video: string;
 };
 
 const ZOOMS = [100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000];
 
-export default function Player () {
-  let { game, video, videoType, folder } = useParams<PlayerParams>();
+export const Player: React.FC<Props> = ({videos}) => {
+  let { game, video, videoType } = useParams<PlayerParams>();
+  let folder = videos.find(v => v.fileName.includes(video))?.folder;
+  
   const videoElement = useRef<HTMLVideoElement>(null);
   const volumeSliderElement = useRef<HTMLInputElement>(null);
   const timelineElement = useRef<HTMLDivElement>(null);
@@ -435,3 +440,5 @@ export default function Player () {
     </div>
   )
 }
+
+export default Player;

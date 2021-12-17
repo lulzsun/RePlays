@@ -258,7 +258,7 @@ function App() {
                   <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
                   <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
                   <Route exact path="/settings/:page"> <Settings userSettings={userSettings} setUserSettings={setUserSettings}/></Route>
-                  <Route exact path="/player/:game/:video/:videoType/*:folder"><Player/></Route>
+                  <Route exact path="/player/:game/:video/:videoType"><Player videos={sessions.concat(clips)}/></Route>
                 </Switch>
               </div>
             </div>

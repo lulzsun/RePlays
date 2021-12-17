@@ -8,6 +8,8 @@ using Squirrel;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 using System.Collections.Generic;
+using System.IO;
+using System;
 
 namespace RePlays {
     public partial class frmMain : Form {
@@ -96,8 +98,9 @@ namespace RePlays {
                 await webView2.EnsureCoreWebView2Async(environment);
 #if (DEBUG)
                 webView2.CoreWebView2.Navigate("http://localhost:3000/#/");
+                //webView2.CoreWebView2.Navigate("file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html");
 #elif (RELEASE)
-                webView2.CoreWebView2.Navigate("file://D:/Documents/GitHub/RePlays/ClientApp/build/index.html");
+                webView2.CoreWebView2.Navigate("file://"+ Application.StartupPath +"/ClientApp/build/index.html");
 #endif
 
             }

@@ -53,7 +53,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
           </div>
         </div>
       </div>
-      <Link to={`/player/${game}/${video}/${videoType}/${folder}`}>
+      <Link to={`/player/${game}/${video}/${videoType}`} onClick={() => {console.log(folder)}}>
         <div className="relative w-full rounded-t-lg object-cover overflow-hidden items-center">
           <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
           <img className="absolute z-20 w-full" alt="" src={`${folder}/${game}/.thumbs/${thumb}`}/>
