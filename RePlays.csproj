@@ -95,7 +95,7 @@
 	</XmlPeek>
 
 	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
-	<Exec Command="$(SquirrelTools)\Squirrel.exe --releasify $(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases" />
+	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases" />
   </Target>
 
 </Project>
