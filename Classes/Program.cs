@@ -5,9 +5,9 @@ using System.Windows.Forms;
 using RePlays.Utils;
 using System.Threading;
 using Squirrel;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Diagnostics;
 
 namespace RePlays {
     static class Program {
@@ -35,7 +35,7 @@ namespace RePlays {
                         break;
                 }
                 var st = new StackTrace(eventArgs.Exception, true);
-                Logger.WriteLine(eventArgs.Exception.Message.ToString(), st.GetFrame(0).GetFileName(), st.GetFrame(0).GetFileLineNumber());
+                Logger.WriteLine(eventArgs.Exception.ToString(), st.GetFrames().Last().GetFileName() ?? "External Library", st.GetFrames().Last().GetFileLineNumber());
             };
 
             // prevent multiple instances

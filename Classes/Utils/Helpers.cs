@@ -18,6 +18,15 @@ namespace RePlays.Utils {
             return ans.ToString("x");
         }
 
+        public static string GetRePlaysURI() {
+#if (DEBUG)
+            //return "http://localhost:3000/#/";
+            return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
+#elif (RELEASE)
+            return "file://" + Application.StartupPath + "/ClientApp/build/index.html";
+#endif
+        }
+
         public static string GetPlaysLtcFolder() {
             //var path = Path.Join(Application.StartupPath, @"Plays-ltc\0.54.7\"); this doesnt work for some reason, plays-ltc has to be in the localappdata folder
             var path = Environment.GetEnvironmentVariable("LocalAppData") + @"\Plays-ltc\0.54.7\";
@@ -48,7 +57,7 @@ namespace RePlays.Utils {
         public static string GetFFmpegFolder() {
 
 #if DEBUG
-            string ffmpegFolder = Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #else
             string ffmpegFolder = Path.Join(Application.StartupPath, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #endif
@@ -62,7 +71,7 @@ namespace RePlays.Utils {
 
         public static string Get7zipExecutable() {
 #if DEBUG
-            string _7zipExecutable = Path.Join(Directory.GetCurrentDirectory(), @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
+            string _7zipExecutable = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #else
             string _7zipExecutable = Path.Join(Application.StartupPath, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #endif

@@ -114,6 +114,10 @@ namespace RePlays.Utils {
                 Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
 
             switch (webMessage.message) {
+                case "GetAudioDevices": {
+                        frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
+                    }
+                    break;
                 case "Initialize": {
                         // INIT USER SETTINGS
                         SendMessage(GetUserSettings());
@@ -131,6 +135,9 @@ namespace RePlays.Utils {
                             Logger.WriteLine("Found Plays-ltc existing on local disk");
                             DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
                             Logger.WriteLine("Copied Plays-ltc to recorders folder");
+                            RecordingService.Start(typeof(PlaysLTC));
+                        }
+                        else {
                             RecordingService.Start(typeof(PlaysLTC));
                         }
 

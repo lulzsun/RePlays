@@ -46,8 +46,6 @@ namespace RePlays {
             else {
                 InitializeWebView2();
             }
-
-            RecordingService.Start(typeof(PlaysLTC));
         }
 
         private async void CheckForUpdates() {
@@ -86,6 +84,31 @@ namespace RePlays {
         private async void InitializeWebView2() {
             RefreshLoader();
 
+            try {
+                Logger.WriteLine("WebView2 Version: " + CoreWebView2Environment.GetAvailableBrowserVersionString());
+            }
+            catch (WebView2RuntimeNotFoundException exception) {
+                Logger.WriteLine(exception.Message);
+                Logger.WriteLine("Prompting user to install WebView2");
+                DialogResult result =
+                    MessageBox.Show(
+                        "Microsoft Edge WebView2 Runtime is required to display interface. Would you like to run the installer?",
+                        "Missing Microsoft Edge WebView2 Runtime", MessageBoxButtons.YesNoCancel);
+                if (result == DialogResult.Yes) {
+                    var startInfo = new ProcessStartInfo {
+#if (DEBUG)
+                        FileName = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + @"/Resources/runtimes/win/MicrosoftEdgeWebview2Setup.exe",
+#elif (RELEASE)
+                        FileName = Application.StartupPath + @"/runtimes/win/MicrosoftEdgeWebview2Setup.exe",
+#endif
+                        Arguments = "/install"
+                    };
+                    var process = Process.Start(startInfo);
+                    process.WaitForExit();
+                    Logger.WriteLine("MicrosoftEdgeWebview2Setup.exe exited with code: " + process.ExitCode.ToString());
+                }
+            }
+
             if (webView2 == null || webView2.IsDisposed) {
                 webView2 = new Microsoft.Web.WebView2.WinForms.WebView2();
                 webView2.Dock = DockStyle.Fill;
@@ -96,13 +119,6 @@ namespace RePlays {
                 };
                 CoreWebView2Environment environment = await CoreWebView2Environment.CreateAsync(null, null, environmentOptions);
                 await webView2.EnsureCoreWebView2Async(environment);
-#if (DEBUG)
-                webView2.CoreWebView2.Navigate("http://localhost:3000/#/");
-                //webView2.CoreWebView2.Navigate("file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html");
-#elif (RELEASE)
-                webView2.CoreWebView2.Navigate("file://"+ Application.StartupPath +"/ClientApp/build/index.html");
-#endif
-
             }
         }
 
@@ -120,21 +136,17 @@ namespace RePlays {
         }
 
         private async void CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e) {
-            if (webView2.CoreWebView2 == null) {
-                DialogResult result =
-                    MessageBox.Show(
-                        "Microsoft Edge WebView2 Runtime is required to display interface. Would you like to download and run the installer?",
-                        "Missing Microsoft Edge WebView2 Runtime", MessageBoxButtons.YesNoCancel);
-                if (result == DialogResult.Yes) {
-                    Process.Start("https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section");
-                }
-            }
             await webView2.CoreWebView2.CallDevToolsProtocolMethodAsync("Security.setIgnoreCertificateErrors", "{\"ignore\": true}");
             webView2.CoreWebView2.Settings.IsStatusBarEnabled = false;
             webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
             webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;
+#if (DEBUG)
+            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.local", Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/public/", CoreWebView2HostResourceAccessKind.Allow);
+#elif (RELEASE)
+            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.local", Application.StartupPath + "/ClientApp/build/", CoreWebView2HostResourceAccessKind.Allow);
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-            //webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.local", GetPlaysFolder(), CoreWebView2HostResourceAccessKind.Allow);
+#endif
+            webView2.CoreWebView2.Navigate("https://replays.local/preload.html");
         }
 
         private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {
