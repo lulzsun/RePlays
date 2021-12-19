@@ -58,6 +58,8 @@ namespace RePlays.Utils {
         public string theme { get { return _theme; } set { _theme = value; } }
         private string _update = "automatic"; // ??? why is there a warning
         public string update { get { return _update; } set { _update = value; } }
+        private string _updateChannel = "stable";
+        public string updateChannel { get { return _updateChannel; } set { _updateChannel = value; } }
         public string currentVersion { get { return frmMain.currentVersion; } }
         public string latestVersion { get { return frmMain.latestVersion; } }
     }

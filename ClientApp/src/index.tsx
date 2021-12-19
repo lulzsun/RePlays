@@ -77,7 +77,13 @@ declare global {
     keybindings: Keybindings
   }
   interface GeneralSettings {
-    launchStartup: boolean, startMinimized: boolean, theme: string, update: string, currentVersion: string, latestVersion: string, 
+    launchStartup: boolean, 
+    startMinimized: boolean, 
+    theme: string, 
+    update: string, 
+    updateChannel: string, 
+    currentVersion: string, 
+    latestVersion: string, 
   }
   interface CaptureSettings {
     recordingMode: string,

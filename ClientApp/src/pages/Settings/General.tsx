@@ -50,7 +50,15 @@ export const General: React.FC<Props> = ({settings, updateSettings}) => {
         </label>
       </div>
 
-      <h1 className="font-semibold text-2xl mt-4">Version</h1>
+      <div className="flex flex-col gap-1">
+        Update Channel
+        <DropDownMenu text={(settings === undefined ? "Stable" : settings.updateChannel)} width={"auto"}
+        items={[
+          {name: "Stable", onClick: () => {settings!.updateChannel = "Stable"; updateSettings();}},
+          {name: "Nightly", onClick: () => {settings!.updateChannel = "Nightly"; updateSettings();}},
+        ]}/> 
+      </div>
+
       <span className="text-gray-700 dark:text-gray-400">Current Version: {settings?.currentVersion}</span>
       <span className="text-gray-700 dark:text-gray-400">Latest Version: {settings?.latestVersion}</span>
       <Button text="Change logs" width={"auto"}/>

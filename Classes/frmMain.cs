@@ -50,7 +50,8 @@ namespace RePlays {
 
         private async void CheckForUpdates() {
             try {
-                var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays");
+                var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays", null, null, null, 
+                    SettingsService.Settings.generalSettings.updateChannel != "stable");
                 currentVersion = manager.CurrentlyInstalledVersion().ToString();
                 var updateInfo = await manager.CheckForUpdate();
                 latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();

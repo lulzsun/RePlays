@@ -69,7 +69,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
           <span className="px-2 text-gray-700 dark:text-gray-400">Off</span>
         </label>
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-1">
         Toggle Recording Keybind
         <HotkeySelector id="StartStopRecording" width="auto" keybind={keybindings?.StartStopRecording}/> 
       </div>
