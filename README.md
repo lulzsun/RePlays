@@ -18,7 +18,7 @@ RePlays is a free and open source program that automatically manages recording o
 Note: Depending on your Windows version, you may need to download and install [Microsoft Edge WebView2 runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section).
 
 ## Development
-RePlays is powered by C# (ASP.NET Core, .NET) and Typescript (React). Typescript is used for the interface (frontend), while C# is the core of the program (backend).
+RePlays is powered by C# (.NET 5) and Typescript (React). Typescript is used for the interface (frontend), while C# is the core of the program (backend).
 
 The interface is displayed using Microsoft Edge WebView2. It was chosen over Electron in favor of performance, while still allowing for a web-powered interface.
 
