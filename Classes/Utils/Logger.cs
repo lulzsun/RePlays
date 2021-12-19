@@ -15,7 +15,7 @@ namespace RePlays.Utils {
                 System.Diagnostics.Debug.WriteLine(logLine);
             }
             else
-                File.AppendAllText(Application.StartupPath + @"\logs.txt", logLine + Environment.NewLine);
+                File.AppendAllText(Application.StartupPath + @"\cfg\logs.txt", logLine + Environment.NewLine);
         }
     }
 }
