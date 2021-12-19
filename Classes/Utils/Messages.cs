@@ -216,7 +216,7 @@ namespace RePlays.Utils {
                     }
                     break;
                 case "ShowLogs": {
-                        Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.Join(Application.StartupPath, @"logs.txt")));
+                        Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.Join(Application.StartupPath, @"cfg\logs.txt")));
                     }
                     break;
                 case "Delete": {
