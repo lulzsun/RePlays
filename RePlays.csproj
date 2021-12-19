@@ -100,7 +100,7 @@
 		  </ResolvedFileToPublish>
 	  </ItemGroup>
 
-	<!-- Include WebView2 online installer in the publish output
+	<!-- Include WebView2 online installer in the publish output -->
 	<ItemGroup>
 		<DistFiles Include="$(SolutionDir)Resources\runtimes\**" />
 		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
@@ -108,14 +108,17 @@
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</ResolvedFileToPublish>
-	</ItemGroup> -->
+	</ItemGroup>
 
 	<!-- Include a copy of the app's license -->
 	<ItemGroup>
 		<_license Include="$(SolutionDir)LICENSE" />
 	</ItemGroup>
 	<Copy SourceFiles="@(_license)" DestinationFolder="$(PublishDir)" />
+  </Target>
 
+  <Target Name="Package" AfterTargets="Publish" Condition=" '$(Configuration)' == 'Release' ">
+	<!-- Prepare Squirrel package -->
 	<XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
 		<Output TaskParameter="Result" ItemName="ID" />
 	</XmlPeek>
