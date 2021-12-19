@@ -34,14 +34,14 @@ namespace RePlays.Utils {
         }
 
         public static string GetPlaysFolder() {
-            var videoSaveDir = SettingsService.Settings.advancedSettings.videoSaveDir;
+            var videoSaveDir = SettingsService.Settings.advancedSettings.videoSaveDir.Replace('\\', '/');
             if (!Directory.Exists(videoSaveDir))
                 Directory.CreateDirectory(videoSaveDir);
             return videoSaveDir;
         }
 
         public static string GetTempFolder() {
-            var tempSaveDir = SettingsService.Settings.advancedSettings.tempSaveDir;
+            var tempSaveDir = SettingsService.Settings.advancedSettings.tempSaveDir.Replace('\\', '/');
             if (!Directory.Exists(tempSaveDir))
                 Directory.CreateDirectory(tempSaveDir);
             return tempSaveDir;

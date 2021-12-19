@@ -19,7 +19,7 @@ namespace RePlays.Recorders {
 
             ltc.ConnectionHandshake += (sender, msg) => {
                 ltc.GetEncoderSupportLevel();
-                ltc.SetSavePaths(GetPlaysFolder().Replace('\\', '/'), GetTempFolder().Replace('\\', '/'));
+                ltc.SetSavePaths(GetPlaysFolder(), GetTempFolder());
                 ltc.SetGameDVRQuality(
                     SettingsService.Settings.captureSettings.bitRate,
                     SettingsService.Settings.captureSettings.frameRate,

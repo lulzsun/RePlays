@@ -8,7 +8,7 @@ namespace RePlays.Services {
     public static class StorageService {
         public static void ManageStorage() {
             if (!SettingsService.Settings.advancedSettings.autoManageSpace) return;
-            string folderPath = SettingsService.Settings.advancedSettings.videoSaveDir;
+            string folderPath = GetPlaysFolder();
             DriveInfo dInfo = new DriveInfo(folderPath);
             double percentOfUsedDisk = (dInfo.TotalSize - dInfo.TotalFreeSpace) / (double)dInfo.TotalSize * 100;
             double folderSizeGb = DirectorySize(new DirectoryInfo(folderPath)) / 1024f / 1024f / 1024f;
