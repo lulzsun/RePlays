@@ -207,7 +207,7 @@ namespace RePlays.Utils {
                     break;
                 case "ShowInFolder": {
                         ShowInFolder data = JsonSerializer.Deserialize<ShowInFolder>(webMessage.data);
-                        var filePath = Path.Join(GetPlaysFolder(), data.filePath);
+                        var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
                         Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
                     }
                     break;
