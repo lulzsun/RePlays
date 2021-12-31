@@ -67,8 +67,11 @@ namespace RePlays {
                     else { // manual
                         WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
                     }
+                }
+                else {
                     Logger.WriteLine($"Found no updates higher than current version {updateInfo.CurrentlyInstalledVersion.Version}");
                 }
+                manager.Dispose();
             }
             catch (System.Exception exception) {
                 Logger.WriteLine("Error: Issue fetching update releases: " + exception.ToString());
