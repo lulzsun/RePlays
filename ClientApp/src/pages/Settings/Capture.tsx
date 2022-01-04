@@ -15,6 +15,32 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
   const [micAudioDevices, setMicAudioDevices] = useState<any[]>();
 
   useEffect(() => {
+    if(settings == null) return;
+    if(settings.micDevicesCache == null) return;
+    
+    let ddmItems: any[] = [];
+    
+    settings.micDevicesCache.forEach((device) => {
+      console.log(device);
+
+      if(device.deviceId === "default" && settings.micDevice.deviceId === "") {
+        settings.micDevice.deviceId = device.deviceId; 
+        settings.micDevice.deviceLabel = device.deviceLabel;
+        updateSettings();
+      }
+      
+      ddmItems.push({name: device.deviceLabel, onClick: () => {
+        settings.micDevice.deviceId = device.deviceId; 
+        settings.micDevice.deviceLabel = device.deviceLabel; 
+        updateSettings();
+      }});
+    });
+
+    setMicAudioDevices(ddmItems);
+    return;
+
+    //dead code below
+
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices)
       console.error('enumerateDevices() not supported');
     else {

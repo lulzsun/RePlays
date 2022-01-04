@@ -9,6 +9,7 @@ using RePlays.Recorders;
 using RePlays.Services;
 using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
+using static RePlays.Utils.CaptureSettings;
 
 namespace RePlays.Utils {
     public class RetrieveVideos {
@@ -115,6 +116,10 @@ namespace RePlays.Utils {
 
             switch (webMessage.message) {
                 case "GetAudioDevices": {
+                        List<MicDevice> data = JsonSerializer.Deserialize<List<MicDevice>>(webMessage.data);
+                        SettingsService.Settings.captureSettings.micDevicesCache = data;
+                        Logger.WriteLine(data[0].deviceId + " | " + data[0].deviceLabel);
+                        SettingsService.SaveSettings();
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
                     }
                     break;

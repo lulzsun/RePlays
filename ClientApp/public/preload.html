@@ -15,7 +15,7 @@
             console.log(rawAudioDevices);
             let deviceList = [];
             rawAudioDevices.forEach((device) => {
-              if(device.deviceId !== "") deviceList.push({name: device.label, id: device.deviceId});
+              if(device.deviceId !== "") deviceList.push({deviceLabel: device.label, deviceId: device.deviceId});
             });
 
             if(window.chrome === undefined || window.chrome.webview === undefined) {

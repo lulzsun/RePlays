@@ -64,6 +64,13 @@ namespace RePlays.Utils {
         public string latestVersion { get { return frmMain.latestVersion; } }
     }
 
+    public class MicDevice {
+        private string _deviceId = "";
+        public string deviceId { get { return _deviceId; } set { _deviceId = value; } }
+        private string _deviceLabel = "";
+        public string deviceLabel { get { return _deviceLabel; } set { _deviceLabel = value; } }
+    }
+
     public class CaptureSettings {
         private string _recordingMode = "automatic";
         public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
@@ -79,12 +86,8 @@ namespace RePlays.Utils {
         private int _micAudioVolume = 50;
         public int micAudioVolume { get { return _micAudioVolume; } set { _micAudioVolume = value; } }
 
-        public class MicDevice {
-            private string _deviceId = "";
-            public string deviceId { get { return _deviceId; } set { _deviceId = value; } }
-            private string _deviceLabel = "";
-            public string deviceLabel { get { return _deviceLabel; } set { _deviceLabel = value; } }
-        }
+        private List<MicDevice> _micDevicesCache = new();
+        public List<MicDevice> micDevicesCache { get { return _micDevicesCache; } set { _micDevicesCache = value; } }
 
         private MicDevice _micDevice = new();
         public MicDevice micDevice { get { return _micDevice; } set { _micDevice = value; } }

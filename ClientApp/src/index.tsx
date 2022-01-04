@@ -85,16 +85,18 @@ declare global {
     currentVersion: string, 
     latestVersion: string, 
   }
+  interface MicDevice {
+    deviceId: string,
+    deviceLabel: string,
+  }
   interface CaptureSettings {
     recordingMode: string,
     resolution: number, frameRate: number, bitRate: number,
 
     gameAudioVolume: number,
     micAudioVolume: number,
-    micDevice: {
-      deviceId: string,
-      deviceLabel: string,
-    }
+    micDevice: MicDevice,
+    micDevicesCache: MicDevice[],
   }
   interface UploadSettings {
     recentLinks: string[],
