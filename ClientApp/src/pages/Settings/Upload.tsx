@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link, Route, HashRouter as Router, Switch } from "react-router-dom";
+import Button from "../../components/Button";
+import DirectoryBrowser from "../../components/DirectoryBrowser";
+import { postMessage } from "../../helpers/messenger";
 
 interface Props {
   updateSettings: () => void;
@@ -7,31 +9,29 @@ interface Props {
 }
 
 export const Upload: React.FC<Props> = ({settings, updateSettings}) => {
-  const [subPage, setSubPage] = useState("General");
-  
+  const [subPage, setSubPage] = useState('Streamable');
+
 	return (
-    <Router>
-      <div className="flex flex-col h-full gap-2 font-medium text-base"> 
-        <div className="flex flex-row" style={{height: "calc(100%)"}}>
-          <div className="w-40 h-full pr-6 border-0 border-r">
-            <div className="inline-block text-base align-bottom pb-2 font-semibold">Destinations</div>
-            <Link to="/settings/upload/streamable" onClick={() => setSubPage("Streamable")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
-              Streamable
-            </Link>
-            {/* <Link to="/settings/upload/youtube" onClick={() => setSubPage("Youtube")} className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
-              Youtube
-            </Link> */}
+    <div className="flex flex-col h-full gap-2 font-medium text-base"> 
+      <div className="flex flex-row" style={{height: "calc(100%)"}}>
+        <div className="w-48 h-full pr-6 border-0 border-r">
+          <div className="inline-block text-base align-bottom pb-2 font-semibold">Destinations</div>
+          <div onClick={() => setSubPage("Streamable")} className="cursor-pointer flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            Streamable
           </div>
-          <div className="flex-auto overflow-auto h-full w-full p-7 pt-0">
-            <Switch>
-              <Route exact path="/settings/upload">               <Streamable settings={settings} updateSettings={updateSettings}/></Route>
-              <Route exact path="/settings/upload/streamable">    <Streamable settings={settings} updateSettings={updateSettings}/></Route>
-              {/* <Route exact path="/settings/upload/youtube">       <Youtube settings={settings} updateSettings={updateSettings}/></Route> */}
-            </Switch>
+          {/* <div onClick={() => setSubPage("YouTube")} className="cursor-pointer flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            YouTube
+          </div> */}
+          <div onClick={() => setSubPage("LocalFolder")} className="cursor-pointer flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            Local Folder
           </div>
         </div>
+        <div className="flex-auto overflow-auto h-full w-full p-7 pt-0">
+          {(subPage === 'Streamable' ? <Streamable settings={settings} updateSettings={updateSettings}/> : "")}
+          {(subPage === 'LocalFolder' ? <LocalFolder settings={settings} updateSettings={updateSettings}/> : "")}
+        </div>
       </div>
-    </Router>
+    </div>
 	)
 }
 
@@ -73,10 +73,17 @@ const Youtube: React.FC<Props> = ({settings, updateSettings}) => {
 	)
 }
 
-const SMB: React.FC<Props> = ({settings, updateSettings}) => {
+const LocalFolder: React.FC<Props> = ({settings, updateSettings}) => {
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7">
-      <div className="font-semibold">SMB</div>
+      <div className="font-semibold">Local Folder</div>
+      <div className="flex flex-col">
+        <span className="text-gray-700 dark:text-gray-400">Game Recordings Directory</span>
+        <div className="flex flex-row">
+          <DirectoryBrowser id="localFolderDir" path={settings === undefined ? undefined : settings.localFolderSettings.dir}/>
+          <Button text="Open Folder" width={"auto"} onClick={(e) => {postMessage("ShowFolder", (settings === undefined ? "C:\\" : settings.localFolderSettings.dir))}}/>
+        </div>
+      </div>
     </div>
 	)
 }

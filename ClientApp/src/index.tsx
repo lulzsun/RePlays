@@ -106,7 +106,10 @@ declare global {
     },
     youtubeSettings: {
       token: string,
-    }
+    },
+    localFolderSettings: {
+      dir: string,
+    },
   }
   interface AdvancedSettings {
     videoSaveDir: string,

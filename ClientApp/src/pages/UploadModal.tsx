@@ -41,6 +41,7 @@ export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
             name="destinationDdm" id="destinationDdm" defaultValue={destination} onChange={(e) => setDestination(e.target.value)}>
               <option value="Streamable">Streamable</option>
               {/* <option value="Youtube">Youtube</option> */}
+              <option value="LocalFolder">Local Folder</option>
             </select>
           </div>
         </div>

@@ -127,5 +127,13 @@ namespace RePlays.Utils {
 
         private StreamableSettings _streamableSettings = new();
         public StreamableSettings streamableSettings { get { return _streamableSettings; } set { _streamableSettings = value; } }
+
+        public class LocalFolderSettings {
+            private string _dir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            public string dir { get { return _dir; } set { _dir = value; } }
+        }
+
+        private LocalFolderSettings _localFolderSettings = new();
+        public LocalFolderSettings localFolderSettings { get { return _localFolderSettings; } set { _localFolderSettings = value; } }
     }
 }

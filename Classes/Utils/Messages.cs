@@ -184,22 +184,20 @@ namespace RePlays.Utils {
                 case "SelectFolder": {
                         var type = webMessage.data.Replace("\"", "");
                         switch (type) {
-                            case "videoSaveDir":
-                            case "tempSaveDir":
+                            case "extraSaveDir":
+                                break;
+                            default:
                                 using (var fbd = new FolderBrowserDialog()) {
                                     DialogResult result = fbd.ShowDialog();
 
                                     if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
                                         if (type == "videoSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
                                         else if (type == "tempSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
+                                        else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
                                         SaveSettings();
                                         SendMessage(GetUserSettings());
                                     }
                                 }
-                                break;
-                            case "extraSaveDir":
-                                break;
-                            default:
                                 break;
                         }
                     }
