@@ -192,7 +192,7 @@ namespace RePlays.Utils {
 
                                     if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
                                         if (type == "videoSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
-                                        else if (type == "tempSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
+                                        else if (type == "tempSaveDir") Settings.advancedSettings.tempSaveDir = fbd.SelectedPath;
                                         else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
                                         SaveSettings();
                                         SendMessage(GetUserSettings());
