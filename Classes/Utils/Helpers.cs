@@ -48,7 +48,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetCfgFolder() {
-            var cfgDir = Path.Join(Application.StartupPath, @"cfg\");
+            var cfgDir = Path.Join(Application.StartupPath, @"..\cfg\");
             if (!Directory.Exists(cfgDir))
                 Directory.CreateDirectory(cfgDir);
             return cfgDir;
