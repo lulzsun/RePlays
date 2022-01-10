@@ -17,7 +17,7 @@
   <PropertyGroup>
     <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
     <SquirrelTools>$(PkgClowd_Squirrel)\tools</SquirrelTools>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <NuspecFile>RePlays.nuspec</NuspecFile>
     <Nullable>annotations</Nullable>
     <StartupObject />
