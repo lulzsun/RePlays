@@ -60,7 +60,7 @@ function App() {
       case 'DisplayModal':
         setModalData(data);
         if(data.title === "Missing Recorder") {
-          setModalConfirm(() => () => postMessage('InstallPlaysLTC'));
+          setModalConfirm(() => () => postMessage('InstallLibOBS'));
         } else if(data.title === "Downloading") {
           setModalConfirm(() => () => {});
         } else setModalConfirm(() => () => {});

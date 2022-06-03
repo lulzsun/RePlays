@@ -24,8 +24,14 @@ namespace RePlays.Services {
         public static void Start(Type type) {
             DetectionService.LoadDetections();
 
-            if (ActiveRecorder == null && type == typeof(PlaysLTC)) {
-                ActiveRecorder = new PlaysLTC();
+            if (ActiveRecorder == null) {
+                if (type == typeof(PlaysLTCRecorder)) {
+                    ActiveRecorder = new PlaysLTCRecorder();
+                    ActiveRecorder.Start();
+                    return;
+                }
+
+                ActiveRecorder = new LibObsRecorder();
                 ActiveRecorder.Start();
             }
         }

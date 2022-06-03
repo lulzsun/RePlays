@@ -128,22 +128,28 @@ namespace RePlays.Utils {
                         SendMessage(GetUserSettings());
 
                         // INIT RECORDER API
-                        if (!File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
-                            // path to old plays/replaystv's plays-ltc
-                            var sourcePath = Path.Join(Environment.GetEnvironmentVariable("LocalAppData"), @"\Plays-ltc\0.54.7\");
-
-                            if (!File.Exists(Path.Join(sourcePath, "PlaysTVComm.exe"))) {
-                                DisplayModal("Did not detect a recording software. Would you like RePlays to automatically download and use PlaysLTC?", "Missing Recorder", "question");
-                                break;
-                            }
-
-                            Logger.WriteLine("Found Plays-ltc existing on local disk");
-                            DirectoryCopy(sourcePath, GetPlaysLtcFolder(), true);
-                            Logger.WriteLine("Copied Plays-ltc to recorders folder");
-                            RecordingService.Start(typeof(PlaysLTC));
+                        if (File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
+                            RecordingService.Start(typeof(PlaysLTCRecorder));
                         }
                         else {
-                            RecordingService.Start(typeof(PlaysLTC));
+                            if (!File.Exists(Path.Join(Application.StartupPath, "obs.dll"))) {
+                                // if obs.dll doesn't exist, it could be that the user updated RePlays, forcing us to reinstall libobs,
+                                // we will try to reinstall using existing files, or force a redownload.
+                                if(File.Exists(Path.Join(GetTempFolder() + @"\libobs-windows64-release-27.5.32.7z"))) {
+                                    bool downloadSuccess = await DownloadLibObsAsync();
+                                    bool installSuccess = await InstallLibObs();
+
+                                    if (downloadSuccess && installSuccess) {
+                                        RecordingService.Start(typeof(LibObsRecorder));
+                                        break;
+                                    }
+                                }
+
+                                DisplayModal("Did not detect a recording API. Would you like RePlays to automatically download and use LibObs?", "Missing Recorder", "question");
+                            }
+                            else {
+                                RecordingService.Start(typeof(LibObsRecorder));
+                            }
                         }
 
                         Logger.WriteLine(toastList.Count + " Initialized List");
@@ -152,12 +158,23 @@ namespace RePlays.Utils {
                         }
                     }
                     break;
+                case "InstallLibOBS": {
+                        bool downloadSuccess = await DownloadLibObsAsync();
+                        bool installSuccess = await InstallLibObs();
+                        if (downloadSuccess && installSuccess) {
+                            DisplayModal("LibObs successfully installed!", "Install Success", "success");
+                            RecordingService.Start(typeof(LibObsRecorder));
+                            break;
+                        }
+                        DisplayModal("Failed to install LibObs", "Install Failed", "warning");
+                    }
+                    break;
                 case "InstallPlaysLTC": {
                         bool downloadSuccess = await DownloadPlaysSetupAsync();
                         bool installSuccess = await InstallPlaysSetup();
                         if (downloadSuccess && installSuccess) {
                             DisplayModal("PlaysLTC successfully installed!", "Install Success", "success");
-                            RecordingService.Start(typeof(PlaysLTC));
+                            RecordingService.Start(typeof(PlaysLTCRecorder));
                         }
                         else {
                             DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning");

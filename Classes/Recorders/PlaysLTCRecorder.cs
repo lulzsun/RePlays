@@ -6,7 +6,7 @@ using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Recorders {
-    public class PlaysLTC : BaseRecorder {
+    public class PlaysLTCRecorder : BaseRecorder {
         private LTCProcess ltc = new LTCProcess();
         public bool Connected { get; private set; }
 
