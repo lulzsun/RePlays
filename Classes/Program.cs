@@ -26,16 +26,9 @@ namespace RePlays {
             }
 
             // log all exceptions
-            AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => {
-                switch (eventArgs.Exception.GetType().ToString()) {
-                    case "System.Threading.Tasks.TaskCanceledException":
-                    case "System.OperationCanceledException":
-                        return;
-                    default:
-                        break;
-                }
-                var st = new StackTrace(eventArgs.Exception, true);
-                Logger.WriteLine(eventArgs.Exception.ToString(), st.GetFrames().Last().GetFileName() ?? "External Library", st.GetFrames().Last().GetFileLineNumber());
+            AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) => {
+                var st = new StackTrace((Exception)eventArgs.ExceptionObject, true);
+                Logger.WriteLine(eventArgs.ExceptionObject.ToString(), st.GetFrames().Last().GetFileName() ?? "External Library", st.GetFrames().Last().GetFileLineNumber());
             };
 
             // prevent multiple instances
