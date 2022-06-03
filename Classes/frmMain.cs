@@ -189,6 +189,7 @@ namespace RePlays {
             if (e.CloseReason == CloseReason.UserClosing) {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
+                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
                 this.ShowInTaskbar = false;
                 DisposeWebView2();
             }
@@ -209,8 +210,10 @@ namespace RePlays {
 
         private void notifyIcon1_DoubleClick(object sender, System.EventArgs e) {
             this.Activate();
-            if (this.WindowState == FormWindowState.Minimized)
+            if (this.WindowState == FormWindowState.Minimized) {
+                this.FormBorderStyle = FormBorderStyle.Sizable;
                 this.WindowState = _PreviousWindowState;
+            }
         }
 
         private void exitToolStripMenuItem_Click(object sender, System.EventArgs e) {
