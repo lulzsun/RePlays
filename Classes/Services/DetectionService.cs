@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
@@ -47,10 +49,19 @@ namespace RePlays.Services {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
                 for (int y = 0; y < gameDetections.Length; y++) {
+                    bool d1 = gameDetections[y].TryGetProperty("gameexe", out JsonElement detection1);
+                    bool d2 = gameDetections[y].TryGetProperty("launchexe", out JsonElement detection2);
+                    string[] jsonExeStr = Array.Empty<string>();
 
-                    if (gameDetections[y].TryGetProperty("gameexe", out JsonElement detection)) {
-                        string[] jsonExeStr = detection.GetString().ToLower().Split('|');
+                    if (d1) {
+                        jsonExeStr = detection1.GetString().ToLower().Split('|');
+                    }
 
+                    if (d2) {
+                        jsonExeStr = jsonExeStr.Concat(detection2.GetString().ToLower().Split('|')).ToArray();
+                    }
+
+                    if(d1 || d2) {
                         for (int z = 0; z < jsonExeStr.Length; z++) {
                             if (exeFile.ToLower().Contains(jsonExeStr[z]) && jsonExeStr[z].Length > 0) {
                                 return true;
@@ -68,10 +79,19 @@ namespace RePlays.Services {
                     JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
                     for (int y = 0; y < gameDetections.Length; y++) {
+                        bool d1 = gameDetections[y].TryGetProperty("gameexe", out JsonElement detection1);
+                        bool d2 = gameDetections[y].TryGetProperty("launchexe", out JsonElement detection2);
+                        string[] jsonExeStr = Array.Empty<string>();
 
-                        if (gameDetections[y].TryGetProperty("gameexe", out JsonElement detection)) {
-                            string[] jsonExeStr = detection.GetString().ToLower().Split('|');
+                        if (d1) {
+                            jsonExeStr = detection1.GetString().ToLower().Split('|');
+                        }
 
+                        if (d2) {
+                            jsonExeStr = jsonExeStr.Concat(detection2.GetString().ToLower().Split('|')).ToArray();
+                        }
+
+                        if (d1 || d2) {
                             for (int z = 0; z < jsonExeStr.Length; z++) {
                                 if (exeFile.ToLower().Contains(jsonExeStr[z]) && jsonExeStr[z].Length > 0) {
                                     return gameDetectionsJson[x].GetProperty("title").ToString();
@@ -84,8 +104,8 @@ namespace RePlays.Services {
             }
 
             // if isUnknown (if not on detection.json), check to see if path is a steam game, and parse name
-            if(exeFile.Contains("\\steamapps\\common\\"))
-                return exeFile.Split("\\steamapps\\common\\")[1].Split('\\')[0];
+            if(exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
+                return exeFile.Replace("\\", "/").Split("/steamapps/common/")[1].Split('/')[0];
             return "Game Unknown";
         }
 
