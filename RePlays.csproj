@@ -38,12 +38,14 @@
   
   <ItemGroup>
     <PackageReference Include="Clowd.Squirrel" Version="2.6.34-pre" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.0.1" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1054.31" />
     <PackageReference Include="NHotkey.WindowsForms" Version="2.1.0" />
     <PackageReference Include="NuGet.CommandLine" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Management" Version="6.0.0" />
   </ItemGroup>
   
   <ItemGroup>
