@@ -48,10 +48,7 @@ namespace RePlays.Recorders {
         }
 
         public void ProcessCreation_EventArrived(object sender, EventArrivedEventArgs e) {
-            if (RecordingService.IsRecording) {
-                Logger.WriteLine("Current recording a game right now, ignoring detection checks.");
-                return;
-            }
+            if (RecordingService.IsRecording) return;
 
             try {
                 if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription) {
@@ -152,32 +149,35 @@ namespace RePlays.Recorders {
             bool isGame = false;
             string exeFile = executablePath;
 
-            using (Process process = Process.GetProcessById(processId)) {
-                if (process != null) {
-                    string modules = "";
+            try {
+                using (Process process = Process.GetProcessById(processId)) {
+                    if (process != null) {
+                        string modules = "";
 
-                    if (exeFile == null)
-                        exeFile = process.ProcessName + ".exe";
+                        if (exeFile == null)
+                            exeFile = process.ProcessName + ".exe";
 
-                    try {
-                        foreach (ProcessModule module in process.Modules) {
-                            if (module == null) continue;
+                        try {
+                            foreach (ProcessModule module in process.Modules) {
+                                if (module == null) continue;
 
-                            var name = module.ModuleName.ToLower();
+                                var name = module.ModuleName.ToLower();
 
-                            if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
-                                modules += ", " + module.ModuleName;
+                                if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
+                                    modules += ", " + module.ModuleName;
+                                    isGame = true;
+                                }
+                            }
+                        }
+                        catch (Exception) {
+                            if (DetectionService.IsMatchedGame(exeFile)) {
                                 isGame = true;
                             }
                         }
                     }
-                    catch (Exception) {
-                        if (DetectionService.IsMatchedGame(exeFile)) {
-                            isGame = true;
-                        }
-                    }
                 }
             }
+            catch (Exception) { }
 
             if (isGame && !DetectionService.IsMatchedNonGame(exeFile)) {
                 string gameTitle = DetectionService.GetGameTitle(exeFile);
