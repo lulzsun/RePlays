@@ -83,6 +83,18 @@ namespace RePlays.Utils {
             }
         }
 
+        public static string MakeValidFolderNameSimple(string folderName) {
+            if (string.IsNullOrEmpty(folderName)) return folderName;
+
+            foreach (var c in Path.GetInvalidFileNameChars())
+                folderName = folderName.Replace(c.ToString(), string.Empty);
+
+            foreach (var c in Path.GetInvalidPathChars())
+                folderName = folderName.Replace(c.ToString(), string.Empty);
+
+            return folderName;
+        }
+
         public static async Task<bool> DownloadLibObsAsync() {
             var libObsDir = Path.Join(GetTempFolder() + @"\libobs-windows64-release-27.5.32.7z");
             var correctHash = "f7a310559c850cab4232ead41f44da759860e834d7be18c06969ce6e44eb9ca9";
@@ -107,7 +119,7 @@ namespace RePlays.Utils {
             return File.Exists(libObsDir) && SHA256Compare(libObsDir, correctHash);
         }
 
-        public static async Task<bool> InstallLibObs() {
+        public static Task<bool> InstallLibObs() {
             bool result = true;
             string libObsDir = Path.Join(GetTempFolder() + @"\libobs-windows64-release-27.5.32.7z");
 
@@ -144,7 +156,7 @@ namespace RePlays.Utils {
             process.WaitForExit();
             process.Close();
 
-            if (!result) return result;
+            if (!result) return Task.FromResult(result);
 
             // after extracting
             libObsDir = Path.Join(GetTempFolder() + @"\packed_build");
@@ -153,7 +165,7 @@ namespace RePlays.Utils {
             DirectoryCopy(libObsDir + @"\data", Application.StartupPath + @"\data", true);
             DirectoryCopy(libObsDir + @"\obs-plugins", Application.StartupPath + @"\obs-plugins", true);
 
-            return File.Exists(Path.Join(Application.StartupPath, "obs.dll"));
+            return Task.FromResult(File.Exists(Path.Join(Application.StartupPath, "obs.dll")));
         }
 
         public static async Task<bool> DownloadPlaysSetupAsync() {
@@ -180,7 +192,7 @@ namespace RePlays.Utils {
             return File.Exists(playsSetupDir) && SHA256Compare(playsSetupDir, correctHash);
         }
 
-        public static async Task<bool> InstallPlaysSetup() {
+        public static Task<bool> InstallPlaysSetup() {
             bool install = false; bool result = true;
             string playsSetup = Path.Join(GetTempFolder() + @"\PlaysSetup.exe");
 
@@ -223,7 +235,7 @@ namespace RePlays.Utils {
             process.Close();
 
             if (install && File.Exists(Path.Join(GetTempFolder(), @"\Plays-3.0.0-full.nupkg"))) InstallPlaysSetup();
-            return result;
+            return Task.FromResult(result);
         }
 
         public static bool SHA256Compare(string filePath, string compare) {
