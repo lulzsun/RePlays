@@ -42,7 +42,9 @@ namespace RePlays.Services {
         }
 
         public static bool IsMatchedGame(string exeFile) {
-            if (SettingsService.Settings.advancedSettings.whitelist.Contains(exeFile.ToLower())) {
+            exeFile = exeFile.ToLower();
+
+            if (SettingsService.Settings.advancedSettings.whitelist.Contains(exeFile)) {
                 return true;
             }
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
@@ -57,13 +59,13 @@ namespace RePlays.Services {
                         jsonExeStr = detection1.GetString().ToLower().Split('|');
                     }
 
-                    if (d2) {
-                        jsonExeStr = jsonExeStr.Concat(detection2.GetString().ToLower().Split('|')).ToArray();
+                    if (!d1 && d2) {
+                        jsonExeStr = detection2.GetString().ToLower().Split('|');
                     }
 
-                    if(d1 || d2) {
+                    if (jsonExeStr.Length > 0) {
                         for (int z = 0; z < jsonExeStr.Length; z++) {
-                            if (exeFile.ToLower().Contains(jsonExeStr[z]) && jsonExeStr[z].Length > 0) {
+                            if (Path.GetFileName(jsonExeStr[z]).Equals(exeFile.ToLower()) && jsonExeStr[z].Length > 0) {
                                 return true;
                             }
                         }
@@ -74,7 +76,9 @@ namespace RePlays.Services {
         }
 
         public static string GetGameTitle(string exeFile, bool isUnknown=false) {
-            if(isUnknown == false) {
+            exeFile = exeFile.ToLower();
+
+            if (isUnknown == false) {
                 for (int x = 0; x < gameDetectionsJson.Length; x++) {
                     JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
@@ -87,13 +91,13 @@ namespace RePlays.Services {
                             jsonExeStr = detection1.GetString().ToLower().Split('|');
                         }
 
-                        if (d2) {
-                            jsonExeStr = jsonExeStr.Concat(detection2.GetString().ToLower().Split('|')).ToArray();
+                        if (!d1 && d2) {
+                            jsonExeStr = detection2.GetString().ToLower().Split('|');
                         }
 
-                        if (d1 || d2) {
+                        if (jsonExeStr.Length > 0) {
                             for (int z = 0; z < jsonExeStr.Length; z++) {
-                                if (exeFile.ToLower().Contains(jsonExeStr[z]) && jsonExeStr[z].Length > 0) {
+                                if (Path.GetFileName(jsonExeStr[z]).Equals(exeFile) && jsonExeStr[z].Length > 0) {
                                     return gameDetectionsJson[x].GetProperty("title").ToString();
                                 }
                             }
@@ -110,7 +114,9 @@ namespace RePlays.Services {
         }
 
         public static bool IsMatchedNonGame(string exeFile) {
-            if(SettingsService.Settings.advancedSettings.blacklist.Contains(exeFile.ToLower())) {
+            exeFile = exeFile.ToLower();
+
+            if (SettingsService.Settings.advancedSettings.blacklist.Contains(exeFile)) {
                 return true;
             }
             for (int x = 0; x < nonGameDetectionsJson.Length; x++) {
@@ -120,9 +126,9 @@ namespace RePlays.Services {
 
                     if (gameDetections[y].TryGetProperty("detect_exe", out JsonElement detection)) {
                         string[] jsonExeStr = detection.GetString().ToLower().Split('|');
-
+                        
                         for (int z = 0; z < jsonExeStr.Length; z++) {
-                            if (exeFile.ToLower().Contains(jsonExeStr[z]) && jsonExeStr[z].Length > 0)
+                            if (Path.GetFileName(jsonExeStr[z]).Equals(exeFile) && jsonExeStr[z].Length > 0)
                                 return true;
                         }
                     }
