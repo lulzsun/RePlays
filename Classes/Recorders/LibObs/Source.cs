@@ -16,5 +16,8 @@ namespace obs_net {
 			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(UTF8StringMarshaler))] string id,
 			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(UTF8StringMarshaler))] string name,
 			obs_data_t settings, obs_data_t hotkey_data);
+
+		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern void obs_source_release(obs_source_t source);
 	}
 }

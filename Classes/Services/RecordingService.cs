@@ -12,6 +12,7 @@ namespace RePlays.Services {
         private static int recordingElapsed = 0;
         private static Session currentSession = new Session(0, "Game Unknown");
         public static bool IsRecording { get; internal set; }
+        private static bool IsPreRecording { get; set; }
 
         public class Session {
             public int Pid { get; internal set; }
@@ -48,8 +49,9 @@ namespace RePlays.Services {
         }
 
         public static async void StartRecording() {
-            if (IsRecording) return;
+            if (IsRecording || IsPreRecording) return;
 
+            IsPreRecording = true;
             bool result = await ActiveRecorder.StartRecording();
 
             if (!IsRecording && result) {
@@ -62,6 +64,7 @@ namespace RePlays.Services {
                 }
                 //DetectionService.DisposeDetections();
             }
+            IsPreRecording = false;
         }
 
         private static void OnTimedEvent(object source, ElapsedEventArgs e) {

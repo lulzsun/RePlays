@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 namespace obs_net{
     using obs_output_t = IntPtr;
     using obs_data_t = IntPtr;
+    using signal_handler_t = IntPtr;
 
     public partial class Obs {
         [DllImport(importLibrary, CallingConvention = importCall, CharSet = importCharSet)]
@@ -13,8 +14,23 @@ namespace obs_net{
             obs_data_t settings, obs_data_t hotkey_data);
 
         [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern void obs_output_release(obs_output_t output);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool obs_output_start(obs_output_t output);
+
+        /// <summary>
+        /// <para>https://obsproject.com/docs/reference-outputs.html?highlight=obs_output_stop#c.obs_output_stop</para>
+        /// <para>Requests the output to stop. The output will wait until all data is sent up until the time the call was made, then when the output has successfully stopped, it will send the “stop” signal.</para>
+        /// <para>See <see href="https://obsproject.com/docs/reference-outputs.html?highlight=obs_output_stop#output-signal-handler-reference">Output Signals</see> for more information on output signals.</para>
+        /// </summary>
+        /// <param name="output"></param>
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern void obs_output_stop(obs_output_t output);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern signal_handler_t obs_output_get_signal_handler(obs_output_t output);
 
         /// <summary>
         /// https://obsproject.com/docs/reference-outputs.html#c.obs_output_get_last_error
