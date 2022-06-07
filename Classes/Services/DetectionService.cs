@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
@@ -10,8 +9,8 @@ namespace RePlays.Services {
     public static class DetectionService {
         static JsonElement[] gameDetectionsJson;
         static JsonElement[] nonGameDetectionsJson;
-        private static string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
-        private static string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
+        private static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
+        private static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
 
         public static void DisposeDetections() {
             gameDetectionsJson = null;
