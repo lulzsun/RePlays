@@ -2,6 +2,7 @@
 using RePlays.Utils;
 using System.Timers;
 using System;
+using System.Threading.Tasks;
 
 namespace RePlays.Services {
     public static class RecordingService {
@@ -15,9 +16,11 @@ namespace RePlays.Services {
         public class Session {
             public int Pid { get; internal set; }
             public string GameTitle { get; internal set; }
-            public Session(int _Pid, string _GameTitle) {
+            public string Exe { get; internal set; }
+            public Session(int _Pid, string _GameTitle, string _Exe=null) {
                 Pid = _Pid;
                 GameTitle = _GameTitle;
+                Exe = _Exe;
             }
         }
 
@@ -44,9 +47,12 @@ namespace RePlays.Services {
             return currentSession;
         }
 
-        public static void StartRecording() {
-            if (!IsRecording) {
-                ActiveRecorder.StartRecording();
+        public static async void StartRecording() {
+            if (IsRecording) return;
+
+            bool result = await ActiveRecorder.StartRecording();
+
+            if (!IsRecording && result) {
                 if(currentSession.Pid != 0) {
                     recordingTimer.Elapsed += OnTimedEvent;
                     recordingTimer.Start();
@@ -63,9 +69,12 @@ namespace RePlays.Services {
             WebMessage.DisplayToast("Recording", currentSession.GameTitle, "🔴 Recording", "none", recordingElapsed);
         }
 
-        public static void StopRecording() {
-            if (IsRecording) {
-                ActiveRecorder.StopRecording();
+        public static async void StopRecording() {
+            if (!IsRecording) return;
+
+            bool result = await ActiveRecorder.StopRecording();
+
+            if (IsRecording && result) {
                 if(currentSession.Pid != 0) {
                     recordingElapsed = 0;
                     recordingTimer.Elapsed -= OnTimedEvent;

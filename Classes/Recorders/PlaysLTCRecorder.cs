@@ -109,13 +109,15 @@ namespace RePlays.Recorders {
             throw new System.NotImplementedException();
         }
 
-        public override void StartRecording() {
+        public override Task<bool> StartRecording() {
             ltc.SetKeyBinds();
             ltc.StartRecording();
+            return Task.FromResult(true);
         }
 
-        public override void StopRecording() {
+        public override Task<bool> StopRecording() {
             ltc.StopRecording();
+            return Task.FromResult(true);
         }
     }
 }
