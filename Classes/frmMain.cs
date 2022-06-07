@@ -85,11 +85,15 @@ namespace RePlays {
             pictureBox1.Refresh();
         }
 
+        bool firstLaunch = true;
         private async void InitializeWebView2() {
             RefreshLoader();
 
             try {
-                Logger.WriteLine("WebView2 Version: " + CoreWebView2Environment.GetAvailableBrowserVersionString());
+                if(firstLaunch) {
+                    Logger.WriteLine("WebView2 Version: " + CoreWebView2Environment.GetAvailableBrowserVersionString());
+                    firstLaunch = false;
+                }
             }
             catch (WebView2RuntimeNotFoundException exception) {
                 Logger.WriteLine(exception.Message);
