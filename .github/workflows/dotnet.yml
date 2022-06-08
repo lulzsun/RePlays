@@ -1,0 +1,70 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build and Draft Nightly Release
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  schedule:
+  - cron: "0 0 * * *"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow checks to see if branch has any changes since last wo
+  check_for_changes:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Create cache file
+        run: |
+          mkdir check-SHA
+          echo ${{ github.sha }} > github-sha.txt
+
+      - name: Check SHA
+        id: check_sha
+        uses: actions/cache@v1
+        with:
+          path: check-SHA
+          key: check-SHA-${{ github.sha }}
+
+      - uses: actions/github-script@v2
+        if: steps.check_sha.outputs.cache-hit != 'true'
+        id: check
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            if (myCondition) {
+              console.log('Cancelling ...');
+              const run_id = "${{ github.run_id }}";
+              await github.actions.cancelWorkflowRun({ owner, repo, run_id });
+              return 'stop'
+            } else {
+              return 'build'
+            }
+          result-encoding: string
+      - name: Waiting for cancellation
+        run: sleep 60
+        if: steps.check.outputs.result == 'stop'
+    
+  build:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build RePlays
+        run: dotnet publish /p:PublishProfile=FolderProfile
