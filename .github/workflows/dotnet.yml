@@ -30,9 +30,24 @@ jobs:
           path: check-SHA
           key: check-SHA-${{ github.sha }}
 
-      - name: Some subsequent steps
+      - uses: actions/github-script@v2
         if: steps.check_sha.outputs.cache-hit != 'true'
-        run: exit 1
+        id: check
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            if (myCondition) {
+              console.log('Cancelling ...');
+              const run_id = "${{ github.run_id }}";
+              await github.actions.cancelWorkflowRun({ owner, repo, run_id });
+              return 'stop'
+            } else {
+              return 'build'
+            }
+          result-encoding: string
+      - name: Waiting for cancellation
+        run: sleep 60
+        if: steps.check.outputs.result == 'stop'
     
   build:
     # The type of runner that the job will run on
