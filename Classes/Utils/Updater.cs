@@ -7,9 +7,11 @@ namespace RePlays.Utils {
         public static string latestVersion = "Offline";
         public static async void CheckForUpdates() {
             try {
-                var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays", null, null, null,
+                using var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays", null, null, null,
                     SettingsService.Settings.generalSettings.updateChannel != "stable");
-                currentVersion = manager.CurrentlyInstalledVersion().ToString();
+                if (manager.CurrentlyInstalledVersion() != null) {
+                    currentVersion = manager.CurrentlyInstalledVersion().ToString();
+                }
                 var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "stable"); // if nightly, we ignore deltas
                 latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();
 
@@ -20,6 +22,7 @@ namespace RePlays.Utils {
                         Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
                         await manager.UpdateApp();
                         Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
+                        WebMessage.DisplayModal("New update applied! Restart to take effect.", "Automatic Updates", "info");
                     }
                     else { // manual
                         WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
@@ -28,7 +31,6 @@ namespace RePlays.Utils {
                 else {
                     Logger.WriteLine($"Found no updates higher than current version {updateInfo.CurrentlyInstalledVersion.Version}");
                 }
-                manager.Dispose();
             }
             catch (System.Exception exception) {
                 Logger.WriteLine("Error: Issue fetching update releases: " + exception.ToString());
