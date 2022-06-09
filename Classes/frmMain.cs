@@ -16,8 +16,6 @@ namespace RePlays {
         public static Microsoft.Web.WebView2.WinForms.WebView2 webView2;
         public ContextMenuStrip recentLinksMenu;
         public static frmMain Instance;
-        public static string currentVersion = "?";
-        public static string latestVersion = "Offline";
 
         public frmMain() {
             Instance = this;
@@ -27,7 +25,7 @@ namespace RePlays {
             HotkeyService.Start();
             InitializeComponent();
             PurgeTempVideos();
-            CheckForUpdates();
+            Updater.CheckForUpdates();
             notifyIcon1.Icon = this.Icon;
         }
 
@@ -45,36 +43,6 @@ namespace RePlays {
             }
             else {
                 InitializeWebView2();
-            }
-        }
-
-        private async void CheckForUpdates() {
-            try {
-                var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays", null, null, null, 
-                    SettingsService.Settings.generalSettings.updateChannel != "stable");
-                currentVersion = manager.CurrentlyInstalledVersion().ToString();
-                var updateInfo = await manager.CheckForUpdate();
-                latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();
-
-                if (SettingsService.Settings.generalSettings.update == "none") return;
-
-                if (updateInfo.ReleasesToApply.Count > 0) {
-                    if (SettingsService.Settings.generalSettings.update == "automatic") {
-                        Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
-                        await manager.UpdateApp();
-                        Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
-                    }
-                    else { // manual
-                        WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
-                    }
-                }
-                else {
-                    Logger.WriteLine($"Found no updates higher than current version {updateInfo.CurrentlyInstalledVersion.Version}");
-                }
-                manager.Dispose();
-            }
-            catch (System.Exception exception) {
-                Logger.WriteLine("Error: Issue fetching update releases: " + exception.ToString());
             }
         }
 
@@ -227,7 +195,7 @@ namespace RePlays {
         }
 
         private void checkForUpdatesToolStripMenuItem_Click(object sender, System.EventArgs e) {
-            CheckForUpdates();
+            Updater.CheckForUpdates();
         }
 
         bool moving;

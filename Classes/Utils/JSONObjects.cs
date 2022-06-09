@@ -60,8 +60,8 @@ namespace RePlays.Utils {
         public string update { get { return _update; } set { _update = value; } }
         private string _updateChannel = "stable";
         public string updateChannel { get { return _updateChannel; } set { _updateChannel = value; } }
-        public string currentVersion { get { return frmMain.currentVersion; } }
-        public string latestVersion { get { return frmMain.latestVersion; } }
+        public string currentVersion { get { return Updater.currentVersion; } }
+        public string latestVersion { get { return Updater.latestVersion; } }
     }
 
     public class MicDevice {
