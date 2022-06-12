@@ -124,6 +124,7 @@ namespace RePlays.Recorders {
         const int retryInterval = 1000; // 1 second
         const int maxRetryAttempts = 10; // 10 seconds
         public override async Task<bool> StartRecording() {
+            signalOutputStop = false;
             var session = RecordingService.GetCurrentSession();
             IntPtr handle = EnumerateProcessWindowHandles(session.Pid).First();
 
