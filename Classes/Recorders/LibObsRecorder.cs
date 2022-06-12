@@ -27,8 +27,9 @@ namespace RePlays.Recorders {
         WinEventDelegate dele = null;
 
         IntPtr output;
-        IntPtr videoSource, audioSource;
-        
+        Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
+        Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
+
         static bool signalOutputStop = false;
         static bool signalGCHookSuccess = false;
 
@@ -49,9 +50,9 @@ namespace RePlays.Recorders {
 
                     // a very crude way to see if game_capture source has successfully hooked/capture application....
                     // does game_capture source provide any signals that we can alternatively use?
-                    if(formattedMsg == "[game-capture: 'Game Capture Source'] Starting capture") {
+                    if(formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
                         signalGCHookSuccess = true;
-                    } else if (formattedMsg == "[game-capture: 'Game Capture Source'] capture stopped") {
+                    } else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                         signalGCHookSuccess = false;
                     }
                 }
@@ -98,32 +99,11 @@ namespace RePlays.Recorders {
 
             obs_post_load_modules();
 
-            // SETUP NEW VIDEO ENCODER
-            IntPtr videoEncoderSettings = obs_data_create();
-            obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
-            obs_data_set_string(videoEncoderSettings, "profile", "high");
-            obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
-            obs_data_set_string(videoEncoderSettings, "rate_control", "CRF");
-            obs_data_set_int(videoEncoderSettings, "crf", 20);
-            IntPtr videoEncoder = obs_video_encoder_create("obs_x264", "simple_h264_recording", videoEncoderSettings, IntPtr.Zero);
-            obs_data_release(videoEncoderSettings);
-
-            // SETUP NEW AUDIO ENCODER
-            IntPtr audioEncoder = obs_audio_encoder_create("ffmpeg_aac", "simple_aac_recording", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero);
-
             // SETUP NEW OUTPUT
             output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
             signal_handler_connect(obs_output_get_signal_handler(output), "stop", new signal_callback_t((data, cd) => {
                 signalOutputStop = true; // this has to be static or else it will throw an engine fail exception. something to do with illegal memory
             }), IntPtr.Zero);
-
-            obs_encoder_set_video(videoEncoder, obs_get_video());
-            obs_output_set_video_encoder(output, videoEncoder);
-            Logger.WriteLine("video encoder active: " + (videoEncoder != IntPtr.Zero));
-
-            obs_encoder_set_audio(audioEncoder, obs_get_audio());
-            obs_output_set_audio_encoder(output, audioEncoder, (UIntPtr)0);
-            Logger.WriteLine("audio encoder active: " + (audioEncoder != IntPtr.Zero));
 
             pCreationWatcher.EventArrived += ProcessCreation_EventArrived;
             pDeletionWatcher.EventArrived += ProcessDeletion_EventArrived;
@@ -174,17 +154,44 @@ namespace RePlays.Recorders {
             obs_output_update(output, outputSettings);
             obs_data_release(outputSettings);
 
-            // SETUP NEW AUDIO SOURCE
-            audioSource = obs_source_create("wasapi_output_capture", "Audio Capture Source", IntPtr.Zero, IntPtr.Zero);
-            obs_set_output_source(1, audioSource); //1 = AUDIO CHANNEL
+            // SETUP NEW AUDIO SOURCES
+            // - Create a source for the desktop in channel 0, and the microphone in 1
+            audioSources.Add("desktop", obs_audio_source_create("wasapi_output_capture", "desktop")); // captures whole desktop
+            obs_set_output_source(0, audioSources["desktop"]);
+            obs_source_set_audio_mixers(audioSources["desktop"], 1 | (1 << 0));
+            audioSources.Add("microphone", obs_audio_source_create("wasapi_input_capture", "microphone"));
+            obs_set_output_source(1, audioSources["microphone"]);
+            obs_source_set_audio_mixers(audioSources["microphone"], 1 | (1 << 1));
+
+            // SETUP AUDIO ENCODERS
+            // - Each audio source needs an audio encoder, IF we plan to separate audio tracks in the future
+            audioEncoders.Add("aac0", obs_audio_encoder_create("ffmpeg_aac", "aac0", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero));
+            obs_output_set_audio_encoder(output, audioEncoders["aac0"], (UIntPtr)0);
+            obs_encoder_set_audio(audioEncoders["aac0"], obs_output_audio(output));
+            //audioEncoders.Add("aac1", obs_audio_encoder_create("ffmpeg_aac", "aac1", IntPtr.Zero, (UIntPtr)1, IntPtr.Zero));
+            //obs_output_set_audio_encoder(output, audioEncoders["aac1"], (UIntPtr)1);
+            //obs_encoder_set_audio(audioEncoders["aac1"], obs_output_audio(output));
 
             // SETUP NEW VIDEO SOURCE
+            // - Create a source for the game_capture in channel 2
             IntPtr videoSourceSettings = obs_data_create();
             obs_data_set_string(videoSourceSettings, "capture_mode", "window");
             obs_data_set_string(videoSourceSettings, "window", GetWindowTitle(handle) + ":" + className + ":" + session.Exe);
-            videoSource = obs_source_create("game_capture", "Game Capture Source", videoSourceSettings, IntPtr.Zero);
-            obs_set_output_source(0, videoSource); //0 = VIDEO CHANNEL
+            videoSources.Add("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
+            obs_set_output_source(2, videoSources["gameplay"]);
             obs_data_release(videoSourceSettings);
+
+            // SETUP VIDEO ENCODER
+            IntPtr videoEncoderSettings = obs_data_create();
+            obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
+            obs_data_set_string(videoEncoderSettings, "profile", "high");
+            obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
+            obs_data_set_string(videoEncoderSettings, "rate_control", "CRF");
+            obs_data_set_int(videoEncoderSettings, "crf", 20);
+            IntPtr videoEncoder = obs_video_encoder_create("obs_x264", "simple_h264_recording", videoEncoderSettings, IntPtr.Zero);
+            obs_data_release(videoEncoderSettings);
+            obs_encoder_set_video(videoEncoder, obs_get_video());
+            obs_output_set_video_encoder(output, videoEncoder);
 
             // attempt to wait for game_capture source to hook first
             // this might take longer, so multiply maxRetryAttempts
@@ -209,6 +216,14 @@ namespace RePlays.Recorders {
             return true;
         }
 
+        public IntPtr obs_audio_source_create(string id, string name, string deviceId = "default") {
+            IntPtr settings = obs_data_create();
+            obs_data_set_string(settings, "device_id", deviceId);
+            IntPtr source = obs_source_create(id, name, settings, IntPtr.Zero);
+            obs_data_release(settings);
+            return source;
+        }
+
         public override async Task<bool> StopRecording() {
             signalGCHookSuccess = false;
             var session = RecordingService.GetCurrentSession();
@@ -229,6 +244,7 @@ namespace RePlays.Recorders {
 
             // CLEANUP
             ReleaseSources();
+            ReleaseEncoders();
 
             Logger.WriteLine(string.Format("Session recording saved to {0}", videoSavePath));
             Logger.WriteLine(string.Format("LibObs stopped recording {0} {1}", session.Pid, session.GameTitle));
@@ -243,9 +259,27 @@ namespace RePlays.Recorders {
 
             return true;
         }
+
         public void ReleaseSources() {
-            obs_source_release(videoSource);
-            obs_source_release(audioSource);
+            foreach (var videoSource in videoSources.Values) {
+                obs_source_release(videoSource);
+            }
+            videoSources.Clear();
+            foreach (var audioSource in audioSources.Values) {
+                obs_source_release(audioSource);
+            }
+            audioSources.Clear();
+        }
+
+        public void ReleaseEncoders() {
+            foreach (var videoEncoder in videoEncoders.Values) {
+                obs_encoder_release(videoEncoder);
+            }
+            videoEncoders.Clear();
+            foreach (var audioEncoder in audioEncoders.Values) {
+                obs_encoder_release(audioEncoder);
+            }
+            audioEncoders.Clear();
         }
 
         public void ProcessCreation_EventArrived(object sender, EventArrivedEventArgs e) {

@@ -5,6 +5,8 @@ namespace obs_net{
     using obs_output_t = IntPtr;
     using obs_data_t = IntPtr;
     using signal_handler_t = IntPtr;
+    using video_t = IntPtr;
+    using audio_t = IntPtr;
 
     public partial class Obs {
         [DllImport(importLibrary, CallingConvention = importCall, CharSet = importCharSet)]
@@ -57,5 +59,11 @@ namespace obs_net{
         /// <param name="mixers"></param>
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_output_set_mixers(obs_output_t output, UIntPtr mixers);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern video_t obs_output_video(obs_output_t output);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern audio_t obs_output_audio(obs_output_t output);
     }
 }

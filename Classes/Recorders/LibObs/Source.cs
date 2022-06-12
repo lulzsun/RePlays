@@ -19,5 +19,19 @@ namespace obs_net {
 
 		[DllImport(importLibrary, CallingConvention = importCall)]
 		public static extern void obs_source_release(obs_source_t source);
+
+		/// <summary>
+		/// <para>https://obsproject.com/docs/reference-sources.html?highlight=audio%20mixer#c.obs_source_set_audio_mixers</para>
+		/// <para>
+		/// Sets/gets the audio mixer channels that a source outputs to, depending on what bits are set. 
+		/// Audio mixers allow filtering specific using multiple audio encoders to mix different sources 
+		/// together depending on what mixer channel they’re set to.
+		/// </para>
+		/// <para>For example, to output to mixer 1 and 3, you would perform a bitwise OR on bits 0 and 2: (1<<0) | (1<<2), or 0x5.</para>
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="mixers"></param>
+		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern void obs_source_set_audio_mixers(obs_source_t source, uint mixers);
 	}
 }

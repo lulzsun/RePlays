@@ -44,5 +44,13 @@ namespace obs_net{
 
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_encoder_set_audio(obs_encoder_t encoder, audio_t audio);
+
+        /// <summary>
+        /// <para>https://obsproject.com/docs/reference-encoders.html?highlight=obs_encoder_release#c.obs_encoder_release</para>
+        /// <para>Releases a reference to an encoder. When the last reference is released, the encoder is destroyed.</para>
+        /// </summary>
+        /// <param name="encoder"></param>
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern void obs_encoder_release(obs_encoder_t encoder);
     }
 }
