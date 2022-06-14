@@ -100,11 +100,15 @@ jobs:
           # eg: out-file-path: "my-downloads" => It will create directory $GITHUB_WORKSPACE/my-downloads
           out-file-path: "bin/Deployment/Releases"
 
+      - name: Build LibObs
+        run: .\\build-libobs.cmd
+        shell: bash
+
       - name: Build RePlays
         env:
          CI: false
         run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile
-        
+
       - name: Generate Prerelease
         uses: ncipollo/release-action@v1
         with:
@@ -121,4 +125,3 @@ jobs:
             ./bin/Deployment/Releases/Setup.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
-            

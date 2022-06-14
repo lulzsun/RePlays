@@ -118,6 +118,16 @@
 		</ResolvedFileToPublish>
 	</ItemGroup>
 
+	<!-- Include libobs in the publish output -->
+	<ItemGroup>
+		<DistFiles Include="$(SolutionDir)obs-studio-build\build\win64\bin\64bit\**" />
+		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
+
 	<!-- Include a copy of the app's license -->
 	<ItemGroup>
 		<_license Include="$(SolutionDir)LICENSE" />
