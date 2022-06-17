@@ -128,45 +128,24 @@ namespace RePlays.Utils {
                         SendMessage(GetUserSettings());
 
                         // INIT RECORDER API
-                        if (File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
-                            RecordingService.Start(typeof(PlaysLTCRecorder));
+                        if (!File.Exists(Path.Join(Application.StartupPath, "obs.dll"))) {
+#if DEBUG
+                            DisplayModal("Missing obs.dll, make sure to check to wiki to learn how to build libobs", "Warning", "warning");
+#else
+                            DisplayModal("Missing obs.dll, recording may not be functional", "Warning", "warning");
+#endif
+                            if (File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
+                                RecordingService.Start(typeof(PlaysLTCRecorder));
+                            }
                         }
                         else {
-                            if (!File.Exists(Path.Join(Application.StartupPath, "obs.dll"))) {
-                                // if obs.dll doesn't exist, it could be that the user updated RePlays, forcing us to reinstall libobs,
-                                // we will try to reinstall using existing files, or force a redownload.
-                                if(File.Exists(Path.Join(GetTempFolder() + @"\libobs-windows64-release-27.5.32.7z"))) {
-                                    bool downloadSuccess = await DownloadLibObsAsync();
-                                    bool installSuccess = await InstallLibObs();
-
-                                    if (downloadSuccess && installSuccess) {
-                                        RecordingService.Start(typeof(LibObsRecorder));
-                                        break;
-                                    }
-                                }
-
-                                DisplayModal("Did not detect a recording API. Would you like RePlays to automatically download and use LibObs?", "Missing Recorder", "question");
-                            }
-                            else {
-                                RecordingService.Start(typeof(LibObsRecorder));
-                            }
+                            RecordingService.Start(typeof(LibObsRecorder));
                         }
 
                         Logger.WriteLine(toastList.Count + " Initialized List");
                         foreach (var toast in toastList) {
                             SendMessage(JsonSerializer.Serialize(toast.Value));
                         }
-                    }
-                    break;
-                case "InstallLibOBS": {
-                        bool downloadSuccess = await DownloadLibObsAsync();
-                        bool installSuccess = await InstallLibObs();
-                        if (downloadSuccess && installSuccess) {
-                            DisplayModal("LibObs successfully installed!", "Install Success", "success");
-                            RecordingService.Start(typeof(LibObsRecorder));
-                            break;
-                        }
-                        DisplayModal("Failed to install LibObs", "Install Failed", "warning");
                     }
                     break;
                 case "InstallPlaysLTC": {
