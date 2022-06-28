@@ -148,18 +148,6 @@ namespace RePlays.Utils {
                         }
                     }
                     break;
-                case "InstallPlaysLTC": {
-                        bool downloadSuccess = await DownloadPlaysSetupAsync();
-                        bool installSuccess = await InstallPlaysSetup();
-                        if (downloadSuccess && installSuccess) {
-                            DisplayModal("PlaysLTC successfully installed!", "Install Success", "success");
-                            RecordingService.Start(typeof(PlaysLTCRecorder));
-                        }
-                        else {
-                            DisplayModal("Failed to install PlaysLTC", "Install Failed", "warning");
-                        }
-                    }
-                    break;
                 case "UpdateSettings": {
                         SaveSettings(webMessage);
                     }
@@ -231,7 +219,7 @@ namespace RePlays.Utils {
                                     File.Delete(thumbPath);
                                     successfulDelete = true;
                                 }
-                                catch (Exception e) {
+                                catch (Exception) {
                                     if(failedLoops == 5) {
                                         DisplayModal("Failed to delete file (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
                                         break;

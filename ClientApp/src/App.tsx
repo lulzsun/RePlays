@@ -59,9 +59,7 @@ function App() {
         break;
       case 'DisplayModal':
         setModalData(data);
-        if(data.title === "Missing Recorder") {
-          setModalConfirm(() => () => postMessage('InstallPlaysLTC'));
-        } else if(data.title === "Downloading") {
+        if(data.title === "Downloading") {
           setModalConfirm(() => () => {});
         } else setModalConfirm(() => () => {});
         setModalOpen(true);
