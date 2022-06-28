@@ -324,8 +324,8 @@ namespace RePlays.Utils {
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) {
                 if (index == 0) File.Delete(Path.Join(GetTempFolder(), "list.txt"));
-                outputFile = Path.Join("temp" + index + ".mp4");
-                File.AppendAllLines(Path.Join(GetTempFolder(), "list.txt"), new[] { "file '" + outputFile + "'" });
+                outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4");
+                File.AppendAllLines(Path.Join(GetTempFolder(), "list.txt"), new[] { "file 'temp" + index + ".mp4'" });
             }
             if (clipSegments.Length > 1 && index == clipSegments.Length) {
                 startInfo.Arguments =
