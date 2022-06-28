@@ -223,9 +223,24 @@ namespace RePlays.Utils {
                         foreach (var filePath in data.filePaths) {
                             var realFilePath = Path.Join(GetPlaysFolder(), filePath);
                             var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
-
-                            File.Delete(realFilePath);
-                            File.Delete(thumbPath);
+                            var successfulDelete = false;
+                            var failedLoops = 0;
+                            while(!successfulDelete) {
+                                try {
+                                    File.Delete(realFilePath);
+                                    File.Delete(thumbPath);
+                                    successfulDelete = true;
+                                }
+                                catch (Exception e) {
+                                    if(failedLoops == 5) {
+                                        DisplayModal("Failed to delete file (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
+                                        break;
+                                    }
+                                    Logger.WriteLine(String.Format("Failed to delete file(s): {0} {1} will retry in 2 seconds", realFilePath, thumbPath));
+                                    await Task.Delay(2000);
+                                    failedLoops++;
+                                }
+                            } 
                         }
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                         SendMessage(t);
