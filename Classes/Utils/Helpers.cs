@@ -337,6 +337,7 @@ namespace RePlays.Utils {
                     "-ss " + clipSegments[index].start + " " +
                     "-i \"" + inputFile + "\" " +
                     "-t " + clipSegments[index].duration + " -codec copy " +
+                    "-avoid_negative_ts make_zero -fflags +genpts " +
                     "-y \"" + outputFile + "\"";
             }
 
