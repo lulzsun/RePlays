@@ -33,5 +33,25 @@ namespace obs_net {
 		/// <param name="mixers"></param>
 		[DllImport(importLibrary, CallingConvention = importCall)]
 		public static extern void obs_source_set_audio_mixers(obs_source_t source, uint mixers);
+
+		/// <summary>
+		/// <para>https://obsproject.com/docs/reference-sources.html#c.obs_source_update</para>
+		/// <para>
+		/// Updates the settings for a source and calls the obs_source_info.update callback of the source. 
+		/// If the source is a video source, the obs_source_info.update will be not be called immediately; 
+		/// instead, it will be deferred to the video thread to prevent threading issues.
+		/// </para>
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="settings"></param>
+		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern void obs_source_update(obs_source_t source, obs_data_t settings);
+
+		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern obs_data_t obs_source_get_settings(obs_source_t source);
+
+		[DllImport(importLibrary, CallingConvention = importCall, CharSet = importCharSet)]
+		public static extern obs_data_t obs_get_source_defaults(
+			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(UTF8StringMarshaler))] string id);
 	}
 }
