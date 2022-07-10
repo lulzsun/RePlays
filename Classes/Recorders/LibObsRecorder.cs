@@ -157,19 +157,19 @@ namespace RePlays.Recorders {
 
             // SETUP NEW AUDIO SOURCES
             // - Create a source for the desktop in channel 0, and the microphone in 1
-            audioSources.Add("desktop", obs_audio_source_create("wasapi_output_capture", "desktop")); // captures whole desktop
+            audioSources.TryAdd("desktop", obs_audio_source_create("wasapi_output_capture", "desktop")); // captures whole desktop
             obs_set_output_source(0, audioSources["desktop"]);
             obs_source_set_audio_mixers(audioSources["desktop"], 1 | (1 << 0));
-            audioSources.Add("microphone", obs_audio_source_create("wasapi_input_capture", "microphone"));
+            audioSources.TryAdd("microphone", obs_audio_source_create("wasapi_input_capture", "microphone"));
             obs_set_output_source(1, audioSources["microphone"]);
             obs_source_set_audio_mixers(audioSources["microphone"], 1 | (1 << 1));
 
             // SETUP AUDIO ENCODERS
             // - Each audio source needs an audio encoder, IF we plan to separate audio tracks in the future
-            audioEncoders.Add("aac0", obs_audio_encoder_create("ffmpeg_aac", "aac0", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero));
+            audioEncoders.TryAdd("aac0", obs_audio_encoder_create("ffmpeg_aac", "aac0", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero));
             obs_output_set_audio_encoder(output, audioEncoders["aac0"], (UIntPtr)0);
             obs_encoder_set_audio(audioEncoders["aac0"], obs_output_audio(output));
-            //audioEncoders.Add("aac1", obs_audio_encoder_create("ffmpeg_aac", "aac1", IntPtr.Zero, (UIntPtr)1, IntPtr.Zero));
+            //audioEncoders.TryAdd("aac1", obs_audio_encoder_create("ffmpeg_aac", "aac1", IntPtr.Zero, (UIntPtr)1, IntPtr.Zero));
             //obs_output_set_audio_encoder(output, audioEncoders["aac1"], (UIntPtr)1);
             //obs_encoder_set_audio(audioEncoders["aac1"], obs_output_audio(output));
 
@@ -178,7 +178,7 @@ namespace RePlays.Recorders {
             IntPtr videoSourceSettings = obs_data_create();
             obs_data_set_string(videoSourceSettings, "capture_mode", "window");
             obs_data_set_string(videoSourceSettings, "window", GetWindowTitle(handle) + ":" + className + ":" + session.Exe);
-            videoSources.Add("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
+            videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
             obs_set_output_source(2, videoSources["gameplay"]);
             obs_data_release(videoSourceSettings);
 
@@ -203,6 +203,7 @@ namespace RePlays.Recorders {
             }
             if (retryAttempt >= maxRetryAttempts * 3) {
                 ReleaseSources();
+                ReleaseEncoders();
                 return false;
             }
 
