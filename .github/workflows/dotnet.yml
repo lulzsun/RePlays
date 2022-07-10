@@ -50,7 +50,7 @@ jobs:
       - name: 'Get Previous tag'
         id: previoustag
         run: |
-          if [ ${{steps.nightly.outputs.id}} == "" ]; then
+          if [ "${{steps.nightly.outputs.id}}" == "" ]; then
             echo "::set-output name=tag::$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))"
           else
             echo "::set-output name=tag::$(echo ${{steps.nightly.outputs.name}} | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')"
