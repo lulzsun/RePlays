@@ -161,7 +161,7 @@ namespace RePlays {
             if (e.CloseReason == CloseReason.UserClosing) {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
-                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+                this.FormBorderStyle = FormBorderStyle.None;
                 this.ShowInTaskbar = false;
                 DisposeWebView2();
             }
