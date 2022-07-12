@@ -218,9 +218,11 @@ namespace RePlays.Recorders {
             return true;
         }
 
-        public IntPtr obs_audio_source_create(string id, string name, string deviceId = "default") {
-            IntPtr settings = obs_data_create();
-            obs_data_set_string(settings, "device_id", deviceId);
+        public IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default") {
+            if (settings == IntPtr.Zero) {
+                settings = obs_data_create();
+                obs_data_set_string(settings, "device_id", deviceId);
+            }
             IntPtr source = obs_source_create(id, name, settings, IntPtr.Zero);
             obs_data_release(settings);
             return source;
@@ -461,7 +463,7 @@ namespace RePlays.Recorders {
                     }
                 }
             }
-            catch (Exception) { }
+            catch (Exception) { } // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
 
             if (isGame && !DetectionService.IsMatchedNonGame(exeFile)) {
                 if (EnumerateProcessWindowHandles(processId).Count() <= 0) return;
