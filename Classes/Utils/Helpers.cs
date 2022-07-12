@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -93,6 +95,24 @@ namespace RePlays.Utils {
                 folderName = folderName.Replace(c.ToString(), string.Empty);
 
             return folderName;
+        }
+
+        public static Dictionary<string, string> GetAudioDevices() {
+            Dictionary<string, string> devices = new();
+
+            ManagementObjectSearcher searcher = new("Select * From Win32_PnPEntity");
+            ManagementObjectCollection deviceCollection = searcher.Get();
+
+            foreach (ManagementObject obj in deviceCollection) {
+                if (obj == null) continue;
+                if (obj.Properties["PNPClass"].Value == null) continue;
+
+                if (obj.Properties["PNPClass"].Value.ToString() == "AudioEndpoint") {
+                    devices.Add(obj.Properties["Name"].Value.ToString(), obj.Properties["PNPDeviceID"].Value.ToString().Split('\\').Last());
+                }
+            }
+
+            return devices;
         }
 
         public static string GetUserSettings() {
