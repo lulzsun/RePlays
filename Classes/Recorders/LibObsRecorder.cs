@@ -73,19 +73,23 @@ namespace RePlays.Recorders {
             };
             bool resetAudioCode = obs_reset_audio(ref avi);
 
-            // scene rendering resolution
-            int MainWidth = 1920;
-            int MainHeight = 1080;
+            // Should match monitor resolution
+            int baseWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+            int baseHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+            // output resolution
+            int outputWidth = 1920;
+            int outputHeight = 1080;
+
 
             obs_video_info ovi = new() {
                 adapter = 0,
                 graphics_module = "libobs-d3d11",
                 fps_num = 60,
                 fps_den = 1,
-                base_width = (uint)MainWidth,
-                base_height = (uint)MainHeight,
-                output_width = (uint)MainWidth,
-                output_height = (uint)MainHeight,
+                base_width = (uint)baseWidth,
+                base_height = (uint)baseHeight,
+                output_width = (uint)outputWidth,
+                output_height = (uint)outputHeight,
                 output_format = video_format.VIDEO_FORMAT_NV12,
                 gpu_conversion = true,
                 colorspace = video_colorspace.VIDEO_CS_DEFAULT,
