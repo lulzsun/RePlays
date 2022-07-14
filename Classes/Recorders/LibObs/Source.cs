@@ -20,6 +20,9 @@ namespace obs_net {
 		[DllImport(importLibrary, CallingConvention = importCall)]
 		public static extern void obs_source_release(obs_source_t source);
 
+		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern void obs_source_remove(obs_source_t source);
+
 		/// <summary>
 		/// <para>https://obsproject.com/docs/reference-sources.html?highlight=audio%20mixer#c.obs_source_set_audio_mixers</para>
 		/// <para>

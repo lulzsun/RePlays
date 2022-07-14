@@ -270,6 +270,9 @@ namespace obs_net {
 		public static extern void obs_set_output_source(uint channel, obs_source_t source);
 
 		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern obs_source_t obs_get_output_source(uint channel);
+
+		[DllImport(importLibrary, CallingConvention = importCall)]
 		public static extern audio_t obs_get_audio();
 
 		[DllImport(importLibrary, CallingConvention = importCall)]

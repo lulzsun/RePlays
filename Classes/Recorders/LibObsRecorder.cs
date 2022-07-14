@@ -282,10 +282,12 @@ namespace RePlays.Recorders {
 
         public void ReleaseSources() {
             foreach (var videoSource in videoSources.Values) {
+                obs_source_remove(videoSource);
                 obs_source_release(videoSource);
             }
             videoSources.Clear();
             foreach (var audioSource in audioSources.Values) {
+                obs_source_remove(audioSource);
                 obs_source_release(audioSource);
             }
             audioSources.Clear();
