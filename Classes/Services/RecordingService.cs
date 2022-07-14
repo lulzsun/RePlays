@@ -64,6 +64,10 @@ namespace RePlays.Services {
                 }
                 //DetectionService.DisposeDetections();
             }
+            if (!result) {
+                // recorder failed to start properly so lets restart the currentSession Pid
+                currentSession.Pid = 0;
+            }
             IsPreRecording = false;
         }
 

@@ -73,19 +73,23 @@ namespace RePlays.Recorders {
             };
             bool resetAudioCode = obs_reset_audio(ref avi);
 
-            // scene rendering resolution
-            int MainWidth = 1920;
-            int MainHeight = 1080;
+            // Should match monitor resolution
+            int baseWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+            int baseHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+            // output resolution
+            int outputWidth = 1920;
+            int outputHeight = 1080;
+
 
             obs_video_info ovi = new() {
                 adapter = 0,
                 graphics_module = "libobs-d3d11",
                 fps_num = 60,
                 fps_den = 1,
-                base_width = (uint)MainWidth,
-                base_height = (uint)MainHeight,
-                output_width = (uint)MainWidth,
-                output_height = (uint)MainHeight,
+                base_width = (uint)baseWidth,
+                base_height = (uint)baseHeight,
+                output_width = (uint)outputWidth,
+                output_height = (uint)outputHeight,
                 output_format = video_format.VIDEO_FORMAT_NV12,
                 gpu_conversion = true,
                 colorspace = video_colorspace.VIDEO_CS_DEFAULT,
@@ -126,9 +130,21 @@ namespace RePlays.Recorders {
         public override async Task<bool> StartRecording() {
             signalOutputStop = false;
             var session = RecordingService.GetCurrentSession();
-            IntPtr handle = EnumerateProcessWindowHandles(session.Pid).First();
+            IntPtr handle;
+            if (session.Pid == 0) {
+                // If session is empty, this is a manual record attempt.  Lets try to yolo record the foregroundwindow
+                handle = GetForegroundWindow();
+                if (handle == IntPtr.Zero)
+                    Logger.WriteLine(string.Format(""));
+                if (GetWindowThreadProcessId(handle, out int processId) == 0)
+                    Logger.WriteLine(string.Format(""));
+                // string title = GetWindowTitle(handle);
+                AutoDetectGame(processId, autoRecord:false);
+                session = RecordingService.GetCurrentSession();
+            }
 
             // attempt to retrieve process's window handle to retieve class name and window title
+            handle = EnumerateProcessWindowHandles(session.Pid).First();
             int retryAttempt = 0;
             while (handle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
                 await Task.Delay(retryInterval);
@@ -295,31 +311,8 @@ namespace RePlays.Recorders {
                     var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
                     var cmdLine = instanceDescription.GetPropertyValue("CommandLine"); // may or may not be useful in the future
 
-                    if (executablePath != null && !String.IsNullOrEmpty(executablePath.ToString())) {
-                        string exe = Path.GetFileName(executablePath.ToString());
+                    AutoDetectGame(processId);
 
-                        bool isGame = DetectionService.IsMatchedGame(exe);
-                        bool isNonGame = DetectionService.IsMatchedNonGame(exe);
-
-                        if (isGame && !isNonGame) {
-                            Logger.WriteLine(string.Format("This process [{0}] is a recordable game [{1}], prepared to record", processId, exe));
-
-                            string gameTitle = DetectionService.GetGameTitle(exe);
-                            RecordingService.SetCurrentSession(processId, gameTitle);
-                            RecordingService.GetCurrentSession().Exe = exe;
-
-                            if (SettingsService.Settings.captureSettings.recordingMode == "automatic")
-                                RecordingService.StartRecording();
-                        }
-                        else if (!isGame && !isNonGame) {
-                            Logger.WriteLine(string.Format("This process [{0}] is an unknown application [{1}], lets guess if it is a game", processId, exe));
-
-                            AutoDetectGame(processId);
-                        }
-                        else {
-                            Logger.WriteLine(string.Format("This process [{0}] is a non-game [{1}]", processId, exe));
-                        }
-                    }
                 }
             }
             catch (ManagementException) { }
@@ -415,7 +408,7 @@ namespace RePlays.Recorders {
         /// </summary>
         /// <param name="processId"></param>
         /// <param name="executablePath">Full path to executable, if possible</param>
-        public void AutoDetectGame(int processId, string executablePath = null) {
+        public void AutoDetectGame(int processId, string executablePath = null, bool autoRecord = true) {
             bool isGame = false, isNonGame = false;
             string exeFile = executablePath;
             string modules = "";
@@ -427,15 +420,25 @@ namespace RePlays.Recorders {
 
                     if (exeFile == null) {
                         exeFile = process.ProcessName + ".exe";
-                        isNonGame = DetectionService.IsMatchedNonGame(exeFile);
-                        if (isNonGame) {
-                            return;
-                        }
+                    }
+
+                    if (!autoRecord){
+                        // This is a manual record event so lets just yolo it and assume user knows best
+                        string gameTitle = DetectionService.GetGameTitle(exeFile);
+                        RecordingService.SetCurrentSession(processId, gameTitle);
+                        RecordingService.GetCurrentSession().Exe = exeFile;
+                        return;
+                    }
+
+                    isNonGame = DetectionService.IsMatchedNonGame(exeFile);
+                    if (isNonGame) {
+                        return;
                     }
 
                     isGame = DetectionService.IsMatchedGame(exeFile);
 
                     if (!isGame) {
+                        Logger.WriteLine(string.Format("Process [{0}] isn't in the game detection list, checking if it might be a game", Path.GetFileName(exeFile)));
                         try {
                             foreach (ProcessModule module in process.Modules) {
                                 if (module == null) continue;
@@ -451,21 +454,22 @@ namespace RePlays.Recorders {
 
                                 if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
                                     isGame = true;
+                                    Logger.WriteLine(string.Format("This process [{0}]:[{1}] : [{2}], appears to be a game.", processId, name, Path.GetFileName(exeFile)));
                                 }
                                 module.Dispose();
                             }
                         }
                         catch (Exception) {
-                            if (DetectionService.IsMatchedGame(exeFile)) {
-                                isGame = true;
-                            }
+                            Logger.WriteLine(string.Format("Failed to view all ProcessModules for [{0}{1}] isGame: {2} isNonGame: {3}", Path.GetFileName(exeFile), modules, isGame, isNonGame));
                         }
                     }
                 }
             }
-            catch (Exception) { } // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
+            catch (Exception) { // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
+                Logger.WriteLine(string.Format("Exception while trying to determine if {0} is a game. isGame: {1} isNonGame: {2}", Path.GetFileName(exeFile), isGame, isNonGame));
+            }
 
-            if (isGame && !DetectionService.IsMatchedNonGame(exeFile)) {
+            if (isGame) {
                 if (EnumerateProcessWindowHandles(processId).Count() <= 0) return;
 
                 string gameTitle = DetectionService.GetGameTitle(exeFile);
@@ -474,7 +478,7 @@ namespace RePlays.Recorders {
 
                 Logger.WriteLine(string.Format("This process [{0}] is a recordable game [{1}{2}], prepared to record", processId, Path.GetFileName(exeFile), modules));
 
-                if (SettingsService.Settings.captureSettings.recordingMode == "automatic")
+                if (autoRecord && SettingsService.Settings.captureSettings.recordingMode == "automatic")
                     RecordingService.StartRecording();
             }
         }
