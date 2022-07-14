@@ -143,7 +143,7 @@ namespace RePlays.Recorders {
                 session = RecordingService.GetCurrentSession();
             }
 
-            // attempt to retrieve process's window handle to retieve class name and window title
+            // attempt to retrieve process's window handle to retrieve class name and window title
             handle = EnumerateProcessWindowHandles(session.Pid).First();
             int retryAttempt = 0;
             while (handle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
@@ -273,7 +273,7 @@ namespace RePlays.Recorders {
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
                 WebMessage.SendMessage(t);
             }
-            catch (System.Exception e) {
+            catch (Exception e) {
                 Logger.WriteLine(e.Message);
             }
 
@@ -314,7 +314,6 @@ namespace RePlays.Recorders {
                     var cmdLine = instanceDescription.GetPropertyValue("CommandLine"); // may or may not be useful in the future
 
                     AutoDetectGame(processId);
-
                 }
             }
             catch (ManagementException) { }
@@ -400,13 +399,17 @@ namespace RePlays.Recorders {
             if (GetWindowThreadProcessId(handle, out int processId) == 0)
                 return;
 
-            string title = GetWindowTitle(handle);
+            //string title = GetWindowTitle(handle);
 
             AutoDetectGame(processId);
         }
 
         /// <summary>
-        /// Checks to see if the process contains any graphics dll modules (directx, opengl). If it does, we will assume it is a "game".
+        /// <para>Checks to see if the process:</para>
+        /// <para>1. contains in the game detection list (whitelist)</para>
+        /// <para>2. does NOT contain in nongame detection list (blacklist)</para>
+        /// <para>3. contains any graphics dll modules (directx, opengl)</para>
+        /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
         /// <param name="processId"></param>
         /// <param name="executablePath">Full path to executable, if possible</param>
@@ -472,7 +475,7 @@ namespace RePlays.Recorders {
             }
 
             if (isGame) {
-                if (EnumerateProcessWindowHandles(processId).Count() <= 0) return;
+                if (!EnumerateProcessWindowHandles(processId).Any()) return;
 
                 string gameTitle = DetectionService.GetGameTitle(exeFile);
                 RecordingService.SetCurrentSession(processId, gameTitle);
