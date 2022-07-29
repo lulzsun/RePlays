@@ -57,7 +57,7 @@ namespace RePlays.Recorders {
                     else if (!isGame && !isNonGame) {
                         Logger.WriteLine(string.Format("This process [{0}] is an unknown application, lets try to ScanForGraphLib", msg.Pid));
 
-                        RecordingService.SetCurrentSession(0, DetectionService.GetGameTitle(msg.ExeFile, true));
+                        RecordingService.SetCurrentSession(0, DetectionService.GetGameTitle(msg.ExeFile));
                         ltc.ScanForGraphLib(msg.Pid); // the response will be sent to GraphicsLibLoaded if successful
                     }
                     else {

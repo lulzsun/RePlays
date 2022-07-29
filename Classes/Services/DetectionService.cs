@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
@@ -71,44 +72,43 @@ namespace RePlays.Services {
                     }
                 }
             }
+
+            // TODO: also parse Epic games/Origin games
+            if (exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
+                return true;
             return false;
         }
 
-        public static string GetGameTitle(string exeFile, bool isUnknown=false) {
-            exeFile = exeFile.ToLower();
+        public static string GetGameTitle(string exeFile) {
+            for (int x = 0; x < gameDetectionsJson.Length; x++) {
+                JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
-            if (isUnknown == false) {
-                for (int x = 0; x < gameDetectionsJson.Length; x++) {
-                    JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
+                for (int y = 0; y < gameDetections.Length; y++) {
+                    bool d1 = gameDetections[y].TryGetProperty("gameexe", out JsonElement detection1);
+                    bool d2 = gameDetections[y].TryGetProperty("launchexe", out JsonElement detection2);
+                    string[] jsonExeStr = Array.Empty<string>();
 
-                    for (int y = 0; y < gameDetections.Length; y++) {
-                        bool d1 = gameDetections[y].TryGetProperty("gameexe", out JsonElement detection1);
-                        bool d2 = gameDetections[y].TryGetProperty("launchexe", out JsonElement detection2);
-                        string[] jsonExeStr = Array.Empty<string>();
+                    if (d1) {
+                        jsonExeStr = detection1.GetString().ToLower().Split('|');
+                    }
 
-                        if (d1) {
-                            jsonExeStr = detection1.GetString().ToLower().Split('|');
-                        }
+                    if (!d1 && d2) {
+                        jsonExeStr = detection2.GetString().ToLower().Split('|');
+                    }
 
-                        if (!d1 && d2) {
-                            jsonExeStr = detection2.GetString().ToLower().Split('|');
-                        }
-
-                        if (jsonExeStr.Length > 0) {
-                            for (int z = 0; z < jsonExeStr.Length; z++) {
-                                if (Path.GetFileName(jsonExeStr[z]).Equals(exeFile) && jsonExeStr[z].Length > 0) {
-                                    return gameDetectionsJson[x].GetProperty("title").ToString();
-                                }
+                    if (jsonExeStr.Length > 0) {
+                        for (int z = 0; z < jsonExeStr.Length; z++) {
+                            if (Path.GetFileName(jsonExeStr[z]).Equals(exeFile.ToLower()) && jsonExeStr[z].Length > 0) {
+                                return gameDetectionsJson[x].GetProperty("title").ToString();
                             }
                         }
                     }
                 }
-                return "Game Unknown";
             }
-
-            // if isUnknown (if not on detection.json), check to see if path is a steam game, and parse name
-            if(exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
-                return exeFile.Replace("\\", "/").Split("/steamapps/common/")[1].Split('/')[0];
+            // Check to see if path is a steam game, and parse name
+            // TODO: also parse Epic games/Origin games
+            if(exeFile.ToLower().Replace("\\", "/").Contains("/steamapps/common/"))
+                return Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0];
             return "Game Unknown";
         }
 
