@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Runtime.ConstrainedExecution;
+using System.Security;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
@@ -125,8 +127,8 @@ namespace RePlays.Recorders {
             throw new System.NotImplementedException();
         }
 
-        const int retryInterval = 1000; // 1 second
-        const int maxRetryAttempts = 10; // 10 seconds
+        const int retryInterval = 2000; // 2 second
+        const int maxRetryAttempts = 5; // 10 seconds
         public override async Task<bool> StartRecording() {
             signalOutputStop = false;
             var session = RecordingService.GetCurrentSession();
@@ -164,6 +166,7 @@ namespace RePlays.Recorders {
             // Get the window class name
             StringBuilder className = new(256);
             _ = GetClassName(handle, className, className.Capacity);
+            var windowClassNameId = GetWindowTitle(handle) + ":" + className.ToString() + ":" + Path.GetFileName(session.Exe);
 
             // SETUP OUTPUT SETTINGS
             IntPtr outputSettings = obs_data_create();
@@ -193,7 +196,7 @@ namespace RePlays.Recorders {
             // - Create a source for the game_capture in channel 2
             IntPtr videoSourceSettings = obs_data_create();
             obs_data_set_string(videoSourceSettings, "capture_mode", "window");
-            obs_data_set_string(videoSourceSettings, "window", GetWindowTitle(handle) + ":" + className + ":" + session.Exe);
+            obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
             videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
             obs_set_output_source(2, videoSources["gameplay"]);
             obs_data_release(videoSourceSettings);
@@ -215,7 +218,7 @@ namespace RePlays.Recorders {
             while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts * 3) {
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                Logger.WriteLine(string.Format("Waiting for successful graphics hook... retry attempt #{0}", retryAttempt));
+                Logger.WriteLine(string.Format("Waiting for successful graphics hook for [{0}]... retry attempt #{1}", windowClassNameId, retryAttempt));
             }
             if (retryAttempt >= maxRetryAttempts * 3) {
                 ReleaseSources();
@@ -228,7 +231,7 @@ namespace RePlays.Recorders {
             if (outputStartSuccess != true) {
                 Console.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
             } else {
-                Logger.WriteLine(string.Format("LibObs started recording [{0}] [{1}] [{2}]", session.Pid, session.GameTitle, GetWindowTitle(handle) + ":" + className + ":" + session.Exe));
+                Logger.WriteLine(string.Format("LibObs started recording [{0}] [{1}] [{2}]", session.Pid, session.GameTitle, windowClassNameId));
             }
 
             return true;
@@ -404,6 +407,18 @@ namespace RePlays.Recorders {
             AutoDetectGame(processId);
         }
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, Int32 dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        [SuppressUnmanagedCodeSecurity]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("psapi.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, uint nSize);
+
         /// <summary>
         /// <para>Checks to see if the process:</para>
         /// <para>1. contains in the game detection list (whitelist)</para>
@@ -418,60 +433,73 @@ namespace RePlays.Recorders {
             string exeFile = executablePath;
             string modules = "";
 
-            try {
-                using Process process = Process.GetProcessById(processId);
+            Process[] processlist = Process.GetProcesses();
+            using Process process = processlist.FirstOrDefault(pr => pr.Id == processId);
 
-                if (process != null) {
+            if (process != null) {
+                if (exeFile == null) {
+                    exeFile = process.ProcessName + ".exe";
+                }
 
-                    if (exeFile == null) {
-                        exeFile = process.ProcessName + ".exe";
+                IntPtr processHandle = OpenProcess(0x0400 | 0x0010, //PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
+                false, process.Id);
+
+                if (processHandle != IntPtr.Zero) {
+                    StringBuilder stringBuilder = new(1024);
+                    if (GetModuleFileNameEx(processHandle, IntPtr.Zero, stringBuilder, (uint)stringBuilder.Capacity) == 0) {
+                        Logger.WriteLine(string.Format("Failed to get process [{0}] [{1}] full path.", process.Id, exeFile));
                     }
-
-                    if (!autoRecord){
-                        // This is a manual record event so lets just yolo it and assume user knows best
-                        string gameTitle = DetectionService.GetGameTitle(exeFile);
-                        RecordingService.SetCurrentSession(processId, gameTitle);
-                        RecordingService.GetCurrentSession().Exe = exeFile;
-                        return;
+                    else {
+                        exeFile = stringBuilder.ToString();
                     }
+                    CloseHandle(processHandle);
+                }
+                else {
+                    Logger.WriteLine(string.Format("Failed to open process [{0}] [{1}].", process.Id, exeFile));
+                }
 
-                    isNonGame = DetectionService.IsMatchedNonGame(exeFile);
-                    if (isNonGame) {
-                        return;
-                    }
+                string gameTitle = DetectionService.GetGameTitle(exeFile);
 
-                    isGame = DetectionService.IsMatchedGame(exeFile);
+                if (!autoRecord){
+                    // This is a manual record event so lets just yolo it and assume user knows best
+                    RecordingService.SetCurrentSession(processId, gameTitle);
+                    RecordingService.GetCurrentSession().Exe = exeFile;
+                    return;
+                }
 
-                    if (!isGame) {
-                        Logger.WriteLine(string.Format("Process [{0}] isn't in the game detection list, checking if it might be a game", Path.GetFileName(exeFile)));
-                        try {
-                            foreach (ProcessModule module in process.Modules) {
-                                if (module == null) continue;
+                isNonGame = DetectionService.IsMatchedNonGame(exeFile);
+                if (isNonGame) {
+                    return;
+                }
 
-                                var name = module.ModuleName.ToLower();
-                                modules += ", " + module.ModuleName;
+                isGame = DetectionService.IsMatchedGame(exeFile);
 
-                                // this could cause false positives, but it should be ok for most applications
-                                if (name.StartsWith("explorerframe") || name.StartsWith("desktop-notifications") || name.StartsWith("squirrel")) { 
-                                    isGame = false;
-                                    break;
-                                }
+                if (!isGame) {
+                    Logger.WriteLine(string.Format("Process [{0}] isn't in the game detection list, checking if it might be a game", Path.GetFileName(exeFile)));
+                    try {
+                        foreach (ProcessModule module in process.Modules) {
+                            if (module == null) continue;
 
-                                if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
-                                    isGame = true;
-                                    Logger.WriteLine(string.Format("This process [{0}]:[{1}] : [{2}], appears to be a game.", processId, name, Path.GetFileName(exeFile)));
-                                }
-                                module.Dispose();
+                            var name = module.ModuleName.ToLower();
+                            modules += ", " + module.ModuleName;
+
+                            // this could cause false positives, but it should be ok for most applications
+                            if (name.StartsWith("explorerframe") || name.StartsWith("desktop-notifications") || name.StartsWith("squirrel")) { 
+                                isGame = false;
+                                break;
                             }
+
+                            if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
+                                isGame = true;
+                                Logger.WriteLine(string.Format("This process [{0}]:[{1}] : [{2}], appears to be a game.", processId, name, Path.GetFileName(exeFile)));
+                            }
+                            module.Dispose();
                         }
-                        catch (Exception) {
-                            Logger.WriteLine(string.Format("Failed to view all ProcessModules for [{0}{1}] isGame: {2} isNonGame: {3}", Path.GetFileName(exeFile), modules, isGame, isNonGame));
-                        }
+                    }
+                    catch (Exception e) { // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
+                        Logger.WriteLine(string.Format("Failed to view all ProcessModules for [{0}{1}] isGame: {2} isNonGame: {3}, reason: {4}", Path.GetFileName(exeFile), modules, isGame, isNonGame, e.Message));
                     }
                 }
-            }
-            catch (Exception) { // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
-                Logger.WriteLine(string.Format("Exception while trying to determine if {0} is a game. isGame: {1} isNonGame: {2}", Path.GetFileName(exeFile), isGame, isNonGame));
             }
 
             if (isGame) {
