@@ -441,8 +441,13 @@ namespace RePlays.Recorders {
                     exeFile = process.ProcessName + ".exe";
                 }
 
+                isNonGame = DetectionService.IsMatchedNonGame(exeFile);
+                if (isNonGame) {
+                    return;
+                }
+
                 IntPtr processHandle = OpenProcess(0x0400 | 0x0010, //PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
-                false, process.Id);
+                    false, process.Id);
 
                 if (processHandle != IntPtr.Zero) {
                     StringBuilder stringBuilder = new(1024);
@@ -457,55 +462,49 @@ namespace RePlays.Recorders {
                 else {
                     Logger.WriteLine(string.Format("Failed to open process [{0}] [{1}].", process.Id, exeFile));
                 }
+            }
 
-                string gameTitle = DetectionService.GetGameTitle(exeFile);
+            string gameTitle = DetectionService.GetGameTitle(exeFile);
 
-                if (!autoRecord){
-                    // This is a manual record event so lets just yolo it and assume user knows best
-                    RecordingService.SetCurrentSession(processId, gameTitle);
-                    RecordingService.GetCurrentSession().Exe = exeFile;
-                    return;
-                }
+            if (!autoRecord) {
+                // This is a manual record event so lets just yolo it and assume user knows best
+                RecordingService.SetCurrentSession(processId, gameTitle);
+                RecordingService.GetCurrentSession().Exe = exeFile;
+                return;
+            }
 
-                isNonGame = DetectionService.IsMatchedNonGame(exeFile);
-                if (isNonGame) {
-                    return;
-                }
+            isGame = DetectionService.IsMatchedGame(exeFile);
 
-                isGame = DetectionService.IsMatchedGame(exeFile);
+            if (!isGame && process != null) {
+                Logger.WriteLine(string.Format("Process [{0}] isn't in the game detection list, checking if it might be a game", Path.GetFileName(exeFile)));
+                try {
+                    foreach (ProcessModule module in process.Modules) {
+                        if (module == null) continue;
 
-                if (!isGame) {
-                    Logger.WriteLine(string.Format("Process [{0}] isn't in the game detection list, checking if it might be a game", Path.GetFileName(exeFile)));
-                    try {
-                        foreach (ProcessModule module in process.Modules) {
-                            if (module == null) continue;
+                        var name = module.ModuleName.ToLower();
+                        modules += ", " + module.ModuleName;
 
-                            var name = module.ModuleName.ToLower();
-                            modules += ", " + module.ModuleName;
-
-                            // this could cause false positives, but it should be ok for most applications
-                            if (name.StartsWith("explorerframe") || name.StartsWith("desktop-notifications") || name.StartsWith("squirrel")) { 
-                                isGame = false;
-                                break;
-                            }
-
-                            if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
-                                isGame = true;
-                                Logger.WriteLine(string.Format("This process [{0}]:[{1}] : [{2}], appears to be a game.", processId, name, Path.GetFileName(exeFile)));
-                            }
-                            module.Dispose();
+                        // this could cause false positives, but it should be ok for most applications
+                        if (name.StartsWith("explorerframe") || name.StartsWith("desktop-notifications") || name.StartsWith("squirrel")) { 
+                            isGame = false;
+                            break;
                         }
+
+                        if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
+                            isGame = true;
+                            Logger.WriteLine(string.Format("This process [{0}]:[{1}] : [{2}], appears to be a game.", processId, name, Path.GetFileName(exeFile)));
+                        }
+                        module.Dispose();
                     }
-                    catch (Exception e) { // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
-                        Logger.WriteLine(string.Format("Failed to view all ProcessModules for [{0}{1}] isGame: {2} isNonGame: {3}, reason: {4}", Path.GetFileName(exeFile), modules, isGame, isNonGame, e.Message));
-                    }
+                }
+                catch (Exception e) { // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
+                    Logger.WriteLine(string.Format("Failed to view all ProcessModules for [{0}{1}] isGame: {2} isNonGame: {3}, reason: {4}", Path.GetFileName(exeFile), modules, isGame, isNonGame, e.Message));
                 }
             }
 
             if (isGame) {
                 if (!EnumerateProcessWindowHandles(processId).Any()) return;
 
-                string gameTitle = DetectionService.GetGameTitle(exeFile);
                 RecordingService.SetCurrentSession(processId, gameTitle);
                 RecordingService.GetCurrentSession().Exe = exeFile;
 
