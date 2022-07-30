@@ -42,6 +42,9 @@ namespace RePlays.Services {
         }
 
         public static bool IsMatchedGame(string exeFile) {
+            if (exeFile == null)
+                return false;
+
             exeFile = exeFile.ToLower();
 
             if (SettingsService.Settings.advancedSettings.whitelist.Contains(exeFile)) {
@@ -81,6 +84,9 @@ namespace RePlays.Services {
         }
 
         public static string GetGameTitle(string exeFile) {
+            if (exeFile == null)
+                return "Game Unknown";
+
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
@@ -115,6 +121,9 @@ namespace RePlays.Services {
         }
 
         public static bool IsMatchedNonGame(string exeFile) {
+            if (exeFile == null)
+                return false;
+
             exeFile = exeFile.ToLower();
 
             if (SettingsService.Settings.advancedSettings.blacklist.Contains(exeFile)) {
