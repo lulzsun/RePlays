@@ -203,7 +203,14 @@ namespace RePlays.Utils {
                     }
                     break;
                 case "ShowLogs": {
-                        Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.Join(Application.StartupPath, @"cfg\logs.txt")));
+                        if (File.Exists(Path.GetFullPath(Path.Join(Application.StartupPath, "../cfg/logs.txt"))))
+                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(Application.StartupPath, "../cfg/logs.txt"))));
+                        else if (File.Exists(Path.GetFullPath(Path.Join(Application.StartupPath, "../../cfg/logs.txt"))))
+                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(Application.StartupPath, "../../cfg/logs.txt"))));
+                        else {
+                            MessageBox.Show("Logs could not be found, are you perhaps in Debug mode?");
+                            Logger.WriteLine("Current running application path: " + Application.StartupPath);
+                        }
                     }
                     break;
                 case "Delete": {
