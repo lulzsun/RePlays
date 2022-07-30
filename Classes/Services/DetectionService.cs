@@ -65,7 +65,8 @@ namespace RePlays.Services {
 
                     if (jsonExeStr.Length > 0) {
                         for (int z = 0; z < jsonExeStr.Length; z++) {
-                            if (Path.GetFileName(jsonExeStr[z]).Equals(exeFile.ToLower()) && jsonExeStr[z].Length > 0) {
+                            // TODO: use proper regex to check fullpaths instead of just filenames
+                            if (Path.GetFileName(jsonExeStr[z]).Equals(Path.GetFileName(exeFile)) && jsonExeStr[z].Length > 0) {
                                 return true;
                             }
                         }
