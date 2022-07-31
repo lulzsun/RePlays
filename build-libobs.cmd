@@ -10,6 +10,7 @@ set BUILD_DIR=%BASE_DIR%\build
 set OBS_STUDIO_BUILD_DIR=%BASE_DIR%\obs-studio-build
 set OBS_STUDIO_DIR=%OBS_STUDIO_BUILD_DIR%\obs-studio-%OBS_STUDIO_VERSION%
 set WINDOWS_DEPS_DIR=%OBS_STUDIO_BUILD_DIR%\windows-deps
+set OBS_STUDIO_RELEASE_DIR=%OBS_STUDIO_BUILD_DIR%\obs-studio-release
 set WIN_CAPTURE_AUDIO_ZIP=win-capture-audio-%WIN_CAPTURE_AUDIO_VERSION%
 set WIN_CAPTURE_AUDIO_DIR=%OBS_STUDIO_BUILD_DIR%\win-capture-audio
 set OBS_INSTALL_PREFIX=%OBS_STUDIO_BUILD_DIR%\build
@@ -20,11 +21,19 @@ cd "%OBS_STUDIO_BUILD_DIR%"
 if not exist "%OBS_STUDIO_DIR%" (
 	git clone --recursive -b %OBS_STUDIO_VERSION% --single-branch https://github.com/obsproject/obs-studio.git "obs-studio-%OBS_STUDIO_VERSION%"
 )
+:: download obs windows deps
 if not exist "%WINDOWS_DEPS_DIR%" (
 	if not exist "%WINDOWS_DEPS_VERSION%.zip" (
 		curl -kLO "https://github.com/obsproject/obs-deps/releases/download/%OBS_DEPS_RELEASE_DATE%/%WINDOWS_DEPS_VERSION%.zip" -f --retry 5 -C -
 	)
 	7z x "%WINDOWS_DEPS_VERSION%.zip" -o"%WINDOWS_DEPS_DIR%"
+)
+:: download the official release of obs studio (to copy signed win-capture)
+if not exist "%OBS_STUDIO_RELEASE_DIR%" (
+	if not exist "OBS-Studio-%OBS_STUDIO_VERSION%-Full-x64.zip" (
+		curl -kLO "https://github.com/obsproject/obs-studio/releases/download/%OBS_STUDIO_VERSION%/OBS-Studio-%OBS_STUDIO_VERSION%-Full-x64.zip" -f --retry 5 -C -
+	)
+	7z x "OBS-Studio-%OBS_STUDIO_VERSION%-Full-x64.zip" -o"%OBS_STUDIO_RELEASE_DIR%"
 )
 :: download and include win-capture-audio
 if not exist "%WIN_CAPTURE_AUDIO_DIR%.zip" (
@@ -75,7 +84,7 @@ xcopy "%OBS_INSTALL_PREFIX%\win32\data" "%OBS_INSTALL_PREFIX%\win64\data\" /E /Y
 xcopy "%OBS_INSTALL_PREFIX%\win64\obs-plugins" "%OBS_INSTALL_PREFIX%\win64\bin\64bit\obs-plugins\" /E /Y /I
 xcopy "%OBS_INSTALL_PREFIX%\win64\data" "%OBS_INSTALL_PREFIX%\win64\bin\64bit\data\" /E /Y /I
 xcopy "%WIN_CAPTURE_AUDIO_DIR%" "%OBS_INSTALL_PREFIX%\win64\bin\64bit\" /E /Y /I
+:: copy win-capture from official release to our build (because we need signed files for better compatibility)
+xcopy "%OBS_STUDIO_RELEASE_DIR%\data\obs-plugins\win-capture" "%OBS_INSTALL_PREFIX%\win64\data\obs-plugins\win-capture\" /E /Y /I
 
 cd %BASE_DIR%
-
-
