@@ -85,6 +85,6 @@ xcopy "%OBS_INSTALL_PREFIX%\win64\obs-plugins" "%OBS_INSTALL_PREFIX%\win64\bin\6
 xcopy "%OBS_INSTALL_PREFIX%\win64\data" "%OBS_INSTALL_PREFIX%\win64\bin\64bit\data\" /E /Y /I
 xcopy "%WIN_CAPTURE_AUDIO_DIR%" "%OBS_INSTALL_PREFIX%\win64\bin\64bit\" /E /Y /I
 :: copy win-capture from official release to our build (because we need signed files for better compatibility)
-xcopy "%OBS_STUDIO_RELEASE_DIR%\data\obs-plugins\win-capture" "%OBS_INSTALL_PREFIX%\win64\data\obs-plugins\win-capture\" /E /Y /I
+xcopy "%OBS_STUDIO_RELEASE_DIR%\data\obs-plugins\win-capture" "%OBS_INSTALL_PREFIX%\win64\bin\64bit\data\obs-plugins\win-capture\" /E /Y /I
 
 cd %BASE_DIR%
