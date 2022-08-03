@@ -44,19 +44,27 @@ namespace RePlays.Recorders {
             }
 
             base_set_log_handler(new log_handler_t((lvl, msg, args, p) => {
-                using (va_list arglist = new va_list(args)) {
-                    object[] objs = arglist.GetObjectsByFormat(msg);
-                    string formattedMsg = Printf.sprintf(msg, objs);
+                try {
+                    using (va_list arglist = new va_list(args)) {
+                        object[] objs = arglist.GetObjectsByFormat(msg);
+                        string formattedMsg = Printf.sprintf(msg, objs);
 
-                    Logger.WriteLine(((LogErrorLevel)lvl).ToString() + ": " + formattedMsg);
+                        Logger.WriteLine(((LogErrorLevel)lvl).ToString() + ": " + formattedMsg);
 
-                    // a very crude way to see if game_capture source has successfully hooked/capture application....
-                    // does game_capture source provide any signals that we can alternatively use?
-                    if(formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
-                        signalGCHookSuccess = true;
-                    } else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
-                        signalGCHookSuccess = false;
+                        // a very crude way to see if game_capture source has successfully hooked/capture application....
+                        // does game_capture source provide any signals that we can alternatively use?
+                        if (formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
+                            signalGCHookSuccess = true;
+                        }
+                        else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
+                            signalGCHookSuccess = false;
+                        }
                     }
+                }
+                catch (Exception e) {
+                    // something went wrong, most likely an issue with our sprintf implementation?
+                    Logger.WriteLine(e.ToString());
+                    Logger.WriteLine(e.StackTrace);
                 }
             }), IntPtr.Zero);
 
