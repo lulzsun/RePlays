@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
@@ -269,11 +270,12 @@ namespace RePlays.Utils {
             }
             else {
                 startInfo.Arguments =
-                    "-ss " + clipSegments[index].start + " " +
+                    "-ss " + clipSegments[index].start.ToString(CultureInfo.InvariantCulture) + " " +
                     "-i \"" + inputFile + "\" " +
-                    "-t " + clipSegments[index].duration + " -codec copy " +
+                    "-t " + clipSegments[index].duration.ToString(CultureInfo.InvariantCulture) + " -codec copy " +
                     "-avoid_negative_ts make_zero -fflags +genpts " +
                     "-y \"" + outputFile + "\"";
+                Logger.WriteLine(startInfo.Arguments);
             }
 
             var process = new Process {
