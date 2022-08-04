@@ -60,7 +60,7 @@ namespace RePlays.Services {
                     recordingTimer.Start();
                     Logger.WriteLine(string.Format("Start Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
                     IsRecording = true;
-                    frmMain.Instance.DisplayNotification("Recording Started", $"Currently recording {currentSession.GameTitle}");
+                    //frmMain.Instance.DisplayNotification("Recording Started", $"Currently recording {currentSession.GameTitle}");
                 }
                 //DetectionService.DisposeDetections();
             }
