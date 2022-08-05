@@ -18,14 +18,17 @@ namespace RePlays.Recorders {
         ManagementEventWatcher pDeletionWatcher = new(new EventQuery("SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
 
         public virtual void Start() {
+            // watch process creation/deletion events
             pCreationWatcher.EventArrived += ProcessCreation_EventArrived;
             pDeletionWatcher.EventArrived += ProcessDeletion_EventArrived;
             pCreationWatcher.Start();
             pDeletionWatcher.Start();
 
+            // watch active foreground window changes 
             dele = new WinEventDelegate(WinEventProc);
-            IntPtr m_hhook = SetWinEventHook(3, 3, IntPtr.Zero, dele, 0, 0, 0);
+            SetWinEventHook(3, 3, IntPtr.Zero, dele, 0, 0, 0);
         }
+
         public abstract void Stop();
         public abstract Task<bool> StartRecording();
         public abstract Task<bool> StopRecording();
@@ -147,6 +150,7 @@ namespace RePlays.Recorders {
             return handles;
         }
 
+        // this event should occur when the active foreground changes
         public void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
             if (RecordingService.IsRecording) return;
 
