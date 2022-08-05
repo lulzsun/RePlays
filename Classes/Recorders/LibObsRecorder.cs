@@ -298,15 +298,19 @@ namespace RePlays.Recorders {
         }
 
         public static void ResetVideo(int outputWidth = 0, int outputHeight = 0) {
+
+            //Screen ratio to calculate output width.
+            double screenRatio = outputWidth / outputHeight;
+
             obs_video_info ovi = new() {
                 adapter = 0,
                 graphics_module = "libobs-d3d11",
-                fps_num = 60,
+                fps_num = (uint)SettingsService.Settings.captureSettings.frameRate,
                 fps_den = 1,
                 base_width = (uint)(outputWidth > 0 ? outputWidth : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width),
                 base_height = (uint)(outputHeight > 0 ? outputHeight : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height),
-                output_width = (uint)(outputWidth > 0 ? outputWidth : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width),
-                output_height = (uint)(outputHeight > 0 ? outputHeight : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height),
+                output_width = (uint)(outputWidth > 0 ? Convert.ToInt32(SettingsService.Settings.captureSettings.resolution * screenRatio) : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width),
+                output_height = (uint)(outputHeight > 0 ? SettingsService.Settings.captureSettings.resolution : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height),
                 output_format = video_format.VIDEO_FORMAT_NV12,
                 gpu_conversion = true,
                 colorspace = video_colorspace.VIDEO_CS_DEFAULT,
