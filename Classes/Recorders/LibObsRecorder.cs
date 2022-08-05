@@ -13,10 +13,10 @@ namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
         public bool Connected { get; private set; }
 
-        string videoSavePath = "";
+        static string videoSavePath = "";
 
         static IntPtr windowHandle;
-        IntPtr output;
+        static IntPtr output;
 
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
@@ -48,10 +48,7 @@ namespace RePlays.Recorders {
                             if(signalGCHookSuccess != false) {
                                 // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
                                 // if it has resized, restart output with correct size
-                                Rect windowSize = GetWindowSize(windowHandle);
-                                Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
-                                //ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
-                                // ... stop output and restart here?
+                                RestartOutput();
                             }
                             signalGCHookSuccess = true;
                         }
@@ -199,7 +196,7 @@ namespace RePlays.Recorders {
             // preparations complete, launch the rocket
             bool outputStartSuccess = obs_output_start(output);
             if (outputStartSuccess != true) {
-                Console.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
+                Logger.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
             } else {
                 Logger.WriteLine(string.Format("LibObs started recording [{0}] [{1}] [{2}]", session.Pid, session.GameTitle, windowClassNameId));
             }
@@ -243,6 +240,45 @@ namespace RePlays.Recorders {
             return true;
         }
 
+        public static async void RestartOutput() {
+            // Stop output
+            obs_output_stop(output);
+            // attempt to check if output signalled stop
+            int retryAttempt = 0;
+            while (signalOutputStop == false && retryAttempt < maxRetryAttempts) {
+                await Task.Delay(retryInterval);
+                retryAttempt++;
+                Logger.WriteLine(string.Format("Waiting for obs_output to stop... retry attempt #{0}", retryAttempt));
+            }
+            if (retryAttempt >= maxRetryAttempts) {
+                Logger.WriteLine("Issue trying to stop output, giving up.");
+                return;
+            }
+
+            videoSavePath = Path.Join(Path.GetDirectoryName(videoSavePath), DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-ses.mp4");
+
+            // SETUP OUTPUT SETTINGS
+            IntPtr outputSettings = obs_data_create();
+            obs_data_set_string(outputSettings, "path", videoSavePath);
+            obs_output_update(output, outputSettings);
+            obs_data_release(outputSettings);
+
+            // get game's window size and change output to match
+            Rect windowSize = GetWindowSize(windowHandle);
+            Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+            ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+
+            // preparations complete, launch the rocket
+            bool outputStartSuccess = obs_output_start(output);
+            if (outputStartSuccess != true) {
+                Logger.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
+            }
+            else {
+                Logger.WriteLine("Force Restart Output successful.");
+                signalOutputStop = false;
+            }
+        }
+
         public IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default") {
             if (settings == IntPtr.Zero) {
                 settings = obs_data_create();
@@ -253,7 +289,7 @@ namespace RePlays.Recorders {
             return source;
         }
 
-        public void ResetAudio() {
+        public static void ResetAudio() {
             obs_audio_info avi = new() {
                 samples_per_sec = 44100,
                 speakers = speaker_layout.SPEAKERS_STEREO
@@ -261,7 +297,7 @@ namespace RePlays.Recorders {
             bool resetAudioCode = obs_reset_audio(ref avi);
         }
 
-        public void ResetVideo(int outputWidth = 0, int outputHeight = 0) {
+        public static void ResetVideo(int outputWidth = 0, int outputHeight = 0) {
             obs_video_info ovi = new() {
                 adapter = 0,
                 graphics_module = "libobs-d3d11",
