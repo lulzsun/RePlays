@@ -7,6 +7,7 @@ using RePlays.Utils;
 using static RePlays.Utils.Functions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
@@ -14,7 +15,9 @@ namespace RePlays.Recorders {
 
         string videoSavePath = "";
 
+        static IntPtr windowHandle;
         IntPtr output;
+
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
 
@@ -29,6 +32,8 @@ namespace RePlays.Recorders {
                 throw new Exception("error: obs already initialized");
             }
 
+            // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
+            // it will cause a System.ExecutionEngineException, something to do with illegal memory
             base_set_log_handler(new log_handler_t((lvl, msg, args, p) => {
                 try {
                     using (va_list arglist = new va_list(args)) {
@@ -40,6 +45,14 @@ namespace RePlays.Recorders {
                         // a very crude way to see if game_capture source has successfully hooked/capture application....
                         // does game_capture source provide any signals that we can alternatively use?
                         if (formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
+                            if(signalGCHookSuccess != false) {
+                                // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
+                                // if it has resized, restart output with correct size
+                                Rect windowSize = GetWindowSize(windowHandle);
+                                Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+                                //ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+                                // ... stop output and restart here?
+                            }
                             signalGCHookSuccess = true;
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
@@ -63,46 +76,18 @@ namespace RePlays.Recorders {
             obs_load_all_modules();
             obs_log_loaded_modules();
 
-            obs_audio_info avi = new() {
-                samples_per_sec = 44100,
-                speakers = speaker_layout.SPEAKERS_STEREO
-            };
-            bool resetAudioCode = obs_reset_audio(ref avi);
-
-            // Should match monitor resolution
-            int baseWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
-            int baseHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
-            // output resolution
-            int outputWidth = 1920;
-            int outputHeight = 1080;
-
-
-            obs_video_info ovi = new() {
-                adapter = 0,
-                graphics_module = "libobs-d3d11",
-                fps_num = 60,
-                fps_den = 1,
-                base_width = (uint)baseWidth,
-                base_height = (uint)baseHeight,
-                output_width = (uint)outputWidth,
-                output_height = (uint)outputHeight,
-                output_format = video_format.VIDEO_FORMAT_NV12,
-                gpu_conversion = true,
-                colorspace = video_colorspace.VIDEO_CS_DEFAULT,
-                range = video_range_type.VIDEO_RANGE_DEFAULT,
-                scale_type = obs_scale_type.OBS_SCALE_BILINEAR
-            };
-            int resetVideoCode = obs_reset_video(ref ovi);
-            if (resetVideoCode != 0) {
-                throw new Exception("error on libobs reset video: " + ((VideoResetError)resetVideoCode).ToString());
-            }
+            ResetAudio();
+            ResetVideo();
 
             obs_post_load_modules();
 
             // SETUP NEW OUTPUT
             output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
+
+            // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
+            // it will cause a System.ExecutionEngineException, something to do with illegal memory
             signal_handler_connect(obs_output_get_signal_handler(output), "stop", new signal_callback_t((data, cd) => {
-                signalOutputStop = true; // this has to be static or else it will throw an engine fail exception. something to do with illegal memory
+                signalOutputStop = true;
             }), IntPtr.Zero);
 
             base.Start();
@@ -111,17 +96,12 @@ namespace RePlays.Recorders {
             Logger.WriteLine("Successfully started LibObs!");
         }
 
-        public override void Stop() {
-            throw new System.NotImplementedException();
-        }
-
         const int retryInterval = 2000; // 2 second
         const int maxRetryAttempts = 5; // 10 seconds
         public override async Task<bool> StartRecording() {
             signalOutputStop = false;
             int retryAttempt = 0;
             var session = RecordingService.GetCurrentSession();
-            IntPtr windowHandle;
 
             // If session is empty, this is a manual record attempt. Lets try to yolo record the foregroundwindow
             if (session.Pid == 0) {
@@ -211,6 +191,11 @@ namespace RePlays.Recorders {
                 return false;
             }
 
+            // get game's window size and change output to match
+            Rect windowSize = GetWindowSize(windowHandle);
+            Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+            ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+
             // preparations complete, launch the rocket
             bool outputStartSuccess = obs_output_start(output);
             if (outputStartSuccess != true) {
@@ -220,16 +205,6 @@ namespace RePlays.Recorders {
             }
 
             return true;
-        }
-
-        public IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default") {
-            if (settings == IntPtr.Zero) {
-                settings = obs_data_create();
-                obs_data_set_string(settings, "device_id", deviceId);
-            }
-            IntPtr source = obs_source_create(id, name, settings, IntPtr.Zero);
-            obs_data_release(settings);
-            return source;
         }
 
         public override async Task<bool> StopRecording() {
@@ -266,6 +241,46 @@ namespace RePlays.Recorders {
             }
 
             return true;
+        }
+
+        public IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default") {
+            if (settings == IntPtr.Zero) {
+                settings = obs_data_create();
+                obs_data_set_string(settings, "device_id", deviceId);
+            }
+            IntPtr source = obs_source_create(id, name, settings, IntPtr.Zero);
+            obs_data_release(settings);
+            return source;
+        }
+
+        public void ResetAudio() {
+            obs_audio_info avi = new() {
+                samples_per_sec = 44100,
+                speakers = speaker_layout.SPEAKERS_STEREO
+            };
+            bool resetAudioCode = obs_reset_audio(ref avi);
+        }
+
+        public void ResetVideo(int outputWidth = 0, int outputHeight = 0) {
+            obs_video_info ovi = new() {
+                adapter = 0,
+                graphics_module = "libobs-d3d11",
+                fps_num = 60,
+                fps_den = 1,
+                base_width = (uint)(outputWidth > 0 ? outputWidth : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width),
+                base_height = (uint)(outputHeight > 0 ? outputHeight : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height),
+                output_width = (uint)(outputWidth > 0 ? outputWidth : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width),
+                output_height = (uint)(outputHeight > 0 ? outputHeight : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height),
+                output_format = video_format.VIDEO_FORMAT_NV12,
+                gpu_conversion = true,
+                colorspace = video_colorspace.VIDEO_CS_DEFAULT,
+                range = video_range_type.VIDEO_RANGE_DEFAULT,
+                scale_type = obs_scale_type.OBS_SCALE_BILINEAR
+            };
+            int resetVideoCode = obs_reset_video(ref ovi);
+            if (resetVideoCode != 0) {
+                throw new Exception("error on libobs reset video: " + ((VideoResetError)resetVideoCode).ToString());
+            }
         }
 
         public void ReleaseSources() {

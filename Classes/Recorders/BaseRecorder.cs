@@ -14,8 +14,12 @@ using System.Threading.Tasks;
 
 namespace RePlays.Recorders {
     public abstract class BaseRecorder {
-        ManagementEventWatcher pCreationWatcher = new(new EventQuery("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
-        ManagementEventWatcher pDeletionWatcher = new(new EventQuery("SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
+        readonly ManagementEventWatcher pCreationWatcher = new(new EventQuery("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
+        readonly ManagementEventWatcher pDeletionWatcher = new(new EventQuery("SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
+
+        // https://stackoverflow.com/a/14407610/8805016
+        WinEventDelegate dele = null;
+        IntPtr winActiveHook = IntPtr.Zero;
 
         public virtual void Start() {
             // watch process creation/deletion events
@@ -25,16 +29,22 @@ namespace RePlays.Recorders {
             pDeletionWatcher.Start();
 
             // watch active foreground window changes 
-            dele = new WinEventDelegate(WinEventProc);
-            SetWinEventHook(3, 3, IntPtr.Zero, dele, 0, 0, 0);
+            dele = new WinEventDelegate(WhenActiveForegroundChanges);
+            winActiveHook = SetWinEventHook(3, 3, IntPtr.Zero, dele, 0, 0, 0);
         }
 
-        public abstract void Stop();
+        public virtual void Stop() {
+            pCreationWatcher.Stop();
+            pDeletionWatcher.Stop();
+            pCreationWatcher.Dispose();
+            pDeletionWatcher.Dispose();
+
+            UnhookWinEvent(winActiveHook);
+            dele = null;
+        }
+
         public abstract Task<bool> StartRecording();
         public abstract Task<bool> StopRecording();
-
-        // https://stackoverflow.com/a/14407610/8805016
-        WinEventDelegate dele = null;
 
         public void ProcessCreation_EventArrived(object sender, EventArrivedEventArgs e) {
             if (RecordingService.IsRecording) return;
@@ -71,10 +81,13 @@ namespace RePlays.Recorders {
             e.NewEvent.Dispose();
         }
 
-        delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+        public delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
         [DllImport("user32.dll")]
         static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -99,6 +112,41 @@ namespace RePlays.Recorders {
                 Logger.WriteLine(String.Format("There was an issue retrieving the window handle for process id [{0}]: {1}", processId, e.Message));
             }
             return handle;
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetClientRect(IntPtr hwnd, ref Rect lpRect);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Rect {
+            public int Left, Top, Right, Bottom;
+
+            public Rect(int _left, int _top, int _right, int _bottom) : this() {
+                Left = _left;
+                Top = _top;
+                Right = _right;
+                Bottom = _bottom;
+            }
+
+            public int GetWidth() {
+                return this.Right - this.Left;
+            }
+
+            public int GetHeight() {
+                return this.Bottom - this.Top;
+            }
+        }
+
+        public static Rect GetWindowSize(IntPtr handle) {
+            Rect rect = new(0, 0, 0, 0);
+
+            if (!GetClientRect(handle, ref rect)) {
+                Logger.WriteLine("Issue using GetClientRect");
+                return rect;
+            }
+
+            return rect;
         }
 
         // http://www.pinvoke.net/default.aspx/user32.getclassname
@@ -151,7 +199,7 @@ namespace RePlays.Recorders {
         }
 
         // this event should occur when the active foreground changes
-        public void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
+        public void WhenActiveForegroundChanges(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
             if (RecordingService.IsRecording) return;
 
             AutoDetectGame(GetForegroundProcessId());
