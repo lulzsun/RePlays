@@ -113,7 +113,10 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
               break;
             case "high":
               settings!.resolution = 1080; settings!.frameRate = 60; settings!.bitRate = 50;
-              break;
+                  break;
+            case "ultra":
+              settings!.resolution = 1440; settings!.frameRate = 60; settings!.bitRate = 50;
+                  break;
             default:
               return;
           }
@@ -136,6 +139,11 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
           <span className="px-2 text-gray-700 dark:text-gray-400">High</span>
         </label>
         <label className="inline-flex items-center">
+            <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="high"
+                defaultChecked={(settings?.resolution === 1440 && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
+            <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
+        </label>
+        <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">Custom</span>
         </label>
@@ -148,6 +156,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
             {name: "480p", onClick: () => {settings!.resolution = 480; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "720p", onClick: () => {settings!.resolution = 720; updateSettings();}},
             {name: "1080p", onClick: () => {settings!.resolution = 1080; updateSettings();}},
+            {name: "1440p", onClick: () => {settings!.resolution = 1440; updateSettings();}},
           ]}/> 
         </div>
         <div className="flex flex-col">
