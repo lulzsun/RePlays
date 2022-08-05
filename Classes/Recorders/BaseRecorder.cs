@@ -55,7 +55,14 @@ namespace RePlays.Recorders {
                     var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
                     var cmdLine = instanceDescription.GetPropertyValue("CommandLine"); // may or may not be useful in the future
 
-                    AutoDetectGame(processId);
+                    if (executablePath != null) {
+                        if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
+                            return;                                                             // we can assume it is not a game
+                        }
+                        AutoDetectGame(processId, executablePath.ToString());
+                    }
+                    else if (processId != 0)
+                        AutoDetectGame(processId);
                 }
             }
             catch (ManagementException) { }
