@@ -23,8 +23,8 @@ namespace RePlays.Utils {
 
         public static string GetRePlaysURI() {
 #if (DEBUG)
-            //return "http://localhost:3000/#/";
-            return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
+            //return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
+            return "http://localhost:3000/#/";
 #elif (RELEASE)
             return "file://" + Application.StartupPath + "/ClientApp/build/index.html";
 #endif
@@ -168,7 +168,11 @@ namespace RePlays.Utils {
                 video.date = new FileInfo(file).CreationTime;
                 video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
+#if (DEBUG)
+                video.folder = "https://videos.replays.app/";
+#elif (RELEASE)
                 video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+#endif
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 

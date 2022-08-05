@@ -61,8 +61,7 @@ namespace RePlays.Recorders {
                         }
                         AutoDetectGame(processId, executablePath.ToString());
                     }
-                    else if (processId != 0)
-                        AutoDetectGame(processId);
+                    else if (processId != 0)AutoDetectGame(processId);
                 }
             }
             catch (ManagementException) { }

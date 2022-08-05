@@ -281,6 +281,15 @@ export const Player: React.FC<Props> = ({videos}) => {
 
   return (
     <div className="h-full flex flex-col">
+      {(!process.env.NODE_ENV || process.env.NODE_ENV === 'development') && 
+      <div className="flex flex-col gap-2 font-medium text-base pb-2">
+        <span className="font-normal text-sm">DEV ONLY NOTE: Player has issues that only occur when debugging, it works perfectly fine in production</span>
+        <span className="font-normal text-sm">see this issue for more details:
+          <a className="cursor-pointer underline pl-2" onClick={(e) => {postMessage("ShowFolder", "https://github.com/lulzsun/RePlays/issues/11")}}>https://github.com/lulzsun/RePlays/issues/11</a>
+        </span>
+      </div>
+      }
+
       <div className="relative flex w-full h-full bg-black justify-center cursor-pointer" 
         onClick={() => {
           (videoElement.current?.paused ? videoElement.current?.play() : videoElement.current?.pause())

@@ -117,12 +117,13 @@ namespace RePlays {
             webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
             webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;
 #if (DEBUG)
-            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.local", Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/public/", CoreWebView2HostResourceAccessKind.Allow);
+            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("videos.replays.app", GetPlaysFolder(), CoreWebView2HostResourceAccessKind.Allow);
+            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/public/", CoreWebView2HostResourceAccessKind.Allow);
 #elif (RELEASE)
-            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.local", Application.StartupPath + "/ClientApp/build/", CoreWebView2HostResourceAccessKind.Allow);
+            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", Application.StartupPath + "/ClientApp/build/", CoreWebView2HostResourceAccessKind.Allow);
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
-            webView2.CoreWebView2.Navigate("https://replays.local/preload.html");
+            webView2.CoreWebView2.Navigate("https://replays.app/preload.html");
         }
 
         private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {
