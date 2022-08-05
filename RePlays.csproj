@@ -11,7 +11,7 @@
 	<DebugSymbols>true</DebugSymbols>
 	<DebugType>embedded</DebugType>
 	<PublishTrimmed>true</PublishTrimmed>
-	<TrimMode>CopyUsed</TrimMode>
+	<TrimMode>Link</TrimMode>
   </PropertyGroup>
   
   <PropertyGroup>
