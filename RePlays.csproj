@@ -87,9 +87,9 @@
 
 	<!-- Include the newly-built files in the publish output -->
 	<ItemGroup>
-		<DistFiles Include="$(SpaRoot)build\**" />
-		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>%(DistFiles.Identity)</RelativePath>
+		<DistFiles1 Include="$(SpaRoot)build\**" />
+		<ResolvedFileToPublish Include="@(DistFiles1->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles1.Identity)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</ResolvedFileToPublish>
@@ -97,9 +97,9 @@
 
 	<!-- Include ffmpeg binaries in the publish output -->
 	<ItemGroup>
-		<DistFiles Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
-		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>%(DistFiles.Identity)</RelativePath>
+		<DistFiles2 Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
+		<ResolvedFileToPublish Include="@(DistFiles2->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles2.Identity)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</ResolvedFileToPublish>
@@ -107,9 +107,9 @@
 
 	<!-- Include 7zip binaries in the publish output -->
 	<ItemGroup>
-		<DistFiles Include="$(SpaRoot)node_modules\7zip-bin\**" />
-		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>%(DistFiles.Identity)</RelativePath>
+		<DistFiles3 Include="$(SpaRoot)node_modules\7zip-bin\**" />
+		<ResolvedFileToPublish Include="@(DistFiles3->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles3.Identity)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</ResolvedFileToPublish>
@@ -117,8 +117,8 @@
 
 	<!-- Include WebView2 online installer in the publish output -->
 	<ItemGroup>
-		<DistFiles Include="$(SolutionDir)Resources\runtimes\**" />
-		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+		<DistFiles4 Include="$(SolutionDir)Resources\runtimes\**" />
+		<ResolvedFileToPublish Include="@(DistFiles4->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
 			<RelativePath>runtimes\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
@@ -127,8 +127,8 @@
 
 	<!-- Include libobs in the publish output -->
 	<ItemGroup>
-		<DistFiles Include="$(SolutionDir)obs-studio-build\build\win64\bin\64bit\**" />
-		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+		<DistFiles5 Include="$(SolutionDir)obs-studio-build\build\win64\bin\64bit\**" />
+		<ResolvedFileToPublish Include="@(DistFiles5->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
 			<RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
