@@ -28,12 +28,19 @@
     <!-- Don't publish the SPA source files, but do show them in the project files list -->
     <Content Remove="$(SpaRoot)**" />
     <None Remove="$(SpaRoot)**" />
+    <None Remove="ClientApp\build\**" />
+    <None Remove="obs-studio-build\**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
   
   <ItemGroup>
     <None Remove="Classes\Recorders\LibObs\LICENSE" />
     <None Remove="Classes\Recorders\PlaysLTC\LICENSE" />
+    <None Remove="ClientApp\build\**" />
+    <Compile Remove="ClientApp\build\**" />
+    <Compile Remove="obs-studio-build\**" />
+    <EmbeddedResource Remove="ClientApp\build\**" />
+    <EmbeddedResource Remove="obs-studio-build\**" />
   </ItemGroup>
   
   <ItemGroup>
@@ -78,35 +85,35 @@
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
 
-	  <!-- Include the newly-built files in the publish output -->
-	  <ItemGroup>
-		  <DistFiles Include="$(SpaRoot)build\**" />
-		  <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			  <RelativePath>%(DistFiles.Identity)</RelativePath>
-			  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		  </ResolvedFileToPublish>
-	  </ItemGroup>
+	<!-- Include the newly-built files in the publish output -->
+	<ItemGroup>
+		<DistFiles Include="$(SpaRoot)build\**" />
+		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles.Identity)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
 
-	  <!-- Include ffmpeg binaries in the publish output -->
-	  <ItemGroup>
-		  <DistFiles Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
-		  <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			  <RelativePath>%(DistFiles.Identity)</RelativePath>
-			  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		  </ResolvedFileToPublish>
-	  </ItemGroup>
+	<!-- Include ffmpeg binaries in the publish output -->
+	<ItemGroup>
+		<DistFiles Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
+		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles.Identity)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
 
-	  <!-- Include 7zip binaries in the publish output -->
-	  <ItemGroup>
-		  <DistFiles Include="$(SpaRoot)node_modules\7zip-bin\**" />
-		  <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			  <RelativePath>%(DistFiles.Identity)</RelativePath>
-			  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		  </ResolvedFileToPublish>
-	  </ItemGroup>
+	<!-- Include 7zip binaries in the publish output -->
+	<ItemGroup>
+		<DistFiles Include="$(SpaRoot)node_modules\7zip-bin\**" />
+		<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles.Identity)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
 
 	<!-- Include WebView2 online installer in the publish output -->
 	<ItemGroup>
