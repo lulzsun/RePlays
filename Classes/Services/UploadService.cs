@@ -11,7 +11,7 @@ namespace RePlays.Services {
                 BaseUploader uploader = (BaseUploader)Activator.CreateInstance("RePlays", $"RePlays.Uploaders.{destination}Uploader").Unwrap();
                 string url = await uploader.Upload(uploadId, title, file);
                 if (url == null) return;
-                SettingsService.Settings.uploadSettings.recentLinks.Add($"[{DateTime.UtcNow.ToShortTimeString()}] " + url);
+                SettingsService.Settings.uploadSettings.recentLinks.Add($"[{DateTime.Now.ToShortTimeString()}] " + url);
                 if (SettingsService.Settings.uploadSettings.recentLinks.Count > 10)
                     SettingsService.Settings.uploadSettings.recentLinks.RemoveAt(0);
                 SettingsService.SaveSettings();
