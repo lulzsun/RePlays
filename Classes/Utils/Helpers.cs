@@ -217,6 +217,7 @@ namespace RePlays.Utils {
             catch (Exception) {
                 // if exception happens, usually means video is not valid
                 Logger.WriteLine(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+                duration = 0;
             }
             process.WaitForExit();
             process.Close();
@@ -231,21 +232,35 @@ namespace RePlays.Utils {
             if (File.Exists(thumbnailPath)) return thumbnailPath;
             if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
+            var duration = GetVideoDuration(videoPath);
+            if (duration == 0) {
+                Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: duration of video is 0, corrupted video?");
+                return thumbnailPath;
+            }
+
             var startInfo = new ProcessStartInfo {
                 CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
-                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", GetVideoDuration(videoPath) / 2, videoPath, thumbnailPath),
+                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", duration / 2, videoPath, thumbnailPath),
             };
 
             var process = new Process {
                 StartInfo = startInfo
             };
             process.Start();
+            var details = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
+
+            if (!File.Exists(thumbnailPath)) {
+                Logger.WriteLine(startInfo.Arguments);
+                Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: {details}");
+            }
+            else Logger.WriteLine($"Created new thumbnail: {thumbnailPath}");
+
             process.WaitForExit();
             process.Close();
-
-            Logger.WriteLine(string.Format("Created new thumbnail: {0}", thumbnailPath));
 
             return thumbnailPath;
         }
