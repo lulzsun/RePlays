@@ -113,10 +113,10 @@ namespace RePlays.Recorders {
             // attempt to retrieve process's window handle to retrieve class name and window title
             windowHandle = GetWindowHandleByProcessId(session.Pid);
             while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
-                await Task.Delay(retryInterval);
-                windowHandle = GetWindowHandleByProcessId(session.Pid);
-                retryAttempt++;
                 Logger.WriteLine(string.Format("Waiting to retrieve process handle... retry attempt #{0}", retryAttempt));
+                await Task.Delay(retryInterval);
+                retryAttempt++;
+                windowHandle = GetWindowHandleByProcessId(session.Pid);
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
@@ -178,20 +178,36 @@ namespace RePlays.Recorders {
             // attempt to wait for game_capture source to hook first
             // this might take longer, so multiply maxRetryAttempts
             while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts * 3) {
+                Logger.WriteLine(string.Format("Waiting for successful graphics hook for [{0}]... retry attempt #{1}", windowClassNameId, retryAttempt));
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                Logger.WriteLine(string.Format("Waiting for successful graphics hook for [{0}]... retry attempt #{1}", windowClassNameId, retryAttempt));
             }
             if (retryAttempt >= maxRetryAttempts * 3) {
                 ReleaseSources();
                 ReleaseEncoders();
                 return false;
             }
+            retryAttempt = 0;
 
             // get game's window size and change output to match
             Rect windowSize = GetWindowSize(windowHandle);
-            Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
-            ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+            // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension
+            // this is a quick a dirty check: if there aren't more than 1120 pixels, we can assume it needs a retry
+            while (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt < maxRetryAttempts) {
+                Logger.WriteLine(string.Format("Waiting to retrieve correct window size (currently {1}x{2})... retry attempt #{0}",
+                    retryAttempt, windowSize.GetWidth(), windowSize.GetHeight()));
+                await Task.Delay(retryInterval);
+                retryAttempt++;
+                windowSize = GetWindowSize(windowHandle);
+            }
+            if (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt >= maxRetryAttempts) {
+                Logger.WriteLine(String.Format("Possible issue in getting correct window size {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+                ResetVideo();
+            }
+            else {
+                Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+                ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+            }
 
             // preparations complete, launch the rocket
             bool outputStartSuccess = obs_output_start(output);
@@ -213,9 +229,9 @@ namespace RePlays.Recorders {
             // attempt to check if output signalled stop
             int retryAttempt = 0;
             while (signalOutputStop == false && retryAttempt < maxRetryAttempts) {
+                Logger.WriteLine(string.Format("Waiting for obs_output to stop... retry attempt #{0}", retryAttempt));
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                Logger.WriteLine(string.Format("Waiting for obs_output to stop... retry attempt #{0}", retryAttempt));
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
@@ -246,14 +262,15 @@ namespace RePlays.Recorders {
             // attempt to check if output signalled stop
             int retryAttempt = 0;
             while (signalOutputStop == false && retryAttempt < maxRetryAttempts) {
+                Logger.WriteLine(string.Format("Waiting for obs_output to stop... retry attempt #{0}", retryAttempt));
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                Logger.WriteLine(string.Format("Waiting for obs_output to stop... retry attempt #{0}", retryAttempt));
             }
-            if (retryAttempt >= maxRetryAttempts) {
+            if (signalOutputStop == false && retryAttempt >= maxRetryAttempts) {
                 Logger.WriteLine("Issue trying to stop output, giving up.");
                 return;
             }
+            retryAttempt = 0;
 
             videoSavePath = Path.Join(Path.GetDirectoryName(videoSavePath), DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-ses.mp4");
 
@@ -265,8 +282,23 @@ namespace RePlays.Recorders {
 
             // get game's window size and change output to match
             Rect windowSize = GetWindowSize(windowHandle);
-            Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
-            ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+            // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension
+            // this is a quick a dirty check: if there aren't more than 1120 pixels, we can assume it needs a retry
+            while (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt < maxRetryAttempts) {
+                Logger.WriteLine(string.Format("Waiting to retrieve correct window size (currently {1}x{2})... retry attempt #{0}",
+                    retryAttempt, windowSize.GetWidth(), windowSize.GetHeight()));
+                await Task.Delay(retryInterval);
+                retryAttempt++;
+                windowSize = GetWindowSize(windowHandle);
+            }
+            if (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt >= maxRetryAttempts) {
+                Logger.WriteLine(String.Format("Possible issue in getting correct window size {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+                ResetVideo();
+            }
+            else {
+                Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+                ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+            }
 
             // preparations complete, launch the rocket
             bool outputStartSuccess = obs_output_start(output);
