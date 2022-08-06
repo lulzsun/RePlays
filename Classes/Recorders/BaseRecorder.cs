@@ -109,6 +109,17 @@ namespace RePlays.Recorders {
             return processId;
         }
 
+        public IntPtr LazyGetWindowHandleByProcessId(int processId) {
+            IntPtr handle = IntPtr.Zero;
+            try {
+                handle = Process.GetProcessById(processId).MainWindowHandle;
+            }
+            catch (Exception e) {
+                Logger.WriteLine(String.Format("There was an issue retrieving the window handle for process id [{0}]: {1}", processId, e.Message));
+            }
+            return handle;
+        }
+
         public IntPtr GetWindowHandleByProcessId(int processId) {
             IntPtr handle = IntPtr.Zero;
             try {

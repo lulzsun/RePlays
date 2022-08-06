@@ -111,12 +111,15 @@ namespace RePlays.Recorders {
             }
 
             // attempt to retrieve process's window handle to retrieve class name and window title
-            windowHandle = GetWindowHandleByProcessId(session.Pid);
+            windowHandle = LazyGetWindowHandleByProcessId(session.Pid);
             while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
                 Logger.WriteLine(string.Format("Waiting to retrieve process handle... retry attempt #{0}", retryAttempt));
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                windowHandle = GetWindowHandleByProcessId(session.Pid);
+                if(retryAttempt % 2 == 1) // alternate, one or the other might get us a better handle
+                    windowHandle = GetWindowHandleByProcessId(session.Pid);
+                else
+                    LazyGetWindowHandleByProcessId(session.Pid);
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
