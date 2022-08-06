@@ -13,7 +13,7 @@ namespace RePlays.Services {
             double percentOfUsedDisk = (dInfo.TotalSize - dInfo.TotalFreeSpace) / (double)dInfo.TotalSize * 100;
             double folderSizeGb = DirectorySize(new DirectoryInfo(folderPath)) / 1024f / 1024f / 1024f;
 
-            Logger.WriteLine(string.Format("VideoSaveDir size is {0} gbs", folderSizeGb));
+            Logger.WriteLine(string.Format("VideoSaveDir '{0}' size is {1} gbs", folderPath, folderSizeGb));
 
             if(SettingsService.Settings.advancedSettings.manageSpaceLimit == -1 || SettingsService.Settings.advancedSettings.manageTimeLimit == -1) {
                 Logger.WriteLine($"Automatically managing space if exceeds 90% of folder's disk. Currently at {percentOfUsedDisk}%");
