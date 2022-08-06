@@ -47,9 +47,9 @@ namespace RePlays {
         }
 
         private void RefreshLoader() {
-            pictureBox1.Size = new Size(pictureBox1.Image.Width, pictureBox1.Image.Height);
-            pictureBox1.Location = new Point((pictureBox1.Parent.ClientSize.Width / 2) - (pictureBox1.Image.Width / 2),
-                                            (pictureBox1.Parent.ClientSize.Height / 2) - (pictureBox1.Image.Height / 2));
+            pictureBox1.Size = new Size(128,128);
+            pictureBox1.Location = new Point((this.Size.Width / 2) - (pictureBox1.Size.Width / 2),
+                                            (this.Size.Height / 2) - (pictureBox1.Size.Height / 2));
             pictureBox1.Refresh();
         }
 
