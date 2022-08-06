@@ -216,6 +216,7 @@ namespace RePlays.Recorders {
             bool outputStartSuccess = obs_output_start(output);
             if (outputStartSuccess != true) {
                 Logger.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
+                return false;
             } else {
                 Logger.WriteLine(string.Format("LibObs started recording [{0}] [{1}] [{2}]", session.Pid, session.GameTitle, windowClassNameId));
             }
