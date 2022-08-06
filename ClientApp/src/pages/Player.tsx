@@ -5,6 +5,7 @@ import { SyntheticEvent, useContext, useEffect, useRef, useState } from 'react';
 import { ContextMenuContext, ModalContext } from '../App';
 import { postMessage } from '../helpers/messenger';
 import UploadModal from './UploadModal';
+import Bookmark from '../components/Bookmark';
 
 interface Props {
   videos: Video[];
@@ -30,11 +31,13 @@ export const Player: React.FC<Props> = ({videos}) => {
   const targetSeekElement = useRef<HTMLDivElement>(null);
   
   const [clips, setClips] = useState<Clip[]>([]);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [currentZoom, setZoom] = useState(0);
   const [currentPlaybackRate, setPlaybackRate] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackClips, setPlaybackClips] = useState(-1);
   const clipsRef = useRef<HTMLDivElement[]>([]);
+  const bookmarksRef = useRef<HTMLDivElement[]>([]);
 
   const contextMenuCtx = useContext(ContextMenuContext);
   const modalCtx = useContext(ModalContext);
@@ -217,7 +220,18 @@ export const Player: React.FC<Props> = ({videos}) => {
         videoElement.current.pause();
       }
     }
-  }
+    }
+
+    function handleAddBookmark() {
+        if (seekWindowElement.current && seekBarElement.current) {
+            let time = currentTime / videoElement.current!.duration * 100;
+            let newBookmarks = bookmarks.slice();
+
+            if (videoElement.current)
+                newBookmarks.push({ id: Date.now(), time: time}); // 10 seconds
+            setBookmarks(newBookmarks);
+        }
+    }
 
   function handleVideoLoad(e: SyntheticEvent) {
     let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
@@ -314,6 +328,10 @@ export const Player: React.FC<Props> = ({videos}) => {
             <div ref={seekBarElement} style={{ width: '6px', left: '-3px'}} className="z-30 absolute bg-red-500 rounded-lg h-full cursor-ew-resize"/>
             {clips && clips.map((clip, i) => {
               return <Clip key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} start={clip.start} duration={clip.duration}/>
+            })}
+
+            {bookmarks && bookmarks.map((clip, i) => {
+                return <Bookmark key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} time={clip.time} />
             })}
           </div>
           <div ref={targetSeekElement} style={{ height: 'calc(100%)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>
@@ -426,7 +444,7 @@ export const Player: React.FC<Props> = ({videos}) => {
                 </svg>
             </button> :
             <button title="Clip" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
-              type="button" onClick={() => handleAddClip()}>
+              type="button" onClick={() => handleAddBookmark()}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
                   <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
                 </svg>
