@@ -113,10 +113,10 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
               break;
             case "high":
               settings!.resolution = 1080; settings!.frameRate = 60; settings!.bitRate = 50;
-                  break;
+              break;
             case "ultra":
               settings!.resolution = 1440; settings!.frameRate = 60; settings!.bitRate = 50;
-                  break;
+              break;
             default:
               return;
           }
@@ -139,7 +139,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
           <span className="px-2 text-gray-700 dark:text-gray-400">High</span>
         </label>
         <label className="inline-flex items-center">
-            <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="high"
+            <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
                 defaultChecked={(settings?.resolution === 1440 && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
             <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
         </label>
