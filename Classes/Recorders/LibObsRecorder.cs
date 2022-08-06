@@ -119,7 +119,7 @@ namespace RePlays.Recorders {
                 if(retryAttempt % 2 == 1) // alternate, one or the other might get us a better handle
                     windowHandle = GetWindowHandleByProcessId(session.Pid);
                 else
-                    LazyGetWindowHandleByProcessId(session.Pid);
+                    windowHandle = LazyGetWindowHandleByProcessId(session.Pid);
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
