@@ -39,6 +39,7 @@ namespace RePlays {
                 CenterToScreen();
                 this.WindowState = FormWindowState.Minimized;
                 this.ShowInTaskbar = false;
+                label1.Visible = false;
                 firstTime = false;
             }
             else {
