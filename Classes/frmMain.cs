@@ -164,6 +164,7 @@ namespace RePlays {
                 this.WindowState = FormWindowState.Minimized;
                 this.FormBorderStyle = FormBorderStyle.None;
                 this.ShowInTaskbar = false;
+                label1.Visible = false;
                 DisposeWebView2();
             }
         }
