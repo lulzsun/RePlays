@@ -135,19 +135,19 @@ namespace RePlays.Utils {
         }
 
         public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
-            var allfiles = (dynamic)null;
+            List<string> allfiles = new();
             switch (SortBy) {
                 case "Latest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).CreationTime);
+                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).CreationTime));
                     break;
                 case "Oldest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).CreationTime);
+                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).CreationTime));
                     break;
                 case "Smallest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).Length);
+                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).Length));
                     break;
                 case "Largest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).Length);
+                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).Length));
                     break;
                 default:
                     return null;
@@ -159,6 +159,8 @@ namespace RePlays.Utils {
             videoList.sortBy = SortBy;
             videoList.sessions = new();
             videoList.clips = new();
+
+            Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
 
             foreach (string file in allfiles) {
                 if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-man.mp4") || file.EndsWith("-clp.mp4")) || !File.Exists(file)) continue;
@@ -191,6 +193,7 @@ namespace RePlays.Utils {
                     videoList.clipsSize += video.size;
                 }
             }
+            Logger.WriteLine($"Parsed '{videoList.sessions.Count + videoList.clips.Count}' video files. Sessions: {videoList.sessions.Count}, Clips: {videoList.clips.Count}.");
 
             videoList.games.Sort();
 
