@@ -24,6 +24,9 @@ namespace RePlays {
                 Logger.IsConsole = true;
                 AttachConsole(ATTACH_PARENT_PROCESS);
             }
+            else {
+                Logger.Purge();
+            }
 
             // log all exceptions
             AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) => {

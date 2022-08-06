@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace RePlays.Utils {
@@ -16,8 +17,25 @@ namespace RePlays.Utils {
             }
             else {
                 lock (thisLock) {
-                    File.AppendAllText(Path.Join(Functions.GetCfgFolder(), @"\logs.txt"), logLine + Environment.NewLine);
+                    string logFile = Path.Join(Functions.GetCfgFolder(), @"\logs.txt");
+                    File.AppendAllText(logFile, logLine + Environment.NewLine);
                 }
+            }
+        }
+
+        public static void Purge() {
+            try {
+                string logFile = Path.Join(Functions.GetCfgFolder(), @"\logs.txt");
+                var logFileContents = File.ReadAllLines(logFile);
+
+                if (logFileContents.Length > 2000) {
+                    var newLogs = File.ReadAllLines(logFile).Skip(logFileContents.Length / 2).ToList();
+                    newLogs.Insert(0, "--- Purged Logs ---");
+                    File.WriteAllLines(logFile, newLogs.ToArray());
+                }
+            }
+            catch (Exception e) {
+                WriteLine($"Failed to purge logs file, reason: {e.Message}");
             }
         }
     }
