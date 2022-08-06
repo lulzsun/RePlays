@@ -247,7 +247,8 @@ namespace RePlays.Utils {
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
-                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", duration / 2, videoPath, thumbnailPath),
+                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", 
+                    (duration / 2).ToString(CultureInfo.InvariantCulture), videoPath, thumbnailPath),
             };
 
             var process = new Process {
