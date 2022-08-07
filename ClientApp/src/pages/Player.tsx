@@ -90,7 +90,29 @@ export const Player: React.FC<Props> = ({videos}) => {
         else if(e.button === 2) { // context menu / Delete Clip
           handleDeleteClip(e, index);
         }
-      }
+        }
+
+       // bookmarks handling
+       if (bookmarksRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) {
+           let index = bookmarksRef.current?.indexOf(element.parentElement as HTMLDivElement);
+           if (e.button === 0) { // clip reposition
+               clipDragging = index;
+               clipDragOffset = e.clientX - bookmarksRef.current[clipDragging]?.getBoundingClientRect().left;
+           }
+           else if (e.button === 2) { // context menu / Delete Bookmark
+               handleDeleteBookmark(e, index);
+           }
+       } else { // bookmark resizing
+           let index = bookmarksRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
+           if (e.button === 0) { // bookmark reposition
+               clipDragging = index;
+               clipResizeDir = (element.parentElement)?.getAttribute('data-side')!;
+               clipResizeLimit = bookmarksRef.current[clipDragging]?.clientWidth + bookmarksRef.current[clipDragging]?.offsetLeft;
+           }
+           else if (e.button === 2) { // context menu / Delete Bookmark
+               handleDeleteBookmark(e, index);
+           }
+       }
     }
   
     function handleOnMouseMove(e: MouseEvent) {
@@ -195,7 +217,7 @@ export const Player: React.FC<Props> = ({videos}) => {
       localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
     }}]);
     contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
-  }
+    }
 
   function handleSaveClips() {
     let convertedClips: any[] = [];
@@ -231,6 +253,22 @@ export const Player: React.FC<Props> = ({videos}) => {
                 newBookmarks.push({ id: Date.now(), time: time}); // 10 seconds
             setBookmarks(newBookmarks);
         }
+    }
+
+    function handleDeleteBookmark(e: MouseEvent, index: number) {
+        contextMenuCtx?.setItems([{
+            name: 'Delete', onClick: () => {
+                let newBookmarks = bookmarks.slice();
+                if (videoElement.current)
+                    newBookmarks.splice(index, 1);
+                setBookmarks(newBookmarks);
+
+                let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+                videoMetadata[`/${game}/${video}`] = { bookmarks: newBookmarks };
+                localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
+            }
+        }]);
+        contextMenuCtx?.setPosition({ x: e.pageX, y: e.pageY });
     }
 
   function handleVideoLoad(e: SyntheticEvent) {
@@ -330,8 +368,8 @@ export const Player: React.FC<Props> = ({videos}) => {
               return <Clip key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} start={clip.start} duration={clip.duration}/>
             })}
 
-            {bookmarks && bookmarks.map((clip, i) => {
-                return <Bookmark key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} time={clip.time} />
+            {bookmarks && bookmarks.map((bookmark, i) => {
+                return <Bookmark key={bookmark.id} ref={e => bookmarksRef.current[i] = e!} id={bookmark.id} time={bookmark.time} />
             })}
           </div>
           <div ref={targetSeekElement} style={{ height: 'calc(100%)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>
@@ -443,12 +481,20 @@ export const Player: React.FC<Props> = ({videos}) => {
                   <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
                 </svg>
             </button> :
-            <button title="Clip" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
-              type="button" onClick={() => handleAddBookmark()}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
-                  <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
-                </svg>
-            </button>
+            <div>
+                <button title="Bookmark" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
+                  type="button" onClick={() => handleAddBookmark()}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
+                        <path d="M 23 27 L 15 20 L 7 27 L 7 5 C 7 3.894531 7.894531 3 9 3 L 21 3 C 22.105469 3 23 3.894531 23 5 Z M 23 27 "/>
+                    </svg>
+                </button>
+                <button title="Clip" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
+                  type="button" onClick={() => handleAddClip()}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
+                      <path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61 3.5 3.5zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0zm7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
+                    </svg>
+                </button>
+            </div>
             )}
             <span title="Zoom Out" className="text-center cursor-pointer -mt-0.5 mb-0.5 inline-block align-middle w-12 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 active:bg-gray-50 active:text-gray-800"
               onClick={() => {if (currentZoom-1 > -1) setZoom(currentZoom-1);}}>
