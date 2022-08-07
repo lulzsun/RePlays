@@ -104,7 +104,8 @@ function App() {
   
   useEffect(() => {
     if(document.querySelector('initialized') === null) {
-      if(localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{}');
+        if (localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{}');
+        if (localStorage.getItem("videoMetadataBookmarks") === null) localStorage.setItem("videoMetadataBookmarks", '{}');
 
       postMessage('Initialize');
       postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
