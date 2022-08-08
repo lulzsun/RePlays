@@ -5,6 +5,8 @@ import { SyntheticEvent, useContext, useEffect, useRef, useState } from 'react';
 import { ContextMenuContext, ModalContext } from '../App';
 import { postMessage } from '../helpers/messenger';
 import UploadModal from './UploadModal';
+import Bookmark from '../components/Bookmark';
+import { Console } from 'console';
 
 interface Props {
   videos: Video[];
@@ -30,11 +32,13 @@ export const Player: React.FC<Props> = ({videos}) => {
   const targetSeekElement = useRef<HTMLDivElement>(null);
   
   const [clips, setClips] = useState<Clip[]>([]);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [currentZoom, setZoom] = useState(0);
   const [currentPlaybackRate, setPlaybackRate] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackClips, setPlaybackClips] = useState(-1);
   const clipsRef = useRef<HTMLDivElement[]>([]);
+  const bookmarksRef = useRef<HTMLDivElement[]>([]);
 
   const contextMenuCtx = useContext(ContextMenuContext);
   const modalCtx = useContext(ModalContext);
@@ -66,28 +70,38 @@ export const Player: React.FC<Props> = ({videos}) => {
           }
         }
       }
-  
-      // clips handling
+
+      //Clips and Bookmarks handling
       if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) {
-        let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
+          let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
         if(e.button === 0) { // clip reposition
           clipDragging = index;
           clipDragOffset = e.clientX - clipsRef.current[clipDragging]?.getBoundingClientRect().left;
         }
-        else if(e.button === 2) { // context menu / Delete Clip
-          handleDeleteClip(e, index);
-        }
-      } else { // clip resizing
-        let index = clipsRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
-        if(e.button === 0) { // clip reposition
-          clipDragging = index;
-          clipResizeDir = (element.parentElement)?.getAttribute('data-side')!;
-          clipResizeLimit = clipsRef.current[clipDragging]?.clientWidth + clipsRef.current[clipDragging]?.offsetLeft;
-        }
-        else if(e.button === 2) { // context menu / Delete Clip
-          handleDeleteClip(e, index);
+        else if (e.button === 2) { // context menu / Delete Clip
+            if(index != -1)
+                handleDeleteClip(e, index);
         }
       }
+      else if (bookmarksRef.current?.indexOf(element as HTMLDivElement) !== -1) { // Bookmark deleting
+          let index = bookmarksRef.current?.indexOf(element as HTMLDivElement);
+          if (e.button === 2) { // context menu / Delete Bookmark
+              if (index != -1)
+                  handleDeleteBookmark(e, index);
+          }
+      }
+      else { // clip resizing
+            let index = clipsRef.current?.indexOf((element.parentElement)?.parentElement as HTMLDivElement);
+            if(e.button === 0) { // clip reposition
+              clipDragging = index;
+              clipResizeDir = (element.parentElement)?.getAttribute('data-side')!;
+              clipResizeLimit = clipsRef.current[clipDragging]?.clientWidth + clipsRef.current[clipDragging]?.offsetLeft;
+            }
+            else if(e.button === 2) { // context menu / Delete Clip
+                if (index != -1)
+                    handleDeleteClip(e, index);
+            }
+        }
     }
   
     function handleOnMouseMove(e: MouseEvent) {
@@ -138,6 +152,12 @@ export const Player: React.FC<Props> = ({videos}) => {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
       videoMetadata[`/${game}/${video}`] = {clips};
       localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
+    }
+
+    if (bookmarks.length !== 0) {
+      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+      videoMetadata[`/${game}/${video}`] = { bookmarks };
+      localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
     }
 
     return () => {
@@ -192,7 +212,7 @@ export const Player: React.FC<Props> = ({videos}) => {
       localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
     }}]);
     contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
-  }
+    }
 
   function handleSaveClips() {
     let convertedClips: any[] = [];
@@ -219,16 +239,53 @@ export const Player: React.FC<Props> = ({videos}) => {
     }
   }
 
-  function handleVideoLoad(e: SyntheticEvent) {
-    let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+    function handleAddBookmark() {
+        if (seekWindowElement.current && seekBarElement.current) {
+            let time = currentTime / videoElement.current!.duration * 100;
+            let newBookmarks = bookmarks.slice();
 
-    console.log((e));
+            if (videoElement.current)
+                newBookmarks.push({ id: Date.now(), time: time}); // 10 seconds
+            setBookmarks(newBookmarks);
+
+            let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+            videoMetadata[`/${game}/${video}`] = { bookmarks: newBookmarks };
+            localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
+        }
+    }
+
+    function handleDeleteBookmark(e: MouseEvent, index: number) {
+        contextMenuCtx?.setItems([{
+            name: 'Delete', onClick: () => {
+                let newBookmarks = bookmarks.slice();
+                if (videoElement.current)
+                    newBookmarks.splice(index, 1);
+                setBookmarks(newBookmarks);
+  
+                let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+                videoMetadata[`/${game}/${video}`] = { bookmarks: newBookmarks };
+                localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
+            }
+        }]);
+        contextMenuCtx?.setPosition({ x: e.pageX, y: e.pageY });
+    }
+
+  function handleVideoLoad(e: SyntheticEvent) {
+      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+      let videoMetadataBookmarks = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+
+      console.log((e));
+      console.log(videoMetadata[`/${game}/${video}`]);
+      console.log(videoMetadataBookmarks[`/${game}/${video}`]);
     if(videoElement.current && volumeSliderElement.current) {
       videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
       videoElement.current.play();
     }
     if(videoMetadata[`/${game}/${video}`])
-      setClips(videoMetadata[`/${game}/${video}`].clips);
+          setClips(videoMetadata[`/${game}/${video}`].clips);
+
+    if(videoMetadataBookmarks[`/${game}/${video}`])
+        setBookmarks(videoMetadataBookmarks[`/${game}/${video}`].bookmarks);
   }
 
   function handleVideoPlaying(e: SyntheticEvent) {
@@ -314,6 +371,10 @@ export const Player: React.FC<Props> = ({videos}) => {
             <div ref={seekBarElement} style={{ width: '6px', left: '-3px'}} className="z-30 absolute bg-red-500 rounded-lg h-full cursor-ew-resize"/>
             {clips && clips.map((clip, i) => {
               return <Clip key={clip.id} ref={e => clipsRef.current[i] = e!} id={clip.id} start={clip.start} duration={clip.duration}/>
+            })}
+
+            {bookmarks && bookmarks.map((bookmark, i) => {
+                return <Bookmark key={bookmark.id} ref={e => bookmarksRef.current[i] = e!} id={bookmark.id} time={bookmark.time} />
             })}
           </div>
           <div ref={targetSeekElement} style={{ height: 'calc(100%)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>
@@ -417,6 +478,13 @@ export const Player: React.FC<Props> = ({videos}) => {
 
         <div className="flex justify-end">
           <div className="border-2 rounded-b-lg">
+            <button title="Bookmark" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800"
+                type="button" onClick={() => handleAddBookmark()}>
+                  <svg width="16px" height="16px" viewBox="0 0 24 24" id="magicoon-Filled" xmlns="http://www.w3.org/2000/svg"><defs></defs><title>bookmark</title><g id="bookmark-Filled">
+                      <path id="bookmark-Filled-2" data-name="bookmark-Filled" d="M19.5,7V20a1.5,1.5,0,0,1-2.354,1.233l-4.863-3.367a.5.5,0,0,0-.57,0L6.854,21.231A1.5,1.5,0,0,1,4.5,20V7A4.505,4.505,0,0,1,9,2.5h6A4.505,4.505,0,0,1,19.5,7Z" /></g>
+                  </svg>
+            </button>
+
             {(videoType === "Clips" ? 
             <button title="Upload" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-white transition duration-150 ease-in-out bg-blue-400 hover:bg-blue-300 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
               type="button" onClick={() => handleUpload()}>
@@ -424,7 +492,8 @@ export const Player: React.FC<Props> = ({videos}) => {
                   <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
                   <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
                 </svg>
-            </button> :
+            </button>
+            :
             <button title="Clip" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800" 
               type="button" onClick={() => handleAddClip()}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="align-bottom inline" viewBox="0 0 16 16">
