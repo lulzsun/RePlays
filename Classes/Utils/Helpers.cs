@@ -204,6 +204,7 @@ namespace RePlays.Utils {
             var startInfo = new ProcessStartInfo {
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 FileName = Path.Join(GetFFmpegFolder(), "ffprobe.exe"),
                 Arguments = string.Format("-i \"{0}\" -show_entries format=duration -v quiet -of csv=\"p = 0\"", videoPath),
@@ -213,13 +214,18 @@ namespace RePlays.Utils {
                 StartInfo = startInfo
             };
             process.Start();
-            double duration = 0;
+            string stdout = "", stderr = "";
+            double duration;
             try {
-                duration = Convert.ToDouble(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+                stdout = process.StandardOutput.ReadToEnd();
+                stderr = process.StandardError.ReadToEnd();
+                duration = Convert.ToDouble(stdout);
             }
-            catch (Exception) {
-                // if exception happens, usually means video is not valid
-                Logger.WriteLine(process.StandardOutput.ReadToEnd().Replace("\r\n", ""));
+            catch (Exception e) {
+                // if exception happens, usually means video is not valid?
+                Logger.WriteLine($"Issue retrieving duration of video? exception: '{e.Message}'");
+                Logger.WriteLine($"arguments: {startInfo.Arguments}");
+                Logger.WriteLine($"reason: {stdout+stderr}");
                 duration = 0;
             }
             process.WaitForExit();
