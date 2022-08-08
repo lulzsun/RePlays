@@ -39,7 +39,11 @@ declare global {
     id: number,
     start: number,
     duration: number,
-  }
+    }
+  interface Bookmark {
+    id: number,
+    time: number,
+    }
   interface ContextMenuOptions {
     setItems: (items: ContextMenuItem[]) => any,
     setPosition: (position: ContextMenuPosition) => any,
