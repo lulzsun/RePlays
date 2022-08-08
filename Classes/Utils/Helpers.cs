@@ -219,7 +219,7 @@ namespace RePlays.Utils {
             try {
                 stdout = process.StandardOutput.ReadToEnd();
                 stderr = process.StandardError.ReadToEnd();
-                duration = Convert.ToDouble(stdout);
+                duration = double.Parse(stdout, CultureInfo.InvariantCulture);
             }
             catch (Exception e) {
                 // if exception happens, usually means video is not valid?
