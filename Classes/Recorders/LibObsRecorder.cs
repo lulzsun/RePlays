@@ -47,7 +47,7 @@ namespace RePlays.Recorders {
                         // a very crude way to see if game_capture source has successfully hooked/capture application....
                         // does game_capture source provide any signals that we can alternatively use?
                         if (formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
-                            if(signalGCHookSuccess != false) {
+                            if(signalGCHookSuccess != false && RecordingService.IsRecording) {
                                 // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
                                 // if it has resized, restart output with correct size
                                 RestartOutput();
