@@ -269,6 +269,8 @@ namespace RePlays.Recorders {
         }
 
         public static async void RestartOutput() {
+            if (output == IntPtr.Zero) return;
+
             // Stop output
             obs_output_stop(output);
             // attempt to check if output signalled stop
@@ -393,6 +395,7 @@ namespace RePlays.Recorders {
         public void ReleaseOutput() {
             signal_handler_disconnect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
             obs_output_release(output);
+            output = IntPtr.Zero;
         }
     }
 }
