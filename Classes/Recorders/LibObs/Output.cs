@@ -20,8 +20,16 @@ namespace obs_net{
         public static extern void obs_output_release(obs_output_t output);
 
         [DllImport(importLibrary, CallingConvention = importCall)]
-        [return: MarshalAs(UnmanagedType.Bool)]
+        [return: MarshalAs(UnmanagedType.I1)]
         public static extern bool obs_output_start(obs_output_t output);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool obs_output_can_begin_data_capture(obs_output_t output, uint flags);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool obs_output_initialize_encoders(obs_output_t output, uint flags);
 
         /// <summary>
         /// <para>https://obsproject.com/docs/reference-outputs.html?highlight=obs_output_stop#c.obs_output_stop</para>

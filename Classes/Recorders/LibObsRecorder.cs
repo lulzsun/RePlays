@@ -15,8 +15,8 @@ namespace RePlays.Recorders {
 
         static string videoSavePath = "";
 
-        static IntPtr windowHandle;
-        static IntPtr output;
+        static IntPtr windowHandle = IntPtr.Zero;
+        static IntPtr output = IntPtr.Zero;
 
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
@@ -93,8 +93,10 @@ namespace RePlays.Recorders {
         }
 
         const int retryInterval = 2000; // 2 second
-        const int maxRetryAttempts = 5; // 10 seconds
+        const int maxRetryAttempts = 20; // 30 retries
         public override async Task<bool> StartRecording() {
+            if (output != IntPtr.Zero) return false;
+
             signalOutputStop = false;
             int retryAttempt = 0;
             var session = RecordingService.GetCurrentSession();
@@ -105,17 +107,17 @@ namespace RePlays.Recorders {
                 // if processId is 0, there was something wrong retrieving foreground process (this shouldn't normally happen)
                 if (processId == 0)
                     return false;
-                AutoDetectGame(processId, autoRecord:false);
+                AutoDetectGame(processId, autoRecord: false);
                 session = RecordingService.GetCurrentSession();
             }
 
             // attempt to retrieve process's window handle to retrieve class name and window title
             windowHandle = LazyGetWindowHandleByProcessId(session.Pid);
-            while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts * 3) {
+            while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
                 Logger.WriteLine(string.Format("Waiting to retrieve process handle... retry attempt #{0}", retryAttempt));
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                if(retryAttempt % 2 == 1) // alternate, one or the other might get us a better handle
+                if (retryAttempt % 2 == 1) // alternate, one or the other might get us a better handle
                     windowHandle = GetWindowHandleByProcessId(session.Pid);
                 else
                     windowHandle = LazyGetWindowHandleByProcessId(session.Pid);
@@ -183,15 +185,16 @@ namespace RePlays.Recorders {
 
             // attempt to wait for game_capture source to hook first
             // this might take longer, so multiply maxRetryAttempts
-            while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts * 3) {
+            while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts) {
                 Logger.WriteLine(string.Format("Waiting for successful graphics hook for [{0}]... retry attempt #{1}", windowClassNameId, retryAttempt));
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
-            if (retryAttempt >= maxRetryAttempts * 3) {
+            if (retryAttempt >= maxRetryAttempts) {
+                Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
+                ReleaseOutput();
                 ReleaseSources();
                 ReleaseEncoders();
-                ReleaseOutput();
                 return false;
             }
             retryAttempt = 0;
@@ -216,13 +219,40 @@ namespace RePlays.Recorders {
                 ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
             }
 
+            // some quick checks on initializations before starting output
+            bool canStartCapture = obs_output_can_begin_data_capture(output, 0);
+            if (!canStartCapture) {
+                while(!obs_output_initialize_encoders(output, 0) && retryAttempt < maxRetryAttempts) {
+                    Logger.WriteLine(string.Format("Waiting for encoders to finish initializing... retry attempt #{0}", retryAttempt));
+                    await Task.Delay(retryInterval);
+                    retryAttempt++;
+                }
+                if (retryAttempt >= maxRetryAttempts) {
+                    Logger.WriteLine(string.Format("Unable to get encoders to initialize"));
+                    ReleaseOutput();
+                    ReleaseSources();
+                    ReleaseEncoders();
+                    return false;
+                }
+            }
+            retryAttempt = 0;
+
+            // another null check just incase
+            if(output == IntPtr.Zero) {
+                Logger.WriteLine("LibObs output returned null, something really went wrong (this isn't suppose to happen)...");
+                ReleaseOutput();
+                ReleaseSources();
+                ReleaseEncoders();
+                return false;
+            }
+
             // preparations complete, launch the rocket
             bool outputStartSuccess = obs_output_start(output);
             if (outputStartSuccess != true) {
                 Logger.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
+                ReleaseOutput();
                 ReleaseSources();
                 ReleaseEncoders();
-                ReleaseOutput();
                 return false;
             } else {
                 Logger.WriteLine(string.Format("LibObs started recording [{0}] [{1}] [{2}]", session.Pid, session.GameTitle, windowClassNameId));
@@ -232,6 +262,8 @@ namespace RePlays.Recorders {
         }
 
         public override async Task<bool> StopRecording() {
+            if (output == IntPtr.Zero) return false;
+
             signalGCHookSuccess = false;
             var session = RecordingService.GetCurrentSession();
 
@@ -250,9 +282,9 @@ namespace RePlays.Recorders {
             retryAttempt = 0;
 
             // CLEANUP
+            ReleaseOutput();
             ReleaseSources();
             ReleaseEncoders();
-            ReleaseOutput();
 
             Logger.WriteLine(string.Format("Session recording saved to {0}", videoSavePath));
             Logger.WriteLine(string.Format("LibObs stopped recording {0} {1}", session.Pid, session.GameTitle));
