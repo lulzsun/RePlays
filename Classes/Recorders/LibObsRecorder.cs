@@ -24,6 +24,8 @@ namespace RePlays.Recorders {
         static bool signalOutputStop = false;
         static bool signalGCHookSuccess = false;
 
+        static signal_callback_t outputStopCb;
+
         public override void Start() {
             if (Connected) return;
 
@@ -78,14 +80,11 @@ namespace RePlays.Recorders {
 
             obs_post_load_modules();
 
-            // SETUP NEW OUTPUT
-            output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
-
             // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
             // it will cause a System.ExecutionEngineException, something to do with illegal memory
-            signal_handler_connect(obs_output_get_signal_handler(output), "stop", new signal_callback_t((data, cd) => {
+            outputStopCb = new signal_callback_t((data, cd) => {
                 signalOutputStop = true;
-            }), IntPtr.Zero);
+            });
 
             base.Start();
 
@@ -112,7 +111,7 @@ namespace RePlays.Recorders {
 
             // attempt to retrieve process's window handle to retrieve class name and window title
             windowHandle = LazyGetWindowHandleByProcessId(session.Pid);
-            while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
+            while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts * 3) {
                 Logger.WriteLine(string.Format("Waiting to retrieve process handle... retry attempt #{0}", retryAttempt));
                 await Task.Delay(retryInterval);
                 retryAttempt++;
@@ -132,6 +131,10 @@ namespace RePlays.Recorders {
 
             // Get the window class name
             var windowClassNameId = GetWindowTitle(windowHandle) + ":" + GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
+
+            // SETUP NEW OUTPUT
+            output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
+            signal_handler_connect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
 
             // SETUP OUTPUT SETTINGS
             IntPtr outputSettings = obs_data_create();
@@ -188,6 +191,7 @@ namespace RePlays.Recorders {
             if (retryAttempt >= maxRetryAttempts * 3) {
                 ReleaseSources();
                 ReleaseEncoders();
+                ReleaseOutput();
                 return false;
             }
             retryAttempt = 0;
@@ -216,6 +220,9 @@ namespace RePlays.Recorders {
             bool outputStartSuccess = obs_output_start(output);
             if (outputStartSuccess != true) {
                 Logger.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
+                ReleaseSources();
+                ReleaseEncoders();
+                ReleaseOutput();
                 return false;
             } else {
                 Logger.WriteLine(string.Format("LibObs started recording [{0}] [{1}] [{2}]", session.Pid, session.GameTitle, windowClassNameId));
@@ -245,6 +252,7 @@ namespace RePlays.Recorders {
             // CLEANUP
             ReleaseSources();
             ReleaseEncoders();
+            ReleaseOutput();
 
             Logger.WriteLine(string.Format("Session recording saved to {0}", videoSavePath));
             Logger.WriteLine(string.Format("LibObs stopped recording {0} {1}", session.Pid, session.GameTitle));
@@ -380,6 +388,11 @@ namespace RePlays.Recorders {
                 obs_encoder_release(audioEncoder);
             }
             audioEncoders.Clear();
+        }
+
+        public void ReleaseOutput() {
+            signal_handler_disconnect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
+            obs_output_release(output);
         }
     }
 }
