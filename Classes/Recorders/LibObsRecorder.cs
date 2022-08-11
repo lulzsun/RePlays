@@ -17,7 +17,7 @@ namespace RePlays.Recorders {
 
         static IntPtr windowHandle = IntPtr.Zero;
         static IntPtr output = IntPtr.Zero;
-        static Rect currentSize;
+        static Rect windowSize;
 
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
@@ -51,8 +51,8 @@ namespace RePlays.Recorders {
                             if(signalGCHookSuccess != false && RecordingService.IsRecording) {
                                 // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
                                 // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
-                                Rect windowSize = GetWindowSize(windowHandle);
-                                if ((windowSize.GetWidth() > 1 && windowSize.GetHeight() > 1) && // fullscreen tabbing check
+                                Rect currentSize = GetWindowSize(windowHandle);
+                                if ((currentSize.GetWidth() > 1 && currentSize.GetHeight() > 1) && // fullscreen tabbing check
                                     (currentSize.GetWidth() != windowSize.GetWidth() || currentSize.GetHeight() != windowSize.GetHeight())) {
                                     RestartRecording();
                                 }
@@ -143,7 +143,7 @@ namespace RePlays.Recorders {
             var windowClassNameId = GetWindowTitle(windowHandle) + ":" + GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
 
             // get game's window size and change output to match
-            Rect windowSize = GetWindowSize(windowHandle);
+            windowSize = GetWindowSize(windowHandle);
             // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension
             // this is a quick a dirty check: if there aren't more than 1120 pixels, we can assume it needs a retry
             while (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt < maxRetryAttempts) {
