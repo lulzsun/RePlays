@@ -25,7 +25,7 @@ namespace RePlays.Services {
             }
         }
 
-        public static void Start(Type type) {
+        public async static void Start(Type type) {
             DetectionService.LoadDetections();
 
             if (ActiveRecorder == null) {
@@ -36,7 +36,7 @@ namespace RePlays.Services {
                 }
 
                 ActiveRecorder = new LibObsRecorder();
-                ActiveRecorder.Start();
+                await Task.Run(() => ActiveRecorder.Start());
             }
         }
 

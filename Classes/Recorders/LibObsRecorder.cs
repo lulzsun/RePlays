@@ -27,7 +27,7 @@ namespace RePlays.Recorders {
 
         static signal_callback_t outputStopCb;
 
-        public override void Start() {
+        public override async void Start() {
             if (Connected) return;
 
             // STARTUP
