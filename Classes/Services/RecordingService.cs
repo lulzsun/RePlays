@@ -95,5 +95,20 @@ namespace RePlays.Services {
                 //DetectionService.LoadDetections();
             }
         }
+
+        public static async void RestartRecording() {
+            if (!IsRecording) return;
+
+            bool stopResult = await ActiveRecorder.StopRecording();
+            bool startResult = await ActiveRecorder.StartRecording();
+
+            if (stopResult && startResult) {
+                Logger.WriteLine("Recording restart successful");
+            }
+            else {
+                Logger.WriteLine($"Issue trying to restart recording: {stopResult} {startResult}");
+                IsRecording = false;
+            }
+        }
     }
 }
