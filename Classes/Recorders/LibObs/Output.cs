@@ -21,6 +21,10 @@ namespace obs_net{
 
         [DllImport(importLibrary, CallingConvention = importCall)]
         [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool obs_output_active(obs_output_t output);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
         public static extern bool obs_output_start(obs_output_t output);
 
         [DllImport(importLibrary, CallingConvention = importCall)]

@@ -134,71 +134,6 @@ namespace RePlays.Recorders {
             // Get the window class name
             var windowClassNameId = GetWindowTitle(windowHandle) + ":" + GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
 
-            // SETUP NEW OUTPUT
-            output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
-            signal_handler_connect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
-
-            // SETUP OUTPUT SETTINGS
-            IntPtr outputSettings = obs_data_create();
-            obs_data_set_string(outputSettings, "path", videoSavePath);
-            obs_output_update(output, outputSettings);
-            obs_data_release(outputSettings);
-
-            // SETUP NEW AUDIO SOURCES
-            // - Create a source for the desktop in channel 0, and the microphone in 1
-            audioSources.TryAdd("desktop", obs_audio_source_create("wasapi_output_capture", "desktop")); // captures whole desktop
-            obs_set_output_source(0, audioSources["desktop"]);
-            obs_source_set_audio_mixers(audioSources["desktop"], 1 | (1 << 0));
-            audioSources.TryAdd("microphone", obs_audio_source_create("wasapi_input_capture", "microphone"));
-            obs_set_output_source(1, audioSources["microphone"]);
-            obs_source_set_audio_mixers(audioSources["microphone"], 1 | (1 << 1));
-
-            // SETUP AUDIO ENCODERS
-            // - Each audio source needs an audio encoder, IF we plan to separate audio tracks in the future
-            audioEncoders.TryAdd("aac0", obs_audio_encoder_create("ffmpeg_aac", "aac0", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero));
-            obs_output_set_audio_encoder(output, audioEncoders["aac0"], (UIntPtr)0);
-            obs_encoder_set_audio(audioEncoders["aac0"], obs_output_audio(output));
-            //audioEncoders.TryAdd("aac1", obs_audio_encoder_create("ffmpeg_aac", "aac1", IntPtr.Zero, (UIntPtr)1, IntPtr.Zero));
-            //obs_output_set_audio_encoder(output, audioEncoders["aac1"], (UIntPtr)1);
-            //obs_encoder_set_audio(audioEncoders["aac1"], obs_output_audio(output));
-
-            // SETUP NEW VIDEO SOURCE
-            // - Create a source for the game_capture in channel 2
-            IntPtr videoSourceSettings = obs_data_create();
-            obs_data_set_string(videoSourceSettings, "capture_mode", "window");
-            obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
-            videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
-            obs_set_output_source(2, videoSources["gameplay"]);
-            obs_data_release(videoSourceSettings);
-
-            // SETUP VIDEO ENCODER
-            IntPtr videoEncoderSettings = obs_data_create();
-            obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
-            obs_data_set_string(videoEncoderSettings, "profile", "high");
-            obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
-            obs_data_set_string(videoEncoderSettings, "rate_control", "CRF");
-            obs_data_set_int(videoEncoderSettings, "crf", 20);
-            IntPtr videoEncoder = obs_video_encoder_create("obs_x264", "simple_h264_recording", videoEncoderSettings, IntPtr.Zero);
-            obs_data_release(videoEncoderSettings);
-            obs_encoder_set_video(videoEncoder, obs_get_video());
-            obs_output_set_video_encoder(output, videoEncoder);
-
-            // attempt to wait for game_capture source to hook first
-            // this might take longer, so multiply maxRetryAttempts
-            while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Waiting for successful graphics hook for [{0}]... retry attempt #{1}", windowClassNameId, retryAttempt));
-                await Task.Delay(retryInterval);
-                retryAttempt++;
-            }
-            if (retryAttempt >= maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
-                ReleaseOutput();
-                ReleaseSources();
-                ReleaseEncoders();
-                return false;
-            }
-            retryAttempt = 0;
-
             // get game's window size and change output to match
             Rect windowSize = GetWindowSize(windowHandle);
             // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension
@@ -218,6 +153,71 @@ namespace RePlays.Recorders {
                 Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
                 ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
             }
+
+            Logger.WriteLine($"Preparing to create libobs output [{bnum_allocs()}]...");
+
+            // SETUP NEW AUDIO SOURCES
+            // - Create a source for the desktop in channel 0, and the microphone in 1
+            audioSources.TryAdd("desktop", obs_audio_source_create("wasapi_output_capture", "desktop")); // captures whole desktop
+            obs_set_output_source(0, audioSources["desktop"]);
+            obs_source_set_audio_mixers(audioSources["desktop"], 1 | (1 << 0));
+            audioSources.TryAdd("microphone", obs_audio_source_create("wasapi_input_capture", "microphone"));
+            obs_source_set_audio_mixers(audioSources["microphone"], 1 | (1 << 1));
+
+            // SETUP NEW VIDEO SOURCE
+            // - Create a source for the game_capture in channel 2
+            IntPtr videoSourceSettings = obs_data_create();
+            obs_data_set_string(videoSourceSettings, "capture_mode", "window");
+            obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
+            videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
+            obs_data_release(videoSourceSettings);
+
+            // SETUP AUDIO ENCODERS
+            // - Each audio source needs an audio encoder, IF we plan to separate audio tracks in the future
+            audioEncoders.TryAdd("aac0", obs_audio_encoder_create("ffmpeg_aac", "aac0", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero));
+            obs_encoder_set_audio(audioEncoders["aac0"], obs_get_audio());
+            obs_set_output_source(1, audioSources["microphone"]);
+
+            // SETUP VIDEO ENCODER
+            IntPtr videoEncoderSettings = obs_data_create();
+            obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
+            obs_data_set_string(videoEncoderSettings, "profile", "high");
+            obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
+            obs_data_set_string(videoEncoderSettings, "rate_control", "CRF");
+            obs_data_set_int(videoEncoderSettings, "crf", 20);
+            videoEncoders.TryAdd("h264", obs_video_encoder_create("obs_x264", "simple_h264_recording", videoEncoderSettings, IntPtr.Zero));
+            obs_data_release(videoEncoderSettings);
+            obs_encoder_set_video(videoEncoders["h264"], obs_get_video());
+            obs_set_output_source(2, videoSources["gameplay"]);
+
+            // attempt to wait for game_capture source to hook first
+            // this might take longer, so multiply maxRetryAttempts
+            while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts) {
+                Logger.WriteLine(string.Format("Waiting for successful graphics hook for [{0}]... retry attempt #{1}", windowClassNameId, retryAttempt));
+                await Task.Delay(retryInterval);
+                retryAttempt++;
+            }
+            if (retryAttempt >= maxRetryAttempts) {
+                Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
+                ReleaseOutput();
+                ReleaseSources();
+                ReleaseEncoders();
+                return false;
+            }
+            retryAttempt = 0;
+
+            // SETUP NEW OUTPUT
+            output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
+            signal_handler_connect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
+
+            // SETUP OUTPUT SETTINGS
+            IntPtr outputSettings = obs_data_create();
+            obs_data_set_string(outputSettings, "path", videoSavePath);
+            obs_output_update(output, outputSettings);
+            obs_data_release(outputSettings);
+            
+            obs_output_set_video_encoder(output, videoEncoders["h264"]);
+            obs_output_set_audio_encoder(output, audioEncoders["aac0"], (UIntPtr)0);
 
             // some quick checks on initializations before starting output
             bool canStartCapture = obs_output_can_begin_data_capture(output, 0);
@@ -247,6 +247,7 @@ namespace RePlays.Recorders {
             }
 
             // preparations complete, launch the rocket
+            Logger.WriteLine($"LibObs output is starting [{bnum_allocs()}]...");
             bool outputStartSuccess = obs_output_start(output);
             if (outputStartSuccess != true) {
                 Logger.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
@@ -287,7 +288,7 @@ namespace RePlays.Recorders {
             ReleaseEncoders();
 
             Logger.WriteLine(string.Format("Session recording saved to {0}", videoSavePath));
-            Logger.WriteLine(string.Format("LibObs stopped recording {0} {1}", session.Pid, session.GameTitle));
+            Logger.WriteLine(string.Format("LibObs stopped recording {0} {1} [{2}]", session.Pid, session.GameTitle, bnum_allocs()));
 
             try {
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
