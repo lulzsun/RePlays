@@ -91,6 +91,8 @@ export const Player: React.FC<Props> = ({videos}) => {
 
           if (e.button === 2) { // context menu / Delete Bookmark
               handleDeleteBookmark(e, index);
+          } else if (e.button === 0) { // Click on the bookmark
+              mouseSeek(e);
           }
       }
       else { // clip resizing
