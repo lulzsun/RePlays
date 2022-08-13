@@ -85,9 +85,14 @@ export const Player: React.FC<Props> = ({videos}) => {
       }
       else if (bookmarksRef.current?.indexOf(element as HTMLDivElement) !== -1) { // Bookmark deleting
           let index = bookmarksRef.current?.indexOf(element as HTMLDivElement);
+
+          if (index == -1)
+              return;
+
           if (e.button === 2) { // context menu / Delete Bookmark
-              if (index != -1)
-                  handleDeleteBookmark(e, index);
+              handleDeleteBookmark(e, index);
+          } else if (e.button === 0) { // Click on the bookmark
+              mouseSeek(e);
           }
       }
       else { // clip resizing
@@ -166,7 +171,7 @@ export const Player: React.FC<Props> = ({videos}) => {
       document.removeEventListener('mousemove', handleOnMouseMove);
       document.removeEventListener('mouseup', handleOnMouseUp);
     }
-  }, [clips, contextMenuCtx]);
+  }, [clips, bookmarks, contextMenuCtx]);
 
   useEffect(() => {
     seekBarElement.current!.style.left = `calc(${currentTime / videoElement.current!.duration * 100}% - 3px)`;
@@ -245,12 +250,9 @@ export const Player: React.FC<Props> = ({videos}) => {
             let newBookmarks = bookmarks.slice();
 
             if (videoElement.current)
-                newBookmarks.push({ id: Date.now(), time: time}); // 10 seconds
+                newBookmarks.push({ id: Date.now(), time: time}); 
+            
             setBookmarks(newBookmarks);
-
-            let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
-            videoMetadata[`/${game}/${video}`] = { bookmarks: newBookmarks };
-            localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
         }
     }
 
@@ -258,10 +260,11 @@ export const Player: React.FC<Props> = ({videos}) => {
         contextMenuCtx?.setItems([{
             name: 'Delete', onClick: () => {
                 let newBookmarks = bookmarks.slice();
+
                 if (videoElement.current)
                     newBookmarks.splice(index, 1);
+
                 setBookmarks(newBookmarks);
-  
                 let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
                 videoMetadata[`/${game}/${video}`] = { bookmarks: newBookmarks };
                 localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
@@ -273,16 +276,13 @@ export const Player: React.FC<Props> = ({videos}) => {
   function handleVideoLoad(e: SyntheticEvent) {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
       let videoMetadataBookmarks = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
-
-      console.log((e));
-      console.log(videoMetadata[`/${game}/${video}`]);
-      console.log(videoMetadataBookmarks[`/${game}/${video}`]);
+      
     if(videoElement.current && volumeSliderElement.current) {
       videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
       videoElement.current.play();
     }
     if(videoMetadata[`/${game}/${video}`])
-          setClips(videoMetadata[`/${game}/${video}`].clips);
+        setClips(videoMetadata[`/${game}/${video}`].clips);
 
     if(videoMetadataBookmarks[`/${game}/${video}`])
         setBookmarks(videoMetadataBookmarks[`/${game}/${video}`].bookmarks);
