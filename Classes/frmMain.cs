@@ -27,6 +27,21 @@ namespace RePlays {
             PurgeTempVideos();
             Updater.CheckForUpdates();
             notifyIcon1.Icon = this.Icon;
+
+            // INIT RECORDER API
+            if (!File.Exists(Path.Join(Application.StartupPath, "obs.dll"))) {
+#if DEBUG
+                WebMessage.DisplayModal("Missing obs.dll, make sure to check to wiki to learn how to build libobs", "Warning", "warning");
+#else
+                WebMessage.DisplayModal("Missing obs.dll, recording may not be functional", "Warning", "warning");
+#endif
+                if (File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
+                    RecordingService.Start(typeof(PlaysLTCRecorder));
+                }
+            }
+            else {
+                RecordingService.Start(typeof(LibObsRecorder));
+            }
         }
 
         private void frmMain_Load(object sender, System.EventArgs e) {
