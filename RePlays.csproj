@@ -80,6 +80,14 @@
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
   </Target>
 
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net5.0-windows\obs.dll') ">
+	<Error Condition="!Exists('$(SolutionDir)obs-studio-build\build\win64\bin\64bit\obs.dll')" Text="Could not find 'obs.dll' in 'obs-studio-build\build\win64\bin\64bit\'" />
+	<ItemGroup>
+	   <LIBOBSDEBUG Include="$(SolutionDir)obs-studio-build\build\win64\bin\64bit\**\*.*" />
+	</ItemGroup>
+	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net5.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
 	<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />

@@ -127,21 +127,6 @@ namespace RePlays.Utils {
                         // INIT USER SETTINGS
                         SendMessage(GetUserSettings());
 
-                        // INIT RECORDER API
-                        if (!File.Exists(Path.Join(Application.StartupPath, "obs.dll"))) {
-#if DEBUG
-                            DisplayModal("Missing obs.dll, make sure to check to wiki to learn how to build libobs", "Warning", "warning");
-#else
-                            DisplayModal("Missing obs.dll, recording may not be functional", "Warning", "warning");
-#endif
-                            if (File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
-                                RecordingService.Start(typeof(PlaysLTCRecorder));
-                            }
-                        }
-                        else {
-                            RecordingService.Start(typeof(LibObsRecorder));
-                        }
-
                         Logger.WriteLine(toastList.Count + " Initialized List");
                         foreach (var toast in toastList) {
                             SendMessage(JsonSerializer.Serialize(toast.Value));
