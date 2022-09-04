@@ -325,8 +325,9 @@ namespace RePlays.Recorders {
 
                 Logger.WriteLine(string.Format("This process [{0}] is a recordable game [{1}{2}], prepared to record", processId, Path.GetFileName(exeFile), modules));
 
+                Logger.WriteLine("Is allowed to record: " + (autoRecord && SettingsService.Settings.captureSettings.recordingMode == "automatic").ToString());
                 if (autoRecord && SettingsService.Settings.captureSettings.recordingMode == "automatic")
-                    RecordingService.StartRecording();
+                    RecordingService.StartRecording();               
             }
         }
     }

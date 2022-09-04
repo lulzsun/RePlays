@@ -353,5 +353,17 @@ namespace RePlays.Utils {
                 "\"id\": \"" + id + "\"}";
             SendMessage(JsonSerializer.Serialize(webMessage));
         }
+
+        public static void SetBookmarks(string videoName, List<int> bookmarks, double elapsed)
+        {
+
+            WebMessage webMessage = new();
+            webMessage.message = "SetBookmarks";
+            webMessage.data = "{" +
+                "\"videoname\": \"" + videoName + "\", " +
+                "\"elapsed\": " + elapsed.ToString().Replace(",",".") + ", " +
+                "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
+            SendMessage(JsonSerializer.Serialize(webMessage));
+        }
     }
 }

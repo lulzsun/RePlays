@@ -3,13 +3,17 @@ using RePlays.Utils;
 using System.Timers;
 using System;
 using System.Threading.Tasks;
+using RePlays.Classes.Services;
+using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace RePlays.Services {
     public static class RecordingService {
         public static BaseRecorder ActiveRecorder = null;
 
-        private static Timer recordingTimer = new Timer(1000);
-        private static int recordingElapsed = 0;
+        private static System.Timers.Timer recordingTimer = new System.Timers.Timer(1000);
+        public static int recordingElapsed = 0;
+        public static double lastVideoDuration = 0;
         private static Session currentSession = new Session(0, "Game Unknown");
         public static bool IsRecording { get; internal set; }
         private static bool IsPreRecording { get; set; }
@@ -28,6 +32,7 @@ namespace RePlays.Services {
         public async static void Start(Type type) {
             DetectionService.LoadDetections();
 
+            Logger.WriteLine("RecordingService starting...");
             if (ActiveRecorder == null) {
                 if (type == typeof(PlaysLTCRecorder)) {
                     ActiveRecorder = new PlaysLTCRecorder();
@@ -36,7 +41,12 @@ namespace RePlays.Services {
                 }
 
                 ActiveRecorder = new LibObsRecorder();
+                Logger.WriteLine("Creating a new ActiveRecorder");
                 await Task.Run(() => ActiveRecorder.Start());
+            }
+            else
+            {
+                Logger.WriteLine("Reusing old ActiveRecorder");
             }
         }
 
@@ -48,18 +58,30 @@ namespace RePlays.Services {
             return currentSession;
         }
 
+        //[STAThread]
         public static async void StartRecording() {
+            Logger.WriteLine("Is PreRecording " + IsRecording.ToString());
+            Logger.WriteLine("Is Recording " + IsPreRecording.ToString());
+
             if (IsRecording || IsPreRecording) return;
 
             IsPreRecording = true;
             bool result = await ActiveRecorder.StartRecording();
-
+            Logger.WriteLine("Start Success: " + result.ToString());
+            Logger.WriteLine("Still allowed to record: " + (!IsRecording && result).ToString());
             if (!IsRecording && result) {
-                if(currentSession.Pid != 0) {
+                Logger.WriteLine("Current Session PID: " + currentSession.Pid.ToString());
+                if (currentSession.Pid != 0) {
                     recordingTimer.Elapsed += OnTimedEvent;
                     recordingTimer.Start();
+                    
                     Logger.WriteLine(string.Format("Start Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
                     IsRecording = true;
+                    IsPreRecording = false;
+
+                    KeyboardHookService.Start();
+                    Application.Run();
+
                     //frmMain.Instance.DisplayNotification("Recording Started", $"Currently recording {currentSession.GameTitle}");
                 }
                 //DetectionService.DisposeDetections();

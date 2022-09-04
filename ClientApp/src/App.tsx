@@ -87,6 +87,22 @@ function App() {
           return tl;
         });
         break;
+        case 'SetBookmarks':
+            console.log(data);
+            let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+            
+
+            let bookmarks: { id: number, time: number }[] = [];
+
+            data.bookmarks.forEach(function (bookmark: any) {
+                let time = bookmark / (data.elapsed) * 100;
+                bookmarks.push({ id: Date.now(), time: time });
+            }); 
+
+            videoMetadata[data.videoname] = { bookmarks };
+            
+            localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
+            break;
       case 'UserSettings':
         setUserSettings(data);
         break;
@@ -94,6 +110,7 @@ function App() {
         break;
     }
   }
+
 
   function handleMouseDown(e: MouseEvent) {
     if(recentLinksMenuOpen) {
