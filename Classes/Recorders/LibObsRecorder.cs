@@ -8,12 +8,14 @@ using static RePlays.Utils.Functions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Drawing;
+using RePlays.Classes.Services;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
         public bool Connected { get; private set; }
 
         static string videoSavePath = "";
+        static string videoNameTimeStamp = "";
 
         static IntPtr windowHandle = IntPtr.Zero;
         static IntPtr output = IntPtr.Zero;
@@ -64,6 +66,9 @@ namespace RePlays.Recorders {
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                             signalGCHookSuccess = false;
+                            
+                            //TODO: Read video recording lenght from file or in another way.
+                            RecordingService.lastVideoDuration = RecordingService.recordingElapsed;
                         }
                     }
                 }
@@ -137,7 +142,8 @@ namespace RePlays.Recorders {
 
             string dir = Path.Join(GetPlaysFolder(), "/" + MakeValidFolderNameSimple(session.GameTitle) + "/");
             Directory.CreateDirectory(dir);
-            videoSavePath = Path.Join(dir, DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-ses.mp4");
+            videoNameTimeStamp = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+            videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses.mp4");
 
             // Get the window class name
             var windowClassNameId = GetWindowTitle(windowHandle) + ":" + GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
@@ -305,6 +311,9 @@ namespace RePlays.Recorders {
             catch (Exception e) {
                 Logger.WriteLine(e.Message);
             }
+
+            //Adding bookmarks
+            KeyboardHookService.Stop("/" + MakeValidFolderNameSimple(session.GameTitle) + "/" + videoNameTimeStamp + "-ses.mp4");
 
             return true;
         }
