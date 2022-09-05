@@ -68,8 +68,7 @@ namespace RePlays.Recorders {
                             signalGCHookSuccess = false;
                             
                             //TODO: Read video recording lenght from file or in another way.
-                            //0.25 is to compensate for delay.
-                            RecordingService.lastVideoDuration = RecordingService.recordingElapsed + 0.25;
+                            RecordingService.lastVideoDuration = RecordingService.recordingElapsed;
                         }
                     }
                 }

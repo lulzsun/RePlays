@@ -2,11 +2,14 @@
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace RePlays.Classes.Services
 {
     internal static class BookmarkService
     {
+        private static Keys bookmarkKey = Keys.F8;
         static List<int> bookmarks = new List<int>();
         static int latestBookmarkKeyPress = 0;
 
@@ -31,6 +34,33 @@ namespace RePlays.Classes.Services
         {
             WebMessage.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
             bookmarks.Clear();
+        }
+
+        public static void SetBookmarkKeyFromSettings()
+        {
+            //Get bookmark key
+            string[] keybind;
+            SettingsService.Settings.keybindings.TryGetValue("CreateBookmark", out keybind);
+            for (int i = 0; i < keybind.Length; i++)
+            {
+                Keys key = Keys.None;
+                Enum.TryParse(keybind[i], out key);
+                if (i == 0) bookmarkKey = key;
+                else bookmarkKey = key;
+
+                //TODO: Make it possible to use multiple keys
+                //else bookmarkKey |= key;
+            }
+        }
+
+        [DllImport("user32.dll")]
+        static public extern short GetKeyState(Keys nVirtKey);
+
+        public static bool IsPressingBookmark()
+        {
+            int state = GetKeyState(bookmarkKey);
+            if (state > 1 || state < -1) return true;
+            return false;
         }
 
     }
