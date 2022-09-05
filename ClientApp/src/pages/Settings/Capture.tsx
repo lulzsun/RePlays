@@ -99,6 +99,10 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         Toggle Recording Keybind
         <HotkeySelector id="StartStopRecording" width="auto" keybind={keybindings?.StartStopRecording}/> 
       </div>
+      <div className="flex flex-col gap-1">
+         Bookmark Keybind
+         <HotkeySelector id="CreateBookmark" width="auto" keybind={keybindings?.CreateBookmark} />
+      </div>
 
       <h1 className="font-semibold text-2xl mt-4">Video Quality</h1>
       <div className="flex gap-4" 

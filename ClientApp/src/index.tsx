@@ -127,5 +127,6 @@ declare global {
   }
   interface Keybindings {
     StartStopRecording: string[],
+    CreateBookmark: string[],
   }
 }

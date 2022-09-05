@@ -1,19 +1,16 @@
 ﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Windows.Forms;
-using System.Windows.Input;
 
 namespace RePlays.Classes.Services
 {
     public static class KeyboardHookService
     {
-        private static int latestF9KeyPress = 0;
+        private static Keys bookmarkKey = Keys.F8;
+        private static int latestBookmarkButtonPress = 0;
 
         public delegate void LocalKeyEventHandler(Keys key, bool Shift, bool Ctrl, bool Alt);
 
@@ -45,9 +42,24 @@ namespace RePlays.Classes.Services
         static CallbackDelegate TheHookCB = null;
         static List<int> bookmarks = new List<int>();
 
-
         public static void Start()
         {
+
+            //Get bookmark key
+            string[] keybind;
+            SettingsService.Settings.keybindings.TryGetValue("CreateBookmark", out keybind);
+            for (int i = 0; i < keybind.Length; i++)
+            {
+                Keys key = Keys.None;
+                Enum.TryParse(keybind[i], out key);
+                if (i == 0) bookmarkKey = key;
+                else bookmarkKey = key;
+
+                //TODO: Make it possible to use multiple keys
+                //else bookmarkKey |= key;
+            }
+
+            //Create hook
             TheHookCB = new CallbackDelegate(KeybHookProc);
             HookID = SetWindowsHookEx(13, TheHookCB, 0, 0);
             Logger.WriteLine("Loaded KeyboardHook...");
@@ -56,7 +68,6 @@ namespace RePlays.Classes.Services
         public static void Stop(string videoName)
         {
             UnhookWindowsHookEx(HookID);
-
             WebMessage.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
             bookmarks.Clear();
             Logger.WriteLine("Unloaded KeyboardHook...");
@@ -78,9 +89,9 @@ namespace RePlays.Classes.Services
                     {
                         TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
                         int secondsSinceEpoch = (int)t.TotalSeconds;
-                        if (secondsSinceEpoch - latestF9KeyPress >= 2)
+                        if (secondsSinceEpoch - latestBookmarkButtonPress >= 2)
                         {
-                            latestF9KeyPress = secondsSinceEpoch;
+                            latestBookmarkButtonPress = secondsSinceEpoch;
                             Logger.WriteLine("Bookmark: " + RecordingService.recordingElapsed);
                             bookmarks.Add(RecordingService.recordingElapsed);
 
@@ -105,11 +116,11 @@ namespace RePlays.Classes.Services
         }
 
         [DllImport("user32.dll")]
-        static public extern short GetKeyState(System.Windows.Forms.Keys nVirtKey);
+        static public extern short GetKeyState(Keys nVirtKey);
 
         public static bool IsPressingBookmark()
         {
-            int state = GetKeyState(System.Windows.Forms.Keys.F8);
+            int state = GetKeyState(bookmarkKey);
             if (state > 1 || state < -1) return true;
             return false;
         }
