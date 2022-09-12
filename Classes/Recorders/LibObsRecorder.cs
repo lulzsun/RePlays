@@ -24,6 +24,12 @@ namespace RePlays.Recorders {
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
 
+        private Dictionary<string, string> encoder_ids = new()
+        {
+            {"x264", "obs_x264"},
+            {"NVENC", "jim_nvenc"}
+        };
+
         static bool signalOutputStop = false;
         static bool signalGCHookSuccess = false;
 
@@ -193,15 +199,9 @@ namespace RePlays.Recorders {
             obs_set_output_source(1, audioSources["microphone"]);
 
             // SETUP VIDEO ENCODER
-            IntPtr videoEncoderSettings = obs_data_create();
-            obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
-            obs_data_set_string(videoEncoderSettings, "profile", "high");
-            obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
-            obs_data_set_string(videoEncoderSettings, "rate_control", "CRF");
-            obs_data_set_int(videoEncoderSettings, "crf", 20);
-            videoEncoders.TryAdd("h264", obs_video_encoder_create("obs_x264", "simple_h264_recording", videoEncoderSettings, IntPtr.Zero));
-            obs_data_release(videoEncoderSettings);
-            obs_encoder_set_video(videoEncoders["h264"], obs_get_video());
+            string encoder = SettingsService.Settings.captureSettings.encoder;
+            videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder));
+            obs_encoder_set_video(videoEncoders[encoder], obs_get_video());
             obs_set_output_source(2, videoSources["gameplay"]);
 
             // attempt to wait for game_capture source to hook first
@@ -230,7 +230,7 @@ namespace RePlays.Recorders {
             obs_output_update(output, outputSettings);
             obs_data_release(outputSettings);
             
-            obs_output_set_video_encoder(output, videoEncoders["h264"]);
+            obs_output_set_video_encoder(output, videoEncoders[encoder]);
             obs_output_set_audio_encoder(output, audioEncoders["aac0"], (UIntPtr)0);
 
             // some quick checks on initializations before starting output
@@ -274,6 +274,28 @@ namespace RePlays.Recorders {
             }
 
             return true;
+        }
+
+        private IntPtr GetVideoEncoder(string encoder)
+        {
+            IntPtr videoEncoderSettings = obs_data_create();
+            obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
+            obs_data_set_string(videoEncoderSettings, "profile", "high");
+            //Didn't really know how to handle the presets so it's just hacked for now.
+            switch (encoder)
+            {
+                case "NVENC":
+                    obs_data_set_string(videoEncoderSettings, "preset", "Quality");
+                    break;
+                case "x264":
+                    obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
+                    break;
+            }
+            obs_data_set_string(videoEncoderSettings, "rate_control", "CBR");
+            obs_data_set_int(videoEncoderSettings, "bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
+            IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
+            obs_data_release(videoEncoderSettings);
+            return encoderPtr;
         }
 
         public override async Task<bool> StopRecording() {

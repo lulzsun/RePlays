@@ -153,6 +153,14 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         </label>
       </div>
       <div className="flex gap-8">
+      <div className="flex flex-col">
+          Encoder
+          <DropDownMenu text={(settings === undefined? "NVENC" : settings!.encoder)} width={"auto"}
+          items={[
+            {name: "NVENC", onClick: () => {settings!.encoder = "NVENC"; customVideoQuality.current!.checked = true; updateSettings();}},
+            {name: "x264", onClick: () => {settings!.encoder = "x264"; updateSettings();}},
+          ]}/> 
+        </div>
         <div className="flex flex-col">
           Resolution
           <DropDownMenu text={(settings === undefined ? "1080p" : settings.resolution + "p")} width={"auto"}
