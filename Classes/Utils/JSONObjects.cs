@@ -74,6 +74,8 @@ namespace RePlays.Utils {
     public class CaptureSettings {
         private string _recordingMode = "automatic";
         public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
+        private string _encoder = "NVENC";
+        public string encoder { get { return _encoder; } set { _encoder = value; } }
         private int _resolution = 1080;
         public int resolution { get { return _resolution; } set { _resolution = value; } }
         private int _frameRate = 60;
