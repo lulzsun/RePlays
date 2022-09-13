@@ -33,6 +33,9 @@ namespace RePlays.Services {
                 { "CreateBookmark", new string[] { "F8" } }
             };
             public Dictionary<string, string[]> keybindings { get { return _keybindings; } set { _keybindings = value; } }
+
+            private List<CustomGame> _customGames = new();
+            public List<CustomGame> customGames { get { return _customGames; } set { _customGames = value; } }
         }
 
         public static void LoadSettings() {

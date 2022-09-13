@@ -50,6 +50,11 @@ namespace RePlays.Services {
             if (SettingsService.Settings.advancedSettings.whitelist.Contains(exeFile)) {
                 return true;
             }
+
+            foreach (var game in SettingsService.Settings.customGames) {
+                if (game.gameExe == exeFile) return true;
+            }
+
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
 
@@ -86,6 +91,10 @@ namespace RePlays.Services {
         public static string GetGameTitle(string exeFile) {
             if (exeFile == null)
                 return "Game Unknown";
+
+            foreach (var game in SettingsService.Settings.customGames) {
+                if (game.gameExe == exeFile) return game.gameName;
+            }
 
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();

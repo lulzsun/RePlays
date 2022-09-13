@@ -79,6 +79,7 @@ declare global {
     uploadSettings: UploadSettings
     advancedSettings: AdvancedSettings
     keybindings: Keybindings
+    customGames: CustomGame[]
   }
   interface GeneralSettings {
     launchStartup: boolean, 
@@ -125,6 +126,10 @@ declare global {
     manageTimeLimit: number,
     whitelist: string[],
     blacklist: string[],
+  }
+  interface CustomGame {
+    gameExe: string,
+    gameName: string
   }
   interface Keybindings {
     StartStopRecording: string[],

@@ -6,6 +6,7 @@ import Capture from "./Settings/Capture";
 import General from "./Settings/General";
 import Help from "./Settings/Help";
 import Upload from "./Settings/Upload";
+import Games from "./Settings/Games"
 import { postMessage } from '../helpers/messenger';
 
 type SettingsParams = {
@@ -39,6 +40,9 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
             <Link to="/settings/Upload" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Upload
             </Link>
+            <Link to="/settings/CustomGames" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
+              Games
+            </Link>
             <Link to="/settings/Advanced" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Advanced
             </Link>
@@ -54,6 +58,7 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
               <Route exact path="/settings/general"> <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
               <Route exact path="/settings/capture"> <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} keybindings={userSettings?.keybindings}/></Route>
               <Route exact path="/settings/upload">  <Upload updateSettings={updateSettings} settings={userSettings?.uploadSettings}/></Route>
+              <Route exact path="/settings/Games">  <Games updateSettings={updateSettings} games={userSettings?.customGames}/></Route>
               <Route exact path="/settings/advanced"><Advanced updateSettings={updateSettings} settings={userSettings?.advancedSettings}/></Route>
               <Route exact path="/settings/help">    <Help/></Route>
               <Route exact path="/settings/about">   <About/></Route>

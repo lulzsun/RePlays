@@ -259,32 +259,37 @@ namespace RePlays.Utils {
                     break;
                 case "AddProgram": {
                         var list = webMessage.data.Replace("\"", "");
-                        switch (list) {
+                        using var fbd = new OpenFileDialog();
+                        fbd.Filter = "Executable files (*.exe)|*.exe";
+                        DialogResult result = fbd.ShowDialog();
+                        if (result != DialogResult.OK && string.IsNullOrWhiteSpace(fbd.FileName)) break;
+                        switch (list)
+                        {
                             case "blacklist":
-                            case "whitelist":
-                                using (var fbd = new OpenFileDialog()) {
-                                    fbd.Filter = "Executable files (*.exe)|*.exe";
-                                    DialogResult result = fbd.ShowDialog();
-
-                                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.FileName)) {
-                                        if (list == "blacklist") {
-                                            Settings.advancedSettings.blacklist.Add(fbd.FileName.ToLower());
-                                            Logger.WriteLine($"Added {fbd.FileName} to blacklist");
-                                        }
-                                        else if (list == "whitelist") {
-                                            Settings.advancedSettings.whitelist.Add(fbd.FileName.ToLower());
-                                            Logger.WriteLine($"Added {fbd.FileName} to whitelist");
-                                        }
-                                        SaveSettings();
-                                        SendMessage(GetUserSettings());
-                                    }
-                                }
+                                Settings.advancedSettings.blacklist.Add(fbd.FileName.ToLower());
+                                Logger.WriteLine($"Added {fbd.FileName} to blacklist");
                                 break;
-                            default:
+                            case "whitelist":
+                                Settings.advancedSettings.whitelist.Add(fbd.FileName.ToLower());
+                                Logger.WriteLine($"Added {fbd.FileName} to whitelist");
+                                break;
+                            case "customgames":
+                                Settings.customGames.Add(new CustomGame(fbd.FileName, Path.GetFileName(fbd.FileName)));
+                                Logger.WriteLine($"Added {fbd.FileName} to custom games");
                                 break;
                         }
+                        SaveSettings();
+                        SendMessage(GetUserSettings());
                     }
                     break;
+                case "RemoveCustomGame": {
+                    //Temp solution to avoid breaking RemoveProgram
+                        CustomGame data = JsonSerializer.Deserialize<CustomGame>(webMessage.data);
+                        Settings.customGames.Remove(data);
+                        SaveSettings();
+                        SendMessage(GetUserSettings());
+                        break;
+                    }
                 case "RemoveProgram": {
                         RemoveProgram data = JsonSerializer.Deserialize<RemoveProgram>(webMessage.data);
                         Logger.WriteLine($"{data.exe} | {data.list}");

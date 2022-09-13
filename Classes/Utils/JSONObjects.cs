@@ -138,4 +138,18 @@ namespace RePlays.Utils {
         private LocalFolderSettings _localFolderSettings = new();
         public LocalFolderSettings localFolderSettings { get { return _localFolderSettings; } set { _localFolderSettings = value; } }
     }
+
+    public struct CustomGame
+    {
+        public CustomGame(string gameExe, string gameName)
+        {
+            this._gameExe = gameExe;
+            this._gameName = gameName;
+        }
+
+        private string _gameExe;
+        public string gameExe { get { return _gameExe;} set { _gameExe = value; } }
+        private string _gameName;
+        public string gameName { get { return _gameName; } set { _gameName = value; } }
+    }
 }
