@@ -7,7 +7,7 @@ using static RePlays.Utils.Functions;
 namespace RePlays.Services {
     public static class StorageService {
         public static void ManageStorage() {
-            if (!SettingsService.Settings.advancedSettings.autoManageSpace) return;
+            if (!SettingsService.Settings.storageSettings.autoManageSpace) return;
             string folderPath = GetPlaysFolder();
             DriveInfo dInfo = new DriveInfo(folderPath);
             double percentOfUsedDisk = (dInfo.TotalSize - dInfo.TotalFreeSpace) / (double)dInfo.TotalSize * 100;
@@ -15,7 +15,7 @@ namespace RePlays.Services {
 
             Logger.WriteLine(string.Format("VideoSaveDir '{0}' size is {1} gbs", folderPath, folderSizeGb));
 
-            if(SettingsService.Settings.advancedSettings.manageSpaceLimit == -1 || SettingsService.Settings.advancedSettings.manageTimeLimit == -1) {
+            if(SettingsService.Settings.storageSettings.manageSpaceLimit == -1 || SettingsService.Settings.storageSettings.manageTimeLimit == -1) {
                 Logger.WriteLine($"Automatically managing space if exceeds 90% of folder's disk. Currently at {percentOfUsedDisk}%");
                 if (percentOfUsedDisk > 90) {
                     Logger.WriteLine("Disk is over 90% capacity, purging sessions");
@@ -25,9 +25,9 @@ namespace RePlays.Services {
             }
 
             // if users defined settings, lets use them here
-            Logger.WriteLine($"Managing space with user defined values: spaceLimit: {SettingsService.Settings.advancedSettings.manageSpaceLimit}, days: {SettingsService.Settings.advancedSettings.manageTimeLimit}");
-            DeleteSessionsOverSpaceLimit(SettingsService.Settings.advancedSettings.manageSpaceLimit, folderSizeGb);
-            DeleteSessionsOverMaxAge(SettingsService.Settings.advancedSettings.manageTimeLimit);
+            Logger.WriteLine($"Managing space with user defined values: spaceLimit: {SettingsService.Settings.storageSettings.manageSpaceLimit}, days: {SettingsService.Settings.storageSettings.manageTimeLimit}");
+            DeleteSessionsOverSpaceLimit(SettingsService.Settings.storageSettings.manageSpaceLimit, folderSizeGb);
+            DeleteSessionsOverMaxAge(SettingsService.Settings.storageSettings.manageTimeLimit);
         }
 
         public static void DeleteSessionsOverSpaceLimit(int spaceLimitGb, double folderSizeGb) {
@@ -39,7 +39,7 @@ namespace RePlays.Services {
             foreach (Video session in sessions) {
                 if (folderSizeGb - (bytesAlreadyDeleted / 1024f / 1024f / 1024f) < spaceLimitGb) return;
 
-                string filePath = Path.Join(SettingsService.Settings.advancedSettings.videoSaveDir, session.game, "\\", session.fileName);
+                string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir, session.game, "\\", session.fileName);
                 if (File.Exists(filePath)) {
                     var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(filePath) + ".png");
                     File.Delete(filePath);
@@ -56,7 +56,7 @@ namespace RePlays.Services {
             List<Video> sessions = GetAllVideos("All Games", "Oldest", true).sessions;
             foreach (Video session in sessions) {
                 if (maxAgeInDays < (DateTime.Now - session.date).TotalDays) {
-                    string filePath = Path.Join(SettingsService.Settings.advancedSettings.videoSaveDir, session.game, "\\", session.fileName);
+                    string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir, session.game, "\\", session.fileName);
                     if (File.Exists(filePath)) {
                         var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(filePath) + ".png");
                         File.Delete(filePath);

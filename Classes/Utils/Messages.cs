@@ -160,8 +160,8 @@ namespace RePlays.Utils {
                                     DialogResult result = fbd.ShowDialog();
 
                                     if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
-                                        if (type == "videoSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
-                                        else if (type == "tempSaveDir") Settings.advancedSettings.tempSaveDir = fbd.SelectedPath;
+                                        if (type == "videoSaveDir") Settings.storageSettings.videoSaveDir = fbd.SelectedPath;
+                                        else if (type == "tempSaveDir") Settings.storageSettings.tempSaveDir = fbd.SelectedPath;
                                         else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
                                         SaveSettings();
                                         SendMessage(GetUserSettings());
@@ -266,15 +266,11 @@ namespace RePlays.Utils {
                         switch (list)
                         {
                             case "blacklist":
-                                Settings.advancedSettings.blacklist.Add(fbd.FileName.ToLower());
+                                Settings.detectionSettings.blacklist.Add(fbd.FileName.ToLower());
                                 Logger.WriteLine($"Added {fbd.FileName} to blacklist");
                                 break;
                             case "whitelist":
-                                Settings.advancedSettings.whitelist.Add(fbd.FileName.ToLower());
-                                Logger.WriteLine($"Added {fbd.FileName} to whitelist");
-                                break;
-                            case "customgames":
-                                Settings.customGames.Add(new CustomGame(fbd.FileName, Path.GetFileName(fbd.FileName)));
+                                Settings.detectionSettings.whitelist.Add(new CustomGame(fbd.FileName.ToLower(), Path.GetFileName(fbd.FileName)));
                                 Logger.WriteLine($"Added {fbd.FileName} to custom games");
                                 break;
                         }
@@ -282,23 +278,15 @@ namespace RePlays.Utils {
                         SendMessage(GetUserSettings());
                     }
                     break;
-                case "RemoveCustomGame": {
-                    //Temp solution to avoid breaking RemoveProgram
-                        CustomGame data = JsonSerializer.Deserialize<CustomGame>(webMessage.data);
-                        Settings.customGames.Remove(data);
-                        SaveSettings();
-                        SendMessage(GetUserSettings());
-                        break;
-                    }
                 case "RemoveProgram": {
                         RemoveProgram data = JsonSerializer.Deserialize<RemoveProgram>(webMessage.data);
                         Logger.WriteLine($"{data.exe} | {data.list}");
                         switch (data.list) {
                             case "blacklist":
-                                Settings.advancedSettings.blacklist.Remove(data.exe.ToLower());
+                                Settings.detectionSettings.blacklist.Remove(data.exe.ToLower());
                                 break;
                             case "whitelist":
-                                Settings.advancedSettings.whitelist.Remove(data.exe.ToLower());
+                                Settings.detectionSettings.whitelist.RemoveAll((x) => x.gameExe == data.exe);
                                 break;
                             default:
                                 break;

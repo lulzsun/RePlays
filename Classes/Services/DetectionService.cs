@@ -47,11 +47,8 @@ namespace RePlays.Services {
 
             exeFile = exeFile.ToLower();
 
-            if (SettingsService.Settings.advancedSettings.whitelist.Contains(exeFile)) {
-                return true;
-            }
 
-            foreach (var game in SettingsService.Settings.customGames) {
+            foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
                 if (game.gameExe == exeFile) return true;
             }
 
@@ -92,8 +89,8 @@ namespace RePlays.Services {
             if (exeFile == null)
                 return "Game Unknown";
 
-            foreach (var game in SettingsService.Settings.customGames) {
-                if (game.gameExe == exeFile) return game.gameName;
+            foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
+                if (game.gameExe == exeFile.ToLower()) return game.gameName;
             }
 
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
@@ -135,7 +132,7 @@ namespace RePlays.Services {
 
             exeFile = exeFile.ToLower();
 
-            if (SettingsService.Settings.advancedSettings.blacklist.Contains(exeFile)) {
+            if (SettingsService.Settings.detectionSettings.blacklist.Contains(exeFile)) {
                 return true;
             }
             for (int x = 0; x < nonGameDetectionsJson.Length; x++) {
