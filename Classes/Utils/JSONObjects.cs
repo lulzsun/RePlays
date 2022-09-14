@@ -95,7 +95,7 @@ namespace RePlays.Utils {
         public MicDevice micDevice { get { return _micDevice; } set { _micDevice = value; } }
     }
 
-    public class AdvancedSettings {
+    public class StorageSettings {
         private string _videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
         public string videoSaveDir { get { return _videoSaveDir; } set { _videoSaveDir = value; } }
         private string _tempSaveDir = Path.Join(Path.GetTempPath(), "Plays");
@@ -109,11 +109,6 @@ namespace RePlays.Utils {
         public int manageSpaceLimit { get { return _manageSpaceLimit; } set { _manageSpaceLimit = value; } }
         public int _manageTimeLimit = -1;
         public int manageTimeLimit { get { return _manageTimeLimit; } set { _manageTimeLimit = value; } }
-
-        public List<string> _blacklist = new();
-        public List<string> blacklist { get { return _blacklist; } set { _blacklist = value; } }
-        public List<string> _whitelist = new();
-        public List<string> whitelist { get { return _whitelist; } set { _whitelist = value; } }
     }
 
     public class UploadSettings {
@@ -137,5 +132,26 @@ namespace RePlays.Utils {
 
         private LocalFolderSettings _localFolderSettings = new();
         public LocalFolderSettings localFolderSettings { get { return _localFolderSettings; } set { _localFolderSettings = value; } }
+    }
+
+    public class DetectionSettings {
+        private List<CustomGame> _whitelist = new();
+        public List<CustomGame> whitelist { get { return _whitelist; } set { _whitelist = value; } }
+        private List<string> _blacklist = new();
+        public List<string> blacklist { get { return _blacklist; } set { _blacklist = value; } }
+    }
+
+    public struct CustomGame
+    {
+        public CustomGame(string gameExe, string gameName)
+        {
+            this._gameExe = gameExe;
+            this._gameName = gameName;
+        }
+
+        private string _gameExe;
+        public string gameExe { get { return _gameExe;} set { _gameExe = value; } }
+        private string _gameName;
+        public string gameName { get { return _gameName; } set { _gameName = value; } }
     }
 }

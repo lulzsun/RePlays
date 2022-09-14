@@ -18,11 +18,14 @@ namespace RePlays.Services {
             private CaptureSettings _captureSettings = new();
             public CaptureSettings captureSettings { get { return _captureSettings; } set { _captureSettings = value; } }
 
-            private AdvancedSettings _advancedSettings = new();
-            public AdvancedSettings advancedSettings { get { return _advancedSettings; } set { _advancedSettings = value; } }
+            private StorageSettings _storageSettings = new();
+            public StorageSettings storageSettings { get { return _storageSettings; } set { _storageSettings = value; } }
 
             private UploadSettings _uploadSettings = new();
             public UploadSettings uploadSettings { get { return _uploadSettings; } set { _uploadSettings = value; } }
+
+            private DetectionSettings _detectionSettings = new();
+            public DetectionSettings detectionSettings { get { return _detectionSettings; } set { _detectionSettings = value; } }
 
             public string[][][] availableKeybindings = new string[][][] { 
                 new string[][]{ new string[] { "StartStopRecording" }, new string[] { "Control", "F9" } },

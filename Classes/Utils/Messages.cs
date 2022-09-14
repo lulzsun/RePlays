@@ -160,8 +160,8 @@ namespace RePlays.Utils {
                                     DialogResult result = fbd.ShowDialog();
 
                                     if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
-                                        if (type == "videoSaveDir") Settings.advancedSettings.videoSaveDir = fbd.SelectedPath;
-                                        else if (type == "tempSaveDir") Settings.advancedSettings.tempSaveDir = fbd.SelectedPath;
+                                        if (type == "videoSaveDir") Settings.storageSettings.videoSaveDir = fbd.SelectedPath;
+                                        else if (type == "tempSaveDir") Settings.storageSettings.tempSaveDir = fbd.SelectedPath;
                                         else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
                                         SaveSettings();
                                         SendMessage(GetUserSettings());
@@ -259,30 +259,23 @@ namespace RePlays.Utils {
                     break;
                 case "AddProgram": {
                         var list = webMessage.data.Replace("\"", "");
-                        switch (list) {
+                        using var fbd = new OpenFileDialog();
+                        fbd.Filter = "Executable files (*.exe)|*.exe";
+                        DialogResult result = fbd.ShowDialog();
+                        if (result != DialogResult.OK && string.IsNullOrWhiteSpace(fbd.FileName)) break;
+                        switch (list)
+                        {
                             case "blacklist":
-                            case "whitelist":
-                                using (var fbd = new OpenFileDialog()) {
-                                    fbd.Filter = "Executable files (*.exe)|*.exe";
-                                    DialogResult result = fbd.ShowDialog();
-
-                                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.FileName)) {
-                                        if (list == "blacklist") {
-                                            Settings.advancedSettings.blacklist.Add(fbd.FileName.ToLower());
-                                            Logger.WriteLine($"Added {fbd.FileName} to blacklist");
-                                        }
-                                        else if (list == "whitelist") {
-                                            Settings.advancedSettings.whitelist.Add(fbd.FileName.ToLower());
-                                            Logger.WriteLine($"Added {fbd.FileName} to whitelist");
-                                        }
-                                        SaveSettings();
-                                        SendMessage(GetUserSettings());
-                                    }
-                                }
+                                Settings.detectionSettings.blacklist.Add(fbd.FileName.ToLower());
+                                Logger.WriteLine($"Added {fbd.FileName} to blacklist");
                                 break;
-                            default:
+                            case "whitelist":
+                                Settings.detectionSettings.whitelist.Add(new CustomGame(fbd.FileName.ToLower(), Path.GetFileName(fbd.FileName)));
+                                Logger.WriteLine($"Added {fbd.FileName} to custom games");
                                 break;
                         }
+                        SaveSettings();
+                        SendMessage(GetUserSettings());
                     }
                     break;
                 case "RemoveProgram": {
@@ -290,10 +283,10 @@ namespace RePlays.Utils {
                         Logger.WriteLine($"{data.exe} | {data.list}");
                         switch (data.list) {
                             case "blacklist":
-                                Settings.advancedSettings.blacklist.Remove(data.exe.ToLower());
+                                Settings.detectionSettings.blacklist.Remove(data.exe.ToLower());
                                 break;
                             case "whitelist":
-                                Settings.advancedSettings.whitelist.Remove(data.exe.ToLower());
+                                Settings.detectionSettings.whitelist.RemoveAll((x) => x.gameExe == data.exe);
                                 break;
                             default:
                                 break;

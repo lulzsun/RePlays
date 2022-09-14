@@ -77,8 +77,9 @@ declare global {
     generalSettings: GeneralSettings
     captureSettings: CaptureSettings
     uploadSettings: UploadSettings
-    advancedSettings: AdvancedSettings
+    storageSettings: StorageSettings
     keybindings: Keybindings
+    detectionSettings: DetectionSettings
   }
   interface GeneralSettings {
     launchStartup: boolean, 
@@ -116,15 +117,21 @@ declare global {
       dir: string,
     },
   }
-  interface AdvancedSettings {
+  interface StorageSettings {
     videoSaveDir: string,
     tempSaveDir: string,
     extraVideoSaveDir: string[],
     autoManageSpace: boolean,
     manageSpaceLimit: number,
     manageTimeLimit: number,
-    whitelist: string[],
+  }
+  interface DetectionSettings{
+    whitelist: CustomGame[],
     blacklist: string[],
+  }
+  interface CustomGame {
+    gameExe: string,
+    gameName: string,
   }
   interface Keybindings {
     StartStopRecording: string[],
