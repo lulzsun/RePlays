@@ -13,6 +13,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
   const [gameAudioVolume, setGameAudioVolume] = useState(settings!.gameAudioVolume);
   const [micAudioVolume, setMicAudioVolume] = useState(settings!.micAudioVolume);
   const [micAudioDevices, setMicAudioDevices] = useState<any[]>();
+  const [availableEncoders, setAvailableEncoders] = useState<any[]>();
 
   useEffect(() => {
     if(settings == null) return;
@@ -74,6 +75,24 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
 
     }
   }, [setMicAudioDevices]);
+
+  useEffect(() => {
+    if(settings == null) return;
+    if(settings.encodersCache == null) return;
+    
+    let ddmItems: any[] = [];
+    
+    settings.encodersCache.forEach((encoder) => {
+      
+      ddmItems.push({name: encoder, onClick: () => {
+        settings.encoder = encoder;
+        updateSettings();
+      }});
+    });
+
+    setAvailableEncoders(ddmItems);
+    return;
+  }, [setAvailableEncoders]);
 
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
@@ -155,11 +174,8 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
       <div className="flex gap-8">
       <div className="flex flex-col">
           Encoder
-          <DropDownMenu text={(settings === undefined? "NVENC" : settings!.encoder)} width={"auto"}
-          items={[
-            {name: "NVENC", onClick: () => {settings!.encoder = "NVENC"; customVideoQuality.current!.checked = true; updateSettings();}},
-            {name: "x264", onClick: () => {settings!.encoder = "x264"; updateSettings();}},
-          ]}/> 
+          <DropDownMenu text={(settings === undefined? "x264" : settings!.encoder)} width={"auto"}
+          items={availableEncoders}/> 
         </div>
         <div className="flex flex-col">
           Resolution

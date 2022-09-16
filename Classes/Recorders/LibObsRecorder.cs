@@ -27,7 +27,9 @@ namespace RePlays.Recorders {
         private Dictionary<string, string> encoder_ids = new()
         {
             {"x264", "obs_x264"},
-            {"NVENC", "jim_nvenc"}
+            {"NVENC", "jim_nvenc"},
+            {"QSV", "obs_qsv11"},
+            {"AMF", "amd_amf_h264"}
         };
 
         static bool signalOutputStop = false;
@@ -96,6 +98,7 @@ namespace RePlays.Recorders {
 
             ResetAudio();
             ResetVideo();
+            GetAvailableEncoders();
 
             obs_post_load_modules();
 
@@ -276,8 +279,7 @@ namespace RePlays.Recorders {
             return true;
         }
 
-        private IntPtr GetVideoEncoder(string encoder)
-        {
+        private IntPtr GetVideoEncoder(string encoder) {
             IntPtr videoEncoderSettings = obs_data_create();
             obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
             obs_data_set_string(videoEncoderSettings, "profile", "high");
@@ -296,6 +298,39 @@ namespace RePlays.Recorders {
             IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
             obs_data_release(videoEncoderSettings);
             return encoderPtr;
+        }
+
+        private void GetAvailableEncoders() {
+            UIntPtr idx = UIntPtr.Zero;
+            string id = "";
+            List<string> availableEncoders = new();
+            while (obs_enum_encoder_types(idx, ref id))
+            {
+                idx = UIntPtr.Add(idx, 1);
+                if (id == string.Empty)
+                    continue;
+                switch (id)
+                {
+                    case "jim_nvenc":
+                        availableEncoders.Add("NVENC");
+                        break;
+                    case "obs_qsv11":
+                        availableEncoders.Add("QSV");
+                        break;
+                    case "amd_amf_h264":
+                        availableEncoders.Add("AMF");
+                        break;
+                    case "obs_x264":
+                        availableEncoders.Add("x264");
+                        break;
+
+                }
+            }
+
+            SettingsService.Settings.captureSettings.encodersCache = availableEncoders;
+            if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder))
+                SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
+            SettingsService.SaveSettings();
         }
 
         public override async Task<bool> StopRecording() {

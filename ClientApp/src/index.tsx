@@ -97,7 +97,8 @@ declare global {
   interface CaptureSettings {
     recordingMode: string,
     resolution: number, frameRate: number, bitRate: number,
-    encoder: string
+    encodersCache: string[]
+    encoder: string,
 
     gameAudioVolume: number,
     micAudioVolume: number,
