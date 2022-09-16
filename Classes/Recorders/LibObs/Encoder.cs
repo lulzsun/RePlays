@@ -7,6 +7,7 @@ namespace obs_net{
     using obs_data_t = IntPtr;
     using video_t = IntPtr;
     using audio_t = IntPtr;
+    using size_t = UIntPtr;
     public partial class Obs {
         /// <summary>
         /// https://obsproject.com/docs/reference-encoders.html?highlight=obs_video_encoder_create#c.obs_video_encoder_create
@@ -35,6 +36,10 @@ namespace obs_net{
         /// <param name="encoder">The video/audio encoder</param>
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_output_set_video_encoder(obs_output_t output, obs_encoder_t encoder);
+
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool obs_enum_encoder_types(size_t idx, [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(UTF8StringMarshaler))] ref string id);
 
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_output_set_audio_encoder(obs_output_t output, obs_encoder_t encoder, UIntPtr idx);
