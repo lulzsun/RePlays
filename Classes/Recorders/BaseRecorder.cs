@@ -10,6 +10,7 @@ using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RePlays.Recorders {
@@ -22,6 +23,7 @@ namespace RePlays.Recorders {
         IntPtr winActiveHook = IntPtr.Zero;
 
         public virtual void Start() {
+
             // watch process creation/deletion events
             pCreationWatcher.EventArrived += ProcessCreation_EventArrived;
             pDeletionWatcher.EventArrived += ProcessDeletion_EventArrived;
@@ -85,6 +87,20 @@ namespace RePlays.Recorders {
             catch (ManagementException) { }
 
             e.NewEvent.Dispose();
+        }
+
+        public int GetGPUUsage(int pid) {
+            ObjectQuery winQuery = new ObjectQuery("SELECT * FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine");
+
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(winQuery);
+
+            foreach (ManagementObject obj in searcher.Get()) {
+                var match = Regex.Match(obj["Name"].ToString(), @"^pid_(\d+)_luid.+$");
+                if(match.Success && int.Parse(match.Groups[1].Value) == pid) {
+                    return int.Parse(obj["UtilizationPercentage"].ToString());
+                }
+            }
+            return 0;
         }
 
         public delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
@@ -246,7 +262,6 @@ namespace RePlays.Recorders {
         public void AutoDetectGame(int processId, string executablePath = null, bool autoRecord = true) {
             bool isGame = false, isNonGame = false;
             string exeFile = executablePath;
-            string modules = "";
 
             Process[] processlist = Process.GetProcesses();
             using Process process = processlist.FirstOrDefault(pr => pr.Id == processId);
@@ -291,29 +306,17 @@ namespace RePlays.Recorders {
             isGame = DetectionService.IsMatchedGame(exeFile);
 
             if (!isGame && process != null) {
-                Logger.WriteLine(string.Format("Process [{0}] isn't in the game detection list, checking if it might be a game", Path.GetFileName(exeFile)));
+                Logger.WriteLine(string.Format("Process [{0}]:[{1}] isn't in the game detection list, checking if it might be a game", processId, Path.GetFileName(exeFile)));
                 try {
-                    foreach (ProcessModule module in process.Modules) {
-                        if (module == null) continue;
-
-                        var name = module.ModuleName.ToLower();
-                        modules += ", " + module.ModuleName;
-
-                        // this could cause false positives, but it should be ok for most applications
-                        if (name.StartsWith("explorerframe") || name.StartsWith("desktop-notifications") || name.StartsWith("squirrel")) {
-                            isGame = false;
-                            break;
-                        }
-
-                        if (name.StartsWith("d3d") || name.StartsWith("opengl")) {
-                            isGame = true;
-                            Logger.WriteLine(string.Format("This process [{0}]:[{1}] : [{2}], appears to be a game.", processId, name, Path.GetFileName(exeFile)));
-                        }
-                        module.Dispose();
+                    var usage = GetGPUUsage(process.Id);
+                    Logger.WriteLine($"PROCESS GPU USAGE [{process.Id}]: {usage}");
+                    if(usage > 10) {
+                        Logger.WriteLine(string.Format("This process [{0}]:[{1}], appears to be a game.", processId, Path.GetFileName(exeFile)));
+                        isGame = true;
                     }
                 }
-                catch (Exception e) { // sometimes, the process locks us out from reading and throws exception (anticheat functionality?)
-                    Logger.WriteLine(string.Format("Failed to view all ProcessModules for [{0}{1}] isGame: {2} isNonGame: {3}, reason: {4}", Path.GetFileName(exeFile), modules, isGame, isNonGame, e.Message));
+                catch (Exception e) {
+                    Logger.WriteLine(string.Format("Failed to evaluate gpu usage for [{0}] isGame: {1} isNonGame: {2}, reason: {3}", Path.GetFileName(exeFile), isGame, isNonGame, e.Message));
                 }
             }
 
@@ -323,7 +326,7 @@ namespace RePlays.Recorders {
                 RecordingService.SetCurrentSession(processId, gameTitle);
                 RecordingService.GetCurrentSession().Exe = exeFile;
 
-                Logger.WriteLine(string.Format("This process [{0}] is a recordable game [{1}{2}], prepared to record", processId, Path.GetFileName(exeFile), modules));
+                Logger.WriteLine(string.Format("This process [{0}] is a recordable game [{1}], prepared to record", processId, Path.GetFileName(exeFile)));
 
                 Logger.WriteLine("Is allowed to record: " + (autoRecord && SettingsService.Settings.captureSettings.recordingMode == "automatic").ToString());
                 if (autoRecord && SettingsService.Settings.captureSettings.recordingMode == "automatic")
