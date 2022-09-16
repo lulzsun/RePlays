@@ -513,7 +513,7 @@ namespace obs_net
                         break;
                     case 's':   // string
                         w = (o != null) ? o.ToString() : "(null)";
-                        if (fieldPrecision >= 0)
+                        if (fieldPrecision >= 0 && fieldPrecision <= w.Length)
                             w = w.Substring(0, fieldPrecision);
 
                         if (fieldLength != int.MinValue)
