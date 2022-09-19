@@ -90,7 +90,7 @@ declare global {
     currentVersion: string, 
     latestVersion: string, 
   }
-  interface MicDevice {
+  interface AudioDevice {
     deviceId: string,
     deviceLabel: string,
   }
@@ -102,8 +102,10 @@ declare global {
 
     gameAudioVolume: number,
     micAudioVolume: number,
-    micDevice: MicDevice,
-    micDevicesCache: MicDevice[],
+    inputDevice: AudioDevice,
+    inputDevicesCache: AudioDevice[],
+    outputDevice: AudioDevice,
+    outputDevicesCache: AudioDevice[],
   }
   interface UploadSettings {
     recentLinks: string[],

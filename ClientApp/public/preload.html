@@ -11,18 +11,31 @@
           // after getting permissions, lets list audio devices
           navigator.mediaDevices.enumerateDevices().then((devices) => {
             console.log(devices);
-            const rawAudioDevices = devices.filter(item => item.kind === "audioinput");
-            console.log(rawAudioDevices);
+            const rawInputDevices = devices.filter(item => item.kind === "audioinput");
+            console.log(rawInputDevices);
             let deviceList = [];
-            rawAudioDevices.forEach((device) => {
+            rawInputDevices.forEach((device) => {
               if(device.deviceId !== "") deviceList.push({deviceLabel: device.label, deviceId: device.deviceId});
             });
 
             if(window.chrome === undefined || window.chrome.webview === undefined) {
-              console.log({message: "GetAudioDevices", data: JSON.stringify(deviceList)});
+              console.log({message: "GetInputDevices", data: JSON.stringify(deviceList)});
               return;
             }
-            window.chrome.webview.postMessage({message: "GetAudioDevices", data: JSON.stringify(deviceList)});
+            window.chrome.webview.postMessage({message: "GetInputDevices", data: JSON.stringify(deviceList)});
+            //Output devices
+            const rawOutputDevices = devices.filter(item => item.kind === "audiooutput");
+            console.log(rawOutputDevices);
+            deviceList = [];
+            rawOutputDevices.forEach((device) => {
+              if(device.deviceId !== "") deviceList.push({deviceLabel: device.label, deviceId: device.deviceId});
+            });
+
+            if(window.chrome === undefined || window.chrome.webview === undefined) {
+              console.log({message: "GetOutputDevices", data: JSON.stringify(deviceList)});
+              return;
+            }
+            window.chrome.webview.postMessage({message: "GetOutputDevices", data: JSON.stringify(deviceList)});
           }).catch(function(err) {
             console.error(err.name + ": " + err.message);
           });

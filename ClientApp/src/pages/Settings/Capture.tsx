@@ -12,69 +12,61 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
   const [gameAudioVolume, setGameAudioVolume] = useState(settings!.gameAudioVolume);
   const [micAudioVolume, setMicAudioVolume] = useState(settings!.micAudioVolume);
-  const [micAudioDevices, setMicAudioDevices] = useState<any[]>();
+  const [inputAudioDevices, setInputAudioDevices] = useState<any[]>();
+  const [outputAudioDevices, setOutputAudioDevices] = useState<any[]>();
   const [availableEncoders, setAvailableEncoders] = useState<any[]>();
 
   useEffect(() => {
     if(settings == null) return;
-    if(settings.micDevicesCache == null) return;
+    if(settings.inputDevicesCache == null) return;
     
     let ddmItems: any[] = [];
     
-    settings.micDevicesCache.forEach((device) => {
+    settings.inputDevicesCache.forEach((device) => {
       console.log(device);
 
-      if(device.deviceId === "default" && settings.micDevice.deviceId === "") {
-        settings.micDevice.deviceId = device.deviceId; 
-        settings.micDevice.deviceLabel = device.deviceLabel;
+      if(device.deviceId === "default" && settings.inputDevice.deviceId === "") {
+        settings.inputDevice.deviceId = device.deviceId; 
+        settings.inputDevice.deviceLabel = device.deviceLabel;
         updateSettings();
       }
       
       ddmItems.push({name: device.deviceLabel, onClick: () => {
-        settings.micDevice.deviceId = device.deviceId; 
-        settings.micDevice.deviceLabel = device.deviceLabel; 
+        settings.inputDevice.deviceId = device.deviceId; 
+        settings.inputDevice.deviceLabel = device.deviceLabel; 
         updateSettings();
       }});
     });
 
-    setMicAudioDevices(ddmItems);
+    setInputAudioDevices(ddmItems);
     return;
+  }, [setInputAudioDevices]);
 
-    //dead code below
+  useEffect(() => {
+    if(settings == null) return;
+    if(settings.outputDevicesCache == null) return;
+    
+    let ddmItems: any[] = [];
+    
+    settings.outputDevicesCache.forEach((device) => {
+      console.log(device);
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices)
-      console.error('enumerateDevices() not supported');
-    else {
-      // the purpose of getUserMedia is to allow permissions to access audio devices
-      navigator.mediaDevices.getUserMedia({ audio: true }).catch((err) => {return err;});
-      // after getting permissions, lets list audio devices
-      navigator.mediaDevices.enumerateDevices().then((devices) => {
-        const rawAudioDevices = devices.filter(item => item.kind === "audioinput");
-        console.log(rawAudioDevices);
-        // this is bad typescript, but it makes things easier...
-        let ddmItems: any[] = [];
-        rawAudioDevices.forEach((device) => {
-          if(settings == null) return;
+      if(device.deviceId === "default" && settings.outputDevice.deviceId === "") {
+        settings.outputDevice.deviceId = device.deviceId; 
+        settings.outputDevice.deviceLabel = device.deviceLabel;
+        updateSettings();
+      }
+      
+      ddmItems.push({name: device.deviceLabel, onClick: () => {
+        settings.outputDevice.deviceId = device.deviceId; 
+        settings.outputDevice.deviceLabel = device.deviceLabel; 
+        updateSettings();
+      }});
+    });
 
-          if(device.deviceId === "default" && settings.micDevice.deviceId === "") {
-            settings.micDevice.deviceId = device.deviceId; 
-            settings.micDevice.deviceLabel = device.label;
-            updateSettings();
-          }
-
-          ddmItems.push({name: device.label, onClick: () => {
-            settings!.micDevice.deviceId = device.deviceId; 
-            settings!.micDevice.deviceLabel = device.label; 
-            updateSettings();
-          }});
-        });
-        setMicAudioDevices(ddmItems);
-      }).catch(function(err) {
-        console.error(err.name + ": " + err.message);
-      });
-
-    }
-  }, [setMicAudioDevices]);
+    setOutputAudioDevices(ddmItems);
+    return;
+  }, [setOutputAudioDevices]);
 
   useEffect(() => {
     if(settings == null) return;
@@ -239,9 +231,14 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         {micAudioVolume + "%"}
       </div>
       <div className="flex flex-col">
+        Output Source
+        <DropDownMenu text={(settings === undefined ? "Default Device" : settings.outputDevice.deviceLabel)} width={"auto"}
+        items={outputAudioDevices} zIndex={51}/> 
+      </div>
+      <div className="flex flex-col">
         Input Source
-        <DropDownMenu text={(settings === undefined ? "Default Device" : settings.micDevice.deviceLabel)} width={"auto"}
-        items={micAudioDevices}/> 
+        <DropDownMenu text={(settings === undefined ? "Default Device" : settings.inputDevice.deviceLabel)} width={"auto"}
+        items={inputAudioDevices}/> 
       </div>
     </div>
 	)
