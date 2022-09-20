@@ -115,24 +115,10 @@ namespace RePlays.Utils {
                 Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
 
             switch (webMessage.message) {
-                case "GetInputDevices": {
-                        List<AudioDevice> data = JsonSerializer.Deserialize<List<AudioDevice>>(webMessage.data);
-                        SettingsService.Settings.captureSettings.inputDevicesCache = data;
-                        Logger.WriteLine(data[0].deviceId + " | " + data[0].deviceLabel);
-                        if (SettingsService.Settings.captureSettings.inputDevice.deviceId == "") SettingsService.Settings.captureSettings.inputDevice = data[0];
-                        SettingsService.SaveSettings();
+                case "BrowserReady": {
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
+                        break;
                     }
-                    break;
-                case "GetOutputDevices": {
-                        List<AudioDevice> data = JsonSerializer.Deserialize<List<AudioDevice>>(webMessage.data);
-                        SettingsService.Settings.captureSettings.outputDevicesCache = data;
-                        Logger.WriteLine(data[0].deviceId + " | " + data[0].deviceLabel);
-                        if (SettingsService.Settings.captureSettings.outputDevice.deviceId == "") SettingsService.Settings.captureSettings.outputDevice = data[0];
-                        SettingsService.SaveSettings();
-                        frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
-                    }
-                    break;
                 case "Initialize": {
                         // INIT USER SETTINGS
                         SendMessage(GetUserSettings());

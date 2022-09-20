@@ -65,6 +65,11 @@ namespace RePlays.Utils {
     }
 
     public class AudioDevice {
+        public AudioDevice() { }
+        public AudioDevice(string deviceId, string deviceLabel) { 
+            _deviceId = deviceId;
+            _deviceLabel = deviceLabel;
+            }
         private string _deviceId = "";
         public string deviceId { get { return _deviceId; } set { _deviceId = value; } }
         private string _deviceLabel = "";

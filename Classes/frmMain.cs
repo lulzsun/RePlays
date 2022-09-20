@@ -42,6 +42,7 @@ namespace RePlays {
             else {
                 RecordingService.Start(typeof(LibObsRecorder));
             }
+            GetAudioDevices();
         }
 
         private void frmMain_Load(object sender, System.EventArgs e) {

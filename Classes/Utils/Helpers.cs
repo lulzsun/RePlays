@@ -98,22 +98,39 @@ namespace RePlays.Utils {
             return folderName;
         }
 
-        public static Dictionary<string, string> GetAudioDevices() {
-            Dictionary<string, string> devices = new();
-
+        public static void GetAudioDevices() {
+            var outputCache = SettingsService.Settings.captureSettings.outputDevicesCache;
+            var inputCache = SettingsService.Settings.captureSettings.inputDevicesCache;
+            outputCache.Clear();
+            inputCache.Clear();
+            outputCache.Add(new("default", "Default Device"));
+            outputCache.Add(new("communications", "Default Communication Device"));
+            inputCache.Add(new("default", "Default Device"));
+            inputCache.Add(new("communications", "Default Communication Device"));
             ManagementObjectSearcher searcher = new("Select * From Win32_PnPEntity");
             ManagementObjectCollection deviceCollection = searcher.Get();
-
             foreach (ManagementObject obj in deviceCollection) {
                 if (obj == null) continue;
                 if (obj.Properties["PNPClass"].Value == null) continue;
 
                 if (obj.Properties["PNPClass"].Value.ToString() == "AudioEndpoint") {
-                    devices.Add(obj.Properties["Name"].Value.ToString(), obj.Properties["PNPDeviceID"].Value.ToString().Split('\\').Last());
+                    string id = obj.Properties["PNPDeviceID"].Value.ToString().Split('\\').Last();
+                    AudioDevice dev = new(id, obj.Properties["Name"].Value.ToString());
+                    dev.deviceId = id.ToLower();
+                    dev.deviceLabel = obj.Properties["Name"].Value.ToString();
+                    if (id.StartsWith("{0.0.0.00000000}")) outputCache.Add(dev);
+                    else inputCache.Add(dev);
+                    Logger.WriteLine(dev.deviceId + " | " + dev.deviceLabel);
+                    
                 }
             }
-
-            return devices;
+            if (SettingsService.Settings.captureSettings.inputDevice.deviceId == "") {
+                SettingsService.Settings.captureSettings.inputDevice = inputCache[0];
+            }
+            if (SettingsService.Settings.captureSettings.outputDevice.deviceId == "") {
+                SettingsService.Settings.captureSettings.outputDevice = outputCache[0];
+            }
+            SettingsService.SaveSettings();
         }
 
         public static string GetUserSettings() {
