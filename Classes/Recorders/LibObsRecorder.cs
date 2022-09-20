@@ -74,9 +74,6 @@ namespace RePlays.Recorders {
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                             signalGCHookSuccess = false;
-                            
-                            //TODO: Read video recording lenght from file or in another way.
-                            RecordingService.lastVideoDuration = RecordingService.recordingElapsed;
                         }
                     }
                 }
@@ -360,7 +357,7 @@ namespace RePlays.Recorders {
 
             Logger.WriteLine(string.Format("Session recording saved to {0}", videoSavePath));
             Logger.WriteLine(string.Format("LibObs stopped recording {0} {1} [{2}]", session.Pid, session.GameTitle, bnum_allocs()));
-
+            RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
             try {
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
                 WebMessage.SendMessage(t);
