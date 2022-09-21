@@ -64,7 +64,12 @@ namespace RePlays.Utils {
         public string latestVersion { get { return Updater.latestVersion; } }
     }
 
-    public class MicDevice {
+    public class AudioDevice {
+        public AudioDevice() { }
+        public AudioDevice(string deviceId, string deviceLabel) { 
+            _deviceId = deviceId;
+            _deviceLabel = deviceLabel;
+            }
         private string _deviceId = "";
         public string deviceId { get { return _deviceId; } set { _deviceId = value; } }
         private string _deviceLabel = "";
@@ -90,11 +95,17 @@ namespace RePlays.Utils {
         private int _micAudioVolume = 50;
         public int micAudioVolume { get { return _micAudioVolume; } set { _micAudioVolume = value; } }
 
-        private List<MicDevice> _micDevicesCache = new();
-        public List<MicDevice> micDevicesCache { get { return _micDevicesCache; } set { _micDevicesCache = value; } }
+        private List<AudioDevice> _inputDevicesCache = new();
+        public List<AudioDevice> inputDevicesCache { get { return _inputDevicesCache; } set { _inputDevicesCache = value; } }
 
-        private MicDevice _micDevice = new();
-        public MicDevice micDevice { get { return _micDevice; } set { _micDevice = value; } }
+        private AudioDevice _inputDevice = new();
+        public AudioDevice inputDevice { get { return _inputDevice; } set { _inputDevice = value; } }
+
+        private List<AudioDevice> _outputDevicesCache = new();
+        public List<AudioDevice> outputDevicesCache { get { return _outputDevicesCache; } set { _outputDevicesCache = value; } }
+
+        private AudioDevice _outputDevice = new();
+        public AudioDevice outputDevice { get { return _outputDevice; } set { _outputDevice = value; } }
     }
 
     public class StorageSettings {

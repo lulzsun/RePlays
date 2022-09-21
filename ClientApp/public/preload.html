@@ -1,34 +1,8 @@
 <body>
   <script>
-    function getAudioDevices() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices)
-        console.error('enumerateDevices() not supported');
-      else {
-        // the purpose of getUserMedia is to allow permissions to access audio devices
-        navigator.mediaDevices.getUserMedia({ audio: true }).catch((err) => {return err;}).then((e) => {
-          console.log(e);
-
-          // after getting permissions, lets list audio devices
-          navigator.mediaDevices.enumerateDevices().then((devices) => {
-            console.log(devices);
-            const rawAudioDevices = devices.filter(item => item.kind === "audioinput");
-            console.log(rawAudioDevices);
-            let deviceList = [];
-            rawAudioDevices.forEach((device) => {
-              if(device.deviceId !== "") deviceList.push({deviceLabel: device.label, deviceId: device.deviceId});
-            });
-
-            if(window.chrome === undefined || window.chrome.webview === undefined) {
-              console.log({message: "GetAudioDevices", data: JSON.stringify(deviceList)});
-              return;
-            }
-            window.chrome.webview.postMessage({message: "GetAudioDevices", data: JSON.stringify(deviceList)});
-          }).catch(function(err) {
-            console.error(err.name + ": " + err.message);
-          });
-        });
-      }
+    function ready() {
+      window.chrome.webview.postMessage({message: "BrowserReady", data: null});
     }
-    getAudioDevices();
+    ready();
   </script>
 </body>

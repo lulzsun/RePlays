@@ -32,8 +32,8 @@ namespace RePlays.Recorders {
                     SettingsService.Settings.captureSettings.micAudioVolume
                 );
                 ltc.SetMicRecordingDevice(
-                    SettingsService.Settings.captureSettings.micDevice.deviceId,
-                    SettingsService.Settings.captureSettings.micDevice.deviceLabel
+                    SettingsService.Settings.captureSettings.inputDevice.deviceId,
+                    SettingsService.Settings.captureSettings.inputDevice.deviceLabel
                 );
                 ltc.SetCaptureMode(
                     SettingsService.Settings.captureSettings.recordingMode
