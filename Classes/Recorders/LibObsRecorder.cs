@@ -58,7 +58,7 @@ namespace RePlays.Recorders {
                         // a very crude way to see if game_capture source has successfully hooked/capture application....
                         // does game_capture source provide any signals that we can alternatively use?
                         if (formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
-                            if(signalGCHookSuccess != false && RecordingService.IsRecording) {
+                            if(signalGCHookSuccess && RecordingService.IsRecording) {
                                 // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
                                 // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
                                 Rect currentSize = GetWindowSize(windowHandle);
@@ -213,10 +213,18 @@ namespace RePlays.Recorders {
             }
             if (retryAttempt >= maxRetryAttempts) {
                 Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
-                ReleaseOutput();
-                ReleaseSources();
-                ReleaseEncoders();
-                return false;
+                if (SettingsService.Settings.captureSettings.useDisplayCapture)
+                {
+                    Logger.WriteLine("Attempting to use display capture instead");
+                    AttemptDisplayCapture();
+                }
+                else
+                {
+                    ReleaseOutput();
+                    ReleaseSources();
+                    ReleaseEncoders();
+                    return false;
+                }
             }
             retryAttempt = 0;
 
@@ -274,6 +282,15 @@ namespace RePlays.Recorders {
             }
 
             return true;
+        }
+
+        private void AttemptDisplayCapture()
+        {
+            ReleaseVideoSources();
+            IntPtr videoSourceSettings = obs_data_create();
+            videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
+            obs_data_release(videoSourceSettings);
+            obs_set_output_source(2, videoSources["display"]);
         }
 
         private IntPtr GetVideoEncoder(string encoder) {
@@ -424,12 +441,24 @@ namespace RePlays.Recorders {
         }
 
         public void ReleaseSources() {
-            foreach (var videoSource in videoSources.Values) {
+            ReleaseVideoSources();
+            ReleaseAudioSources();
+        }
+
+        public void ReleaseVideoSources()
+        {
+            foreach (var videoSource in videoSources.Values)
+            {
                 obs_source_remove(videoSource);
                 obs_source_release(videoSource);
             }
             videoSources.Clear();
-            foreach (var audioSource in audioSources.Values) {
+        }
+
+        public void ReleaseAudioSources()
+        {
+            foreach (var audioSource in audioSources.Values)
+            {
                 obs_source_remove(audioSource);
                 obs_source_release(audioSource);
             }

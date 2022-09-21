@@ -107,6 +107,14 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         </label>
       </div>
       <div className="flex flex-col gap-1">
+        <label className="inline-flex items-center">
+          <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
+            defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
+            onChange={(e) => {settings!.useDisplayCapture = e.target.checked; updateSettings();}}/>
+          <span className="ml-2 text-gray-700 dark:text-gray-400">Use Display Capture As Backup</span>
+        </label>
+      </div>
+      <div className="flex flex-col gap-1">
         Toggle Recording Keybind
         <HotkeySelector id="StartStopRecording" width="auto" keybind={keybindings?.StartStopRecording}/> 
       </div>
