@@ -1,55 +1,92 @@
-﻿using RePlays.Utils;
-using NHotkey.WindowsForms;
-using System.Windows.Forms;
+﻿using RePlays.Services;
+using RePlays.Utils;
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using RePlays.Classes.Services.Hotkeys;
 
-namespace RePlays.Services {
-    public static class HotkeyService {
+namespace RePlays.Services
+{
+    public static class HotkeyService
+    {
+        public delegate IntPtr CallbackDelegate(int Code, IntPtr W, IntPtr L);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct KBDLLHookStruct
+        {
+            public Int32 vkCode;
+            public Int32 scanCode;
+            public Int32 flags;
+            public Int32 time;
+            public Int32 dwExtraInfo;
+        }
+
+        [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, CallbackDelegate lpfn, int hInstance, int threadId);
+
+        [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
+        private static extern bool UnhookWindowsHookEx(IntPtr idHook);
+
+        [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
+        private static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll", CallingConvention = CallingConvention.StdCall)]
+        private static extern int GetCurrentThreadId();
         public static string EditId = null;
+        private static List<Hotkey> _hotkeys = new();
+        private static IntPtr HookID;
+        static CallbackDelegate TheHookCB = null;
 
-        public static void Start() {
-            foreach (var keybind in SettingsService.Settings.keybindings) {
-                RegisterHotkey(keybind.Key, keybind.Value);
-            }
+        public static void Start()
+        { 
+            //Create hotkeys
+            _hotkeys.Add(new BookmarkHotkey());
+            _hotkeys.Add(new RecordingHotkey());
+            //Create hook
+            TheHookCB = KeybHookProc;
+            HookID = SetWindowsHookEx(13, TheHookCB, 0, 0);
+            Logger.WriteLine("Loaded KeyboardHook...");
         }
 
-        public static void Stop() {
-            foreach (var keybind in SettingsService.Settings.keybindings) {
-                HotkeyManager.Current.Remove(keybind.Key);
-            }
+        public static void Stop()
+        {
+            _hotkeys.Clear();
+            UnhookWindowsHookEx(HookID);
+            Logger.WriteLine("Unloaded KeyboardHook...");
         }
 
-        public static void RegisterHotkey(string name, string[] keys) {
-            Keys keybind = Keys.None;
+        private static IntPtr KeybHookProc(int Code, IntPtr W, IntPtr L)
+        {
+            if (Code < 0)
+                return CallNextHookEx(HookID, Code, W, L);
 
-            for (int i = 0; i < keys.Length; i++) {
-                Keys key = Keys.None;
-                Enum.TryParse(keys[i], out key);
-
-                if(i == 0) keybind = key;
-                else keybind |= key;
-            }
-
-            HotkeyManager.Current.AddOrReplace(name, keybind, (s, e) => {
-                switch (name) {
-                    case "StartStopRecording": {
-                            if (!RecordingService.IsRecording) {
-                                Logger.WriteLine("Manual Start Recording");
-                                RecordingService.StartRecording();
-                            }
-                            else {
-                                Logger.WriteLine("Manual Stop Recording");
-                                RecordingService.StopRecording();
-                            }
-                        }
-                        break;
-                    default:
-                        Logger.WriteLine($"No hotkey event match for {name}");
-                        break;
+            try
+            {
+                KeyEvents kEvent = (KeyEvents)W;
+                if (kEvent == KeyEvents.KeyDown)
+                {
+                    Keys vkCode = (Keys)Marshal.ReadInt32(L);
+                    vkCode |= Control.ModifierKeys;
+                    foreach (Hotkey h in _hotkeys)
+                    {
+                        if (vkCode == h.Keybind) h.Action();
+                    }
                 }
-                e.Handled = true;
-            });
-            Logger.WriteLine($"Registered Hotkey: {name} / [{string.Join(" | ", keys)}]");
+            }
+            catch (Exception e)
+            {
+                Logger.WriteLine("Error getting current keypress: " + e.ToString());
+            }
+
+            return CallNextHookEx(HookID, Code, W, L);
+        }
+
+
+        public enum KeyEvents
+        {
+            KeyDown = 0x0100,
+            KeyUp = 0x0101
         }
     }
 }

@@ -74,9 +74,6 @@ namespace RePlays.Recorders {
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                             signalGCHookSuccess = false;
-                            
-                            //TODO: Read video recording lenght from file or in another way.
-                            RecordingService.lastVideoDuration = RecordingService.recordingElapsed;
                         }
                     }
                 }
@@ -301,6 +298,7 @@ namespace RePlays.Recorders {
         }
 
         private void GetAvailableEncoders() {
+            SettingsService.LoadSettings(); //Hacky fix for weird first launch issue, should be investigated further.
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
             List<string> availableEncoders = new();
@@ -360,7 +358,7 @@ namespace RePlays.Recorders {
 
             Logger.WriteLine(string.Format("Session recording saved to {0}", videoSavePath));
             Logger.WriteLine(string.Format("LibObs stopped recording {0} {1} [{2}]", session.Pid, session.GameTitle, bnum_allocs()));
-
+            RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
             try {
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
                 WebMessage.SendMessage(t);
@@ -370,7 +368,7 @@ namespace RePlays.Recorders {
             }
 
             //Adding bookmarks
-            KeyboardHookService.Stop("/" + MakeValidFolderNameSimple(session.GameTitle) + "/" + videoNameTimeStamp + "-ses.mp4");
+            BookmarkService.ApplyBookmarkToSavedVideo("/" + MakeValidFolderNameSimple(session.GameTitle) + "/" + videoNameTimeStamp + "-ses.mp4");
 
             return true;
         }

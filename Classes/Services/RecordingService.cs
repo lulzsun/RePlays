@@ -79,9 +79,6 @@ namespace RePlays.Services {
                     IsRecording = true;
                     IsPreRecording = false;
 
-                    KeyboardHookService.Start();
-                    Application.Run();
-
                     //frmMain.Instance.DisplayNotification("Recording Started", $"Currently recording {currentSession.GameTitle}");
                 }
                 //DetectionService.DisposeDetections();
