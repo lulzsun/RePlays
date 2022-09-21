@@ -367,7 +367,7 @@ namespace RePlays.Recorders {
             }
 
             //Adding bookmarks
-            KeyboardHookService.Stop("/" + MakeValidFolderNameSimple(session.GameTitle) + "/" + videoNameTimeStamp + "-ses.mp4");
+            BookmarkService.ApplyBookmarkToSavedVideo("/" + MakeValidFolderNameSimple(session.GameTitle) + "/" + videoNameTimeStamp + "-ses.mp4");
 
             return true;
         }
