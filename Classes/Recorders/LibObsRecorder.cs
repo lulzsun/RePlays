@@ -298,6 +298,7 @@ namespace RePlays.Recorders {
         }
 
         private void GetAvailableEncoders() {
+            SettingsService.LoadSettings(); //Hacky fix for weird first launch issue, should be investigated further.
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
             List<string> availableEncoders = new();
