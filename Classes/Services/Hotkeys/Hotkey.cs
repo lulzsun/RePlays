@@ -12,24 +12,22 @@ namespace RePlays.Classes.Services.Hotkeys
     public abstract class Hotkey
     {
         protected Keys _keybind;
+        public Keys Keybind => _keybind;
 
         protected Hotkey()
         {
             SetKeybind();
         }
 
-        [DllImport("user32.dll")]
-        private static extern short GetKeyState(Keys nVirtKey);
         public static Keys ParseKeys(string[] keys)
         {
             Keys keybind = Keys.None;
 
-            for (int i = 0; i < keys.Length; i++) {
-                Keys key = Keys.None;
+            for (int i = 0; i < keys.Length; i++)
+            {
+                Keys key;
                 Enum.TryParse(keys[i], out key);
-
-                if(i == 0) keybind = key;
-                else keybind |= key;
+                keybind |= key;
             }
 
             return keybind;
@@ -37,12 +35,6 @@ namespace RePlays.Classes.Services.Hotkeys
 
         public abstract void Action();
 
-        public bool IsPressed()
-        {
-            int state = GetKeyState(_keybind);
-            if (state > 1 || state < -1) return true;
-            return false;
-        }
         protected abstract void SetKeybind();
     }
 }

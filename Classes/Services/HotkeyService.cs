@@ -10,7 +10,7 @@ namespace RePlays.Services
 {
     public static class HotkeyService
     {
-        public delegate int CallbackDelegate(int Code, int W, int L);
+        public delegate IntPtr CallbackDelegate(int Code, IntPtr W, IntPtr L);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public struct KBDLLHookStruct
@@ -23,19 +23,19 @@ namespace RePlays.Services
         }
 
         [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
-        private static extern int SetWindowsHookEx(int idHook, CallbackDelegate lpfn, int hInstance, int threadId);
+        private static extern IntPtr SetWindowsHookEx(int idHook, CallbackDelegate lpfn, int hInstance, int threadId);
 
         [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
-        private static extern bool UnhookWindowsHookEx(int idHook);
+        private static extern bool UnhookWindowsHookEx(IntPtr idHook);
 
         [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
-        private static extern int CallNextHookEx(int idHook, int nCode, int wParam, int lParam);
+        private static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("kernel32.dll", CallingConvention = CallingConvention.StdCall)]
         private static extern int GetCurrentThreadId();
         public static string EditId = null;
         private static List<Hotkey> _hotkeys = new();
-        private static int HookID = 0;
+        private static IntPtr HookID;
         static CallbackDelegate TheHookCB = null;
 
         public static void Start()
@@ -56,7 +56,7 @@ namespace RePlays.Services
             Logger.WriteLine("Unloaded KeyboardHook...");
         }
 
-        private static int KeybHookProc(int Code, int W, int L)
+        private static IntPtr KeybHookProc(int Code, IntPtr W, IntPtr L)
         {
             if (Code < 0)
                 return CallNextHookEx(HookID, Code, W, L);
@@ -66,9 +66,11 @@ namespace RePlays.Services
                 KeyEvents kEvent = (KeyEvents)W;
                 if (kEvent == KeyEvents.KeyDown)
                 {
+                    Keys vkCode = (Keys)Marshal.ReadInt32(L);
+                    vkCode |= Control.ModifierKeys;
                     foreach (Hotkey h in _hotkeys)
                     {
-                        if (h.IsPressed()) h.Action();
+                        if (vkCode == h.Keybind) h.Action();
                     }
                 }
             }
