@@ -199,7 +199,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         </div>
         <div className="flex flex-col">
           Bitrate
-          <DropDownMenu text={(settings === undefined ? "50 MB/s" : settings.bitRate + " MB/s")} width={"auto"} zIndex={51}
+          <DropDownMenu text={(settings === undefined ? "50 MB/s" : settings.bitRate + " MB/s")} width={"auto"} zIndex={52}
           items={[
             {name: "5 MB/s", onClick: () => {settings!.bitRate = 5; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "10 MB/s", onClick: () => {settings!.bitRate = 10; customVideoQuality.current!.checked = true; updateSettings();}},

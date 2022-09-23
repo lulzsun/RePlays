@@ -95,7 +95,6 @@ namespace RePlays.Recorders {
 
             ResetAudio();
             ResetVideo();
-            GetAvailableEncoders();
 
             obs_post_load_modules();
 
@@ -314,8 +313,7 @@ namespace RePlays.Recorders {
             return encoderPtr;
         }
 
-        private void GetAvailableEncoders() {
-            SettingsService.LoadSettings(); //Hacky fix for weird first launch issue, should be investigated further.
+        public void GetAvailableEncoders() {
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
             List<string> availableEncoders = new();
