@@ -37,13 +37,13 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
             <Link to="/settings/Capture" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Capture
             </Link>
-            <Link to="/settings/detection" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
+            <Link to="/settings/Detection" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Detection
             </Link>
-            <Link to="/settings/upload" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
+            <Link to="/settings/Upload" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Upload
             </Link>
-            <Link to="/settings/storage" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
+            <Link to="/settings/Storage" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Storage
             </Link>
             <Link to="/settings/Help" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
