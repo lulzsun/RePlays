@@ -76,6 +76,7 @@ declare global {
   interface UserSettings {
     generalSettings: GeneralSettings
     captureSettings: CaptureSettings
+    keybindingsSettings: KeybindingsSettings
     uploadSettings: UploadSettings
     storageSettings: StorageSettings
     keybindings: Keybindings
@@ -107,6 +108,9 @@ declare global {
     inputDevicesCache: AudioDevice[],
     outputDevice: AudioDevice,
     outputDevicesCache: AudioDevice[],
+  }
+  interface KeybindingsSettings {
+      keybindings: Keybindings
   }
   interface UploadSettings {
     recentLinks: string[],

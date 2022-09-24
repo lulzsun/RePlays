@@ -5,10 +5,9 @@ import HotkeySelector from "../../components/HotkeySelector";
 interface Props {
   updateSettings: () => void;
   settings: CaptureSettings | undefined;
-  keybindings: Keybindings | undefined;
 }
 
-export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}) => {
+export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
   const [gameAudioVolume, setGameAudioVolume] = useState(settings!.gameAudioVolume);
   const [micAudioVolume, setMicAudioVolume] = useState(settings!.micAudioVolume);
@@ -105,23 +104,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
             defaultChecked={(settings?.recordingMode === "off" ? true : false)}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">Off</span>
         </label>
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="inline-flex items-center">
-          <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
-            defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
-            onChange={(e) => {settings!.useDisplayCapture = e.target.checked; updateSettings();}}/>
-          <span className="ml-2 text-gray-700 dark:text-gray-400">Use Display Capture As Backup</span>
-        </label>
-      </div>
-      <div className="flex flex-col gap-1">
-        Toggle Recording Keybind
-        <HotkeySelector id="StartStopRecording" width="auto" keybind={keybindings?.StartStopRecording}/> 
-      </div>
-      <div className="flex flex-col gap-1">
-         Bookmark Keybind
-         <HotkeySelector id="CreateBookmark" width="auto" keybind={keybindings?.CreateBookmark} />
-      </div>
+        </div>
 
       <h1 className="font-semibold text-2xl mt-4">Video Quality</h1>
       <div className="flex gap-4" 
@@ -172,11 +155,6 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         </label>
       </div>
       <div className="flex gap-8">
-      <div className="flex flex-col">
-          Encoder
-          <DropDownMenu text={(settings === undefined? "x264" : settings!.encoder)} width={"auto"}
-          items={availableEncoders}/> 
-        </div>
         <div className="flex flex-col">
           Resolution
           <DropDownMenu text={(settings === undefined ? "1080p" : settings.resolution + "p")} width={"auto"}
@@ -213,9 +191,15 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
             {name: "50 MB/s", onClick: () => {settings!.bitRate = 50; customVideoQuality.current!.checked = true; updateSettings();}},
           ]}/> 
         </div>
+        <div className="flex flex-col">
+            Encoder
+            <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
+                items={availableEncoders} />
+        </div>
       </div>
 
-      <h1 className="font-semibold text-2xl mt-4">Game Audio Settings</h1>
+      <h1 className="font-semibold text-2xl mt-4">Audio Settings</h1>
+      <div className="flex flex-col">Game Volume</div>
       <div className="flex gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
           <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
@@ -227,7 +211,7 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         {gameAudioVolume + "%"}
       </div>
       
-      <h1 className="font-semibold text-2xl mt-4">Microphone Audio Settings</h1>
+      <div className="flex flex-col">Microphone Volume</div>
       <div className="flex gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
           <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
@@ -247,6 +231,16 @@ export const Capture: React.FC<Props> = ({settings, keybindings, updateSettings}
         Input Source
         <DropDownMenu text={(settings === undefined ? "Default Device" : settings.inputDevice.deviceLabel)} width={"auto"}
         items={inputAudioDevices}/> 
+            </div>
+
+      <h1 className="font-semibold text-2xl mt-4">Advanced</h1>
+      <div className="flex flex-col gap-1">
+          <label className="inline-flex items-center">
+              <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
+                  defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
+                  onChange={(e) => { settings!.useDisplayCapture = e.target.checked; updateSettings(); }} />
+              <span className="ml-2 text-gray-700 dark:text-gray-400">Use Display Capture As Backup</span>
+          </label>
       </div>
     </div>
 	)
