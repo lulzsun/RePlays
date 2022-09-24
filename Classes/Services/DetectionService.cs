@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using RePlays.Utils;
@@ -8,19 +11,97 @@ using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class DetectionService {
+        static readonly ManagementEventWatcher pCreationWatcher = new(new EventQuery("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
+        static readonly ManagementEventWatcher pDeletionWatcher = new(new EventQuery("SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
+        public delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+
+        // Keep delegate alive as long as class is alive.
+        static WinEventDelegate dele;
+        static IntPtr winActiveHook = IntPtr.Zero;
+
         static JsonElement[] gameDetectionsJson;
         static JsonElement[] nonGameDetectionsJson;
-        private static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
-        private static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
+        static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
+        static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
+        public static void Start() {
+            LoadDetections();
+            // watch process creation/deletion events
+            pCreationWatcher.EventArrived += ProcessCreation_EventArrived;
+            pDeletionWatcher.EventArrived += ProcessDeletion_EventArrived;
+            pCreationWatcher.Start();
+            pDeletionWatcher.Start();
 
-        public static void DisposeDetections() {
-            gameDetectionsJson = null;
-            nonGameDetectionsJson = null;
+            // watch active foreground window changes 
+            dele = WhenActiveForegroundChanges;
+            winActiveHook = SetWinEventHook(3, 3, IntPtr.Zero, dele, 0, 0, 0);
+        }
+        public static void Stop() {
+            pCreationWatcher.Stop();
+            pDeletionWatcher.Stop();
+            pCreationWatcher.Dispose();
+            pDeletionWatcher.Dispose();
+
+            UnhookWinEvent(winActiveHook);
+            dele = null;
+        }
+
+        static void ProcessCreation_EventArrived(object sender, EventArrivedEventArgs e) {
+            if (RecordingService.IsRecording) return;
+
+            try
+            {
+                if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription)
+                {
+                    int processId = int.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
+                    var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
+                    //var cmdLine = instanceDescription.GetPropertyValue("CommandLine"); may or may not be useful in the future
+
+                    if (executablePath != null)
+                    {
+                        if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\"))
+                        {   // if this program is starting from here,
+                            return;                                                             // we can assume it is not a game
+                        }
+                    }
+                    if (processId != 0) AutoDetectGame(processId);
+                }
+            }
+            catch (ManagementException) { }
+
+            e.NewEvent.Dispose();
+        }
+        static void ProcessDeletion_EventArrived(object sender, EventArrivedEventArgs e) {
+            if (!RecordingService.IsRecording) return;
+
+            try
+            {
+                if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription)
+                {
+                    int processId = int.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
+
+                    if (processId != 0)
+                    {
+                        if (RecordingService.GetCurrentSession().Pid == processId)
+                            RecordingService.StopRecording();
+                    }
+                }
+            }
+            catch (ManagementException) { }
+
+            e.NewEvent.Dispose();
+        }
+        static void WhenActiveForegroundChanges(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
+            if (RecordingService.IsRecording) return;
+            AutoDetectGame(GetForegroundProcessId());
         }
 
         public static void LoadDetections() {
             gameDetectionsJson = DownloadDetections(gameDetectionsFile, "game_detections.json");
             nonGameDetectionsJson = DownloadDetections(nonGameDetectionsFile, "nongame_detections.json");
+        }
+        public static void DisposeDetections() {
+            gameDetectionsJson = null;
+            nonGameDetectionsJson = null;
         }
 
         public static JsonElement[] DownloadDetections(string dlPath, string file) {
@@ -41,13 +122,78 @@ namespace RePlays.Services {
             return JsonDocument.Parse(result).RootElement.EnumerateArray().ToArray();
         }
 
+        /// <summary>
+        /// <para>Checks to see if the process:</para>
+        /// <para>1. contains in the game detection list (whitelist)</para>
+        /// <para>2. does NOT contain in nongame detection list (blacklist)</para>
+        /// <para>3. contains any graphics dll modules (directx, opengl)</para>
+        /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
+        /// </summary>
+        public static void AutoDetectGame(int processId, bool autoRecord = true)
+        {
+            Process process;
+            string executablePath;
+            try
+            {
+                process = Process.GetProcessById(processId);
+                executablePath = process.MainModule.FileName;
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: [{ex.Message}]");
+                return;
+            }
+
+            if (IsMatchedNonGame(executablePath)) return;
+            string gameTitle = GetGameTitle(executablePath);
+            if (!autoRecord)
+            {
+                // This is a manual record event so lets just yolo it and assume user knows best
+                RecordingService.SetCurrentSession(processId, gameTitle, executablePath);
+                return;
+            }
+
+            bool isGame = IsMatchedGame(executablePath);
+
+            if (!isGame)
+            {
+                Logger.WriteLine($"Process [{processId}]:[{Path.GetFileName(executablePath)}] isn't in the game detection list, checking if it might be a game");
+                try
+                {
+                    var usage = GetGPUUsage(process.Id);
+                    Logger.WriteLine($"PROCESS GPU USAGE [{process.Id}]: {usage}");
+                    if (usage > 10)
+                    {
+                        Logger.WriteLine(
+                            $"This process [{processId}]:[{Path.GetFileName(executablePath)}], appears to be a game.");
+                        isGame = true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.WriteLine(
+                        $"Failed to evaluate gpu usage for [{Path.GetFileName(executablePath)}] isGame: {isGame}, reason: {e.Message}");
+                }
+            }
+
+            if (isGame)
+            {
+                process.Refresh();
+                if (process.MainWindowHandle == IntPtr.Zero) return;
+
+                RecordingService.SetCurrentSession(processId, gameTitle, executablePath);
+                Logger.WriteLine(
+                    $"This process [{processId}] is a recordable game [{Path.GetFileName(executablePath)}], prepared to record");
+
+                Logger.WriteLine("Is allowed to record: " + (SettingsService.Settings.captureSettings.recordingMode == "automatic"));
+                if (SettingsService.Settings.captureSettings.recordingMode == "automatic")
+                    RecordingService.StartRecording();
+            }
+            process.Dispose();
+        }
+
         public static bool IsMatchedGame(string exeFile) {
-            if (exeFile == null)
-                return false;
-
             exeFile = exeFile.ToLower();
-
-
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
                 if (game.gameExe == exeFile) return true;
             }
@@ -86,9 +232,6 @@ namespace RePlays.Services {
         }
 
         public static string GetGameTitle(string exeFile) {
-            if (exeFile == null)
-                return "Game Unknown";
-
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
                 if (game.gameExe == exeFile.ToLower()) return game.gameName;
             }
@@ -153,5 +296,12 @@ namespace RePlays.Services {
             }
             return false;
         }
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
     }
 }

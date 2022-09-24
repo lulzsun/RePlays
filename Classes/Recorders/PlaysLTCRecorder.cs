@@ -50,14 +50,14 @@ namespace RePlays.Recorders {
                         Logger.WriteLine(string.Format("This process [{0}] is a recordable game, preparing to LoadGameModule", msg.Pid));
 
                         string gameTitle = DetectionService.GetGameTitle(msg.ExeFile);
-                        RecordingService.SetCurrentSession(msg.Pid, gameTitle);
+                        //RecordingService.SetCurrentSession(msg.Pid, gameTitle);
                         ltc.SetGameName(gameTitle);
                         ltc.LoadGameModule(msg.Pid);
                     }
                     else if (!isGame && !isNonGame) {
                         Logger.WriteLine(string.Format("This process [{0}] is an unknown application, lets try to ScanForGraphLib", msg.Pid));
 
-                        RecordingService.SetCurrentSession(0, DetectionService.GetGameTitle(msg.ExeFile));
+                        //RecordingService.SetCurrentSession(0, DetectionService.GetGameTitle(msg.ExeFile));
                         ltc.ScanForGraphLib(msg.Pid); // the response will be sent to GraphicsLibLoaded if successful
                     }
                     else {
@@ -105,9 +105,6 @@ namespace RePlays.Recorders {
             Logger.WriteLine("Successfully started Plays-Ltc!");
         }
 
-        public override void Stop() {
-            throw new System.NotImplementedException();
-        }
 
         public override Task<bool> StartRecording() {
             ltc.SetKeyBinds();

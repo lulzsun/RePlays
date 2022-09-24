@@ -30,9 +30,9 @@ namespace RePlays.Services {
         }
 
         public async static void Start(Type type) {
-            DetectionService.LoadDetections();
 
             Logger.WriteLine("RecordingService starting...");
+            DetectionService.Start();
             if (ActiveRecorder == null) {
                 if (type == typeof(PlaysLTCRecorder)) {
                     ActiveRecorder = new PlaysLTCRecorder();
@@ -50,8 +50,8 @@ namespace RePlays.Services {
             }
         }
 
-        public static void SetCurrentSession(int _Pid, string _GameTitle = "Game Unknown") {
-            currentSession = new Session(_Pid, _GameTitle);
+        public static void SetCurrentSession(int _Pid, string _GameTitle, string exeFile) {
+            currentSession = new Session(_Pid, _GameTitle, exeFile);
         }
 
         public static Session GetCurrentSession() {

@@ -6,9 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms; // exists for Application.StartupPath
 using RePlays.Services;
@@ -412,6 +414,38 @@ namespace RePlays.Utils {
                     Convert.FromBase64String(encryptedString)
                     , optionalEntropy != null ? Encoding.UTF8.GetBytes(optionalEntropy) : null
                     , DataProtectionScope.CurrentUser));
+        }
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+        public static int GetForegroundProcessId()
+        {
+            IntPtr handle = GetForegroundWindow();
+            if (handle == IntPtr.Zero)
+                return 0;
+            if (GetWindowThreadProcessId(handle, out int processId) == 0)
+                return 0;
+
+            return processId;
+        }
+
+        public static int GetGPUUsage(int pid)
+        {
+            ObjectQuery winQuery = new ObjectQuery("SELECT * FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine");
+
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(winQuery);
+
+            foreach (ManagementObject obj in searcher.Get())
+            {
+                var match = Regex.Match(obj["Name"].ToString(), @"^pid_(\d+)_luid.+$");
+                if (match.Success && int.Parse(match.Groups[1].Value) == pid)
+                {
+                    return int.Parse(obj["UtilizationPercentage"].ToString());
+                }
+            }
+            return 0;
         }
     }
 }
