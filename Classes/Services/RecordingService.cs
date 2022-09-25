@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace RePlays.Services {
     public static class RecordingService {
-        public static BaseRecorder ActiveRecorder = null;
+        public static BaseRecorder ActiveRecorder;
 
         private static System.Timers.Timer recordingTimer = new System.Timers.Timer(1000);
         public static int recordingElapsed = 0;
@@ -33,21 +33,16 @@ namespace RePlays.Services {
 
             Logger.WriteLine("RecordingService starting...");
             DetectionService.Start();
-            if (ActiveRecorder == null) {
-                if (type == typeof(PlaysLTCRecorder)) {
-                    ActiveRecorder = new PlaysLTCRecorder();
-                    ActiveRecorder.Start();
-                    return;
-                }
-
-                ActiveRecorder = new LibObsRecorder();
-                Logger.WriteLine("Creating a new ActiveRecorder");
-                await Task.Run(() => ActiveRecorder.Start());
-            }
-            else
+            if (type == typeof(PlaysLTCRecorder))
             {
-                Logger.WriteLine("Reusing old ActiveRecorder");
+                ActiveRecorder = new PlaysLTCRecorder();
+                ActiveRecorder.Start();
+                return;
             }
+
+            ActiveRecorder = new LibObsRecorder();
+            Logger.WriteLine("Creating a new ActiveRecorder");
+            await Task.Run(() => ActiveRecorder.Start());
         }
 
         public static void SetCurrentSession(int _Pid, string _GameTitle, string exeFile) {

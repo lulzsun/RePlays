@@ -7,7 +7,6 @@ using RePlays.Utils;
 using static RePlays.Utils.Functions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Drawing;
 using RePlays.Classes.Services;
 
 namespace RePlays.Recorders {
@@ -37,7 +36,7 @@ namespace RePlays.Recorders {
 
         static signal_callback_t outputStopCb;
 
-        public override async void Start() {
+        public override void Start() {
             if (Connected) return;
 
             // STARTUP
@@ -131,7 +130,7 @@ namespace RePlays.Recorders {
             // attempt to retrieve process's window handle to retrieve class name and window title
             windowHandle = LazyGetWindowHandleByProcessId(session.Pid);
             while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Waiting to retrieve process handle... retry attempt #{0}", retryAttempt));
+                Logger.WriteLine($"Waiting to retrieve process handle... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
                 if (retryAttempt % 2 == 1) // alternate, one or the other might get us a better handle
@@ -164,11 +163,11 @@ namespace RePlays.Recorders {
                 windowSize = GetWindowSize(windowHandle);
             }
             if (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt >= maxRetryAttempts) {
-                Logger.WriteLine(String.Format("Possible issue in getting correct window size {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+                Logger.WriteLine($"Possible issue in getting correct window size {windowSize.GetWidth()}x{windowSize.GetHeight()}");
                 ResetVideo();
             }
             else {
-                Logger.WriteLine(String.Format("Game capture window size: {0}x{1}", windowSize.GetWidth(), windowSize.GetHeight()));
+                Logger.WriteLine($"Game capture window size: {windowSize.GetWidth()}x{windowSize.GetHeight()}");
                 ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
             }
 
@@ -205,16 +204,16 @@ namespace RePlays.Recorders {
             // attempt to wait for game_capture source to hook first
             // this might take longer, so multiply maxRetryAttempts
             while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Waiting for successful graphics hook for [{0}]... retry attempt #{1}", windowClassNameId, retryAttempt));
+                Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
             if (retryAttempt >= maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
+                Logger.WriteLine($"Unable to get graphics hook for [{windowClassNameId}]");
                 if (SettingsService.Settings.captureSettings.useDisplayCapture)
                 {
                     Logger.WriteLine("Attempting to use display capture instead");
-                    AttemptDisplayCapture();
+                    StartDisplayCapture();
                 }
                 else
                 {
@@ -243,12 +242,12 @@ namespace RePlays.Recorders {
             bool canStartCapture = obs_output_can_begin_data_capture(output, 0);
             if (!canStartCapture) {
                 while(!obs_output_initialize_encoders(output, 0) && retryAttempt < maxRetryAttempts) {
-                    Logger.WriteLine(string.Format("Waiting for encoders to finish initializing... retry attempt #{0}", retryAttempt));
+                    Logger.WriteLine($"Waiting for encoders to finish initializing... retry attempt #{retryAttempt}");
                     await Task.Delay(retryInterval);
                     retryAttempt++;
                 }
                 if (retryAttempt >= maxRetryAttempts) {
-                    Logger.WriteLine(string.Format("Unable to get encoders to initialize"));
+                    Logger.WriteLine("Unable to get encoders to initialize");
                     ReleaseOutput();
                     ReleaseSources();
                     ReleaseEncoders();
@@ -276,13 +275,13 @@ namespace RePlays.Recorders {
                 ReleaseEncoders();
                 return false;
             } else {
-                Logger.WriteLine(string.Format("LibObs started recording [{0}] [{1}] [{2}]", session.Pid, session.GameTitle, windowClassNameId));
+                Logger.WriteLine($"LibObs started recording [{session.Pid}] [{session.GameTitle}] [{windowClassNameId}]");
             }
 
             return true;
         }
 
-        private void AttemptDisplayCapture()
+        private void StartDisplayCapture()
         {
             ReleaseVideoSources();
             IntPtr videoSourceSettings = obs_data_create();
@@ -356,22 +355,21 @@ namespace RePlays.Recorders {
             // attempt to check if output signalled stop
             int retryAttempt = 0;
             while (signalOutputStop == false && retryAttempt < maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Waiting for obs_output to stop... retry attempt #{0}", retryAttempt));
+                Logger.WriteLine($"Waiting for obs_output to stop... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
             }
-            retryAttempt = 0;
 
             // CLEANUP
             ReleaseOutput();
             ReleaseSources();
             ReleaseEncoders();
 
-            Logger.WriteLine(string.Format("Session recording saved to {0}", videoSavePath));
-            Logger.WriteLine(string.Format("LibObs stopped recording {0} {1} [{2}]", session.Pid, session.GameTitle, bnum_allocs()));
+            Logger.WriteLine($"Session recording saved to {videoSavePath}");
+            Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
             try {
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
@@ -387,14 +385,12 @@ namespace RePlays.Recorders {
             return true;
         }
 
-        public static void RestartRecording() {
+        private static void RestartRecording() {
             if (output == IntPtr.Zero) return;
-
-            if(RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder))
-                RecordingService.RestartRecording();
+            RecordingService.RestartRecording();
         }
 
-        public IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default") {
+        private IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default") {
             if (settings == IntPtr.Zero) {
                 settings = obs_data_create();
                 obs_data_set_string(settings, "device_id", deviceId);
