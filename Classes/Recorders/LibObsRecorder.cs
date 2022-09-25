@@ -104,7 +104,6 @@ namespace RePlays.Recorders {
                 signalOutputStop = true;
             });
 
-            base.Start();
 
             Connected = true;
             Logger.WriteLine("Successfully started LibObs!");
@@ -125,7 +124,7 @@ namespace RePlays.Recorders {
                 // if processId is 0, there was something wrong retrieving foreground process (this shouldn't normally happen)
                 if (processId == 0)
                     return false;
-                AutoDetectGame(processId, autoRecord: false);
+                DetectionService.AutoDetectGame(processId, autoRecord: false);
                 session = RecordingService.GetCurrentSession();
             }
 
