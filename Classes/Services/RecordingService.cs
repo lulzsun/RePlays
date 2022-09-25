@@ -3,20 +3,18 @@ using RePlays.Utils;
 using System.Timers;
 using System;
 using System.Threading.Tasks;
-using RePlays.Classes.Services;
-using System.Windows.Forms;
-using System.Diagnostics;
 
 namespace RePlays.Services {
     public static class RecordingService {
         public static BaseRecorder ActiveRecorder;
 
-        private static System.Timers.Timer recordingTimer = new System.Timers.Timer(1000);
+        private static Timer recordingTimer = new Timer(1000);
         public static int recordingElapsed = 0;
         public static double lastVideoDuration = 0;
-        private static Session currentSession = new Session(0, "Game Unknown");
+        private static Session currentSession = new(0, "Game Unknown");
         public static bool IsRecording { get; internal set; }
         private static bool IsPreRecording { get; set; }
+        public static bool GameInFocus { get; set; }
 
         public class Session {
             public int Pid { get; internal set; }
@@ -29,7 +27,7 @@ namespace RePlays.Services {
             }
         }
 
-        public async static void Start(Type type) {
+        public static async void Start(Type type) {
 
             Logger.WriteLine("RecordingService starting...");
             DetectionService.Start();
@@ -70,9 +68,10 @@ namespace RePlays.Services {
                     recordingTimer.Elapsed += OnTimedEvent;
                     recordingTimer.Start();
                     
-                    Logger.WriteLine(string.Format("Start Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
+                    Logger.WriteLine($"Start Recording: {currentSession.Pid}, {currentSession.GameTitle}");
                     IsRecording = true;
                     IsPreRecording = false;
+                    GameInFocus = true;
 
                     //frmMain.Instance.DisplayNotification("Recording Started", $"Currently recording {currentSession.GameTitle}");
                 }
@@ -109,7 +108,6 @@ namespace RePlays.Services {
                 //DetectionService.LoadDetections();
             }
         }
-
         public static async void RestartRecording() {
             if (!IsRecording) return;
 
@@ -123,6 +121,18 @@ namespace RePlays.Services {
                 Logger.WriteLine($"Issue trying to restart recording: {stopResult} {startResult}");
                 IsRecording = false;
             }
+        }
+
+        public static void LostFocus()
+        {
+            GameInFocus = false;
+            ActiveRecorder.LostFocus();
+        }
+
+        public static void GainedFocus()
+        {
+            GameInFocus = true;
+            ActiveRecorder.GainedFocus();
         }
     }
 }

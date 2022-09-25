@@ -12,10 +12,9 @@ using RePlays.Classes.Services;
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
         public bool Connected { get; private set; }
-
+        public bool DisplayCapture;
         static string videoSavePath = "";
         static string videoNameTimeStamp = "";
-
         static IntPtr windowHandle = IntPtr.Zero;
         static IntPtr output = IntPtr.Zero;
         static Rect windowSize;
@@ -288,6 +287,7 @@ namespace RePlays.Recorders {
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
             obs_set_output_source(2, videoSources["display"]);
+            DisplayCapture = true;
         }
 
         private IntPtr GetVideoEncoder(string encoder) {
@@ -311,6 +311,28 @@ namespace RePlays.Recorders {
             return encoderPtr;
         }
 
+        public override void LostFocus()
+        {
+            if (DisplayCapture) PauseDisplayOutput();
+        }
+
+        public override void GainedFocus()
+        {
+            if (DisplayCapture) ResumeDisplayOutput();
+        }
+
+        public void PauseDisplayOutput()
+        {
+            ReleaseVideoSources();
+        }
+
+        public void ResumeDisplayOutput()
+        {
+            IntPtr videoSourceSettings = obs_data_create();
+            videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
+            obs_data_release(videoSourceSettings);
+            obs_set_output_source(2, videoSources["display"]);
+        }
         public void GetAvailableEncoders() {
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
@@ -370,6 +392,7 @@ namespace RePlays.Recorders {
 
             Logger.WriteLine($"Session recording saved to {videoSavePath}");
             Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
+            DisplayCapture = false;
             RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
             try {
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));

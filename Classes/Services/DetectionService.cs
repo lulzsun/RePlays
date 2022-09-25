@@ -90,8 +90,15 @@ namespace RePlays.Services {
 
             e.NewEvent.Dispose();
         }
-        static void WhenActiveForegroundChanges(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
-            if (RecordingService.IsRecording) return;
+        static void WhenActiveForegroundChanges(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        {
+            int pid = GetForegroundProcessId();
+            if (RecordingService.IsRecording)
+            {
+                if (pid == RecordingService.GetCurrentSession().Pid) RecordingService.GainedFocus();
+                else if (RecordingService.GameInFocus) RecordingService.LostFocus();
+                return;
+            }
             AutoDetectGame(GetForegroundProcessId());
         }
 
