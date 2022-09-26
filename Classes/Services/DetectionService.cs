@@ -155,7 +155,7 @@ namespace RePlays.Services {
 
             bool isGame = IsMatchedGame(executablePath);
 
-            if (!isGame)
+            if (!isGame && !executablePath.Contains(@":\Windows"))
             {
                 Logger.WriteLine($"Process [{processId}]:[{Path.GetFileName(executablePath)}] isn't in the game detection list, checking if it might be a game");
                 try
