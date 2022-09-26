@@ -15,24 +15,15 @@ namespace RePlays.Recorders {
         public abstract void LostFocus();
         public abstract void GainedFocus();
 
-        public IntPtr LazyGetWindowHandleByProcessId(int processId) {
-            IntPtr handle = IntPtr.Zero;
+        public IntPtr GetWindowHandleByProcessId(int processId, bool lazy=false) {
+            IntPtr handle;
             try {
-                handle = Process.GetProcessById(processId).MainWindowHandle;
+                if(!lazy)   handle = EnumerateProcessWindowHandles(processId).First();
+                else        handle = Process.GetProcessById(processId).MainWindowHandle;
             }
             catch (Exception e) {
                 Logger.WriteLine($"There was an issue retrieving the window handle for process id [{processId}]: {e.Message}");
-            }
-            return handle;
-        }
-
-        public IntPtr GetWindowHandleByProcessId(int processId) {
-            IntPtr handle = IntPtr.Zero;
-            try {
-                handle = EnumerateProcessWindowHandles(processId).First();
-            }
-            catch (Exception e) {
-                Logger.WriteLine($"There was an issue retrieving the window handle for process id [{processId}]: {e.Message}");
+                return IntPtr.Zero;
             }
             return handle;
         }
