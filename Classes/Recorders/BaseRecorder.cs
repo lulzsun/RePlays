@@ -1,16 +1,10 @@
-﻿using RePlays.Services;
-using RePlays.Utils;
+﻿using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Management;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RePlays.Recorders {
@@ -18,6 +12,8 @@ namespace RePlays.Recorders {
         public abstract void Start();
         public abstract Task<bool> StartRecording();
         public abstract Task<bool> StopRecording();
+        public abstract void LostFocus();
+        public abstract void GainedFocus();
 
         public IntPtr LazyGetWindowHandleByProcessId(int processId) {
             IntPtr handle = IntPtr.Zero;

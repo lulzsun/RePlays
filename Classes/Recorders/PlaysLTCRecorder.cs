@@ -116,5 +116,13 @@ namespace RePlays.Recorders {
             ltc.StopRecording();
             return Task.FromResult(true);
         }
+
+        public override void LostFocus()
+        {
+        }
+
+        public override void GainedFocus()
+        {
+        }
     }
 }
