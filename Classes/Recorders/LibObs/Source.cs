@@ -37,6 +37,23 @@ namespace obs_net {
 		[DllImport(importLibrary, CallingConvention = importCall)]
 		public static extern void obs_source_set_audio_mixers(obs_source_t source, uint mixers);
 
+
+		/// <summary>
+		/// https://obsproject.com/docs/reference-sources.html?highlight=obs_source_get_flags#c.obs_source_get_flags
+		/// </summary>
+		/// <param name="source"></param>
+		/// <returns></returns>
+		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern uint obs_source_get_flags(obs_source_t source);
+
+		/// <summary>
+		/// https://obsproject.com/docs/reference-sources.html?highlight=obs_source_get_flags#c.obs_source_set_flags
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="flags">OBS_SOURCE_FLAG_FORCE_MONO Forces audio to mono</param>
+		[DllImport(importLibrary, CallingConvention = importCall)]
+		public static extern void obs_source_set_flags(obs_source_t source, uint flags);
+
 		/// <summary>
 		/// <para>https://obsproject.com/docs/reference-sources.html#c.obs_source_update</para>
 		/// <para>

@@ -418,6 +418,13 @@ namespace RePlays.Recorders {
                 obs_data_set_string(settings, "device_id", deviceId);
             }
             IntPtr source = obs_source_create(id, name, settings, IntPtr.Zero);
+
+            // If this is a microphone device, automatically down mix to mono
+            // TODO: make this a user configurable setting instead
+            if(name == "microphone") {
+                uint flags = obs_source_get_flags(source) | (1 << 1);
+                obs_source_set_flags(source, flags);
+            }
             obs_data_release(settings);
             return source;
         }
