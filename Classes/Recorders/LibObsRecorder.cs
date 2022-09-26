@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Drawing;
 using RePlays.Classes.Services;
+using System.Diagnostics;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
@@ -211,13 +212,11 @@ namespace RePlays.Recorders {
             }
             if (retryAttempt >= maxRetryAttempts) {
                 Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
-                if (SettingsService.Settings.captureSettings.useDisplayCapture)
-                {
+                if (SettingsService.Settings.captureSettings.useDisplayCapture && Process.GetProcessById(session.Pid) != null) {
                     Logger.WriteLine("Attempting to use display capture instead");
                     AttemptDisplayCapture();
                 }
-                else
-                {
+                else {
                     ReleaseOutput();
                     ReleaseSources();
                     ReleaseEncoders();
