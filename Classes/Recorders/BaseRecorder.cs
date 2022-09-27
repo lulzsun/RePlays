@@ -27,7 +27,7 @@ namespace RePlays.Recorders {
                 // This detection is very primative and only covers specific cases, in the future we should find another way
                 // to approach this issue. (possibily fetch to see if the window size ratio is not standard?)
                 var className = GetClassName(handle);
-                if (className.Contains("SplashScreen")) throw new Exception($"Window handle is a possible splash screen [{className}]");
+                if (className.Replace(" ", "").ToLower().Contains("splashscreen")) throw new Exception($"Window handle is a possible splash screen [{className}]");
             }
             catch (Exception e) {
                 Logger.WriteLine($"There was an issue retrieving the window handle for process id [{processId}]: {e.Message}");
