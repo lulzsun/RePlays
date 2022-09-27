@@ -355,6 +355,8 @@ namespace RePlays.Services {
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
 
         [DllImport("kernel32.dll", SetLastError = true)]
