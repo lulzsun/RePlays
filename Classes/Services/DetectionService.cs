@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using RePlays.Utils;
@@ -23,8 +27,20 @@ namespace RePlays.Services {
         static JsonElement[] nonGameDetectionsJson;
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
+        private static Dictionary<string, string> drivePaths = new();
         public static void Start() {
             LoadDetections();
+
+            //Get device paths for mounted drive letters
+            for (char letter = 'A'; letter <= 'Z'; letter++)
+            {
+                string driveLetter = letter + ":";
+                StringBuilder s = new StringBuilder();
+                if (QueryDosDevice(driveLetter, s, 1000))
+                {
+                    drivePaths.Add(s.ToString(), driveLetter);
+                }
+            }
             // watch process creation/deletion events
             pCreationWatcher.EventArrived += ProcessCreation_EventArrived;
             pDeletionWatcher.EventArrived += ProcessDeletion_EventArrived;
@@ -143,12 +159,41 @@ namespace RePlays.Services {
             try
             {
                 process = Process.GetProcessById(processId);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Failed to open process: [{processId}]. Error: [{ex.Message}");
+                return;
+            }
+            try
+            {
                 executablePath = process.MainModule.FileName;
             }
             catch (Exception ex)
             {
-                Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: [{ex.Message}]");
-                return;
+                IntPtr processHandle = OpenProcess(0x1000, false, process.Id);
+                if (processHandle != IntPtr.Zero)
+                {
+                    StringBuilder stringBuilder = new(1024);
+                    if (!GetProcessImageFileName(processHandle, stringBuilder, out int size))
+                    {
+                        Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: [{ex.Message}");
+                        return;
+                    }
+                    string s = stringBuilder.ToString();
+                    foreach (var drivePath in drivePaths)
+                    {
+                        if (s.Contains(drivePath.Key)) s = s.Replace(drivePath.Key, drivePath.Value);
+                    }
+
+                    executablePath = s;
+                    CloseHandle(processHandle);
+                }
+                else
+                {
+                    Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: [{ex.Message}");
+                    return;
+                }
             }
 
             if (IsMatchedNonGame(executablePath)) return;
@@ -310,5 +355,21 @@ namespace RePlays.Services {
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, Int32 dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        [SuppressUnmanagedCodeSecurity]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("psapi.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        private static extern bool GetProcessImageFileName(IntPtr hprocess,
+            StringBuilder lpExeName, out int size);
     }
 }
