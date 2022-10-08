@@ -70,7 +70,7 @@ export const Player: React.FC<Props> = ({videos}) => {
           }
         }
       }
-
+        
       //Clips and Bookmarks handling
       if(clipsRef.current?.indexOf(element.parentElement as HTMLDivElement) !== -1) {
           let index = clipsRef.current?.indexOf(element.parentElement as HTMLDivElement);
@@ -107,7 +107,7 @@ export const Player: React.FC<Props> = ({videos}) => {
                     handleDeleteClip(e, index);
             }
         }
-    }
+      }
   
     function handleOnMouseMove(e: MouseEvent) {
       if(seekDragging) {
@@ -147,11 +147,21 @@ export const Player: React.FC<Props> = ({videos}) => {
         clipDragging = -1;
       }
     }
-    
+
+    function handleWheelScroll(e: WheelEvent) {
+        if (e.deltaY < 0) {
+            if (currentZoom + 1 < ZOOMS.length) setZoom(currentZoom + 1);
+        }
+        else if (e.deltaY > 0) {
+            if (currentZoom - 1 > -1) setZoom(currentZoom - 1);
+        }
+    }
+
     document.addEventListener('keydown', handleOnKeyDown);
     document.addEventListener('mousedown', handleOnMouseDown);
     document.addEventListener('mousemove', handleOnMouseMove);
     document.addEventListener('mouseup', handleOnMouseUp);
+    document.addEventListener('wheel', handleWheelScroll);
 
     if(clips.length !== 0) {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
@@ -170,8 +180,9 @@ export const Player: React.FC<Props> = ({videos}) => {
       document.removeEventListener('mousedown', handleOnMouseDown);
       document.removeEventListener('mousemove', handleOnMouseMove);
       document.removeEventListener('mouseup', handleOnMouseUp);
+      document.removeEventListener('wheel', handleWheelScroll);
     }
-  }, [clips, bookmarks, contextMenuCtx]);
+  }, [clips, bookmarks, contextMenuCtx, currentZoom]);
 
   useEffect(() => {
     seekBarElement.current!.style.left = `calc(${currentTime / videoElement.current!.duration * 100}% - 3px)`;
@@ -357,8 +368,8 @@ export const Player: React.FC<Props> = ({videos}) => {
           onPause={() => setPlaybackClips(-1)}/>
       </div>
 
-      <div className="flex flex-initial h-20 grid grid-flow-row">
-        <div ref={timelineElement} className="w-full h-full overflow-x-scroll overflow-y-hidden bg-gray-400"> 
+          <div className="flex flex-initial h-20 grid grid-flow-row">
+          <div ref={timelineElement} className="w-full h-full overflow-x-scroll overflow-y-hidden bg-gray-400"> 
           <div style={{ height: '1rem', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 grid grid-flow-col bg-gray-400 border-gray-300 border-l-2">
             <div className="border-gray-300 border-r-2"></div>
             <div className="border-gray-300 border-r-2"></div>
