@@ -147,11 +147,21 @@ export const Player: React.FC<Props> = ({videos}) => {
         clipDragging = -1;
       }
     }
-    
+
+    function handleWheelScroll(e: WheelEvent) {
+        if (e.deltaY < 0) {
+            if (currentZoom + 1 < ZOOMS.length) setZoom(currentZoom + 1);
+        }
+        else if (e.deltaY > 0) {
+            if (currentZoom - 1 > -1) setZoom(currentZoom - 1);
+        }
+    }
+
     document.addEventListener('keydown', handleOnKeyDown);
     document.addEventListener('mousedown', handleOnMouseDown);
     document.addEventListener('mousemove', handleOnMouseMove);
     document.addEventListener('mouseup', handleOnMouseUp);
+    document.addEventListener('wheel', handleWheelScroll);
 
     if(clips.length !== 0) {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
@@ -170,8 +180,9 @@ export const Player: React.FC<Props> = ({videos}) => {
       document.removeEventListener('mousedown', handleOnMouseDown);
       document.removeEventListener('mousemove', handleOnMouseMove);
       document.removeEventListener('mouseup', handleOnMouseUp);
+      document.removeEventListener('wheel', handleWheelScroll);
     }
-  }, [clips, bookmarks, contextMenuCtx]);
+  }, [clips, bookmarks, contextMenuCtx, currentZoom]);
 
   useEffect(() => {
     seekBarElement.current!.style.left = `calc(${currentTime / videoElement.current!.duration * 100}% - 3px)`;
