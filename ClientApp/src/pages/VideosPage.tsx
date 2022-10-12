@@ -26,8 +26,8 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
       let videoMetadata = JSON.parse(json);
       let updatedVideoMetadata: any = {};
       videos.forEach(video => {
-        if(videoMetadata[`/${video.game}/${video.fileName}`] !== undefined) {
-          updatedVideoMetadata[`/${video.game}/${video.fileName}`] = videoMetadata[`/${video.game}/${video.fileName}`];
+        if(videoMetadata[`/${video.fileName}`] !== undefined) {
+          updatedVideoMetadata[`/${video.fileName}`] = videoMetadata[`/${video.fileName}`];
         }
       });
       if(JSON.stringify(updatedVideoMetadata) === JSON.stringify({})) return;
