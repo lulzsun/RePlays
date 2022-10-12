@@ -352,13 +352,10 @@ namespace RePlays.Recorders {
                     case "amd_amf_h264":
                         availableEncoders.Add("AMF");
                         break;
-                    case "obs_x264":
-                        availableEncoders.Add("x264");
-                        break;
-
                 }
             }
-
+            //As x264 is a software encoder, it must be supported on all platforms
+            availableEncoders.Add("x264");
             SettingsService.Settings.captureSettings.encodersCache = availableEncoders;
             if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder))
                 SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
