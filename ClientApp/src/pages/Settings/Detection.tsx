@@ -33,7 +33,7 @@ export const Detection: React.FC<Props> = ({settings, updateSettings}) => {
         </div>
         <span className="text-gray-700 dark:text-gray-400">Never Record These Games</span>
         <span className="font-normal text-sm">The list of games that Plays will never record.</span>
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-col gap-2">
             {settings !== undefined && settings.blacklist.map((item) => {
             return <Button text={item.replace(/^.*[\\\/]/, '')} width={"auto"} onClick={(e) => {postMessage("RemoveProgram", {"list": "blacklist", "exe": item})}}/>
             })}

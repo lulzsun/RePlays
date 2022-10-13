@@ -115,7 +115,9 @@ namespace RePlays.Services {
                 else if (RecordingService.GameInFocus) RecordingService.LostFocus();
                 return;
             }
-            AutoDetectGame(GetForegroundProcessId());
+
+            //Don't really know why we were doing this, it makes not recording a game impossible
+            //AutoDetectGame(GetForegroundProcessId());
         }
 
         public static void LoadDetections() {
