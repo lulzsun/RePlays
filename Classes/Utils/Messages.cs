@@ -10,6 +10,9 @@ using RePlays.Services;
 using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.CaptureSettings;
+using static RePlays.Utils.Compression;
+using System.Globalization;
+using System.IO.Pipes;
 
 namespace RePlays.Utils {
     public class RetrieveVideos {
@@ -27,6 +30,24 @@ namespace RePlays.Utils {
                 _filePath = value;
             }
         }
+    }
+
+    public class Compress
+    {
+        private string _filePath;
+        public string filePath
+        {
+            get
+            {
+                return _filePath.Replace("/", "\\");
+            }
+            set
+            {
+                _filePath = value;
+            }
+        }
+
+        public string game { get; set; }
     }
 
     public class Delete {
@@ -172,6 +193,15 @@ namespace RePlays.Utils {
                         var path = webMessage.data.Replace("\"", "").Replace("\\\\", "\\");
                         Logger.WriteLine(path);
                         Process.Start("explorer.exe", path);
+                    }
+
+                    break;
+ 
+                case "CompressClip":
+                    {
+                        Compress data = JsonSerializer.Deserialize<Compress>(webMessage.data);
+                        string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
+                        CompressFile(filePath, data.game);
                     }
                     break;
                 case "ShowInFolder": {
