@@ -165,13 +165,13 @@ export const Player: React.FC<Props> = ({videos}) => {
 
     if(clips.length !== 0) {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      videoMetadata[`/${game}/${video}`] = {clips};
+      videoMetadata[`/${video}`] = {clips};
       localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
     }
 
     if (bookmarks.length !== 0) {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
-      videoMetadata[`/${game}/${video}`] = { bookmarks };
+      videoMetadata[`/${video}`] = { bookmarks };
       localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
     }
 
@@ -224,7 +224,7 @@ export const Player: React.FC<Props> = ({videos}) => {
       setClips(newClips);
 
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      videoMetadata[`/${game}/${video}`] = {clips: newClips};
+      videoMetadata[`/${video}`] = {clips: newClips};
       localStorage.setItem("videoMetadata", JSON.stringify(videoMetadata));
     }}]);
     contextMenuCtx?.setPosition({x: e.pageX, y: e.pageY});
@@ -239,7 +239,7 @@ export const Player: React.FC<Props> = ({videos}) => {
         duration: clip.duration / 100 * videoElement.current!.duration
       });
     });
-    postMessage("CreateClips", {videoPath: `/${game}/${video}`, clipSegments: convertedClips});
+    postMessage("CreateClips", {videoPath: `/${video}`, clipSegments: convertedClips});
   }
 
   function handlePlayClips() {
@@ -277,7 +277,7 @@ export const Player: React.FC<Props> = ({videos}) => {
 
                 setBookmarks(newBookmarks);
                 let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
-                videoMetadata[`/${game}/${video}`] = { bookmarks: newBookmarks };
+                videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
                 localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
             }
         }]);
@@ -288,15 +288,18 @@ export const Player: React.FC<Props> = ({videos}) => {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
       let videoMetadataBookmarks = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
       
-    if(videoElement.current && volumeSliderElement.current) {
-      videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
-      videoElement.current.play();
-    }
-    if(videoMetadata[`/${game}/${video}`])
-        setClips(videoMetadata[`/${game}/${video}`].clips);
+      if(videoElement.current && volumeSliderElement.current) {
+        videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
+        videoElement.current.play();
+      }
+      if (videoMetadata[`/${video}`]) {
+          setClips(videoMetadata[`/${video}`].clips);
+      }
 
-    if(videoMetadataBookmarks[`/${game}/${video}`])
-        setBookmarks(videoMetadataBookmarks[`/${game}/${video}`].bookmarks);
+      if (videoMetadataBookmarks[`/${video}`]) {
+          setBookmarks(videoMetadataBookmarks[`/${video}`].bookmarks);
+      }
+
   }
 
   function handleVideoPlaying(e: SyntheticEvent) {

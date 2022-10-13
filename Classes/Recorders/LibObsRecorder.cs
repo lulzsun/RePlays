@@ -399,7 +399,7 @@ namespace RePlays.Recorders {
             }
 
             //Adding bookmarks
-            BookmarkService.ApplyBookmarkToSavedVideo("/" + MakeValidFolderNameSimple(session.GameTitle) + "/" + videoNameTimeStamp + "-ses.mp4");
+            BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
             return true;
         }

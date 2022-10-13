@@ -100,7 +100,7 @@ function App() {
             }); 
 
             videoMetadata[data.videoname] = { bookmarks };
-            
+
             localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
             break;
       case 'UserSettings':
