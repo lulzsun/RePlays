@@ -32,7 +32,7 @@ namespace RePlays.Utils {
         }
     }
 
-    public class Compress
+    public class CompressClip
     {
         private string _filePath;
         public string filePath
@@ -199,7 +199,7 @@ namespace RePlays.Utils {
  
                 case "CompressClip":
                     {
-                        Compress data = JsonSerializer.Deserialize<Compress>(webMessage.data);
+                        CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
                         string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
                         CompressFile(filePath, data.game);
                     }
