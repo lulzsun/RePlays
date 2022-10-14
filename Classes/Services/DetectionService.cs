@@ -10,6 +10,7 @@ using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
@@ -233,6 +234,24 @@ namespace RePlays.Services {
             if (isGame)
             {
                 process.Refresh();
+
+                int tries = 0;
+                while (tries <= 20)
+                {
+                    if (process.MainWindowHandle != IntPtr.Zero)
+                    {
+                        Logger.WriteLine($"Process [{processId}]: Got MainWindow [{process.MainWindowHandle}]");
+                        break;
+                    }
+                    else
+                    {
+                        tries++;
+                        process.Refresh();
+                        Logger.WriteLine($"Process [{processId}]: Got no MainWindow. Retrying... {tries}/20");
+                        Thread.Sleep(1000);
+                    }
+                }
+
                 if (process.MainWindowHandle == IntPtr.Zero) return;
 
                 RecordingService.SetCurrentSession(processId, gameTitle, executablePath);
