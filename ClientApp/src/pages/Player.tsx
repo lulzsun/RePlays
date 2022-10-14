@@ -239,7 +239,7 @@ export const Player: React.FC<Props> = ({videos}) => {
         duration: clip.duration / 100 * videoElement.current!.duration
       });
     });
-    postMessage("CreateClips", {videoPath: `/${video}`, clipSegments: convertedClips});
+      postMessage("CreateClips", { videoPath: `/${game}/${video}`, clipSegments: convertedClips});
   }
 
   function handlePlayClips() {
