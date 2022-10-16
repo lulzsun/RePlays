@@ -210,24 +210,29 @@ namespace RePlays.Recorders {
             }
             if (retryAttempt >= maxRetryAttempts) {
                 Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
+
+                Process process;
+
                 try
                 {
-                    var process = Process.GetProcessById(session.Pid);
-                    if (SettingsService.Settings.captureSettings.useDisplayCapture && !process.HasExited)
-                    {
+                    process = Process.GetProcessById(session.Pid);
+                }
+                catch {
+                    ReleaseOutput();
+                    ReleaseSources();
+                    ReleaseEncoders();
+                    return false;
+                }
+ 
+                if (SettingsService.Settings.captureSettings.useDisplayCapture && !process.HasExited)
+                {
                         Logger.WriteLine("Attempting to use display capture instead");
                         StartDisplayCapture();
-                    }
-                    else {
-                        ReleaseOutput();
-                        ReleaseSources();
-                        ReleaseEncoders();
-                        return false;
-                    }
                 }
-                catch(Exception ex)
-                {
-                    Logger.WriteLine($"Error: {ex.Message}");
+                else {
+                    ReleaseOutput();
+                    ReleaseSources();
+                    ReleaseEncoders();
                     return false;
                 }
             }
