@@ -82,8 +82,17 @@ namespace RePlays.Utils
                 return;
             }
 
-            System.IO.File.Delete(filePathOriginal);
-            System.IO.File.Move(filePathCompressed, filePathOriginal);    
+            try
+            {
+                System.IO.File.Delete(filePathOriginal);
+                System.IO.File.Move(filePathCompressed, filePathOriginal);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Error: {ex.Message}");
+                WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
+                return;
+            }
 
             var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
             Logger.WriteLine(t);
