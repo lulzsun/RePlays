@@ -11,7 +11,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
+using RePlays.Recorders;
 using RePlays.Utils;
+using static RePlays.Services.RecordingService;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
@@ -199,6 +201,14 @@ namespace RePlays.Services {
                 }
             }
 
+            var windowHandle = ActiveRecorder.GetWindowHandleByProcessId(processId, true);
+            if (ActiveRecorder.GetClassName(windowHandle).Contains("EACLauncherWnd"))
+            {
+                Logger.WriteLine($"{windowHandle}: " + ActiveRecorder.GetClassName(windowHandle));
+                Logger.WriteLine("This is a EAC-application... Closing session to allow the real game to be autodetected.");
+                return;
+            }
+
             if (IsMatchedNonGame(executablePath)) return;
             string gameTitle = GetGameTitle(executablePath);
             if (!autoRecord)
@@ -255,6 +265,7 @@ namespace RePlays.Services {
                 if (process.MainWindowHandle == IntPtr.Zero) return;
 
                 RecordingService.SetCurrentSession(processId, gameTitle, executablePath);
+                Logger.WriteLine($"{processId}:{gameTitle}:{executablePath}");
                 Logger.WriteLine(
                     $"This process [{processId}] is a recordable game [{Path.GetFileName(executablePath)}], prepared to record");
 
