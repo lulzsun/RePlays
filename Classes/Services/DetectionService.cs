@@ -258,9 +258,9 @@ namespace RePlays.Services {
                 Logger.WriteLine(
                     $"This process [{processId}] is a recordable game [{Path.GetFileName(executablePath)}], prepared to record");
 
-                Logger.WriteLine("Is allowed to record: " + (SettingsService.Settings.captureSettings.recordingMode == "automatic"));
-                if (SettingsService.Settings.captureSettings.recordingMode == "automatic")
-                    RecordingService.StartRecording();
+                bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
+                Logger.WriteLine("Is allowed to record: " + allowed);
+                if (allowed) RecordingService.StartRecording();
             }
             process.Dispose();
         }
@@ -270,6 +270,7 @@ namespace RePlays.Services {
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
                 if (game.gameExe == exeFile) return true;
             }
+            if (SettingsService.Settings.captureSettings.recordingMode == "whitelist") return false;
 
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
