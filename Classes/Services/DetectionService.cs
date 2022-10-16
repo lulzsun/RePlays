@@ -10,7 +10,7 @@ using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Threading.Tasks;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
@@ -155,7 +155,7 @@ namespace RePlays.Services {
         /// <para>3. contains any graphics dll modules (directx, opengl)</para>
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
-        public static void AutoDetectGame(int processId, bool autoRecord = true)
+        public static async void AutoDetectGame(int processId, bool autoRecord = true)
         {
             Process process;
             string executablePath;
@@ -238,18 +238,18 @@ namespace RePlays.Services {
                 int tries = 0;
                 while (tries <= 20)
                 {
-                    if (process.MainWindowHandle != IntPtr.Zero)
+                    process.Refresh();
+                    if (process.MainWindowHandle == IntPtr.Zero)
+                    {
+                        Logger.WriteLine($"Process [{processId}]: Got no MainWindow. Retrying... {tries}/20");
+                        await Task.Delay(1000);
+                    }
+                    else
                     {
                         Logger.WriteLine($"Process [{processId}]: Got MainWindow [{process.MainWindowHandle}]");
                         break;
                     }
-                    else
-                    {
-                        tries++;
-                        process.Refresh();
-                        Logger.WriteLine($"Process [{processId}]: Got no MainWindow. Retrying... {tries}/20");
-                        Thread.Sleep(1000);
-                    }
+                    tries++;
                 }
 
                 if (process.MainWindowHandle == IntPtr.Zero) return;
