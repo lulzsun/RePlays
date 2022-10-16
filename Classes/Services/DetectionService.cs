@@ -236,7 +236,7 @@ namespace RePlays.Services {
                 process.Refresh();
 
                 int tries = 0;
-                while (tries <= 20)
+                while (tries < 40)
                 {
                     process.Refresh();
                     if (process.MainWindowHandle == IntPtr.Zero)
