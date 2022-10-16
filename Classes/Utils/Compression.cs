@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Utils
@@ -14,7 +15,7 @@ namespace RePlays.Utils
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
-                Arguments = string.Format("-i \"{0}\" -vcodec libx265 -crf 28 \"{1}\"", filePath, filePath.Replace(".mp4", "-compressed.mp4")),            
+                Arguments = string.Format("-i \"{0}\" -vcodec libx264 -crf 28 \"{1}\"", filePath, filePath.Replace(".mp4", "-compressed.mp4")),            
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -30,7 +31,7 @@ namespace RePlays.Utils
             process.OutputDataReceived += (s, e) => ffmpeg_input(e.Data, process, game);
             process.ErrorDataReceived += (s, e) => ffmpeg_input(e.Data, process, game);
             process.Start();
-            process.Exited += (sender, e) => p_Exited(sender, e, filePath, process);
+            process.Exited += async (sender, e) => await p_ExitedAsync(sender, e, filePath, process);
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
@@ -63,11 +64,33 @@ namespace RePlays.Utils
             }
         }
 
-        static void p_Exited(object sender, EventArgs e, string filePath, Process process)
+        static async Task p_ExitedAsync(object sender, EventArgs e, string filePathOriginal, Process process)
         {
             WebMessage.DestroyToast(process.Id.ToString());
-            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath.Replace(".mp4", "-compressed.mp4")));
-            process.Dispose();
+            process.Kill();
+
+            string filePathCompressed = filePathOriginal.Replace(".mp4", "-compressed.mp4");
+
+            long originalFileSize = new FileInfo(filePathOriginal).Length;
+            long compressedFileSize = new FileInfo(filePathCompressed).Length;
+            
+            if (compressedFileSize > originalFileSize || compressedFileSize == 0)
+            {
+                if(compressedFileSize == 0) WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
+                if(compressedFileSize > originalFileSize) WebMessage.DisplayModal("The compressed file turned out to be larger than the original file. We will keep the original file.", "Compression size", "warning");
+                System.IO.File.Delete(filePathCompressed);
+                return;
+            }
+
+            System.IO.File.Delete(filePathOriginal);
+            System.IO.File.Move(filePathCompressed, filePathOriginal);    
+
+            var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+            Logger.WriteLine(t);
+            WebMessage.SendMessage(t);
+
+            WebMessage.DisplayModal("Successfully compressed the file from " + GetReadableFileSize(originalFileSize) + " to " + GetReadableFileSize(compressedFileSize), "Success", "success");
+
         }
     }
 }
