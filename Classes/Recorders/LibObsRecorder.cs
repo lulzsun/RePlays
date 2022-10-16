@@ -106,6 +106,7 @@ namespace RePlays.Recorders {
 
             Connected = true;
             Logger.WriteLine("Successfully started LibObs!");
+            DetectionService.CheckAlreadyRunningPrograms();
         }
 
         const int retryInterval = 2000; // 2 second

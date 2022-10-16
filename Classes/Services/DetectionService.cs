@@ -87,6 +87,35 @@ namespace RePlays.Services {
 
             e.NewEvent.Dispose();
         }
+
+        public static void CheckAlreadyRunningPrograms()
+        {
+            Process[] processCollection = Array.Empty<Process>();
+
+            try
+            {
+                processCollection = Process.GetProcesses()
+                .Where(p => (long)p.MainWindowHandle != 0)
+                .ToArray();
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Error: {ex.Message}");
+            }
+                
+            foreach (Process process in processCollection)
+            {             
+                if (RecordingService.IsRecording) return;
+
+                try
+                {
+                    if (!process.HasExited) AutoDetectGame(process.Id);
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine(ex.Message);
+                }
+            }
+        }
         static void ProcessDeletion_EventArrived(object sender, EventArrivedEventArgs e) {
             if (!RecordingService.IsRecording) return;
 
