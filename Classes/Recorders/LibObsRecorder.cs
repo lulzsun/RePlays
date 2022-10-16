@@ -210,7 +210,8 @@ namespace RePlays.Recorders {
             }
             if (retryAttempt >= maxRetryAttempts) {
                 Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
-                if (SettingsService.Settings.captureSettings.useDisplayCapture && Process.GetProcessById(session.Pid) != null) {
+                var process = Process.GetProcessById(session.Pid);
+                if (SettingsService.Settings.captureSettings.useDisplayCapture && process != null && process.MainWindowHandle != IntPtr.Zero) {          
                     Logger.WriteLine("Attempting to use display capture instead");
                     StartDisplayCapture();
                 }
