@@ -95,6 +95,11 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
           <span className="px-2 text-gray-700 dark:text-gray-400">Automatic</span>
         </label>
         <label className="inline-flex items-center">
+          <input type="radio" name="recordMode" className="form-checkbox h-4 w-4 text-gray-600" value="whitelist"
+            defaultChecked={(settings?.recordingMode === "whitelist" ? true : false)}/>
+          <span className="px-2 text-gray-700 dark:text-gray-400">Whitelist</span>
+        </label>
+        <label className="inline-flex items-center">
           <input type="radio" name="recordMode" className="form-checkbox h-4 w-4 text-gray-600" value="manual"
             defaultChecked={(settings?.recordingMode === "manual" ? true : false)}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">Manual</span>

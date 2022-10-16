@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using RePlays.Recorders;
 using RePlays.Utils;
 using static RePlays.Services.RecordingService;
@@ -157,7 +158,7 @@ namespace RePlays.Services {
         /// <para>3. contains any graphics dll modules (directx, opengl)</para>
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
-        public static void AutoDetectGame(int processId, bool autoRecord = true)
+        public static async void AutoDetectGame(int processId, bool autoRecord = true)
         {
             Process process;
             string executablePath;
@@ -246,20 +247,20 @@ namespace RePlays.Services {
                 process.Refresh();
 
                 int tries = 0;
-                while (tries <= 20)
+                while (tries < 40)
                 {
-                    if (process.MainWindowHandle != IntPtr.Zero)
+                    process.Refresh();
+                    if (process.MainWindowHandle == IntPtr.Zero)
+                    {
+                        Logger.WriteLine($"Process [{processId}]: Got no MainWindow. Retrying... {tries}/20");
+                        await Task.Delay(1000);
+                    }
+                    else
                     {
                         Logger.WriteLine($"Process [{processId}]: Got MainWindow [{process.MainWindowHandle}]");
                         break;
                     }
-                    else
-                    {
-                        tries++;
-                        process.Refresh();
-                        Logger.WriteLine($"Process [{processId}]: Got no MainWindow. Retrying... {tries}/20");
-                        Thread.Sleep(1000);
-                    }
+                    tries++;
                 }
 
                 if (process.MainWindowHandle == IntPtr.Zero) return;
@@ -269,9 +270,9 @@ namespace RePlays.Services {
                 Logger.WriteLine(
                     $"This process [{processId}] is a recordable game [{Path.GetFileName(executablePath)}], prepared to record");
 
-                Logger.WriteLine("Is allowed to record: " + (SettingsService.Settings.captureSettings.recordingMode == "automatic"));
-                if (SettingsService.Settings.captureSettings.recordingMode == "automatic")
-                    RecordingService.StartRecording();
+                bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
+                Logger.WriteLine("Is allowed to record: " + allowed);
+                if (allowed) RecordingService.StartRecording();
             }
             process.Dispose();
         }
@@ -281,6 +282,7 @@ namespace RePlays.Services {
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
                 if (game.gameExe == exeFile) return true;
             }
+            if (SettingsService.Settings.captureSettings.recordingMode == "whitelist") return false;
 
             for (int x = 0; x < gameDetectionsJson.Length; x++) {
                 JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
