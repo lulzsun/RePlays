@@ -101,7 +101,8 @@ declare global {
     resolution: number, frameRate: number, bitRate: number,
     encodersCache: string[]
     encoder: string,
-
+    rateControlCache: string[]
+    rateControl: string,
     gameAudioVolume: number,
     micAudioVolume: number,
     inputDevice: AudioDevice,

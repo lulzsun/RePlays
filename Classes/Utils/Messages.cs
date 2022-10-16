@@ -139,6 +139,7 @@ namespace RePlays.Utils {
                 case "BrowserReady": {
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
                         ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders(); //Another hacky fix for encoders not being loaded on first start.
+                        ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls(); //Another hacky fix for rate conrols not being loaded on first start.
                         break;
                     }
                 case "Initialize": {
