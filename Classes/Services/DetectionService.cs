@@ -236,7 +236,7 @@ namespace RePlays.Services {
                 process.Refresh();
 
                 int tries = 0;
-                while (tries <= 20)
+                while (tries < 40)
                 {
                     if (process.MainWindowHandle != IntPtr.Zero)
                     {
@@ -247,6 +247,7 @@ namespace RePlays.Services {
                     {
                         tries++;
                         process.Refresh();
+                        if (process.HasExited) return;
                         Logger.WriteLine($"Process [{processId}]: Got no MainWindow. Retrying... {tries}/20");
                         Thread.Sleep(1000);
                     }
