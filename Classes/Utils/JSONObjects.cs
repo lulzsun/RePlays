@@ -86,6 +86,10 @@ namespace RePlays.Utils {
         public List<string> encodersCache { get { return _encodersCache; } set { _encodersCache = value; } }
         private string _encoder = string.Empty;
         public string encoder { get { return _encoder; } set { _encoder = value; } }
+        private string _rateControl = string.Empty;
+        private List<string> _rateControlCache = new();
+        public List<string> rateControlCache { get { return _rateControlCache; } set { _rateControlCache = value; } }
+        public string rateControl { get { return _rateControl; } set { _rateControl = value; } }
         private int _resolution = 1080;
         public int resolution { get { return _resolution; } set { _resolution = value; } }
         private int _frameRate = 60;

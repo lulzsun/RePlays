@@ -31,6 +31,12 @@ namespace RePlays.Recorders {
             {"AMF", "amd_amf_h264"}
         };
 
+        private Dictionary<string, string> rate_controls = new()
+        {
+            {"VBR", "VBR"},
+            {"CBR", "CBR"}
+        };
+
         static bool signalOutputStop = false;
         static bool signalGCHookSuccess = false;
 
@@ -197,7 +203,8 @@ namespace RePlays.Recorders {
 
             // SETUP VIDEO ENCODER
             string encoder = SettingsService.Settings.captureSettings.encoder;
-            videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder));
+            string rateControl = SettingsService.Settings.captureSettings.rateControl;
+            videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder, rateControl));
             obs_encoder_set_video(videoEncoders[encoder], obs_get_video());
             obs_set_output_source(2, videoSources["gameplay"]);
 
@@ -304,7 +311,7 @@ namespace RePlays.Recorders {
             DisplayCapture = true;
         }
 
-        private IntPtr GetVideoEncoder(string encoder) {
+        private IntPtr GetVideoEncoder(string encoder, string rateControl) {
             IntPtr videoEncoderSettings = obs_data_create();
             obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
             obs_data_set_string(videoEncoderSettings, "profile", "high");
@@ -318,7 +325,7 @@ namespace RePlays.Recorders {
                     obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
                     break;
             }
-            obs_data_set_string(videoEncoderSettings, "rate_control", "CBR");
+            obs_data_set_string(videoEncoderSettings, "rate_control", rate_controls[rateControl]);
             obs_data_set_int(videoEncoderSettings, "bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
             IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
             obs_data_release(videoEncoderSettings);
@@ -374,6 +381,20 @@ namespace RePlays.Recorders {
             SettingsService.Settings.captureSettings.encodersCache = availableEncoders;
             if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder))
                 SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
+            SettingsService.SaveSettings();
+        }
+
+        public void GetAvailableRateControls()
+        {
+            List<string> availableRateControls = new();
+
+            //TODO: Add more rate controls. These works in both x256 and GPU encoders.
+            availableRateControls.Add("VBR");
+            availableRateControls.Add("CBR");
+
+            SettingsService.Settings.captureSettings.rateControlCache = availableRateControls;
+            if (!availableRateControls.Contains(SettingsService.Settings.captureSettings.rateControl))
+                SettingsService.Settings.captureSettings.rateControl = availableRateControls[0];
             SettingsService.SaveSettings();
         }
 

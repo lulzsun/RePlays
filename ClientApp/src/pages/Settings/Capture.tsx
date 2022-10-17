@@ -14,6 +14,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
   const [inputAudioDevices, setInputAudioDevices] = useState<any[]>();
   const [outputAudioDevices, setOutputAudioDevices] = useState<any[]>();
   const [availableEncoders, setAvailableEncoders] = useState<any[]>();
+  const [availableRateControls, setAvailableRateControls] = useState<any[]>();
 
   useEffect(() => {
     if(settings == null) return;
@@ -84,6 +85,27 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
     setAvailableEncoders(ddmItems);
     return;
   }, [setAvailableEncoders]);
+
+
+    useEffect(() => {
+        if (settings == null) return;
+        if (settings.rateControlCache == null) return;
+
+        let rateControlsItems: any[] = [];
+
+        settings.rateControlCache.forEach((rateControl) => {
+
+            rateControlsItems.push({
+                name: rateControl, onClick: () => {
+                    settings.rateControl = rateControl;
+                    updateSettings();
+                }
+            });
+        });
+
+        setAvailableRateControls(rateControlsItems);
+        return;
+    }, [setAvailableRateControls]);
 
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
@@ -200,6 +222,11 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
             Encoder
             <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
                 items={availableEncoders} />
+        </div>
+        <div className="flex flex-col">
+            Rate Control
+                <DropDownMenu text={(settings?.rateControl === undefined ? "VBR" : settings!.rateControl)} width={"auto"}
+                items={availableRateControls} />
         </div>
       </div>
 
