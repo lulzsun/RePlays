@@ -447,5 +447,19 @@ namespace RePlays.Utils {
             }
             return 0;
         }
+
+        public static string GetReadableFileSize(double bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            int order = 0;
+            while (bytes >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                bytes = bytes / 1024;
+            }
+
+            return String.Format("{0:0.##} {1}", bytes, sizes[order]);
+        }
+
     }
 }
