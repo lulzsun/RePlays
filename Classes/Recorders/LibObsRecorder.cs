@@ -135,7 +135,7 @@ namespace RePlays.Recorders {
 
             // attempt to retrieve process's window handle to retrieve class name and window title
             windowHandle = GetWindowHandleByProcessId(session.Pid, true);
-            while (windowHandle == IntPtr.Zero && retryAttempt < maxRetryAttempts) {
+            while ((DetectionService.HasBadWordInClassName(windowHandle) || windowHandle == IntPtr.Zero) && retryAttempt < maxRetryAttempts) {
                 Logger.WriteLine($"Waiting to retrieve process handle... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;

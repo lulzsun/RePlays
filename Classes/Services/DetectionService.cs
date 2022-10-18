@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
+using static RePlays.Services.RecordingService;
 
 namespace RePlays.Services {
     public static class DetectionService {
@@ -29,6 +30,7 @@ namespace RePlays.Services {
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
+        public static List<string> splashList = new() { "splashscreen", "launcher", "cheat" };
         public static void Start() {
             LoadDetections();
 
@@ -227,9 +229,25 @@ namespace RePlays.Services {
                     return;
                 }
             }
+            
+
+            // If the windowHandle we captured is problematic, just return nothing
+            // Problematic handles are created if the application for example,
+            // the game displays a splash screen (SplashScreenClass) before launching
+            // This detection is very primative and only covers specific cases, in the future we should find another way
+            // to approach this issue. (possibily fetch to see if the window size ratio is not standard?)
+            var windowHandle = ActiveRecorder.GetWindowHandleByProcessId(processId, true);
+            var className = ActiveRecorder.GetClassName(windowHandle);
+            string gameTitle = GetGameTitle(executablePath);
+
+            FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
+            bool hasBadWordInDescription = fileInformation.FileDescription != null ? splashList.Where(bannedWord => fileInformation.FileDescription.ToLower().Contains(bannedWord)).Any() : false;
+            bool hasBadWordInClassName = splashList.Where(bannedWord => className.ToLower().Contains(bannedWord)).Any() || splashList.Where(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
+            bool hasBadWordInGameTitle = splashList.Where(bannedWord => gameTitle.ToLower().Contains(bannedWord)).Any() || splashList.Where(bannedWord => gameTitle.ToLower().Replace(" ", "").Contains(bannedWord)).Any(); 
+            if (hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle) return;
 
             if (IsMatchedNonGame(executablePath)) return;
-            string gameTitle = GetGameTitle(executablePath);
+
             if (!autoRecord)
             {
                 // This is a manual record event so lets just yolo it and assume user knows best
@@ -262,8 +280,6 @@ namespace RePlays.Services {
 
             if (isGame)
             {
-                process.Refresh();
-
                 int tries = 0;
                 while (tries < 40)
                 {
@@ -294,6 +310,13 @@ namespace RePlays.Services {
             process.Dispose();
         }
 
+        public static bool HasBadWordInClassName(IntPtr windowHandle)
+        {
+            var className = ActiveRecorder.GetClassName(windowHandle);
+            bool hasBadWordInClassName = splashList.Any(bannedWord => className.ToLower().Contains(bannedWord)) || splashList.Any(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord));
+            if (hasBadWordInClassName) windowHandle = IntPtr.Zero;
+            return windowHandle == IntPtr.Zero;
+        }
         public static bool IsMatchedGame(string exeFile) {
             exeFile = exeFile.ToLower();
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
