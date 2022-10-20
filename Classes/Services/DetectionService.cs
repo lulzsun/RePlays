@@ -259,7 +259,7 @@ namespace RePlays.Services {
 
             if (!isGame && !executablePath.Contains(@":\Windows"))
             {
-                Logger.WriteLine($"Process [{processId}]:[{Path.GetFileName(executablePath)}] isn't in the game detection list, checking if it might be a game");
+                Logger.WriteLine($"Process [{processId}][{Path.GetFileName(executablePath)}] isn't in the game detection list, checking if it might be a game");
                 try
                 {
                     var usage = GetGPUUsage(process.Id);
@@ -267,7 +267,7 @@ namespace RePlays.Services {
                     if (usage > 10)
                     {
                         Logger.WriteLine(
-                            $"This process [{processId}]:[{Path.GetFileName(executablePath)}], appears to be a game.");
+                            $"This process [{processId}][{Path.GetFileName(executablePath)}], appears to be a game.");
                         isGame = true;
                     }
                 }
@@ -286,12 +286,12 @@ namespace RePlays.Services {
                     process.Refresh();
                     if (process.MainWindowHandle == IntPtr.Zero)
                     {
-                        Logger.WriteLine($"Process [{processId}]: Got no MainWindow. Retrying... {tries}/40");
+                        Logger.WriteLine($"Process [{processId}][{Path.GetFileName(executablePath)}]: Got no MainWindow. Retrying... {tries}/40");
                         await Task.Delay(1000);
                     }
                     else
                     {
-                        Logger.WriteLine($"Process [{processId}]: Got MainWindow [{process.MainWindowHandle}]");
+                        Logger.WriteLine($"Process [{processId}][{Path.GetFileName(executablePath)}]: Got MainWindow [{process.MainWindowTitle}]");
                         break;
                     }
                     tries++;
