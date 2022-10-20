@@ -30,7 +30,7 @@ namespace RePlays.Services {
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
-        private static List<string> blacklistList = new() { "splashscreen", "launcher", "cheat" };
+        private static List<string> blacklistList = new() { "splashscreen", "launcher", "cheat", "sdl_app" };
         public static void Start() {
             LoadDetections();
 
