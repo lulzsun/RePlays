@@ -8,6 +8,7 @@ import UploadModal from '../pages/UploadModal';
 interface Props {
   game?: string;
   size?: number;
+  duration?: number;
   date?: string;
   video?: string;
   videoType?: string;
@@ -17,7 +18,7 @@ interface Props {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, video="", videoType="", folder="", checked, onChange}) => {
+export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, duration=0, video="", videoType="", folder="", checked, onChange}) => {
   const modalCtx = useContext(ModalContext);
   
   function handleUpload() {
@@ -44,19 +45,22 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
           <div className="opacity-0 invisible dropdown-menu transition-all duration-300 transform origin-top-right -translate-y-2 scale-95">
             <div className="absolute right-0 w-auto mt-2 origin-top-right bg-white border border-gray-500 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
-                              onClick={() => { postMessage("CompressClip", { filePath: `${game}/${video}`, game: `${game}` }) }}>Compress</div>
+                onClick={() => { postMessage("CompressClip", { filePath: `${game}/${video}`, game: `${game}` }) }}>Compress</div>
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
-              onClick={() => {postMessage("ShowInFolder", {filePath: `${game}/${video}`})}}>Show In Folder</div>
+                onClick={() => {postMessage("ShowInFolder", {filePath: `${game}/${video}`})}}>Show In Folder</div>
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
-              onClick={() => {postMessage("Delete", {filePaths: [`${game}/${video}`]})}}>Delete</div>
+                onClick={() => {postMessage("Delete", {filePaths: [`${game}/${video}`]})}}>Delete</div>
               {videoType === "Clips" && <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
-              onClick={() => {handleUpload()}}>Upload</div> }
+                onClick={() => {handleUpload()}}>Upload</div> }
             </div>
           </div>
         </div>
       </div>
       <Link to={`/player/${game}/${video}/${videoType}`} onClick={() => {console.log(folder)}}>
         <div className="relative w-full rounded-t-lg object-cover overflow-hidden items-center">
+          <span className="absolute z-40 bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal" style={{backgroundColor: `rgba(0, 0, 0, 0.5)`}}>
+            {duration > 3600 ? new Date(duration * 1000).toISOString().substr(11, 8).replace(/^0+/, '') : new Date(duration * 1000).toISOString().substring(14, 19)}
+          </span>
           <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
           <img className="absolute z-20 w-full" alt="" src={`${folder}/${game}/.thumbs/${thumb}`}/>
           <img className="relative z-10 w-full" alt="" src={"video_thumbnail_placeholder.png"}/>

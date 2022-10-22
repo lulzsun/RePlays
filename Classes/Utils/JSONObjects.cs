@@ -22,6 +22,11 @@ namespace RePlays.Utils {
         public string fileName { get; set; }
         public string thumbnail { get; set; }
         public string folder { get; set; }
+        public VideoMetadata metadata { get; set; }
+    }
+
+    public class VideoMetadata {
+        public double duration { get; set; }
     }
 
     public class VideoSortSettings {

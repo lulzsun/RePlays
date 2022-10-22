@@ -31,8 +31,10 @@ function App() {
   const [game, setGameSort] = useState("All Games");
   const [sortBy, setTypeSort] = useState("Latest");
   const [gameList, setGameList] = useState([]);
-  const [clips, setClips] = useState<Video[]>([]);
-  const [sessions, setSessions] = useState<Video[]>([]);
+  // @ts-ignore
+  const [clips, setClips] = useState<Video[]>(null);
+  // @ts-ignore
+  const [sessions, setSessions] = useState<Video[]>(null);
   const [clipTotal, setClipTotal] = useState(0);
   const [sessionTotal, setSessionTotal] = useState(0);
   const [userSettings, setUserSettings] = useState<UserSettings>();
@@ -148,7 +150,7 @@ function App() {
             setContextMenuPosition(position);
           }, 1);
         }}}>
-        <div className={(window.matchMedia("(prefers-color-scheme: dark)").matches && userSettings?.generalSettings.theme === "System" ? "Dark" : userSettings?.generalSettings.theme)}>
+        <div className={(window.matchMedia("(prefers-color-scheme: dark)").matches && (userSettings == null && window.matchMedia("(prefers-color-scheme: dark)").matches ? "System" : userSettings?.generalSettings.theme) === "System" ? "Dark" : userSettings?.generalSettings.theme)}>
           <Modal modalData={modalData} open={modalOpen} setOpen={setModalOpen} onConfirm={modalConfirm}/>
           <div className="bg-white dark:bg-gray-800 relative min-h-screen lg:flex">
             <div className="absolute inline-block text-left dropdown" style={{zIndex: 9999}}>
@@ -274,7 +276,7 @@ function App() {
                   <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
                   {/* <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route> */}
                   <Route exact path="/settings/:page"> <Settings userSettings={userSettings} setUserSettings={setUserSettings}/></Route>
-                  <Route exact path="/player/:game/:video/:videoType"><Player videos={sessions.concat(clips)}/></Route>
+                  <Route exact path="/player/:game/:video/:videoType"><Player videos={sessions != null ? sessions.concat(clips) : []}/></Route>
                 </Switch>
               </div>
             </div>

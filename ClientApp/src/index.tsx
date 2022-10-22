@@ -33,17 +33,20 @@ declare global {
     size: number,
     date: string,
     thumbnail: string,
+    metadata: {
+      duration: number,
+    };
     folder: string,
   }
   interface Clip {
     id: number,
     start: number,
     duration: number,
-    }
+  }
   interface Bookmark {
     id: number,
     time: number,
-    }
+  }
   interface ContextMenuOptions {
     setItems: (items: ContextMenuItem[]) => any,
     setPosition: (position: ContextMenuPosition) => any,

@@ -186,6 +186,7 @@ namespace RePlays.Utils {
 
                 Video video = new();
                 video.size = new FileInfo(file).Length;
+                video.metadata = GetOrCreateMetadata(file);
                 video.date = new FileInfo(file).CreationTime;
                 video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
@@ -199,7 +200,7 @@ namespace RePlays.Utils {
 
                 if (!Game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !Game.Equals("All Games")) continue;
 
-                var thumb = GetOrCreateThumbnail(file);
+                var thumb = GetOrCreateThumbnail(file, video.metadata.duration);
                 if (!File.Exists(thumb)) continue;
                 video.thumbnail = Path.GetFileName(thumb);
 
@@ -253,17 +254,19 @@ namespace RePlays.Utils {
             return duration;
         }
 
-        public static string GetOrCreateThumbnail(string videoPath) {
+        public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
             string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
             string thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".png");
 
             if (File.Exists(thumbnailPath)) return thumbnailPath;
             if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
-            var duration = GetVideoDuration(videoPath);
             if (duration == 0) {
-                Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: duration of video is 0, corrupted video?");
-                return thumbnailPath;
+                duration = GetVideoDuration(videoPath);
+                if (duration == 0) {
+                    Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: duration of video is 0, corrupted video?");
+                    return thumbnailPath;
+                }
             }
 
             var startInfo = new ProcessStartInfo {
@@ -292,6 +295,30 @@ namespace RePlays.Utils {
             process.Close();
 
             return thumbnailPath;
+        }
+
+        public static VideoMetadata GetOrCreateMetadata(string videoPath) {
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+
+            if (File.Exists(metadataPath)) {
+                return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+            }
+            else {
+                var metadata = new VideoMetadata();
+
+                if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
+
+                var duration = GetVideoDuration(videoPath);
+                if (duration == 0) {
+                    Logger.WriteLine($"Failed to create metadata {metadataPath}, details: duration of video is 0, corrupted video?");
+                    return metadata;
+                }
+                metadata.duration = duration;
+
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
+                return metadata;
+            }
         }
 
         public static string CreateClip(string videoPath, ClipSegment[] clipSegments, int index = 0) {
