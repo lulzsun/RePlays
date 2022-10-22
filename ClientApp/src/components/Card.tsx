@@ -32,7 +32,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
   
   return (
     <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-blue-500" : "border-gray-500")}>
-      <div className="absolute z-40 w-full flex justify-between">
+      <div className="absolute z-50 w-full flex justify-between">
         <div className={"m-2 group-hover:opacity-100 " + (checked ? "opacity-100" : "opacity-0")}>
           <input type="checkbox" className="h-4 w-4" checked={(checked === undefined || checked === false ? false : true)} onChange={(e) => {onChange(e);}}/>
         </div>
