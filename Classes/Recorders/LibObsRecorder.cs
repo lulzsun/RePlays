@@ -184,8 +184,10 @@ namespace RePlays.Recorders {
             audioSources.TryAdd("desktop", obs_audio_source_create("wasapi_output_capture", "desktop", deviceId: SettingsService.Settings.captureSettings.outputDevice.deviceId)); // captures whole desktop
             obs_set_output_source(0, audioSources["desktop"]);
             obs_source_set_audio_mixers(audioSources["desktop"], 1 | (1 << 0));
+            obs_source_set_volume(audioSources["desktop"], SettingsService.Settings.captureSettings.gameAudioVolume / (float)100);
             audioSources.TryAdd("microphone", obs_audio_source_create("wasapi_input_capture", "microphone", deviceId: SettingsService.Settings.captureSettings.inputDevice.deviceId));
             obs_source_set_audio_mixers(audioSources["microphone"], 1 | (1 << 1));
+            obs_source_set_volume(audioSources["microphone"], SettingsService.Settings.captureSettings.micAudioVolume / (float)100);
 
             // SETUP NEW VIDEO SOURCE
             // - Create a source for the game_capture in channel 2
