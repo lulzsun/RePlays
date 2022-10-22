@@ -494,7 +494,7 @@ export const Player: React.FC<Props> = ({videos}) => {
           <div className="border-2 rounded-b-lg">
             <button title="Bookmark" className="justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800"
                 type="button" onClick={() => handleAddBookmark()}>
-                  <svg width="16px" height="16px" viewBox="0 0 24 24" id="magicoon-Filled" xmlns="http://www.w3.org/2000/svg"><defs></defs><title>bookmark</title><g id="bookmark-Filled">
+                  <svg width="16px" height="16px" viewBox="0 0 24 24" id="magicoon-Filled" xmlns="http://www.w3.org/2000/svg"><defs></defs><title>Bookmark</title><g id="bookmark-Filled">
                       <path id="bookmark-Filled-2" data-name="bookmark-Filled" d="M19.5,7V20a1.5,1.5,0,0,1-2.354,1.233l-4.863-3.367a.5.5,0,0,0-.57,0L6.854,21.231A1.5,1.5,0,0,1,4.5,20V7A4.505,4.505,0,0,1,9,2.5h6A4.505,4.505,0,0,1,19.5,7Z" /></g>
                   </svg>
             </button>
