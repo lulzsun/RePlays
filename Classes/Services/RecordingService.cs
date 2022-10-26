@@ -14,7 +14,6 @@ namespace RePlays.Services {
         private static Session currentSession = new(0, "Game Unknown");
         public static bool IsRecording { get; internal set; }
         private static bool IsPreRecording { get; set; }
-        private static bool IsRestarting { get; set; }
         public static bool GameInFocus { get; set; }
 
         public class Session {
@@ -111,8 +110,7 @@ namespace RePlays.Services {
             }
         }
         public static async void RestartRecording() {
-            if (!IsRecording || IsRestarting) return;
-            IsRestarting = true;
+            if (!IsRecording) return;
 
             bool stopResult = await ActiveRecorder.StopRecording();
             bool startResult = await ActiveRecorder.StartRecording();
@@ -121,10 +119,9 @@ namespace RePlays.Services {
                 Logger.WriteLine("Recording restart successful");
             }
             else {
-                Logger.WriteLine($"Issue trying to restart recording. Could start {stopResult}, could stop {startResult}");
+                Logger.WriteLine($"Issue trying to restart recording: {stopResult} {startResult}");
                 IsRecording = false;
             }
-            IsRestarting = false;
         }
 
         public static void LostFocus()

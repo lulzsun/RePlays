@@ -436,6 +436,7 @@ namespace RePlays.Recorders {
                 Logger.WriteLine(e.Message);
             }
 
+            //Adding bookmarks
             BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
             return true;
