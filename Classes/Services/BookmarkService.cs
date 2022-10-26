@@ -31,10 +31,17 @@ namespace RePlays.Classes.Services
 
         public static void ApplyBookmarkToSavedVideo(string videoName)
         {
-            WebMessage.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
-            bookmarks.Clear();
+            try
+            {
+                Logger.WriteLine($"Applying bookmarks");
+                WebMessage.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
+                bookmarks.Clear();
+                Logger.WriteLine($"Bookmark status [Successfully]");
+            }
+            catch (Exception e)
+            {
+                Logger.WriteLine($"Bookmark status [Failed] with exception {e.Message}");
+            }
         }
-
-
     }
 }
