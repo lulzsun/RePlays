@@ -10,6 +10,7 @@ using static RePlays.Utils.Functions;
 using System.Collections.Generic;
 using System.IO;
 using System;
+using System.Globalization;
 
 namespace RePlays {
     public partial class frmMain : Form {
@@ -108,7 +109,8 @@ namespace RePlays {
                 webView2.CoreWebView2InitializationCompleted += CoreWebView2InitializationCompleted;
                 webView2.WebMessageReceived += WebMessageReceivedAsync;
                 CoreWebView2EnvironmentOptions environmentOptions = new CoreWebView2EnvironmentOptions() {
-                    AdditionalBrowserArguments = "--unlimited-storage --disable-web-security --allow-file-access-from-files --allow-file-access"
+                    AdditionalBrowserArguments = "--unlimited-storage --disable-web-security --allow-file-access-from-files --allow-file-access",
+                    Language = CultureInfo.InstalledUICulture.TwoLetterISOLanguageName
                 };
                 CoreWebView2Environment environment = await CoreWebView2Environment.CreateAsync(null, null, environmentOptions);
                 await webView2.EnsureCoreWebView2Async(environment);
