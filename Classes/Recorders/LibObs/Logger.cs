@@ -758,10 +758,6 @@ namespace obs_net
                         bytes = BitConverter.GetBytes((float)obj);
                     else if (type == typeof(char))
                         bytes = BitConverter.GetBytes((char)obj);
-                    else if (type == typeof(byte))
-                        bytes = BitConverter.GetBytes((byte)obj);
-                    else if (type == typeof(sbyte))
-                        bytes = BitConverter.GetBytes((sbyte)obj);
                     else if (type == typeof(Int16))
                         bytes = BitConverter.GetBytes((Int16)obj);
                     else if (type == typeof(UInt16))
@@ -776,6 +772,11 @@ namespace obs_net
                         bytes = BitConverter.GetBytes((UInt64)obj);
                     else if (type == typeof(bool))
                         bytes = BitConverter.GetBytes((bool)obj);
+                    //These causes "The call is ambiguous between [...]." It should be fine to make it a comment since this method isn't currently used.
+                    //else if (type == typeof(byte))
+                    //    bytes = BitConverter.GetBytes((byte)obj);
+                    //else if (type == typeof(sbyte))
+                    //    bytes = BitConverter.GetBytes((sbyte)obj);
 
                     foreach (byte b in bytes)
                         Marshal.WriteByte(instance, offset + boff++, b);
