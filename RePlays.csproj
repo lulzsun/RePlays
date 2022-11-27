@@ -22,6 +22,7 @@
     <Nullable>annotations</Nullable>
     <StartupObject />
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   
   <ItemGroup>
