@@ -16,6 +16,7 @@ namespace RePlays {
         private const int ATTACH_PARENT_PROCESS = -1;
 
         [STAThread]
+        [Obsolete]
         static void Main(string[] args) {
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
