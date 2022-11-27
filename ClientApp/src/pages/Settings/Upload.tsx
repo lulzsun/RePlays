@@ -80,7 +80,8 @@ const LocalFolder: React.FC<Props> = ({settings, updateSettings}) => {
       <div className="flex flex-col">
         <div className="flex flex-row">
           <DirectoryBrowser id="localFolderDir" path={settings === undefined ? undefined : settings.localFolderSettings.dir}/>
-          <Button text="Open Folder" width={"auto"} onClick={(e) => {postMessage("ShowFolder", (settings === undefined ? "C:\\" : settings.localFolderSettings.dir))}}/>
+          <p>&nbsp;&nbsp;</p>
+          <Button text="Open Folder"  width={"auto"} onClick={(e) => {postMessage("ShowFolder", (settings === undefined ? "C:\\" : settings.localFolderSettings.dir))}}/>
         </div>
       </div>
     </div>
