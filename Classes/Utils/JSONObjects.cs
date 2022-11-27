@@ -104,7 +104,7 @@ namespace RePlays.Utils {
 
         private int _gameAudioVolume = 100;
         public int gameAudioVolume { get { return _gameAudioVolume; } set { _gameAudioVolume = value; } }
-        private int _micAudioVolume = 50;
+        private int _micAudioVolume = 100;
         public int micAudioVolume { get { return _micAudioVolume; } set { _micAudioVolume = value; } }
 
         private List<AudioDevice> _inputDevicesCache = new();
