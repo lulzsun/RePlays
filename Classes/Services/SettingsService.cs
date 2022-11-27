@@ -50,7 +50,7 @@ namespace RePlays.Services {
 
         public static void SaveSettings(WebMessage webMessage) {
             SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data);
-            data.uploadSettings.streamableSettings.password = EncryptString(data.uploadSettings.streamableSettings.password);
+            data.uploadSettings.streamableSettings.password = data.uploadSettings.streamableSettings.password.Length > 0 ? EncryptString(data.uploadSettings.streamableSettings.password) : "";
             SaveSettings(data);
         }
 
