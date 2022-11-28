@@ -8,7 +8,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/lulzsun/RePlays</projectUrl>
-    <iconUrl>https://github.com/lulzsun/RePlays/raw/main/Resources/logo.png</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/lulzsun/RePlays/main/Resources/replays%20logo.ico</iconUrl>
     <description>Open-source game recording management software</description>
     <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
     <copyright>$copyright$</copyright>
