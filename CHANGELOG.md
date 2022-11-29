@@ -52,7 +52,7 @@ All notable changes to this project will be documented in this file.
 - Local Folder upload
 
 ### Fixed
-- Fixed **Can't change "Temporary Video Directory"**
+- Fixed **Can't change 'Temporary Video Directory'**
 - Fixed the displaying of mic devices in Capture settings
 
 ## [1.0.0] - 2021-11-19
