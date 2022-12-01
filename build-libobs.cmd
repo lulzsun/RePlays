@@ -44,10 +44,6 @@ if not exist "%WIN_CAPTURE_AUDIO_DIR%.zip" (
 :: clean build folder if it exists from previous attempt
 rmdir /s /q %OBS_INSTALL_PREFIX% 2>NUL
 
-:: delete libz.a to stop cmake from referencing it instead of zlib.lib
-del /f "%WINDOWS_DEPS_DIR%\win64\lib\libz.a" "%WINDOWS_DEPS_DIR%\win64\lib\libz.dll.a"
-del /f "%WINDOWS_DEPS_DIR%\win32\lib\libz.a" "%WINDOWS_DEPS_DIR%\win32\lib\libz.dll.a"
-
 :: build for Win64
 rmdir /s /q "%OBS_STUDIO_DIR%\build" 2>NUL
 mkdir "%OBS_STUDIO_DIR%\build" 2>NUL
@@ -57,6 +53,7 @@ cmake -G"Visual Studio 17 2022" ^
 	-DCMAKE_GENERATOR_PLATFORM="x64" ^
 	-DCMAKE_INSTALL_PREFIX="%OBS_INSTALL_PREFIX%\win64" ^
 	-DCMAKE_SYSTEM_VERSION=10.0 ^
+	-DCMAKE_PREFIX_PATH="%WINDOWS_DEPS_DIR%\win64" ^
 	-DDepsPath="%WINDOWS_DEPS_DIR%\win64" ^
 	-DDISABLE_UI=TRUE ^
 	-DBUILD_BROWSER=OFF ^
@@ -74,6 +71,7 @@ cmake -G"Visual Studio 17 2022" ^
 	-DCMAKE_GENERATOR_PLATFORM="win32" ^
 	-DCMAKE_INSTALL_PREFIX="%OBS_INSTALL_PREFIX%\win32" ^
 	-DCMAKE_SYSTEM_VERSION=10.0 ^
+	-DCMAKE_PREFIX_PATH="%WINDOWS_DEPS_DIR%\win32" ^
 	-DDepsPath="%WINDOWS_DEPS_DIR%\win32" ^
 	-DDISABLE_UI=TRUE ^
 	-DBUILD_BROWSER=OFF ^
