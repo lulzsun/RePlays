@@ -102,7 +102,7 @@ jobs:
 
       - name: Build LibObs
         run: .\\build-libobs.cmd
-        shell: bash
+        shell: cmd
 
       - name: Build RePlays
         env:
