@@ -11,7 +11,7 @@ export const Keybindings: React.FC<Props> = ({ settings, keybindings, updateSett
 
     return (
         <div className="flex flex-col gap-2 font-medium text-base pb-7">
-            <h1 className="font-semibold text-2xl mt-4">Keybindings</h1>
+            <h1 className="font-semibold text-2xl">Keybindings</h1>
             <div className="flex flex-col gap-1">
                 Toggle Recording Keybind
                 <HotkeySelector id="StartStopRecording" width="auto" keybind={keybindings?.StartStopRecording} />

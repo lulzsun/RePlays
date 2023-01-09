@@ -64,7 +64,7 @@ namespace RePlays.Utils {
         public string theme { get { return _theme; } set { _theme = value; } }
         private string _update = "automatic"; // ??? why is there a warning
         public string update { get { return _update; } set { _update = value; } }
-        private string _updateChannel = "stable";
+        private string _updateChannel = "Stable";
         public string updateChannel { get { return _updateChannel; } set { _updateChannel = value; } }
         public string currentVersion { get { return Updater.currentVersion; } }
         public string latestVersion { get { return Updater.latestVersion; } }
@@ -104,7 +104,7 @@ namespace RePlays.Utils {
 
         private int _gameAudioVolume = 100;
         public int gameAudioVolume { get { return _gameAudioVolume; } set { _gameAudioVolume = value; } }
-        private int _micAudioVolume = 50;
+        private int _micAudioVolume = 100;
         public int micAudioVolume { get { return _micAudioVolume; } set { _micAudioVolume = value; } }
 
         private List<AudioDevice> _inputDevicesCache = new();

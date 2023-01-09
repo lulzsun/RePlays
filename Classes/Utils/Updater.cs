@@ -8,11 +8,11 @@ namespace RePlays.Utils {
         public static async void CheckForUpdates() {
             try {
                 using var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays", null, null, null,
-                    SettingsService.Settings.generalSettings.updateChannel != "stable");
+                    SettingsService.Settings.generalSettings.updateChannel != "Stable");
                 if (manager.CurrentlyInstalledVersion() != null) {
                     currentVersion = manager.CurrentlyInstalledVersion().ToString();
                 }
-                var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "stable"); // if nightly, we ignore deltas
+                var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "Stable"); // if nightly, we ignore deltas
                 latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();
 
                 if (SettingsService.Settings.generalSettings.update == "none") return;
