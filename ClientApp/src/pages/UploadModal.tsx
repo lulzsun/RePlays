@@ -11,7 +11,7 @@ interface Props {
 export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
   const modalCtx = useContext(ModalContext);
 
-  const [destination, setDestination] = useState("Streamable");
+  const [destination, setDestination] = useState("RePlays");
   const [title, setTitle] = useState(video);
 
   useEffect(() => {
@@ -39,6 +39,7 @@ export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
             </svg>
             <select className={`inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 group-hover:text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 cursor-pointer`}
             name="destinationDdm" id="destinationDdm" defaultValue={destination} onChange={(e) => setDestination(e.target.value)}>
+              <option value="RePlays">RePlays</option>
               <option value="Streamable">Streamable</option>
               {/* <option value="Youtube">Youtube</option> */}
               <option value="LocalFolder">Local Folder</option>
