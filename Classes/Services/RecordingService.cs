@@ -1,15 +1,16 @@
 ﻿using RePlays.Recorders;
 using RePlays.Utils;
-using System.Timers;
 using System;
 using System.Threading.Tasks;
+using System.Timers;
 
-namespace RePlays.Services {
+namespace RePlays.Services
+{
     public static class RecordingService {
         public static BaseRecorder ActiveRecorder;
 
-        private static Timer recordingTimer = new Timer(1000);
-        public static int recordingElapsed = 0;
+        private static Timer recordingTimer = new Timer(100);
+        public static DateTime startTime;
         public static double lastVideoDuration = 0;
         private static Session currentSession = new(0, "Game Unknown");
         public static bool IsRecording { get; internal set; }
@@ -67,6 +68,7 @@ namespace RePlays.Services {
             if (!IsRecording && result) {
                 Logger.WriteLine("Current Session PID: " + currentSession.Pid.ToString());
                 if (currentSession.Pid != 0) {
+                    startTime = DateTime.Now;
                     recordingTimer.Elapsed += OnTimedEvent;
                     recordingTimer.Start();
                     
@@ -87,8 +89,7 @@ namespace RePlays.Services {
         }
 
         private static void OnTimedEvent(object source, ElapsedEventArgs e) {
-            recordingElapsed++;
-            WebMessage.DisplayToast("Recording", currentSession.GameTitle, "🔴 Recording", "none", recordingElapsed);
+            WebMessage.DisplayToast("Recording", currentSession.GameTitle, "🔴 Recording", "none", GetTotalRecordingTimeInSeconds());
         }
 
         public static async void StopRecording() {
@@ -98,7 +99,6 @@ namespace RePlays.Services {
 
             if (IsRecording && result) {
                 if(currentSession.Pid != 0) {
-                    recordingElapsed = 0;
                     recordingTimer.Elapsed -= OnTimedEvent;
                     recordingTimer.Stop();
                     Logger.WriteLine(string.Format("Stop Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
@@ -137,6 +137,15 @@ namespace RePlays.Services {
         {
             GameInFocus = true;
             ActiveRecorder.GainedFocus();
+        }
+
+        public static int GetTotalRecordingTimeInSeconds()
+        {
+            return (int)(DateTime.Now - startTime).TotalSeconds;
+        }
+        public static double GetTotalRecordingTimeInSecondsWithDecimals()
+        {
+            return (DateTime.Now - startTime).TotalMilliseconds/1000;
         }
     }
 }

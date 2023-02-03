@@ -7,7 +7,7 @@ namespace RePlays.Classes.Services.Hotkeys
         private readonly string key = "CreateBookmark";
         public override void Action()
         {
-            if (RecordingService.IsRecording) BookmarkService.AddBookmark();
+            if (RecordingService.IsRecording) BookmarkService.AddBookmark(new Bookmark {type = Bookmark.BookmarkType.Manual});
         }
 
         protected override void SetKeybind()

@@ -79,6 +79,7 @@ namespace RePlays.Recorders {
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                             signalGCHookSuccess = false;
+                            IntegrationService.Shutdown();
                         }
                     }
                 }
@@ -300,6 +301,7 @@ namespace RePlays.Recorders {
                 Logger.WriteLine($"LibObs started recording [{session.Pid}] [{session.GameTitle}] [{windowClassNameId}]");
             }
 
+            IntegrationService.Start(session.GameTitle);
             return true;
         }
 

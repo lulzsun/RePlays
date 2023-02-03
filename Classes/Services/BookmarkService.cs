@@ -5,27 +5,30 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace RePlays.Classes.Services
+namespace RePlays.Services
 {
     internal static class BookmarkService
     {
-        static List<int> bookmarks = new();
+        static List<Bookmark> bookmarks = new();
         static int latestBookmarkKeyPress;
 
-        public static void AddBookmark()
+        public static void AddBookmark(Bookmark bookmark)
         {
-            TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
-            int secondsSinceEpoch = (int)t.TotalSeconds;
+            int secondsSinceEpoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
 
-            if (secondsSinceEpoch - latestBookmarkKeyPress >= 2)
+            if ((secondsSinceEpoch - latestBookmarkKeyPress >= 2) || !bookmark.type.Equals(Bookmark.BookmarkType.Manual))
             {
                 latestBookmarkKeyPress = secondsSinceEpoch;
-                Logger.WriteLine("Adding bookmark: " + RecordingService.recordingElapsed);
-                bookmarks.Add(RecordingService.recordingElapsed);
+                double bookmarkTimestamp = RecordingService.GetTotalRecordingTimeInSecondsWithDecimals();
+                Logger.WriteLine("Adding bookmark: " + bookmarkTimestamp);
+                bookmark.time = bookmarkTimestamp;
+                bookmarks.Add(bookmark);
 
-                System.IO.Stream soundStream = Properties.Resources.bookmark;
-                System.Media.SoundPlayer bookmarkSound = new System.Media.SoundPlayer(soundStream);
-                bookmarkSound.Play();
+                if(bookmark.type.Equals(Bookmark.BookmarkType.Manual)){
+                    System.IO.Stream soundStream = Properties.Resources.bookmark;
+                    System.Media.SoundPlayer bookmarkSound = new System.Media.SoundPlayer(soundStream);
+                    bookmarkSound.Play();
+                }
             }
         }
 
@@ -43,5 +46,16 @@ namespace RePlays.Classes.Services
                 Logger.WriteLine($"Bookmark status [Failed] with exception {e.Message}");
             }
         }
+    }
+
+    public class Bookmark
+    {
+        public enum BookmarkType
+        {
+            Manual,
+            Kill
+        }
+        public BookmarkType type { get; set; }
+        public double time { get; set; }
     }
 }

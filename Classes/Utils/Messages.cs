@@ -9,10 +9,7 @@ using RePlays.Recorders;
 using RePlays.Services;
 using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
-using static RePlays.Utils.CaptureSettings;
 using static RePlays.Utils.Compression;
-using System.Globalization;
-using System.IO.Pipes;
 
 namespace RePlays.Utils {
     public class RetrieveVideos {
@@ -375,7 +372,7 @@ namespace RePlays.Utils {
             SendMessage(JsonSerializer.Serialize(webMessage));
         }
 
-        public static void SetBookmarks(string videoName, List<int> bookmarks, double elapsed)
+        public static void SetBookmarks(string videoName, List<Bookmark> bookmarks, double elapsed)
         {
 
             WebMessage webMessage = new();

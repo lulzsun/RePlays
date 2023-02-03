@@ -10,6 +10,16 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
+export enum BookmarkType {
+    Manual,
+    Kill
+}
+export interface BookmarkInterface {
+    id: number,
+    type: BookmarkType
+    time: number,
+}
+
 declare global {
   type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success';
   interface Window { 
@@ -42,11 +52,7 @@ declare global {
     id: number,
     start: number,
     duration: number,
-  }
-  interface Bookmark {
-    id: number,
-    time: number,
-  }
+   }
   interface ContextMenuOptions {
     setItems: (items: ContextMenuItem[]) => any,
     setPosition: (position: ContextMenuPosition) => any,
