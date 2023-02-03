@@ -9,6 +9,7 @@ import { useRef } from 'react';
 import Settings from './pages/Settings';
 import Modal from './components/Modal';
 import Toast from './components/Toast';
+import {BookmarkType} from './index';
 
 export const ContextMenuContext = createContext<ContextMenuOptions | null>(null);
 export const ModalContext = createContext<ModalOptions | null>(null);
@@ -94,11 +95,12 @@ function App() {
             let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
             
 
-            let bookmarks: { id: number, time: number }[] = [];
+            let bookmarks: { id: number, type: BookmarkType, time: number }[] = [];
+            const map = [BookmarkType.Manual, BookmarkType.Kill];
 
             data.bookmarks.forEach(function (bookmark: any) {
-                let time = bookmark / (data.elapsed) * 100;
-                bookmarks.push({ id: Date.now(), time: time });
+                let timeToSet = bookmark.time / (data.elapsed) * 100;
+                bookmarks.push({ id: Date.now(), type: map[bookmark.type], time: timeToSet });
             }); 
 
             videoMetadata[data.videoname] = { bookmarks };

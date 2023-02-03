@@ -7,6 +7,7 @@ import { postMessage } from '../helpers/messenger';
 import UploadModal from './UploadModal';
 import Bookmark from '../components/Bookmark';
 import { Console } from 'console';
+import { BookmarkType, BookmarkInterface } from '../index';
 
 interface Props {
   videos: Video[];
@@ -32,7 +33,7 @@ export const Player: React.FC<Props> = ({videos}) => {
   const targetSeekElement = useRef<HTMLDivElement>(null);
   
   const [clips, setClips] = useState<Clip[]>([]);
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [bookmarks, setBookmarks] = useState<BookmarkInterface[]>([]);
   const [currentZoom, setZoom] = useState(0);
   const [currentPlaybackRate, setPlaybackRate] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
@@ -242,7 +243,7 @@ export const Player: React.FC<Props> = ({videos}) => {
       postMessage("CreateClips", { videoPath: `/${game}/${video}`, clipSegments: convertedClips});
   }
 
-  function handlePlayClips() {
+    function handlePlayClips() {
     if(videoElement.current) {
       if(playbackClips === -1) {
         setClips(clips => clips.sort((a, b) => (a.start > b.start) ? 1 : -1));
@@ -261,7 +262,7 @@ export const Player: React.FC<Props> = ({videos}) => {
             let newBookmarks = bookmarks.slice();
 
             if (videoElement.current)
-                newBookmarks.push({ id: Date.now(), time: time}); 
+                newBookmarks.push({ id: Date.now(), type: BookmarkType.Manual, time: time}); 
             
             setBookmarks(newBookmarks);
         }
@@ -388,7 +389,7 @@ export const Player: React.FC<Props> = ({videos}) => {
             })}
 
             {bookmarks && bookmarks.map((bookmark, i) => {
-                return <Bookmark key={bookmark.id} ref={e => bookmarksRef.current[i] = e!} id={bookmark.id} time={bookmark.time} />
+                return <Bookmark key={bookmark.id} ref={e => bookmarksRef.current[i] = e!} id={bookmark.id} time={bookmark.time} type={bookmark.type} />
             })}
           </div>
           <div ref={targetSeekElement} style={{ height: 'calc(100%)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>
