@@ -239,14 +239,19 @@ namespace RePlays.Services {
             var windowHandle = ActiveRecorder.GetWindowHandleByProcessId(processId, true);
             var className = ActiveRecorder.GetClassName(windowHandle);
             string gameTitle = GetGameTitle(executablePath);
-
+            string fileName = Path.GetFileName(executablePath);
             try
             {
                 FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
                 bool hasBadWordInDescription = fileInformation.FileDescription != null ? blacklistList.Where(bannedWord => fileInformation.FileDescription.ToLower().Contains(bannedWord)).Any() : false;
                 bool hasBadWordInClassName = blacklistList.Where(bannedWord => className.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
                 bool hasBadWordInGameTitle = blacklistList.Where(bannedWord => gameTitle.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => gameTitle.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
-                if (hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle) return;
+                bool hasBadWordInFileName = blacklistList.Where(bannedWord => fileName.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => fileName.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
+
+                bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
+                Logger.WriteLine($"{gameTitle}: hasBadWordInDescription: {hasBadWordInDescription}, hasBadWordInClassName: {hasBadWordInClassName}, hasBadWordInGameTitle: {hasBadWordInGameTitle}, hasBadWordInFileName: {hasBadWordInFileName}");
+                if (isBlocked) return;
+                
             }
             catch(Exception e)
             {
