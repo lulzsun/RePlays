@@ -26,7 +26,7 @@ namespace RePlays.Uploaders {
                 var credentials = $"{rePlaysSettings.email}:{DecryptString(rePlaysSettings.password)}";
                 var authorization = Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authorization);
-                HttpResponseMessage uploadLimitResponse = await httpClient.GetAsync("https://replays.app/v1/method/getuploadlimit.php");
+                HttpResponseMessage uploadLimitResponse = await httpClient.GetAsync("https://replays.app/v1/method/get-upload-limit.php");
                 int fileLimit = int.Parse(await uploadLimitResponse.Content.ReadAsStringAsync());
 
                 int fileSize = (int)(new FileInfo(file).Length / (1024.0 * 1024.0));
