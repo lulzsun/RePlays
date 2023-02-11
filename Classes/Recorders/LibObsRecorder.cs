@@ -7,10 +7,10 @@ using RePlays.Utils;
 using static RePlays.Utils.Functions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using RePlays.Classes.Services;
 using System.Diagnostics;
 
-namespace RePlays.Recorders {
+namespace RePlays.Recorders
+{
     public class LibObsRecorder : BaseRecorder {
         public bool Connected { get; private set; }
         public bool DisplayCapture;
@@ -25,16 +25,28 @@ namespace RePlays.Recorders {
 
         private Dictionary<string, string> encoder_ids = new()
         {
-            {"x264", "obs_x264"},
-            {"NVENC", "jim_nvenc"},
-            {"QSV", "obs_qsv11"},
-            {"AMF", "amd_amf_h264"}
+            {"Software (x264)", "obs_x264"},
+            {"Hardware (NVENC)", "jim_nvenc"},
+            {"Hardware (QSV)", "obs_qsv11"},
+            {"Hardware (AMF)", "amd_amf_h264"}
         };
 
         private Dictionary<string, string> rate_controls = new()
         {
             {"VBR", "VBR"},
-            {"CBR", "CBR"}
+            {"CBR", "CBR"},
+            {"CQP", "CQP"},
+            {"Lossless", "Lossless"},
+            {"ABR", "ABR"},
+            {"CRF", "CRF"},
+        };
+
+        private Dictionary<string, List<string>> encoder_link = new()
+        {
+            { "Hardware (NVENC)", new List<string> { "VBR", "CBR", "CQP", "Lossless" } },
+            { "Software (x264)", new List<string> { "VBR", "CBR", "CRF" } },
+            { "Hardware (AMF)", new List<string> { "VBR", "CBR", "ABR", "CRF" } },
+            { "Hardware (QSV)", new List<string> { "VBR", "CBR" } }
         };
 
         static bool signalOutputStop = false;
@@ -322,10 +334,10 @@ namespace RePlays.Recorders {
             //Didn't really know how to handle the presets so it's just hacked for now.
             switch (encoder)
             {
-                case "NVENC":
+                case "Hardware (NVENC)":
                     obs_data_set_string(videoEncoderSettings, "preset", "Quality");
                     break;
-                case "x264":
+                case "Software (x264)":
                     obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
                     break;
             }
@@ -370,18 +382,18 @@ namespace RePlays.Recorders {
                 switch (id)
                 {
                     case "jim_nvenc":
-                        availableEncoders.Add("NVENC");
-                        break;
-                    case "obs_qsv11":
-                        availableEncoders.Add("QSV");
+                        availableEncoders.Add("Hardware (NVENC)");
                         break;
                     case "amd_amf_h264":
-                        availableEncoders.Add("AMF");
+                        availableEncoders.Add("Hardware (AMF)");
+                        break;
+                    case "obs_qsv11":
+                        availableEncoders.Add("Hardware (QSV)");
                         break;
                 }
             }
             //As x264 is a software encoder, it must be supported on all platforms
-            availableEncoders.Add("x264");
+            availableEncoders.Add("Software (x264)");
             SettingsService.Settings.captureSettings.encodersCache = availableEncoders;
             if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder))
                 SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
@@ -390,16 +402,15 @@ namespace RePlays.Recorders {
 
         public void GetAvailableRateControls()
         {
-            List<string> availableRateControls = new();
-
-            //TODO: Add more rate controls. These works in both x256 and GPU encoders.
-            availableRateControls.Add("VBR");
-            availableRateControls.Add("CBR");
-
-            SettingsService.Settings.captureSettings.rateControlCache = availableRateControls;
-            if (!availableRateControls.Contains(SettingsService.Settings.captureSettings.rateControl))
-                SettingsService.Settings.captureSettings.rateControl = availableRateControls[0];
-            SettingsService.SaveSettings();
+            Logger.WriteLine("Encoder: " + SettingsService.Settings.captureSettings.encoder);
+            if (encoder_link.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls))
+            {
+                Logger.WriteLine("Rate Control options: " + string.Join(",", availableRateControls));
+                SettingsService.Settings.captureSettings.rateControlCache = availableRateControls;
+                if (!availableRateControls.Contains(SettingsService.Settings.captureSettings.rateControl))
+                    SettingsService.Settings.captureSettings.rateControl = availableRateControls[0];
+                SettingsService.SaveSettings();
+            }
         }
 
         public override async Task<bool> StopRecording() {

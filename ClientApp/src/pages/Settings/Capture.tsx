@@ -78,7 +78,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
       
       ddmItems.push({name: encoder, onClick: () => {
         settings.encoder = encoder;
-        updateSettings();
+          updateSettings();
       }});
     });
 
@@ -93,10 +93,10 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
 
         let rateControlsItems: any[] = [];
 
-        settings.rateControlCache.forEach((rateControl) => {
-
+        const rateControls = localStorage.getItem("availableRateControls")!.split(',');
+        rateControls.forEach((rateControl) => {
             rateControlsItems.push({
-                name: rateControl, onClick: () => {
+                name: rateControl, onClick: () => { 
                     settings.rateControl = rateControl;
                     updateSettings();
                 }
@@ -104,8 +104,8 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         });
 
         setAvailableRateControls(rateControlsItems);
-        return;
-    }, [setAvailableRateControls]);
+        return;            
+    }, [setAvailableRateControls, updateSettings]);
 
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
@@ -134,7 +134,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         </div>
 
       <h1 className="font-semibold text-2xl mt-4">Video Quality</h1>
-      <div className="flex gap-4" 
+        <div className="flex gap-4" 
         onChange={e => {
           let value = (e?.target as HTMLInputElement).value;
           switch (value) {
@@ -145,10 +145,10 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
               settings!.resolution = 720; settings!.frameRate = 30; settings!.bitRate = 25;
               break;
             case "high":
-              settings!.resolution = 1080; settings!.frameRate = 60; settings!.bitRate = 50;
+              settings!.resolution = 1080; settings!.frameRate = 60; settings!.bitRate = 35;
               break;
             case "ultra":
-              settings!.resolution = 1440; settings!.frameRate = 60; settings!.bitRate = 50;
+                  settings!.resolution = settings!.maxScreenResolution >= 1440 ? 1440 : 1080; settings!.frameRate = 60; settings!.bitRate = 50;
               break;
             default:
               return;
@@ -168,20 +168,20 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="high"
-            defaultChecked={(settings?.resolution === 1080 && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)}/>
+            defaultChecked={(settings?.resolution === 1080 && settings?.frameRate === 60 && settings?.bitRate === 35 ? true : false)}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">High</span>
         </label>
         <label className="inline-flex items-center">
             <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
-                defaultChecked={(settings?.resolution === 1440 && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
+                        defaultChecked={(settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080) && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
             <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
         </label>
         <label className="inline-flex items-center">
-          <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality}/>
+          <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality} />
           <span className="px-2 text-gray-700 dark:text-gray-400">Custom</span>
         </label>
       </div>
-      <div className="flex gap-8">
+      <div className="flex gap-2">
         <div className="flex flex-col">
           Resolution
           <DropDownMenu text={(settings === undefined ? "1080p" : settings.resolution + "p")} width={"auto"}
@@ -189,7 +189,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
             {name: "480p", onClick: () => {settings!.resolution = 480; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "720p", onClick: () => {settings!.resolution = 720; updateSettings();}},
             {name: "1080p", onClick: () => {settings!.resolution = 1080; updateSettings();}},
-            {name: "1440p", onClick: () => {settings!.resolution = 1440; updateSettings();}},
+              ...(settings!.maxScreenResolution >= 1440 ? [{ name: "1440p", onClick: () => { settings!.resolution = 1440; updateSettings(); } }] : []),
           ]}/> 
         </div>
         <div className="flex flex-col">
@@ -199,7 +199,6 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
             {name: "15 fps", onClick: () => {settings!.frameRate = 15; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "30 fps", onClick: () => {settings!.frameRate = 30; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "60 fps", onClick: () => {settings!.frameRate = 60; customVideoQuality.current!.checked = true; updateSettings();}},
-            //{name: "144 fps", onClick: () => {settings!.frameRate = 144; updateSettings();}},
           ]}/> 
         </div>
         <div className="flex flex-col">
@@ -220,7 +219,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         </div>
         <div className="flex flex-col">
             Encoder
-            <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
+                    <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
                 items={availableEncoders} />
         </div>
         <div className="flex flex-col">
