@@ -151,6 +151,7 @@ namespace RePlays.Utils {
                     break;
                 case "UpdateSettings": {
                         SaveSettings(webMessage);
+                        SendMessage(GetUserSettings());
                     }
                     break;
                 case "RetrieveVideos": {

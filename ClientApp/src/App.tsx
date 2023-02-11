@@ -108,7 +108,8 @@ function App() {
             localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
             break;
       case 'UserSettings':
-        setUserSettings(data);
+            setUserSettings(data);
+            localStorage.setItem("availableRateControls", data.captureSettings.rateControlCache)
         break;
       default:
         break;
