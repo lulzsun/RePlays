@@ -95,6 +95,8 @@ namespace RePlays.Utils {
         private List<string> _rateControlCache = new();
         public List<string> rateControlCache { get { return _rateControlCache; } set { _rateControlCache = value; } }
         public string rateControl { get { return _rateControl; } set { _rateControl = value; } }
+        private int _maxScreenResolution = 1080;
+        public int maxScreenResolution { get { return _maxScreenResolution; } set { _maxScreenResolution = value; } }
         private int _resolution = 1080;
         public int resolution { get { return _resolution; } set { _resolution = value; } }
         private int _frameRate = 60;
