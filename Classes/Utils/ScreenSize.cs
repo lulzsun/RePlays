@@ -13,7 +13,6 @@ namespace RePlays.Utils
             if (SettingsService.Settings.captureSettings.maxScreenResolution != screenResolution)
             {
                 SettingsService.Settings.captureSettings.maxScreenResolution = screenResolution;
-                SettingsService.SaveSettings();
             }
         }
     }
