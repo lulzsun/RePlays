@@ -26,7 +26,7 @@ namespace RePlays.Uploaders {
                 var credentials = $"{rePlaysSettings.email}:{DecryptString(rePlaysSettings.password)}";
                 var authorization = Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authorization);
-                HttpResponseMessage uploadLimitResponse = await httpClient.GetAsync("https://replays.app/v1/method/get-upload-limit.php");
+                HttpResponseMessage uploadLimitResponse = await httpClient.GetAsync("https://upload.replays.app/v1/method/get-upload-limit.php");
                 int fileLimit = int.Parse(await uploadLimitResponse.Content.ReadAsStringAsync());
 
                 int fileSize = (int)(new FileInfo(file).Length / (1024.0 * 1024.0));
@@ -46,7 +46,7 @@ namespace RePlays.Uploaders {
                     formDataContent.Add(fileContent, "uploaded", "video.mp4");
                     formDataContent.Add(titleContent, "title");
 
-                    var response = await httpClient.PostAsync("https://replays.app/v1/method/upload.php", formDataContent);
+                    var response = await httpClient.PostAsync("https://upload.replays.app/v1/method/upload.php", formDataContent);
                     var content = response.Content.ReadAsStringAsync().Result;
                     Logger.WriteLine(response.StatusCode.ToString() + " " + content);
                     try
@@ -68,8 +68,10 @@ namespace RePlays.Uploaders {
                     catch
                     {
                         WebMessage.DisplayModal("An unexpected error occured.", "Warning", "warning");
+                        WebMessage.DestroyToast(id);
                         return null;
                     }
+
                 }
             }
         }
