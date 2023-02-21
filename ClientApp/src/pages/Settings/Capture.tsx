@@ -266,7 +266,13 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
 
       <h1 className="font-semibold text-2xl mt-4">Advanced</h1>
       <div className="flex flex-col gap-1">
-          <label className="inline-flex items-center">
+              <label className="inline-flex items-center">
+                  <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
+                      defaultChecked={settings === undefined ? false : settings.useRecordingStartSound}
+                      onChange={(e) => { settings!.useRecordingStartSound = e.target.checked; updateSettings(); }} />
+                  <span className="ml-2 text-gray-700 dark:text-gray-400">Start Recording Sound Effect</span>
+              </label>
+              <label className="inline-flex items-center">
               <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
                   defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
                   onChange={(e) => { settings!.useDisplayCapture = e.target.checked; updateSettings(); }} />

@@ -3,6 +3,7 @@ using RePlays.Utils;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Media;
 
 namespace RePlays.Services
 {
@@ -77,9 +78,13 @@ namespace RePlays.Services
                     IsPreRecording = false;
                     GameInFocus = true;
 
-                    //frmMain.Instance.DisplayNotification("Recording Started", $"Currently recording {currentSession.GameTitle}");
+                    if (SettingsService.Settings.captureSettings.useRecordingStartSound)
+                    {
+                        System.IO.Stream soundStream = Properties.Resources.start_recording;
+                        SoundPlayer startRecordingSound = new SoundPlayer(soundStream);
+                        startRecordingSound.Play();
+                    }
                 }
-                //DetectionService.DisposeDetections();
             }
             if (!result) {
                 // recorder failed to start properly so lets restart the currentSession Pid
