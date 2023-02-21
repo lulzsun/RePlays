@@ -78,5 +78,14 @@ namespace RePlays.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream start_recording {
+            get {
+                return ResourceManager.GetStream("start_recording", resourceCulture);
+            }
+        }
     }
 }

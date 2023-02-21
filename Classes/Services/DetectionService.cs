@@ -249,7 +249,6 @@ namespace RePlays.Services {
                 bool hasBadWordInFileName = blacklistList.Where(bannedWord => fileName.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => fileName.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
 
                 bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
-                Logger.WriteLine($"{gameTitle}: hasBadWordInDescription: {hasBadWordInDescription}, hasBadWordInClassName: {hasBadWordInClassName}, hasBadWordInGameTitle: {hasBadWordInGameTitle}, hasBadWordInFileName: {hasBadWordInFileName}");
                 if (isBlocked) return;
                 
             }

@@ -22,6 +22,7 @@ namespace RePlays {
             Instance = this;
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
+            ScreenSize.UpdateMaximumScreenResolution();
             StorageService.ManageStorage();
             HotkeyService.Start();
             InitializeComponent();

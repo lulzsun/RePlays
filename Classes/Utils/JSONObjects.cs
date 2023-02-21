@@ -87,6 +87,8 @@ namespace RePlays.Utils {
         public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
         private bool _useDisplayCapture = true;
         public bool useDisplayCapture { get { return _useDisplayCapture; } set { _useDisplayCapture = value; } }
+        private bool _useRecordingStartSound = true;
+        public bool useRecordingStartSound { get { return _useRecordingStartSound; } set { _useRecordingStartSound = value; } }
         private List<string> _encodersCache = new();
         public List<string> encodersCache { get { return _encodersCache; } set { _encodersCache = value; } }
         private string _encoder = string.Empty;

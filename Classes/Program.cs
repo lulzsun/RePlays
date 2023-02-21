@@ -76,7 +76,6 @@ namespace RePlays {
                 if(process == null) process = Process.Start(startInfo);
             }
 #endif
-            ScreenSize.UpdateMaximumScreenResolution();
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
