@@ -15,7 +15,7 @@ export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
   const [title, setTitle] = useState(video);
 
   useEffect(() => {
-    modalCtx?.setConfirm(() => {postMessage("UploadVideo", {destination, title, file: `${game}\\${video}`});});
+    modalCtx?.setConfirm(() => {postMessage("UploadVideo", {destination, title, file: `${game}\\${video}`, game});});
   }, [destination, title, game, video]);
   
 	return (

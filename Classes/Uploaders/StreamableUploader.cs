@@ -17,7 +17,7 @@ namespace RePlays.Uploaders {
             public int status { get; set; }
         }
 
-        public override async Task<string> Upload(string id, string title, string file) {
+        public override async Task<string> Upload(string id, string title, string file, string game) {
             using (var httpClient = new HttpClient()) {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan; // sometimes, uploading can take long
                 var streamableSettings = SettingsService.Settings.uploadSettings.streamableSettings;

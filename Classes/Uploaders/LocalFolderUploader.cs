@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace RePlays.Uploaders {
     public class LocalFolderUploader : BaseUploader {
-        public override async Task<string> Upload(string id, string title, string file) {
+        public override async Task<string> Upload(string id, string title, string file, string game) {
             var result = await Task.Run(() => {
                 var destFile = Path.Combine(SettingsService.Settings.uploadSettings.localFolderSettings.dir, Path.GetFileName(file));
                 byte[] buffer = new byte[1024 * 1024]; // 1MB buffer
