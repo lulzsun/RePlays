@@ -182,7 +182,8 @@ namespace RePlays {
             if (e.CloseReason == CloseReason.UserClosing) {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
-                this.FormBorderStyle = FormBorderStyle.None;
+                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+                this.Opacity = 0;
                 this.ShowInTaskbar = false;
                 label1.Visible = false;
                 DisposeWebView2();
@@ -193,18 +194,17 @@ namespace RePlays {
         private void frmMain_Resize(object sender, System.EventArgs e) {
             RefreshLoader();
 
-            if (this.WindowState != FormWindowState.Minimized)
-                _PreviousWindowState = WindowState;
-
             if (this.WindowState != FormWindowState.Minimized) {
-                if(!firstTime) InitializeWebView2();
+                if (!firstTime) InitializeWebView2();
                 this.ShowInTaskbar = true;
+                _PreviousWindowState = WindowState;
             }
         }
 
         private void notifyIcon1_DoubleClick(object sender, System.EventArgs e) {
             this.Activate();
             if (this.WindowState == FormWindowState.Minimized) {
+                this.Opacity = 100;
                 this.FormBorderStyle = FormBorderStyle.Sizable;
                 this.WindowState = _PreviousWindowState;
             }
