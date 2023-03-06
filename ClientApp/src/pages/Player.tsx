@@ -243,7 +243,7 @@ export const Player: React.FC<Props> = ({videos}) => {
       postMessage("CreateClips", { videoPath: `/${game}/${video}`, clipSegments: convertedClips});
   }
 
-    function handlePlayClips() {
+  function handlePlayClips() {
     if(videoElement.current) {
       if(playbackClips === -1) {
         setClips(clips => clips.sort((a, b) => (a.start > b.start) ? 1 : -1));
@@ -256,51 +256,56 @@ export const Player: React.FC<Props> = ({videos}) => {
     }
   }
 
-    function handleAddBookmark() {
-        if (seekWindowElement.current && seekBarElement.current) {
-            let time = currentTime / videoElement.current!.duration * 100;
-            let newBookmarks = bookmarks.slice();
+  function handleAddBookmark() {
+    if (seekWindowElement.current && seekBarElement.current) {
+      let time = currentTime / videoElement.current!.duration * 100;
+      let newBookmarks = bookmarks.slice();
 
-            if (videoElement.current)
-                newBookmarks.push({ id: Date.now(), type: BookmarkType.Manual, time: time}); 
-            
-            setBookmarks(newBookmarks);
-        }
+      if (videoElement.current)
+        newBookmarks.push({ id: Date.now(), type: BookmarkType.Manual, time: time}); 
+      
+      setBookmarks(newBookmarks);
+      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+      videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
+      localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
+      postMessage("RestoreLocalStorage", localStorage);
     }
+  }
 
-    function handleDeleteBookmark(e: MouseEvent, index: number) {
-        contextMenuCtx?.setItems([{
-            name: 'Delete', onClick: () => {
-                let newBookmarks = bookmarks.slice();
+  function handleDeleteBookmark(e: MouseEvent, index: number) {
+    contextMenuCtx?.setItems([{
+      name: 'Delete', onClick: () => {
+        let newBookmarks = bookmarks.slice();
 
-                if (videoElement.current)
-                    newBookmarks.splice(index, 1);
+        if (videoElement.current)
+          newBookmarks.splice(index, 1);
 
-                setBookmarks(newBookmarks);
-                let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
-                videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
-                localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
-            }
-        }]);
-        contextMenuCtx?.setPosition({ x: e.pageX, y: e.pageY });
-    }
+        setBookmarks(newBookmarks);
+        let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+        videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
+        localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
+        postMessage("RestoreLocalStorage", localStorage);
+      }
+    }]);
+    contextMenuCtx?.setPosition({ x: e.pageX, y: e.pageY });
+  }
 
   function handleVideoLoad(e: SyntheticEvent) {
-      let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
-      let videoMetadataBookmarks = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
-      
-      if(videoElement.current && volumeSliderElement.current) {
-        videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
-        videoElement.current.play();
-      }
-      if (videoMetadata[`/${video}`]) {
-          setClips(videoMetadata[`/${video}`].clips);
-      }
+    let videoMetadata = JSON.parse(localStorage.getItem("videoMetadata")!);
+    let videoMetadataBookmarks = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
+    
+    if(videoElement.current && volumeSliderElement.current) {
+      videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
+      videoElement.current.play();
+    }
+    if (videoMetadata[`/${video}`]) {
+      setClips(videoMetadata[`/${video}`].clips);
+    }
 
-      if (videoMetadataBookmarks[`/${video}`]) {
-          setBookmarks(videoMetadataBookmarks[`/${video}`].bookmarks);
-      }
-
+    if (videoMetadataBookmarks[`/${video}`]) {
+      setBookmarks(videoMetadataBookmarks[`/${video}`].bookmarks);
+    }
+    postMessage("RestoreLocalStorage", localStorage);
   }
 
   function handleVideoPlaying(e: SyntheticEvent) {

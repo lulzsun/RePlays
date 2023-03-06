@@ -90,26 +90,32 @@ function App() {
           return tl;
         });
         break;
-        case 'SetBookmarks':
-            console.log(data);
-            let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
-            
+      case 'SetBookmarks':
+        console.log(data);
+        let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
 
-            let bookmarks: { id: number, type: BookmarkType, time: number }[] = [];
-            const map = [BookmarkType.Manual, BookmarkType.Kill];
+        let bookmarks: { id: number, type: BookmarkType, time: number }[] = [];
+        const map = [BookmarkType.Manual, BookmarkType.Kill];
 
-            data.bookmarks.forEach(function (bookmark: any) {
-                let timeToSet = bookmark.time / (data.elapsed) * 100;
-                bookmarks.push({ id: Date.now(), type: map[bookmark.type], time: timeToSet });
-            }); 
+        data.bookmarks.forEach(function (bookmark: any) {
+            let timeToSet = bookmark.time / (data.elapsed) * 100;
+            bookmarks.push({ id: Date.now(), type: map[bookmark.type], time: timeToSet });
+        }); 
 
-            videoMetadata[data.videoname] = { bookmarks };
+        videoMetadata[data.videoname] = { bookmarks };
 
-            localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
-            break;
+        localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
+        break;
       case 'UserSettings':
-            setUserSettings(data);
-            localStorage.setItem("availableRateControls", data.captureSettings.rateControlCache)
+        setUserSettings(data);
+        localStorage.setItem("availableRateControls", data.captureSettings.rateControlCache); 
+        break;
+      case 'RestoreLocalStorage':
+        Object.keys(data).forEach(function (k) {
+          localStorage.setItem(k, data[k]);
+        });
+
+        postMessage("RestoreLocalStorage", localStorage);
         break;
       default:
         break;
