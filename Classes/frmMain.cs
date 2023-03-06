@@ -53,9 +53,10 @@ namespace RePlays {
 
             if (SettingsService.Settings.generalSettings.startMinimized) {
                 this.Size = new Size(1080, 600);
-                this.FormBorderStyle = FormBorderStyle.Sizable;
                 CenterToScreen();
                 this.WindowState = FormWindowState.Minimized;
+                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+                this.Opacity = 0;
                 this.ShowInTaskbar = false;
                 label1.Visible = false;
                 firstTime = false;
