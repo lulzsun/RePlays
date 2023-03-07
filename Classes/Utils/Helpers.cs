@@ -135,6 +135,16 @@ namespace RePlays.Utils {
             SettingsService.SaveSettings();
         }
 
+        public static string RestoreLocalStorage() {
+            string ls = Path.Join(GetCfgFolder(), @"\localstorage.bak");
+
+            WebMessage webMessage = new() {
+                message = "RestoreLocalStorage",
+                data = File.Exists(ls) ? File.ReadAllText(ls) : "{}"
+            };
+            return JsonSerializer.Serialize(webMessage);
+        }
+
         public static string GetUserSettings() {
             SettingsService.LoadSettings();
 

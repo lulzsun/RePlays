@@ -4,13 +4,13 @@ using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using RePlays.Recorders;
 using RePlays.Services;
-using Squirrel;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 using System.Collections.Generic;
 using System.IO;
 using System;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace RePlays {
     public partial class frmMain : Form {
@@ -22,6 +22,7 @@ namespace RePlays {
             Instance = this;
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
+            ScreenSize.UpdateMaximumScreenResolution();
             StorageService.ManageStorage();
             HotkeyService.Start();
             InitializeComponent();
@@ -52,9 +53,10 @@ namespace RePlays {
 
             if (SettingsService.Settings.generalSettings.startMinimized) {
                 this.Size = new Size(1080, 600);
-                this.FormBorderStyle = FormBorderStyle.Sizable;
                 CenterToScreen();
                 this.WindowState = FormWindowState.Minimized;
+                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+                this.Opacity = 0;
                 this.ShowInTaskbar = false;
                 label1.Visible = false;
                 firstTime = false;
@@ -181,7 +183,8 @@ namespace RePlays {
             if (e.CloseReason == CloseReason.UserClosing) {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
-                this.FormBorderStyle = FormBorderStyle.None;
+                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+                this.Opacity = 0;
                 this.ShowInTaskbar = false;
                 label1.Visible = false;
                 DisposeWebView2();
@@ -192,18 +195,17 @@ namespace RePlays {
         private void frmMain_Resize(object sender, System.EventArgs e) {
             RefreshLoader();
 
-            if (this.WindowState != FormWindowState.Minimized)
-                _PreviousWindowState = WindowState;
-
             if (this.WindowState != FormWindowState.Minimized) {
-                if(!firstTime) InitializeWebView2();
+                if (!firstTime) InitializeWebView2();
                 this.ShowInTaskbar = true;
+                _PreviousWindowState = WindowState;
             }
         }
 
         private void notifyIcon1_DoubleClick(object sender, System.EventArgs e) {
             this.Activate();
             if (this.WindowState == FormWindowState.Minimized) {
+                this.Opacity = 100;
                 this.FormBorderStyle = FormBorderStyle.Sizable;
                 this.WindowState = _PreviousWindowState;
             }
@@ -294,15 +296,24 @@ namespace RePlays {
             Logger.WriteLine(string.Join(" | ", PressedKeys.ToArray()));
         }
 
+        bool _hasHotkeyTimeout = false;
         private void button1_KeyUp(object sender, KeyEventArgs e) {
-            if(HotkeyService.EditId != null && SettingsService.Settings.keybindings.ContainsKey(HotkeyService.EditId)) {
+            if(HotkeyService.EditId != null && SettingsService.Settings.keybindings.ContainsKey(HotkeyService.EditId) && !_hasHotkeyTimeout) {
                 SettingsService.Settings.keybindings[HotkeyService.EditId] = string.Join(" | ", PressedKeys.ToArray()).Split(" | ");
                 SettingsService.SaveSettings();
                 WebMessage.SendMessage(GetUserSettings());
                 HotkeyService.Start();
+                var cleanupTask = new Task(() => ClearKeys()); cleanupTask.Start();
             }
             if (webView2 != null) webView2.Focus();
             else pictureBox1.Focus();
+            _hasHotkeyTimeout = PressedKeys.Count >= 2;
+        }
+        
+        public async void ClearKeys()
+        {
+            await Task.Delay(1000);
+            _hasHotkeyTimeout = false;
             PressedKeys.Clear();
         }
 

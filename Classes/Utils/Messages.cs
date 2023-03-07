@@ -154,6 +154,8 @@ namespace RePlays.Utils {
                 case "Initialize": {
                         // INIT USER SETTINGS
                         SendMessage(GetUserSettings());
+                        // RESTORE LOCAL STORAGE (APP UPDATES DELETES LOCAL STORAGE)
+                        SendMessage(RestoreLocalStorage());
 
                         Logger.WriteLine(toastList.Count + " Initialized List");
                         foreach (var toast in toastList) {
@@ -161,8 +163,15 @@ namespace RePlays.Utils {
                         }
                     }
                     break;
+                case "RestoreLocalStorage": {
+                        string ls = Path.Join(GetCfgFolder(), @"\localstorage.bak");
+                        File.WriteAllText(ls, webMessage.data);
+                        Logger.WriteLine("Successfully backed up localstorage to: " + ls);
+                    }
+                    break;
                 case "UpdateSettings": {
                         SaveSettings(webMessage);
+                        SendMessage(GetUserSettings());
                     }
                     break;
                 case "RetrieveVideos": {

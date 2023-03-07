@@ -107,6 +107,8 @@ declare global {
   interface CaptureSettings {
     recordingMode: string,
     useDisplayCapture: boolean,
+    useRecordingStartSound: boolean,
+    maxScreenResolution: number, 
     resolution: number, frameRate: number, bitRate: number,
     encodersCache: string[]
     encoder: string,

@@ -87,6 +87,8 @@ namespace RePlays.Utils {
         public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
         private bool _useDisplayCapture = true;
         public bool useDisplayCapture { get { return _useDisplayCapture; } set { _useDisplayCapture = value; } }
+        private bool _useRecordingStartSound = true;
+        public bool useRecordingStartSound { get { return _useRecordingStartSound; } set { _useRecordingStartSound = value; } }
         private List<string> _encodersCache = new();
         public List<string> encodersCache { get { return _encodersCache; } set { _encodersCache = value; } }
         private string _encoder = string.Empty;
@@ -95,6 +97,8 @@ namespace RePlays.Utils {
         private List<string> _rateControlCache = new();
         public List<string> rateControlCache { get { return _rateControlCache; } set { _rateControlCache = value; } }
         public string rateControl { get { return _rateControl; } set { _rateControl = value; } }
+        private int _maxScreenResolution = 1080;
+        public int maxScreenResolution { get { return _maxScreenResolution; } set { _maxScreenResolution = value; } }
         private int _resolution = 1080;
         public int resolution { get { return _resolution; } set { _resolution = value; } }
         private int _frameRate = 60;

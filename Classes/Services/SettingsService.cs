@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
+using RePlays.Recorders;
 using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
@@ -56,11 +57,16 @@ namespace RePlays.Services {
         }
 
         public static void SaveSettings(SettingsJson settings=null) {
+            SettingsJson oldSettings = Settings;
             if (settings == null) settings = Settings;
             _Settings = settings;
             var options = new JsonSerializerOptions { WriteIndented = true };
             File.WriteAllText(settingsFile, JsonSerializer.Serialize(settings, options));
             Logger.WriteLine("Saved userSettings.json");
+            if(oldSettings.captureSettings.encoder != Settings.captureSettings.encoder)
+            {
+                ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls();
+            }
         }
     }
 }
