@@ -130,6 +130,10 @@ declare global {
       email: string,
       password: string,
     },
+    rePlaysSettings: {
+      email: string,
+      password: string,
+    },
     youtubeSettings: {
       token: string,
     },

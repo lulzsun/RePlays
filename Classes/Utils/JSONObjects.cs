@@ -153,6 +153,16 @@ namespace RePlays.Utils {
 
         private StreamableSettings _streamableSettings = new();
         public StreamableSettings streamableSettings { get { return _streamableSettings; } set { _streamableSettings = value; } }
+        public class RePlaysSettings
+        {
+            private string _email = "";
+            public string email { get { return _email; } set { _email = value; } }
+            private string _password = "";
+            public string password { get { return _password; } set { _password = value; } }
+        }
+
+        private RePlaysSettings _rePlaysSettings = new();
+        public RePlaysSettings rePlaysSettings { get { return _rePlaysSettings; } set { _rePlaysSettings = value; } }
 
         public class LocalFolderSettings {
             private string _dir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);

@@ -5,11 +5,11 @@ using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class UploadService {
-        public static async void Upload(string destination, string title, string file) {
+        public static async void Upload(string destination, string title, string file, string game) {
             var uploadId = GenerateShortID();
             try {
                 BaseUploader uploader = (BaseUploader)Activator.CreateInstance("RePlays", $"RePlays.Uploaders.{destination}Uploader").Unwrap();
-                string url = await uploader.Upload(uploadId, title, file);
+                string url = await uploader.Upload(uploadId, title, file, game);
                 if (url == null) return;
                 SettingsService.Settings.uploadSettings.recentLinks.Add($"[{DateTime.Now.ToShortTimeString()}] " + url);
                 if (SettingsService.Settings.uploadSettings.recentLinks.Count > 10)

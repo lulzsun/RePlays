@@ -103,6 +103,18 @@ namespace RePlays.Utils {
                 _file = value;
             }
         }
+        private string _game;
+        public string game
+        {
+            get
+            {
+                return _game;
+            }
+            set
+            {
+                _game = value;
+            }
+        }
     }
 
     public class RemoveProgram {
@@ -278,7 +290,7 @@ namespace RePlays.Utils {
                         var filePath = Path.Join(GetPlaysFolder(), data.file);
                         if(File.Exists(filePath)) {
                             Logger.WriteLine($"Preparing to upload {filePath} to {data.destination}");
-                            UploadService.Upload(data.destination, data.title, filePath);
+                            UploadService.Upload(data.destination, data.title, filePath, data.game);
                         }
                         //DisplayModal($"{data.title} {data.destination}", "Error", "warning"));
                     }
