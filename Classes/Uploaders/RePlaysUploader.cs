@@ -34,6 +34,12 @@ namespace RePlays.Uploaders {
                 {
                     httpClient.Timeout = Timeout.InfiniteTimeSpan; // sometimes, uploading can take long
                     var rePlaysSettings = SettingsService.Settings.uploadSettings.rePlaysSettings;
+                    if(String.IsNullOrEmpty(rePlaysSettings.email) || String.IsNullOrEmpty(rePlaysSettings.password))
+                    {
+                        WebMessage.DisplayModal("Enter your account credentials: Settings -> Upload -> Replays", "Wrong Credentials", "warning");
+                        return null;
+                    }
+                    
                     var credentials = $"{rePlaysSettings.email}:{DecryptString(rePlaysSettings.password)}";
                     var authorization = Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authorization);

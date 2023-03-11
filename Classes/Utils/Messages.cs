@@ -207,7 +207,16 @@ namespace RePlays.Utils {
                     }
 
                     break;
- 
+                case "OpenLink":
+                    {
+                        Process browserProcess = new Process();
+                        browserProcess.StartInfo.UseShellExecute = true;
+                        browserProcess.StartInfo.FileName = webMessage.data;
+                        browserProcess.Start();
+                    }
+
+                    break;
+
                 case "CompressClip":
                     {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
