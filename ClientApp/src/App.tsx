@@ -105,6 +105,7 @@ function App() {
         videoMetadata[data.videoname] = { bookmarks };
 
         localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
+        postMessage("RestoreLocalStorage", localStorage);
         break;
       case 'UserSettings':
         setUserSettings(data);
