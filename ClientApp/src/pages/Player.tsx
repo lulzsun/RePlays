@@ -268,7 +268,6 @@ export const Player: React.FC<Props> = ({videos}) => {
       let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
       videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
       localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
-      postMessage("RestoreLocalStorage", localStorage);
     }
   }
 
@@ -284,7 +283,6 @@ export const Player: React.FC<Props> = ({videos}) => {
         let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
         videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
         localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
-        postMessage("RestoreLocalStorage", localStorage);
       }
     }]);
     contextMenuCtx?.setPosition({ x: e.pageX, y: e.pageY });
@@ -305,7 +303,6 @@ export const Player: React.FC<Props> = ({videos}) => {
     if (videoMetadataBookmarks[`/${video}`]) {
       setBookmarks(videoMetadataBookmarks[`/${video}`].bookmarks);
     }
-    postMessage("RestoreLocalStorage", localStorage);
   }
 
   function handleVideoPlaying(e: SyntheticEvent) {

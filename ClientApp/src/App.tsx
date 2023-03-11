@@ -105,18 +105,10 @@ function App() {
         videoMetadata[data.videoname] = { bookmarks };
 
         localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
-        postMessage("RestoreLocalStorage", localStorage);
         break;
       case 'UserSettings':
         setUserSettings(data);
         localStorage.setItem("availableRateControls", data.captureSettings.rateControlCache); 
-        break;
-      case 'RestoreLocalStorage':
-        Object.keys(data).forEach(function (k) {
-          localStorage.setItem(k, data[k]);
-        });
-
-        postMessage("RestoreLocalStorage", localStorage);
         break;
       default:
         break;

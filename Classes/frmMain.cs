@@ -114,7 +114,7 @@ namespace RePlays {
                     AdditionalBrowserArguments = "--unlimited-storage --disable-web-security --allow-file-access-from-files --allow-file-access",
                     Language = CultureInfo.InstalledUICulture.TwoLetterISOLanguageName
                 };
-                CoreWebView2Environment environment = await CoreWebView2Environment.CreateAsync(null, null, environmentOptions);
+                CoreWebView2Environment environment = await CoreWebView2Environment.CreateAsync(null, GetCfgFolder(), environmentOptions);
                 await webView2.EnsureCoreWebView2Async(environment);
             }
         }
