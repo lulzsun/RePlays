@@ -93,6 +93,11 @@ namespace RePlays.Recorders
                             signalGCHookSuccess = false;
                             IntegrationService.Shutdown();
                         }
+                        else if(formattedMsg.Contains("No space left on device"))
+                        {
+                            WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
+                            RecordingService.StopRecording();
+                        }
                     }
                 }
                 catch (Exception e) {
