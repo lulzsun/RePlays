@@ -40,9 +40,30 @@ namespace RePlays.Utils {
 
         public static string GetPlaysFolder() {
             var videoSaveDir = SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
+            if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any())
+            {
+                SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
+                SettingsService.SaveSettings();
+                if (frmMain.webView2 == null)
+                {
+                    Task.Run(() => SendDisplayModalWithDelay("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info", 10000));
+                }
+                else
+                {
+                    WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
+                }
+                return SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
+            }
+
             if (!Directory.Exists(videoSaveDir))
                 Directory.CreateDirectory(videoSaveDir);
             return videoSaveDir;
+        }
+
+        public static async Task SendDisplayModalWithDelay(string context, string title, string icon, int delay)
+        {
+            await Task.Delay(delay);
+            WebMessage.DisplayModal(context, title, icon);
         }
 
         public static string GetTempFolder() {
