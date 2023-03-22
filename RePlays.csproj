@@ -6,7 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
 	<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
 	<SpaRoot>ClientApp\</SpaRoot>
-	<ApplicationIcon>Resources\replays logo.ico</ApplicationIcon>
+	<ApplicationIcon>Resources\logo.ico</ApplicationIcon>
     <RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
 	<DebugSymbols>true</DebugSymbols>
 	<DebugType>embedded</DebugType>
@@ -42,6 +42,10 @@
     <Compile Remove="obs-studio-build\**" />
     <EmbeddedResource Remove="ClientApp\build\**" />
     <EmbeddedResource Remove="obs-studio-build\**" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="Resources\logo.ico" />
   </ItemGroup>
   
   <ItemGroup>
