@@ -145,23 +145,11 @@ namespace RePlays {
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
             webView2.CoreWebView2.Navigate("https://replays.app/preload.html");
+            Logger.WriteLine("wttff");
         }
 
         private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {
             e.State = CoreWebView2PermissionState.Allow;
-        }
-
-        public static void PostWebMessageAsJson(string message) {
-            if (webView2 == null || webView2.IsDisposed == true) return;
-            if (webView2.InvokeRequired) {
-                // Call this same method but make sure it is on UI thread
-                webView2.BeginInvoke((MethodInvoker)delegate {
-                    PostWebMessageAsJson(message);
-                });
-            }
-            else
-                if(webView2 != null && webView2.CoreWebView2 != null)
-                    webView2.CoreWebView2.PostWebMessageAsJson(message);
         }
 
         bool firstTime = true;

@@ -10,6 +10,7 @@ using RePlays.Services;
 using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace RePlays.Utils {
     public class RetrieveVideos {
@@ -133,10 +134,24 @@ namespace RePlays.Utils {
         };
 
         public static void SendMessage(string message) {
-            frmMain.PostWebMessageAsJson(message);
+#if WINDOWS
+            if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return;
+            if (frmMain.webView2.InvokeRequired) {
+                // Call this same method but make sure it is on UI thread
+                frmMain.webView2.BeginInvoke((MethodInvoker)delegate {
+                    frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                });
+            }
+            else
+                if (frmMain.webView2 != null && frmMain.webView2.CoreWebView2 != null)
+                    frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+#else
+            Program.window?.SendWebMessage(message);
+#endif
         }
 
         public static async Task<WebMessage> RecieveMessage(string message) {
+            if (message == null) return null;
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
             if (webMessage.message == "UpdateSettings")

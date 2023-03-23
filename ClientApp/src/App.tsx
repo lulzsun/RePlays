@@ -42,6 +42,12 @@ function App() {
 
   function handleWebViewMessages(event: Event) {
     let eventData = (event as Webview2Event).data;
+    if (eventData.message == undefined) { 
+      // this is probably coming from photino, will need another parse
+      // @ts-ignore
+      eventData = JSON.parse(eventData);
+    }
+
     let message = eventData.message;
     let data = JSON.parse(eventData.data);
 
