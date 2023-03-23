@@ -205,7 +205,7 @@ namespace RePlays.Recorders
             // SETUP NEW VIDEO SOURCE
             // - Create a source for the game_capture in channel 2
             IntPtr videoSourceSettings = obs_data_create();
-            obs_data_set_string(videoSourceSettings, "capture_mode", "window");
+            obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle, System.Windows.Forms.Screen.PrimaryScreen) ? "any_fullscreen" : "window");
             obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
             videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
