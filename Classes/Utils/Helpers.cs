@@ -80,6 +80,14 @@ namespace RePlays.Utils {
             return cfgDir;
         }
 
+        public static string GetResourcesFolder() {
+#if (DEBUG)
+            return Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + @"/Resources/";
+#elif (RELEASE)
+            return Application.StartupPath + @"/Resources/";
+#endif
+        }
+
         public static string GetFFmpegFolder() {
 
 #if DEBUG

@@ -1,9 +1,6 @@
-﻿using RePlays.Services;
-using RePlays.Utils;
+﻿using RePlays.Utils;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace RePlays.Services
 {
@@ -24,10 +21,11 @@ namespace RePlays.Services
                 bookmark.time = bookmarkTimestamp;
                 bookmarks.Add(bookmark);
 
-                if(bookmark.type.Equals(Bookmark.BookmarkType.Manual)){
-                    System.IO.Stream soundStream = Properties.Resources.bookmark;
-                    System.Media.SoundPlayer bookmarkSound = new System.Media.SoundPlayer(soundStream);
+                if(bookmark.type.Equals(Bookmark.BookmarkType.Manual)) {
+#if WINDOWS
+                    System.Media.SoundPlayer bookmarkSound = new(Functions.GetResourcesFolder() + "bookmark.wav");
                     bookmarkSound.Play();
+#endif
                 }
             }
         }

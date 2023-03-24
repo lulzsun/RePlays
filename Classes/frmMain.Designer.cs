@@ -1,4 +1,6 @@
 ﻿
+using RePlays.Utils;
+
 namespace RePlays
 {
     partial class frmMain
@@ -30,7 +32,6 @@ namespace RePlays
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -99,7 +100,7 @@ namespace RePlays
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::RePlays.Properties.Resources.loading;
+            this.pictureBox1.Image = System.Drawing.Image.FromFile(Functions.GetResourcesFolder() + "/loading.gif");
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(0, 0);
@@ -141,7 +142,7 @@ namespace RePlays
             this.Controls.Add(this.button1);
             this.Controls.Add(this.pictureBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Functions.GetResourcesFolder() + "tray_idle.ico");
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "frmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
