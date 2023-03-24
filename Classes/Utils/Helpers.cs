@@ -5,14 +5,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms; // exists for Application.StartupPath
 using RePlays.Services;
 
 namespace RePlays.Utils {
@@ -23,35 +21,31 @@ namespace RePlays.Utils {
             return ans.ToString("x");
         }
 
+        public static string GetStartupPath() {
+            return Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        }
+
         public static string GetRePlaysURI() {
 #if (DEBUG)
             //return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
             return "http://localhost:3000/#/";
 #elif (RELEASE)
-            return "file://" + Application.StartupPath + "/ClientApp/build/index.html";
+            return "file://" + GetStartupPath() + "/ClientApp/build/index.html";
 #endif
         }
 
         public static string GetPlaysLtcFolder() {
-            //var path = Path.Join(Application.StartupPath, @"Plays-ltc\0.54.7\"); this doesnt work for some reason, plays-ltc has to be in the localappdata folder
+            //var path = Path.Join(GetStartupPath(), @"Plays-ltc\0.54.7\"); this doesnt work for some reason, plays-ltc has to be in the localappdata folder
             var path = Environment.GetEnvironmentVariable("LocalAppData") + @"\Plays-ltc\0.54.7\";
             return path;
         }
 
         public static string GetPlaysFolder() {
             var videoSaveDir = SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
-            if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any())
-            {
+            if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any()) {
                 SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
                 SettingsService.SaveSettings();
-                if (frmMain.webView2 == null)
-                {
-                    Task.Run(() => SendDisplayModalWithDelay("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info", 10000));
-                }
-                else
-                {
-                    WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
-                }
+                WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
                 return SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
             }
 
@@ -74,7 +68,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetCfgFolder() {
-            var cfgDir = Path.Join(Application.StartupPath, @"..\cfg\");
+            var cfgDir = Path.Join(GetStartupPath(), @"..\cfg\");
             if (!Directory.Exists(cfgDir))
                 Directory.CreateDirectory(cfgDir);
             return cfgDir;
@@ -84,7 +78,7 @@ namespace RePlays.Utils {
 #if (DEBUG)
             return Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + @"/Resources/";
 #elif (RELEASE)
-            return Application.StartupPath + @"/Resources/";
+            return GetStartupPath() + @"/Resources/";
 #endif
         }
 
@@ -93,7 +87,7 @@ namespace RePlays.Utils {
 #if DEBUG
             string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #else
-            string ffmpegFolder = Path.Join(Application.StartupPath, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #endif
             if (Directory.Exists(ffmpegFolder)) {
                 return ffmpegFolder;
@@ -107,7 +101,7 @@ namespace RePlays.Utils {
 #if DEBUG
             string _7zipExecutable = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #else
-            string _7zipExecutable = Path.Join(Application.StartupPath, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
+            string _7zipExecutable = Path.Join(GetStartupPath(), @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #endif
             if (File.Exists(_7zipExecutable)) {
                 return _7zipExecutable;
@@ -457,19 +451,27 @@ namespace RePlays.Utils {
         }
 
         public static string EncryptString(string stringToEncrypt, string optionalEntropy = null) {
+#if WINDOWS
             return Convert.ToBase64String(
                 ProtectedData.Protect(
                     Encoding.UTF8.GetBytes(stringToEncrypt)
                     , optionalEntropy != null ? Encoding.UTF8.GetBytes(optionalEntropy) : null
                     , DataProtectionScope.CurrentUser));
+#else
+            return stringToEncrypt;
+#endif
         }
 
         public static string DecryptString(string encryptedString, string optionalEntropy = null) {
+#if WINDOWS
             return Encoding.UTF8.GetString(
                 ProtectedData.Unprotect(
                     Convert.FromBase64String(encryptedString)
                     , optionalEntropy != null ? Encoding.UTF8.GetBytes(optionalEntropy) : null
                     , DataProtectionScope.CurrentUser));
+#else
+            return encryptedString;
+#endif
         }
 
         [DllImport("user32.dll")]

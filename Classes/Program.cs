@@ -6,10 +6,13 @@ using System.Threading;
 using System.IO;
 using System.Net;
 using System.Diagnostics;
-using Squirrel;
-using System.Windows.Forms;
+#if !WINDOWS
 using PhotinoNET;
 using RePlays.Classes.Utils;
+#else
+using Squirrel;
+using System.Windows.Forms;
+#endif
 
 namespace RePlays {
     static class Program {

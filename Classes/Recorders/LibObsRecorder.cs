@@ -493,15 +493,23 @@ namespace RePlays.Recorders
             //Screen ratio to calculate output width.
             double screenRatio = (double)outputWidth / (double)outputHeight;
 
+#if WINDOWS
+            var screenWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+            var screenHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+#else
+            var screenWidth = -1;
+            var screenHeight = -1;
+#endif
+
             obs_video_info ovi = new() {
                 adapter = 0,
                 graphics_module = "libobs-d3d11",
                 fps_num = (uint)SettingsService.Settings.captureSettings.frameRate,
                 fps_den = 1,
-                base_width = (uint)(outputWidth > 1 ? outputWidth : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width),
-                base_height = (uint)(outputHeight > 1 ? outputHeight : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height),
-                output_width = (uint)(outputWidth > 1 ? Convert.ToInt32(SettingsService.Settings.captureSettings.resolution * screenRatio) : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width),
-                output_height = (uint)(outputHeight > 1 ? SettingsService.Settings.captureSettings.resolution : System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height),
+                base_width = (uint)(outputWidth > 1 ? outputWidth : screenWidth),
+                base_height = (uint)(outputHeight > 1 ? outputHeight : screenHeight),
+                output_width = (uint)(outputWidth > 1 ? Convert.ToInt32(SettingsService.Settings.captureSettings.resolution * screenRatio) : screenWidth),
+                output_height = (uint)(outputHeight > 1 ? SettingsService.Settings.captureSettings.resolution : screenHeight),
                 output_format = video_format.VIDEO_FORMAT_NV12,
                 gpu_conversion = true,
                 colorspace = video_colorspace.VIDEO_CS_DEFAULT,

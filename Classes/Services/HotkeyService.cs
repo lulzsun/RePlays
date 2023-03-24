@@ -1,4 +1,5 @@
-﻿using RePlays.Services;
+﻿#if WINDOWS
+using RePlays.Services;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
@@ -90,3 +91,4 @@ namespace RePlays.Services
         }
     }
 }
+#endif

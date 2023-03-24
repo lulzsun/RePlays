@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿#if WINDOWS
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
@@ -300,3 +301,4 @@ namespace RePlays {
         }
     }
 }
+#endif

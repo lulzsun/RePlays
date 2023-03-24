@@ -1,4 +1,4 @@
-﻿
+﻿#if WINDOWS
 using RePlays.Utils;
 
 namespace RePlays
@@ -173,3 +173,4 @@ namespace RePlays
     }
 }
 
+#endif

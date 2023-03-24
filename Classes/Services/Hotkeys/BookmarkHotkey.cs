@@ -1,4 +1,5 @@
-﻿using RePlays.Services;
+﻿#if WINDOWS
+using RePlays.Services;
 
 namespace RePlays.Classes.Services.Hotkeys
 {
@@ -18,3 +19,4 @@ namespace RePlays.Classes.Services.Hotkeys
         }
     }
 }
+#endif

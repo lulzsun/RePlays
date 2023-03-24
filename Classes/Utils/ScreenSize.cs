@@ -1,4 +1,5 @@
-﻿using RePlays.Services;
+﻿#if WINDOWS
+using RePlays.Services;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -17,3 +18,4 @@ namespace RePlays.Utils
         }
     }
 }
+#endif
