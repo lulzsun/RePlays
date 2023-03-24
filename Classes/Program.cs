@@ -32,7 +32,9 @@ namespace RePlays {
             string debugArg = "-debug";
             if (args.Any(debugArg.Contains)) {
                 Logger.IsConsole = true;
+#if WINDOWS
                 AttachConsole(ATTACH_PARENT_PROCESS);
+#endif
             }
             else {
                 Logger.Purge();
@@ -97,7 +99,9 @@ namespace RePlays {
             // this will serve video files/thumbnails to allow the react app to use them
             StaticServer.Start();
             Thread uiThread = new(OpenInterface);
+#if WINDOWS
             uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
+#endif
             uiThread.Start();
             ApplicationExitEvent.Wait();
         }
