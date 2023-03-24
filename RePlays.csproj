@@ -4,10 +4,18 @@
     <WebView2UseWinRT>False</WebView2UseWinRT>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'" >
     <TargetFramework>net7.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'" >
+    <TargetFramework>net7.0</TargetFramework>
+	<UseWindowsForms>false</UseWindowsForms>
+  </PropertyGroup>
+
+  <PropertyGroup>
+	<OutputType>WinExe</OutputType>
 	<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
 	<SpaRoot>ClientApp\</SpaRoot>
 	<ApplicationIcon>Resources\logo.ico</ApplicationIcon>
@@ -83,7 +91,7 @@
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
   </Target>
 
-  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net7.0-windows\obs.dll') ">
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(OS)' == 'Windows_NT' And '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net7.0-windows\obs.dll') ">
 	<Error Condition="!Exists('$(SolutionDir)obs-studio-build\obs-studio-29.0.0\build\rundir\Release\bin\64bit\obs.dll')" Text="Could not find 'obs.dll' in 'obs-studio-build\obs-studio-29.0.0\build\rundir\Release\bin\64bit\'. Run `build-libobs.cmd` to build." />
 	<ItemGroup>
 	   <LIBOBSDEBUG Include="$(SolutionDir)obs-studio-build\obs-studio-29.0.0\build\rundir\Release\bin\64bit\**\*.*" />
