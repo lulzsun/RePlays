@@ -84,7 +84,9 @@ namespace RePlays.Utils {
 
         public static string GetFFmpegFolder() {
 
-#if DEBUG
+#if DEBUG && WINDOWS
+            string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+#elif DEBUG && !WINDOWS
             string ffmpegFolder = Path.Join(Environment.CurrentDirectory, @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #else
             string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
