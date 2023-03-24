@@ -99,9 +99,12 @@ namespace RePlays {
             // this will serve video files/thumbnails to allow the react app to use them
             StaticServer.Start();
             Thread uiThread = new(OpenInterface);
-#if WINDOWS
-            uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-#endif
+            try {
+                uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
+            }
+            catch (PlatformNotSupportedException ex) {
+                Logger.WriteLine("PlatformNotSupportedException: " + ex.Message);
+            }
             uiThread.Start();
             ApplicationExitEvent.Wait();
         }
