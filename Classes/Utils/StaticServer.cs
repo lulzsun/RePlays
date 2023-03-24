@@ -7,7 +7,7 @@ namespace RePlays.Classes.Utils {
     public static class StaticServer {
         static IWebHost server;
         public static void Start() {
-            server = WebHost.CreateDefaultBuilder(new[] { "--urls=http://localhost:5001/" })
+            server = WebHost.CreateDefaultBuilder(new[] { "--urls=http://localhost:3001/" })
                 .Configure(config => config.UseStaticFiles())
                 .UseWebRoot(Functions.GetPlaysFolder()).Build();
             server.RunAsync();

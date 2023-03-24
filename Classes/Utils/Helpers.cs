@@ -213,10 +213,12 @@ namespace RePlays.Utils {
                 video.date = new FileInfo(file).CreationTime;
                 video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
-#if (DEBUG)
+#if DEBUG && WINDOWS
                 video.folder = "https://videos.replays.app/";
-#elif (RELEASE)
+#elif RELEASE && WINDOWS
                 video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+#else
+                video.folder = "http://localhost:3001/";
 #endif
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
