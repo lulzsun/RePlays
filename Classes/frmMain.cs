@@ -88,21 +88,8 @@ namespace RePlays {
                 Logger.WriteLine("Prompting user to install WebView2");
                 DialogResult result =
                     MessageBox.Show(
-                        "Microsoft Edge WebView2 Runtime is required to display interface. Would you like to run the installer?",
-                        "Missing Microsoft Edge WebView2 Runtime", MessageBoxButtons.YesNoCancel);
-                if (result == DialogResult.Yes) {
-                    var startInfo = new ProcessStartInfo {
-#if (DEBUG)
-                        FileName = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + @"/Resources/runtimes/win/MicrosoftEdgeWebview2Setup.exe",
-#elif (RELEASE)
-                        FileName = Application.StartupPath + @"/runtimes/win/MicrosoftEdgeWebview2Setup.exe",
-#endif
-                        Arguments = "/install"
-                    };
-                    var process = Process.Start(startInfo);
-                    process.WaitForExit();
-                    Logger.WriteLine("MicrosoftEdgeWebview2Setup.exe exited with code: " + process.ExitCode.ToString());
-                }
+                        "Microsoft Edge WebView2 Runtime is required to run this application.",
+                        "Missing Microsoft Edge WebView2 Runtime", MessageBoxButtons.OK);
             }
 
             if (webView2 == null || webView2.IsDisposed) {
