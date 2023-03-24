@@ -265,7 +265,7 @@ namespace RePlays.Utils {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
                             var realFilePath = Path.Join(GetPlaysFolder(), filePath);
-                            var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
+                            var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"/.thumbs/", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
                             var successfulDelete = false;
                             var failedLoops = 0;
                             while(!successfulDelete) {

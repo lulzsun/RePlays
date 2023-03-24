@@ -41,7 +41,7 @@ namespace RePlays.Services {
 
                 string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir, session.game, "\\", session.fileName);
                 if (File.Exists(filePath)) {
-                    var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(filePath) + ".png");
+                    var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"/.thumbs/", Path.GetFileNameWithoutExtension(filePath) + ".png");
                     File.Delete(filePath);
                     File.Delete(thumbPath);
                     Logger.WriteLine(filePath + " deleted due to being over spaceLimit");
@@ -58,7 +58,7 @@ namespace RePlays.Services {
                 if (maxAgeInDays < (DateTime.Now - session.date).TotalDays) {
                     string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir, session.game, "\\", session.fileName);
                     if (File.Exists(filePath)) {
-                        var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(filePath) + ".png");
+                        var thumbPath = Path.Join(Path.GetDirectoryName(filePath), @"/.thumbs/", Path.GetFileNameWithoutExtension(filePath) + ".png");
                         File.Delete(filePath);
                         File.Delete(thumbPath);
                         Logger.WriteLine(filePath + " deleted due to being over maxAge");

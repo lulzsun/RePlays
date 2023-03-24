@@ -85,9 +85,9 @@ namespace RePlays.Utils {
         public static string GetFFmpegFolder() {
 
 #if DEBUG
-            string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(Environment.CurrentDirectory, @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #else
-            string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #endif
             if (Directory.Exists(ffmpegFolder)) {
                 return ffmpegFolder;
@@ -251,7 +251,7 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffprobe.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
                 Arguments = string.Format("-i \"{0}\" -show_entries format=duration -v quiet -of csv=\"p = 0\"", videoPath),
             };
 
@@ -280,7 +280,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".png");
 
             if (File.Exists(thumbnailPath)) return thumbnailPath;
@@ -299,7 +299,7 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg"),
                 Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", 
                     (duration / 2).ToString(CultureInfo.InvariantCulture), videoPath, thumbnailPath),
             };
@@ -323,7 +323,7 @@ namespace RePlays.Utils {
         }
 
         public static VideoMetadata GetOrCreateMetadata(string videoPath) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
 
             if (File.Exists(metadataPath)) {
@@ -355,7 +355,7 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg"),
             };
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) {
