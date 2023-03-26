@@ -396,14 +396,24 @@ namespace RePlays.Utils {
 
         public static void SetBookmarks(string videoName, List<Bookmark> bookmarks, double elapsed)
         {
+            string json = "{" +
+                    "\"videoname\": \"" + videoName + "\", " +
+                    "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
+                    "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
 
-            WebMessage webMessage = new();
-            webMessage.message = "SetBookmarks";
-            webMessage.data = "{" +
-                "\"videoname\": \"" + videoName + "\", " +
-                "\"elapsed\": " + elapsed.ToString().Replace(",",".") + ", " +
-                "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
-            SendMessage(JsonSerializer.Serialize(webMessage));
+            if (frmMain.webView2 != null)
+            {
+                WebMessage webMessage = new();
+                webMessage.message = "SetBookmarks";
+                webMessage.data = json;
+                SendMessage(JsonSerializer.Serialize(webMessage));
+                Logger.WriteLine("Successfully sent bookmarks to frontend");
+
+            }
+            else
+            {
+                BackupBookmarks(videoName, json);
+            }
         }
     }
 }

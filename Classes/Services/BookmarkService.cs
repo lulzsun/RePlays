@@ -34,16 +34,17 @@ namespace RePlays.Services
 
         public static void ApplyBookmarkToSavedVideo(string videoName)
         {
+            Logger.WriteLine($"Applying {bookmarks.Count} bookmarks");
+            if (bookmarks.Count == 0) return;
+
             try
             {
-                Logger.WriteLine($"Applying bookmarks");
                 WebMessage.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
                 bookmarks.Clear();
-                Logger.WriteLine($"Bookmark status [Successfully]");
             }
             catch (Exception e)
             {
-                Logger.WriteLine($"Bookmark status [Failed] with exception {e.Message}");
+                Logger.WriteLine($"Bookmark status: Failed with exception {e.Message}");
             }
         }
     }

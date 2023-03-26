@@ -14,6 +14,7 @@ namespace RePlays.Recorders
     public class LibObsRecorder : BaseRecorder {
         public bool Connected { get; private set; }
         public bool DisplayCapture;
+        public bool isStopping;
         static string videoSavePath = "";
         static string videoNameTimeStamp = "";
         static IntPtr windowHandle = IntPtr.Zero;
@@ -419,8 +420,8 @@ namespace RePlays.Recorders
         }
 
         public override async Task<bool> StopRecording() {
-            if (output == IntPtr.Zero) return false;
-
+            if (output == IntPtr.Zero || isStopping) return false;
+            isStopping = true;
             signalGCHookSuccess = false;
             var session = RecordingService.GetCurrentSession();
 
@@ -433,6 +434,7 @@ namespace RePlays.Recorders
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
+            isStopping = false;
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
             }
