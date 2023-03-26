@@ -152,6 +152,7 @@ namespace RePlays {
                     CenterToScreen();
                     firstTime = false;
                 }
+                LoadBackupBookmarks();
             }
         }
 

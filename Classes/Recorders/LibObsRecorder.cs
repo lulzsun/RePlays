@@ -14,6 +14,7 @@ namespace RePlays.Recorders
     public class LibObsRecorder : BaseRecorder {
         public bool Connected { get; private set; }
         public bool DisplayCapture;
+        public bool isStopping;
         static string videoSavePath = "";
         static string videoNameTimeStamp = "";
         static IntPtr windowHandle = IntPtr.Zero;
@@ -210,7 +211,7 @@ namespace RePlays.Recorders
             // SETUP NEW VIDEO SOURCE
             // - Create a source for the game_capture in channel 2
             IntPtr videoSourceSettings = obs_data_create();
-            obs_data_set_string(videoSourceSettings, "capture_mode", "window");
+            obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle, System.Windows.Forms.Screen.PrimaryScreen) ? "any_fullscreen" : "window");
             obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
             videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
@@ -419,8 +420,8 @@ namespace RePlays.Recorders
         }
 
         public override async Task<bool> StopRecording() {
-            if (output == IntPtr.Zero) return false;
-
+            if (output == IntPtr.Zero || isStopping) return false;
+            isStopping = true;
             signalGCHookSuccess = false;
             var session = RecordingService.GetCurrentSession();
 
@@ -433,6 +434,7 @@ namespace RePlays.Recorders
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
+            isStopping = false;
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
             }
