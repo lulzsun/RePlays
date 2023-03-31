@@ -92,7 +92,6 @@ namespace RePlays.Recorders
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                             signalGCHookSuccess = false;
-                            IntegrationService.Shutdown();
                         }
                         else if(formattedMsg.Contains("No space left on device"))
                         {
@@ -455,7 +454,7 @@ namespace RePlays.Recorders
             catch (Exception e) {
                 Logger.WriteLine(e.Message);
             }
-
+            IntegrationService.Shutdown();
             BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
             return true;

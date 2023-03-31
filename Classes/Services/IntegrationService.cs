@@ -1,27 +1,29 @@
 ﻿using RePlays.Integrations;
-using System;
 using System.Threading.Tasks;
 
 namespace RePlays.Services
 {
     public static class IntegrationService
     {
-        private static readonly String LEAGUE_OF_LEGENDS = "League of Legends";
+        private const string LEAGUE_OF_LEGENDS = "League of Legends";
+        private const string PUBG = "PLAYERUNKNOWN'S BATTLEGROUNDS";
         public static Integration ActiveGameIntegration;
-        public static async void Start(String gameName)
+        public static async void Start(string gameName)
         {
-            if(gameName == LEAGUE_OF_LEGENDS)
+            switch (gameName)
             {
-                ActiveGameIntegration = new LeagueOfLegendsIntegration();
-            }
-            else
-            {
-                ActiveGameIntegration = null;
+                case LEAGUE_OF_LEGENDS:
+                    ActiveGameIntegration = new LeagueOfLegendsIntegration();
+                    break;
+                case PUBG:
+                    ActiveGameIntegration = new PubgIntegration();
+                    break;
+                default:
+                    ActiveGameIntegration = null;
+                    break;
             }
 
-            if (ActiveGameIntegration == null)
-                return;
-
+            if (ActiveGameIntegration == null) return;
             await Task.Run(() => ActiveGameIntegration.Start());
         }
 
@@ -31,5 +33,5 @@ namespace RePlays.Services
                 return;
             await Task.Run(() => ActiveGameIntegration.Shutdown());
         }
-        }
+    }
 }
