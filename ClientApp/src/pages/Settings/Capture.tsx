@@ -23,8 +23,6 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
     let ddmItems: any[] = [];
     
     settings.inputDevicesCache.forEach((device) => {
-      console.log(device);
-
       if(device.deviceId === "default" && settings.inputDevice.deviceId === "") {
         settings.inputDevice.deviceId = device.deviceId; 
         settings.inputDevice.deviceLabel = device.deviceLabel;
@@ -49,8 +47,6 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
     let ddmItems: any[] = [];
     
     settings.outputDevicesCache.forEach((device) => {
-      console.log(device);
-
       if(device.deviceId === "default" && settings.outputDevice.deviceId === "") {
         settings.outputDevice.deviceId = device.deviceId; 
         settings.outputDevice.deviceLabel = device.deviceLabel;
@@ -87,25 +83,25 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
   }, [setAvailableEncoders]);
 
 
-    useEffect(() => {
-        if (settings == null) return;
-        if (settings.rateControlCache == null) return;
+  useEffect(() => {
+    if (settings == null) return;
+    if (settings.rateControlCache == null) return;
 
-        let rateControlsItems: any[] = [];
+    let rateControlsItems: any[] = [];
 
-        const rateControls = localStorage.getItem("availableRateControls")!.split(',');
-        rateControls.forEach((rateControl) => {
-            rateControlsItems.push({
-                name: rateControl, onClick: () => { 
-                    settings.rateControl = rateControl;
-                    updateSettings();
-                }
-            });
-        });
+    const rateControls = localStorage.getItem("availableRateControls")!.split(',');
+    rateControls.forEach((rateControl) => {
+      rateControlsItems.push({
+        name: rateControl, onClick: () => { 
+          settings.rateControl = rateControl;
+          updateSettings();
+        }
+      });
+    });
 
-        setAvailableRateControls(rateControlsItems);
-        return;            
-    }, [setAvailableRateControls, updateSettings]);
+    setAvailableRateControls(rateControlsItems);
+    return;            
+  }, [setAvailableRateControls, updateSettings]);
 
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
@@ -148,7 +144,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
               settings!.resolution = 1080; settings!.frameRate = 60; settings!.bitRate = 35;
               break;
             case "ultra":
-                  settings!.resolution = settings!.maxScreenResolution >= 1440 ? 1440 : 1080; settings!.frameRate = 60; settings!.bitRate = 50;
+              settings!.resolution = settings!.maxScreenResolution >= 1440 ? 1440 : 1080; settings!.frameRate = 60; settings!.bitRate = 50;
               break;
             default:
               return;
@@ -172,9 +168,9 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
           <span className="px-2 text-gray-700 dark:text-gray-400">High</span>
         </label>
         <label className="inline-flex items-center">
-            <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
-                        defaultChecked={(settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080) && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
-            <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
+          <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
+            defaultChecked={(settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080) && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
+          <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality} />
@@ -218,14 +214,14 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
           ]}/> 
         </div>
         <div className="flex flex-col">
-            Encoder
-                    <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
-                items={availableEncoders} />
+          Encoder
+          <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
+          items={availableEncoders} />
         </div>
         <div className="flex flex-col">
-            Rate Control
-                <DropDownMenu text={(settings?.rateControl === undefined ? "VBR" : settings!.rateControl)} width={"auto"}
-                items={availableRateControls} />
+          Rate Control
+          <DropDownMenu text={(settings?.rateControl === undefined ? "VBR" : settings!.rateControl)} width={"auto"}
+          items={availableRateControls} />
         </div>
       </div>
 
@@ -262,22 +258,22 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         Input Source
         <DropDownMenu text={(settings === undefined ? "Default Device" : settings.inputDevice.deviceLabel)} width={"auto"}
         items={inputAudioDevices}/> 
-            </div>
+      </div>
 
       <h1 className="font-semibold text-2xl mt-4">Advanced</h1>
       <div className="flex flex-col gap-1">
-              <label className="inline-flex items-center">
-                  <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
-                      defaultChecked={settings === undefined ? false : settings.useRecordingStartSound}
-                      onChange={(e) => { settings!.useRecordingStartSound = e.target.checked; updateSettings(); }} />
-                  <span className="ml-2 text-gray-700 dark:text-gray-400">Start Recording Sound Effect</span>
-              </label>
-              <label className="inline-flex items-center">
-              <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
-                  defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
-                  onChange={(e) => { settings!.useDisplayCapture = e.target.checked; updateSettings(); }} />
-              <span className="ml-2 text-gray-700 dark:text-gray-400">Use Display Capture As Backup</span>
-          </label>
+        <label className="inline-flex items-center">
+          <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
+            defaultChecked={settings === undefined ? false : settings.useRecordingStartSound}
+            onChange={(e) => { settings!.useRecordingStartSound = e.target.checked; updateSettings(); }} />
+          <span className="ml-2 text-gray-700 dark:text-gray-400">Start Recording Sound Effect</span>
+        </label>
+        <label className="inline-flex items-center">
+          <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
+            defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
+            onChange={(e) => { settings!.useDisplayCapture = e.target.checked; updateSettings(); }} />
+          <span className="ml-2 text-gray-700 dark:text-gray-400">Use Display Capture As Backup</span>
+        </label>
       </div>
     </div>
 	)
