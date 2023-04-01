@@ -347,42 +347,36 @@ namespace RePlays.Utils {
                 return metadata;
             }
         }
-        public static void BackupBookmarks(string videoName, string json)
-        {
-            try
-            {
+        public static void BackupBookmarks(string videoName, string json) {
+            try {
                 Logger.WriteLine($"Backing up bookmarks for video: {videoName}");
                 string BookmarkBackupFilePath = Path.Join(GetTempFolder(), videoName + "_bookmarks.bak");
                 Logger.WriteLine($"Backup file location: {BookmarkBackupFilePath}");
                 File.WriteAllText(BookmarkBackupFilePath, json);
             }
-            catch(Exception ex)
-            {
+            catch(Exception ex) {
                 Logger.WriteLine($"Could not backup {videoName}. Exception: {ex.Message}");
             }
         }
 
-        public static void LoadBackupBookmarks()
-        {
-            try
-            {
+        public static void LoadBackupBookmarks() {
+            try {
                 string[] bookmarkBackupFiles = Directory.GetFiles(GetTempFolder(), "*_bookmarks.bak", SearchOption.TopDirectoryOnly);
                 if (bookmarkBackupFiles.Length == 0) return;
                 Logger.WriteLine($"Loading {bookmarkBackupFiles.Length} bookmark backups");
-                foreach (string bookmarkBackupFile in bookmarkBackupFiles)
-                {
+                foreach (string bookmarkBackupFile in bookmarkBackupFiles) {
                     Logger.WriteLine($"Loading {bookmarkBackupFile}");
                     string json = File.ReadAllText(bookmarkBackupFile);
-                    WebMessage webMessage = new();
-                    webMessage.message = "SetBookmarks";
-                    webMessage.data = json;
-                    frmMain.PostWebMessageAsJson(JsonSerializer.Serialize(webMessage));
+                    WebMessage webMessage = new() {
+                        message = "SetBookmarks",
+                        data = json
+                    };
+                    WebMessage.SendMessage(JsonSerializer.Serialize(webMessage));
                     File.Delete(bookmarkBackupFile);
                     Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
                 }
             }
-            catch(Exception ex)
-            {
+            catch(Exception ex) {
                 Logger.WriteLine($"Could not load backup bookmarks. Exception: {ex.Message}");
             }
         }
