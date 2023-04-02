@@ -138,20 +138,22 @@ namespace RePlays.Utils {
 
                 if (obj.Properties["PNPClass"].Value.ToString() == "AudioEndpoint") {
                     string id = obj.Properties["PNPDeviceID"].Value.ToString().Split('\\').Last();
-                    AudioDevice dev = new(id, obj.Properties["Name"].Value.ToString());
-                    dev.deviceId = id.ToLower();
-                    dev.deviceLabel = obj.Properties["Name"].Value.ToString();
+                    AudioDevice dev = new(id, obj.Properties["Name"].Value.ToString()) {
+                        deviceId = id.ToLower(),
+                        deviceLabel = obj.Properties["Name"].Value.ToString(),
+                        deviceVolume = 100
+                    };
                     if (id.StartsWith("{0.0.0.00000000}")) outputCache.Add(dev);
                     else inputCache.Add(dev);
                     Logger.WriteLine(dev.deviceId + " | " + dev.deviceLabel);
                     
                 }
             }
-            if (SettingsService.Settings.captureSettings.inputDevice.deviceId == "") {
-                SettingsService.Settings.captureSettings.inputDevice = inputCache[0];
+            if (SettingsService.Settings.captureSettings.inputDevices.Count == 0) {
+                SettingsService.Settings.captureSettings.inputDevices.Add(inputCache[0]);
             }
-            if (SettingsService.Settings.captureSettings.outputDevice.deviceId == "") {
-                SettingsService.Settings.captureSettings.outputDevice = outputCache[0];
+            if (SettingsService.Settings.captureSettings.outputDevices.Count == 0) {
+                SettingsService.Settings.captureSettings.outputDevices.Add(outputCache[0]);
             }
             SettingsService.SaveSettings();
         }
@@ -548,5 +550,8 @@ namespace RePlays.Utils {
             return String.Format("{0:0.##} {1}", bytes, sizes[order]);
         }
 
+        public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {
+            return source.Select((item, index) => (item, index));
+        }
     }
 }

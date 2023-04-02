@@ -103,6 +103,7 @@ declare global {
   interface AudioDevice {
     deviceId: string,
     deviceLabel: string,
+    deviceVolume: number,
   }
   interface CaptureSettings {
     recordingMode: string,
@@ -114,11 +115,9 @@ declare global {
     encoder: string,
     rateControlCache: string[]
     rateControl: string,
-    gameAudioVolume: number,
-    micAudioVolume: number,
-    inputDevice: AudioDevice,
+    inputDevices: AudioDevice[],
     inputDevicesCache: AudioDevice[],
-    outputDevice: AudioDevice,
+    outputDevices: AudioDevice[],
     outputDevicesCache: AudioDevice[],
   }
   interface KeybindingsSettings {

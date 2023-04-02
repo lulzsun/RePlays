@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace RePlays.Recorders
-{
+namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
         public bool Connected { get; private set; }
         public bool DisplayCapture;
@@ -24,16 +23,14 @@ namespace RePlays.Recorders
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
 
-        private Dictionary<string, string> encoder_ids = new()
-        {
+        private Dictionary<string, string> encoder_ids = new() {
             {"Software (x264)", "obs_x264"},
             {"Hardware (NVENC)", "jim_nvenc"},
             {"Hardware (QSV)", "obs_qsv11"},
             {"Hardware (AMF)", "amd_amf_h264"}
         };
 
-        private Dictionary<string, string> rate_controls = new()
-        {
+        private Dictionary<string, string> rate_controls = new() {
             {"VBR", "VBR"},
             {"CBR", "CBR"},
             {"CQP", "CQP"},
@@ -42,8 +39,7 @@ namespace RePlays.Recorders
             {"CRF", "CRF"},
         };
 
-        private Dictionary<string, List<string>> encoder_link = new()
-        {
+        private Dictionary<string, List<string>> encoder_link = new() {
             { "Hardware (NVENC)", new List<string> { "VBR", "CBR", "CQP", "Lossless" } },
             { "Software (x264)", new List<string> { "VBR", "CBR", "CRF" } },
             { "Hardware (AMF)", new List<string> { "VBR", "CBR", "ABR", "CRF" } },
@@ -198,17 +194,24 @@ namespace RePlays.Recorders
             Logger.WriteLine($"Preparing to create libobs output [{bnum_allocs()}]...");
 
             // SETUP NEW AUDIO SOURCES
-            // - Create a source for the desktop in channel 0, and the microphone in 1
-            audioSources.TryAdd("desktop", obs_audio_source_create("wasapi_output_capture", "desktop", deviceId: SettingsService.Settings.captureSettings.outputDevice.deviceId)); // captures whole desktop
-            obs_set_output_source(0, audioSources["desktop"]);
-            obs_source_set_audio_mixers(audioSources["desktop"], 1 | (1 << 0));
-            obs_source_set_volume(audioSources["desktop"], SettingsService.Settings.captureSettings.gameAudioVolume / (float)100);
-            audioSources.TryAdd("microphone", obs_audio_source_create("wasapi_input_capture", "microphone", deviceId: SettingsService.Settings.captureSettings.inputDevice.deviceId));
-            obs_source_set_audio_mixers(audioSources["microphone"], 1 | (1 << 1));
-            obs_source_set_volume(audioSources["microphone"], SettingsService.Settings.captureSettings.micAudioVolume / (float)100);
+            // - Create sources for output and input devices
+            int totalDevices = 0;
+            foreach (var (outputDevice, index) in SettingsService.Settings.captureSettings.outputDevices.WithIndex()) {
+                audioSources.TryAdd("output_" + outputDevice.deviceId, obs_audio_source_create("wasapi_output_capture", "output_" + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
+                obs_set_output_source((uint)(index + 1), audioSources["output_" + outputDevice.deviceId]);
+                obs_source_set_audio_mixers(audioSources["output_" + outputDevice.deviceId], 1 | (uint)(1 << 0));
+                obs_source_set_volume(audioSources["output_" + outputDevice.deviceId], outputDevice.deviceVolume / (float)100);
+                totalDevices++;
+            }
+            foreach (var (inputDevice, index) in SettingsService.Settings.captureSettings.inputDevices.WithIndex()) {
+                audioSources.TryAdd("input_" + inputDevice.deviceId, obs_audio_source_create("wasapi_input_capture", "input_" + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
+                obs_set_output_source((uint)(index + totalDevices + 1), audioSources["input_" + inputDevice.deviceId]);
+                obs_source_set_audio_mixers(audioSources["input_" + inputDevice.deviceId], 1 | (uint)(1 << 1));
+                obs_source_set_volume(audioSources["input_" + inputDevice.deviceId], inputDevice.deviceVolume / (float)100);
+            }
 
             // SETUP NEW VIDEO SOURCE
-            // - Create a source for the game_capture in channel 2
+            // - Create a source for the game_capture in channel 0
             IntPtr videoSourceSettings = obs_data_create();
             obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle, System.Windows.Forms.Screen.PrimaryScreen) ? "any_fullscreen" : "window");
             obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
@@ -219,14 +222,13 @@ namespace RePlays.Recorders
             // - Each audio source needs an audio encoder, IF we plan to separate audio tracks in the future
             audioEncoders.TryAdd("aac0", obs_audio_encoder_create("ffmpeg_aac", "aac0", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero));
             obs_encoder_set_audio(audioEncoders["aac0"], obs_get_audio());
-            obs_set_output_source(1, audioSources["microphone"]);
 
             // SETUP VIDEO ENCODER
             string encoder = SettingsService.Settings.captureSettings.encoder;
             string rateControl = SettingsService.Settings.captureSettings.rateControl;
             videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder, rateControl));
             obs_encoder_set_video(videoEncoders[encoder], obs_get_video());
-            obs_set_output_source(2, videoSources["gameplay"]);
+            obs_set_output_source(0, videoSources["gameplay"]);
 
             // attempt to wait for game_capture source to hook first
             // this might take longer, so multiply maxRetryAttempts
@@ -240,8 +242,7 @@ namespace RePlays.Recorders
 
                 Process process;
 
-                try
-                {
+                try {
                     process = Process.GetProcessById(session.Pid);
                 }
                 catch {
@@ -251,10 +252,9 @@ namespace RePlays.Recorders
                     return false;
                 }
  
-                if (SettingsService.Settings.captureSettings.useDisplayCapture && !process.HasExited)
-                {
-                        Logger.WriteLine("Attempting to use display capture instead");
-                        StartDisplayCapture();
+                if (SettingsService.Settings.captureSettings.useDisplayCapture && !process.HasExited) {
+                    Logger.WriteLine("Attempting to use display capture instead");
+                    StartDisplayCapture();
                 }
                 else {
                     ReleaseOutput();
@@ -322,8 +322,7 @@ namespace RePlays.Recorders
             return true;
         }
 
-        private void StartDisplayCapture()
-        {
+        private void StartDisplayCapture() {
             ReleaseVideoSources();
             IntPtr videoSourceSettings = obs_data_create();
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
@@ -353,23 +352,19 @@ namespace RePlays.Recorders
             return encoderPtr;
         }
 
-        public override void LostFocus()
-        {
+        public override void LostFocus() {
             if (DisplayCapture) PauseDisplayOutput();
         }
 
-        public override void GainedFocus()
-        {
+        public override void GainedFocus() {
             if (DisplayCapture) ResumeDisplayOutput();
         }
 
-        public void PauseDisplayOutput()
-        {
+        public void PauseDisplayOutput() {
             ReleaseVideoSources();
         }
 
-        public void ResumeDisplayOutput()
-        {
+        public void ResumeDisplayOutput() {
             IntPtr videoSourceSettings = obs_data_create();
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
@@ -405,11 +400,9 @@ namespace RePlays.Recorders
             SettingsService.SaveSettings();
         }
 
-        public void GetAvailableRateControls()
-        {
+        public void GetAvailableRateControls() {
             Logger.WriteLine("Encoder: " + SettingsService.Settings.captureSettings.encoder);
-            if (encoder_link.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls))
-            {
+            if (encoder_link.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls)) {
                 Logger.WriteLine("Rate Control options: " + string.Join(",", availableRateControls));
                 SettingsService.Settings.captureSettings.rateControlCache = availableRateControls;
                 if (!availableRateControls.Contains(SettingsService.Settings.captureSettings.rateControl))
@@ -465,16 +458,16 @@ namespace RePlays.Recorders
             RecordingService.RestartRecording();
         }
 
-        private IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default") {
+        private IntPtr obs_audio_source_create(string id, string name, IntPtr settings = new(), string deviceId = "default", bool mono = false) {
             if (settings == IntPtr.Zero) {
                 settings = obs_data_create();
                 obs_data_set_string(settings, "device_id", deviceId);
             }
             IntPtr source = obs_source_create(id, name, settings, IntPtr.Zero);
 
-            // If this is a microphone device, automatically down mix to mono
+            // Down audio source mix to mono
             // TODO: make this a user configurable setting instead
-            if(name == "microphone") {
+            if(mono) {
                 uint flags = obs_source_get_flags(source) | (1 << 1);
                 obs_source_set_flags(source, flags);
             }
@@ -520,20 +513,16 @@ namespace RePlays.Recorders
             ReleaseAudioSources();
         }
 
-        public void ReleaseVideoSources()
-        {
-            foreach (var videoSource in videoSources.Values)
-            {
+        public void ReleaseVideoSources() {
+            foreach (var videoSource in videoSources.Values) {
                 obs_source_remove(videoSource);
                 obs_source_release(videoSource);
             }
             videoSources.Clear();
         }
 
-        public void ReleaseAudioSources()
-        {
-            foreach (var audioSource in audioSources.Values)
-            {
+        public void ReleaseAudioSources() {
+            foreach (var audioSource in audioSources.Values) {
                 obs_source_remove(audioSource);
                 obs_source_release(audioSource);
             }

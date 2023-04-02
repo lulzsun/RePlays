@@ -26,14 +26,14 @@ namespace RePlays.Recorders {
                     SettingsService.Settings.captureSettings.resolution
                 );
                 ltc.SetGameAudioVolume(
-                    SettingsService.Settings.captureSettings.gameAudioVolume
+                    SettingsService.Settings.captureSettings.outputDevices[0].deviceVolume
                 );
                 ltc.SetMicAudioVolume(
-                    SettingsService.Settings.captureSettings.micAudioVolume
+                    SettingsService.Settings.captureSettings.inputDevices[0].deviceVolume
                 );
                 ltc.SetMicRecordingDevice(
-                    SettingsService.Settings.captureSettings.inputDevice.deviceId,
-                    SettingsService.Settings.captureSettings.inputDevice.deviceLabel
+                    SettingsService.Settings.captureSettings.inputDevices[0].deviceId,
+                    SettingsService.Settings.captureSettings.inputDevices[0].deviceLabel
                 );
                 ltc.SetCaptureMode(
                     SettingsService.Settings.captureSettings.recordingMode
