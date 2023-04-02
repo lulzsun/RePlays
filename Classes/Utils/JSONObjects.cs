@@ -168,6 +168,34 @@ namespace RePlays.Utils {
 
         private LocalFolderSettings _localFolderSettings = new();
         public LocalFolderSettings localFolderSettings { get { return _localFolderSettings; } set { _localFolderSettings = value; } }
+        
+        public class CustomUploaderSettings
+        {
+
+            private string _method = "POST";
+            public string method { get { return _method; } set { _method = value; } }
+            
+            private string _url = "";
+            public string url { get { return _url; } set { _url = value; } }
+            
+            private KeyValuePair<string, string>[] _headers = Array.Empty<KeyValuePair<string, string>>();
+            public KeyValuePair<string, string>[] headers { get { return _headers; } set { _headers = value; } }
+            
+            private KeyValuePair<string, string>[] _urlparams = Array.Empty<KeyValuePair<string, string>>();
+            public KeyValuePair<string, string>[] urlparams { get { return _urlparams; } set { _urlparams = value; } }
+            
+            private string _responseType = "TEXT";
+            public string responseType { get { return _responseType; } set { _responseType = value; } }
+            
+            private string _responsePath = "";
+            public string responsePath { get { return _responsePath; } set { _responsePath = value; } }
+            
+
+        }
+        private CustomUploaderSettings _customUploaderSettings = new();
+        public CustomUploaderSettings customUploaderSettings { get { return _customUploaderSettings; } set { _customUploaderSettings = value; } }
+
+        
     }
 
     public class DetectionSettings {

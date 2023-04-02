@@ -43,6 +43,7 @@ export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
               <option value="Streamable">Streamable</option>
               {/* <option value="Youtube">Youtube</option> */}
               <option value="LocalFolder">Local Folder</option>
+              <option value="Custom">Custom</option>  
             </select>
           </div>
         </div>
