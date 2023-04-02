@@ -327,7 +327,7 @@ namespace RePlays.Recorders {
             IntPtr videoSourceSettings = obs_data_create();
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
-            obs_set_output_source(2, videoSources["display"]);
+            obs_set_output_source(0, videoSources["display"]);
             DisplayCapture = true;
         }
 
@@ -368,7 +368,7 @@ namespace RePlays.Recorders {
             IntPtr videoSourceSettings = obs_data_create();
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
-            obs_set_output_source(2, videoSources["display"]);
+            obs_set_output_source(0, videoSources["display"]);
         }
         public void GetAvailableEncoders() {
             UIntPtr idx = UIntPtr.Zero;
