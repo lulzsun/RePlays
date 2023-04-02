@@ -74,11 +74,13 @@ namespace RePlays.Utils {
         public AudioDevice(string deviceId, string deviceLabel) { 
             _deviceId = deviceId;
             _deviceLabel = deviceLabel;
-            }
+        }
         private string _deviceId = "";
         public string deviceId { get { return _deviceId; } set { _deviceId = value; } }
         private string _deviceLabel = "";
         public string deviceLabel { get { return _deviceLabel; } set { _deviceLabel = value; } }
+        private int _deviceVolume = 100;
+        public int deviceVolume { get { return _deviceVolume; } set { _deviceVolume = value; } }
     }
 
     public class CaptureSettings {
@@ -105,22 +107,17 @@ namespace RePlays.Utils {
         private int _bitRate = 50;
         public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
 
-        private int _gameAudioVolume = 100;
-        public int gameAudioVolume { get { return _gameAudioVolume; } set { _gameAudioVolume = value; } }
-        private int _micAudioVolume = 100;
-        public int micAudioVolume { get { return _micAudioVolume; } set { _micAudioVolume = value; } }
-
         private List<AudioDevice> _inputDevicesCache = new();
         public List<AudioDevice> inputDevicesCache { get { return _inputDevicesCache; } set { _inputDevicesCache = value; } }
 
-        private AudioDevice _inputDevice = new();
-        public AudioDevice inputDevice { get { return _inputDevice; } set { _inputDevice = value; } }
+        private List<AudioDevice> _inputDevices = new();
+        public List<AudioDevice> inputDevices { get { return _inputDevices; } set { _inputDevices = value; } }
 
         private List<AudioDevice> _outputDevicesCache = new();
         public List<AudioDevice> outputDevicesCache { get { return _outputDevicesCache; } set { _outputDevicesCache = value; } }
 
-        private AudioDevice _outputDevice = new();
-        public AudioDevice outputDevice { get { return _outputDevice; } set { _outputDevice = value; } }
+        private List<AudioDevice> _outputDevices = new();
+        public List<AudioDevice> outputDevices { get { return _outputDevices; } set { _outputDevices = value; } }
     }
 
     public class StorageSettings {

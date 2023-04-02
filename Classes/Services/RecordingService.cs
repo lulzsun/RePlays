@@ -147,9 +147,11 @@ namespace RePlays.Services
         {
             return (int)(DateTime.Now - startTime).TotalSeconds;
         }
-        public static double GetTotalRecordingTimeInSecondsWithDecimals()
+        public static double GetTotalRecordingTimeInSecondsWithDecimals(DateTime? dateTime = null)
         {
-            return (DateTime.Now - startTime).TotalMilliseconds/1000;
+            if(dateTime == null ) dateTime = DateTime.Now;
+
+            return (dateTime.Value - startTime).TotalMilliseconds/1000;
         }
     }
 }

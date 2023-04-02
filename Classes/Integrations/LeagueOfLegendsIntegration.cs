@@ -65,8 +65,11 @@ namespace RePlays.Integrations
 
         public async override Task Shutdown()
         {
-            Logger.WriteLine("Shutting down League Of Legends integration");
-            timer.Stop();
+            if (timer.Enabled)
+            {
+                Logger.WriteLine("Shutting down League Of Legends integration");
+                timer.Stop();
+            }
         }
 
         private async Task<string> GetCurrentPlayerName()

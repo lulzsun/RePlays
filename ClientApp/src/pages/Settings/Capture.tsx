@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import DropDownMenu from "../../components/DropDownMenu";
-import HotkeySelector from "../../components/HotkeySelector";
+import AudioDevice from "../../components/AudioDevice";
 
 interface Props {
   updateSettings: () => void;
@@ -9,64 +9,71 @@ interface Props {
 
 export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
-  const [gameAudioVolume, setGameAudioVolume] = useState(settings!.gameAudioVolume);
-  const [micAudioVolume, setMicAudioVolume] = useState(settings!.micAudioVolume);
-  const [inputAudioDevices, setInputAudioDevices] = useState<any[]>();
-  const [outputAudioDevices, setOutputAudioDevices] = useState<any[]>();
+  const [audioDevices, setAudioDevices] = useState<any[]>();
   const [availableEncoders, setAvailableEncoders] = useState<any[]>();
   const [availableRateControls, setAvailableRateControls] = useState<any[]>();
 
   useEffect(() => {
     if(settings == null) return;
-    if(settings.inputDevicesCache == null) return;
+    if(settings.inputDevicesCache == null || settings.outputDevicesCache == null) return;
     
     let ddmItems: any[] = [];
     
     settings.inputDevicesCache.forEach((device) => {
-      console.log(device);
-
-      if(device.deviceId === "default" && settings.inputDevice.deviceId === "") {
-        settings.inputDevice.deviceId = device.deviceId; 
-        settings.inputDevice.deviceLabel = device.deviceLabel;
+      // by default, if there does not exist any devices, we will push default device
+      // this behaviour may not be ideal if the user does not want any audio devices 
+      //  (i.e. they removed all devices)
+      if(device.deviceId === "default" && settings.inputDevices.length === 0) {
+        settings.inputDevices.push({
+          deviceId: device.deviceId,
+          deviceLabel: device.deviceLabel,
+          deviceVolume: 100
+        })
         updateSettings();
       }
       
-      ddmItems.push({name: device.deviceLabel, onClick: () => {
-        settings.inputDevice.deviceId = device.deviceId; 
-        settings.inputDevice.deviceLabel = device.deviceLabel; 
+      ddmItems.push({group: "Input", name: device.deviceLabel, onClick: () => {
+        if(settings.inputDevices.find((d) => d.deviceId === device.deviceId))
+          return;
+
+        settings.inputDevices.push({
+          deviceId: device.deviceId,
+          deviceLabel: device.deviceLabel,
+          deviceVolume: 100
+        })
         updateSettings();
       }});
     });
 
-    setInputAudioDevices(ddmItems);
-    return;
-  }, [setInputAudioDevices]);
-
-  useEffect(() => {
-    if(settings == null) return;
-    if(settings.outputDevicesCache == null) return;
-    
-    let ddmItems: any[] = [];
-    
     settings.outputDevicesCache.forEach((device) => {
-      console.log(device);
-
-      if(device.deviceId === "default" && settings.outputDevice.deviceId === "") {
-        settings.outputDevice.deviceId = device.deviceId; 
-        settings.outputDevice.deviceLabel = device.deviceLabel;
+      // by default, if there does not exist any devices, we will push default device
+      // this behaviour may not be ideal if the user does not want any audio devices 
+      //  (i.e. they removed all devices)
+      if(device.deviceId === "default" && settings.outputDevices.length === 0) {
+        settings.outputDevices.push({
+          deviceId: device.deviceId,
+          deviceLabel: device.deviceLabel,
+          deviceVolume: 100
+        })
         updateSettings();
       }
       
-      ddmItems.push({name: device.deviceLabel, onClick: () => {
-        settings.outputDevice.deviceId = device.deviceId; 
-        settings.outputDevice.deviceLabel = device.deviceLabel; 
+      ddmItems.push({group: "Output", id: device.deviceId, name: device.deviceLabel, onClick: () => {
+        if(settings.outputDevices.find((d) => d.deviceId === device.deviceId))
+          return;
+
+        settings.outputDevices.push({
+          deviceId: device.deviceId,
+          deviceLabel: device.deviceLabel,
+          deviceVolume: 100
+        })
         updateSettings();
       }});
     });
 
-    setOutputAudioDevices(ddmItems);
+    setAudioDevices(ddmItems);
     return;
-  }, [setOutputAudioDevices]);
+  }, [setAudioDevices, updateSettings]);
 
   useEffect(() => {
     if(settings == null) return;
@@ -75,7 +82,6 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
     let ddmItems: any[] = [];
     
     settings.encodersCache.forEach((encoder) => {
-      
       ddmItems.push({name: encoder, onClick: () => {
         settings.encoder = encoder;
           updateSettings();
@@ -87,25 +93,25 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
   }, [setAvailableEncoders]);
 
 
-    useEffect(() => {
-        if (settings == null) return;
-        if (settings.rateControlCache == null) return;
+  useEffect(() => {
+    if (settings == null) return;
+    if (settings.rateControlCache == null) return;
 
-        let rateControlsItems: any[] = [];
+    let rateControlsItems: any[] = [];
 
-        const rateControls = localStorage.getItem("availableRateControls")!.split(',');
-        rateControls.forEach((rateControl) => {
-            rateControlsItems.push({
-                name: rateControl, onClick: () => { 
-                    settings.rateControl = rateControl;
-                    updateSettings();
-                }
-            });
-        });
+    const rateControls = localStorage.getItem("availableRateControls")!.split(',');
+    rateControls.forEach((rateControl) => {
+      rateControlsItems.push({
+        name: rateControl, onClick: () => { 
+          settings.rateControl = rateControl;
+          updateSettings();
+        }
+      });
+    });
 
-        setAvailableRateControls(rateControlsItems);
-        return;            
-    }, [setAvailableRateControls, updateSettings]);
+    setAvailableRateControls(rateControlsItems);
+    return;            
+  }, [setAvailableRateControls, updateSettings]);
 
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
@@ -148,7 +154,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
               settings!.resolution = 1080; settings!.frameRate = 60; settings!.bitRate = 35;
               break;
             case "ultra":
-                  settings!.resolution = settings!.maxScreenResolution >= 1440 ? 1440 : 1080; settings!.frameRate = 60; settings!.bitRate = 50;
+              settings!.resolution = settings!.maxScreenResolution >= 1440 ? 1440 : 1080; settings!.frameRate = 60; settings!.bitRate = 50;
               break;
             default:
               return;
@@ -172,9 +178,9 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
           <span className="px-2 text-gray-700 dark:text-gray-400">High</span>
         </label>
         <label className="inline-flex items-center">
-            <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
-                        defaultChecked={(settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080) && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
-            <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
+          <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
+            defaultChecked={(settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080) && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
+          <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality} />
@@ -218,66 +224,59 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
           ]}/> 
         </div>
         <div className="flex flex-col">
-            Encoder
-                    <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
-                items={availableEncoders} />
+          Encoder
+          <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
+          items={availableEncoders} />
         </div>
         <div className="flex flex-col">
-            Rate Control
-                <DropDownMenu text={(settings?.rateControl === undefined ? "VBR" : settings!.rateControl)} width={"auto"}
-                items={availableRateControls} />
+          Rate Control
+          <DropDownMenu text={(settings?.rateControl === undefined ? "VBR" : settings!.rateControl)} width={"auto"}
+          items={availableRateControls} />
         </div>
       </div>
 
-      <h1 className="font-semibold text-2xl mt-4">Audio Settings</h1>
-      <div className="flex flex-col">Game Volume</div>
-      <div className="flex gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
-          <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
-          <path d="M10.025 8a4.486 4.486 0 0 1-1.318 3.182L8 10.475A3.489 3.489 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.486 4.486 0 0 1 10.025 8zM7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12V4zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11z"/>
-        </svg>
-        <input className="w-72" type="range" min="0" max="100" step="1" defaultValue={settings === undefined ? 100 : settings!.gameAudioVolume}
-          onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value); setGameAudioVolume(value); settings!.gameAudioVolume = value; updateSettings();}}/>
-        {gameAudioVolume + "%"}
+      <h1 className="font-semibold text-2xl mt-4">Audio Sources</h1>
+
+      <div className="flex flex-col">Output Devices</div>
+      <div className="flex flex-col gap-4">
+        {settings?.outputDevices && settings.outputDevices.map((item, i) => {
+          return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume}
+            onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value); settings!.outputDevices[i].deviceVolume = value; }}
+            onMouseUpCapture={(e) => { updateSettings(); }}
+            onRemove={() => {settings!.outputDevices = settings!.outputDevices.filter((d) => d.deviceId !== item.deviceId); updateSettings();}}/>
+        })}
       </div>
-      
-      <div className="flex flex-col">Microphone Volume</div>
-      <div className="flex gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
-          <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
-          <path d="M10.025 8a4.486 4.486 0 0 1-1.318 3.182L8 10.475A3.489 3.489 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.486 4.486 0 0 1 10.025 8zM7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12V4zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11z"/>
-        </svg>
-        <input className="w-72" type="range" min="0" max="100" step="1" defaultValue={settings === undefined ? 100 : settings!.micAudioVolume}
-          onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value); setMicAudioVolume(value); settings!.micAudioVolume = value; updateSettings();}}/>
-        {micAudioVolume + "%"}
+
+      <div className="flex flex-col">Input Devices</div>
+      <div className="flex flex-col gap-4">
+        {settings?.inputDevices && settings.inputDevices.map((item, i) => {
+          return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
+            onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value); settings!.inputDevices[i].deviceVolume = value; }}
+            onMouseUpCapture={() => { updateSettings(); }}
+            onRemove={() => {settings!.inputDevices = settings!.inputDevices.filter((d) => d.deviceId !== item.deviceId); updateSettings();}}/>
+        })}
       </div>
+
       <div className="flex flex-col">
-        Output Source
-        <DropDownMenu text={(settings === undefined ? "Default Device" : settings.outputDevice.deviceLabel)} width={"auto"}
-        items={outputAudioDevices} zIndex={51}/> 
+        Add New Audio Source
+        <DropDownMenu text={"Select Audio Device"} width={"auto"}
+        items={audioDevices} groups={["Output", "Input"]}/> 
       </div>
-      <div className="flex flex-col">
-        Input Source
-        <DropDownMenu text={(settings === undefined ? "Default Device" : settings.inputDevice.deviceLabel)} width={"auto"}
-        items={inputAudioDevices}/> 
-            </div>
 
       <h1 className="font-semibold text-2xl mt-4">Advanced</h1>
       <div className="flex flex-col gap-1">
-              <label className="inline-flex items-center">
-                  <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
-                      defaultChecked={settings === undefined ? false : settings.useRecordingStartSound}
-                      onChange={(e) => { settings!.useRecordingStartSound = e.target.checked; updateSettings(); }} />
-                  <span className="ml-2 text-gray-700 dark:text-gray-400">Start Recording Sound Effect</span>
-              </label>
-              <label className="inline-flex items-center">
-              <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
-                  defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
-                  onChange={(e) => { settings!.useDisplayCapture = e.target.checked; updateSettings(); }} />
-              <span className="ml-2 text-gray-700 dark:text-gray-400">Use Display Capture As Backup</span>
-          </label>
+        <label className="inline-flex items-center">
+          <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
+            defaultChecked={settings === undefined ? false : settings.useRecordingStartSound}
+            onChange={(e) => { settings!.useRecordingStartSound = e.target.checked; updateSettings(); }} />
+          <span className="ml-2 text-gray-700 dark:text-gray-400">Start Recording Sound Effect</span>
+        </label>
+        <label className="inline-flex items-center">
+          <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
+            defaultChecked={settings === undefined ? false : settings.useDisplayCapture}
+            onChange={(e) => { settings!.useDisplayCapture = e.target.checked; updateSettings(); }} />
+          <span className="ml-2 text-gray-700 dark:text-gray-400">Use Display Capture As Backup</span>
+        </label>
       </div>
     </div>
 	)

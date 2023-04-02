@@ -9,14 +9,18 @@ namespace RePlays.Services
         static List<Bookmark> bookmarks = new();
         static int latestBookmarkKeyPress;
 
-        public static void AddBookmark(Bookmark bookmark)
+        public static void AddBookmark(Bookmark bookmark, DateTime? dateTime = null)
         {
-            int secondsSinceEpoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+            if(dateTime == null)
+            {
+                dateTime = DateTime.Now;
+            }
+            int secondsSinceEpoch = (int)(dateTime.Value - new DateTime(1970, 1, 1)).TotalSeconds;
 
             if ((secondsSinceEpoch - latestBookmarkKeyPress >= 2) || !bookmark.type.Equals(Bookmark.BookmarkType.Manual))
             {
                 latestBookmarkKeyPress = secondsSinceEpoch;
-                double bookmarkTimestamp = RecordingService.GetTotalRecordingTimeInSecondsWithDecimals();
+                double bookmarkTimestamp = RecordingService.GetTotalRecordingTimeInSecondsWithDecimals(dateTime);
                 Logger.WriteLine("Adding bookmark: " + bookmarkTimestamp);
                 bookmark.time = bookmarkTimestamp;
                 bookmarks.Add(bookmark);
