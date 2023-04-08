@@ -68,23 +68,23 @@ namespace RePlays.Services
             Logger.WriteLine("Still allowed to record: " + (!IsRecording && result).ToString());
             if (!IsRecording && result) {
                 Logger.WriteLine("Current Session PID: " + currentSession.Pid.ToString());
-                if (currentSession.Pid != 0) {
-                    startTime = DateTime.Now;
-                    recordingTimer.Elapsed += OnTimedEvent;
-                    recordingTimer.Start();
-                    
-                    Logger.WriteLine($"Start Recording: {currentSession.Pid}, {currentSession.GameTitle}");
-                    IsRecording = true;
-                    IsPreRecording = false;
-                    GameInFocus = true;
+                
+                startTime = DateTime.Now;
+                recordingTimer.Elapsed += OnTimedEvent;
+                recordingTimer.Start();
+                
+                Logger.WriteLine($"Start Recording: {currentSession.Pid}, {currentSession.GameTitle}");
+                IsRecording = true;
+                IsPreRecording = false;
+                GameInFocus = true;
 
-                    if (SettingsService.Settings.captureSettings.useRecordingStartSound)
-                    {
-                        System.IO.Stream soundStream = Properties.Resources.start_recording;
-                        SoundPlayer startRecordingSound = new SoundPlayer(soundStream);
-                        startRecordingSound.Play();
-                    }
+                if (SettingsService.Settings.captureSettings.useRecordingStartSound)
+                {
+                    System.IO.Stream soundStream = Properties.Resources.start_recording;
+                    SoundPlayer startRecordingSound = new SoundPlayer(soundStream);
+                    startRecordingSound.Play();
                 }
+                
             }
             if (!result) {
                 // recorder failed to start properly so lets restart the currentSession Pid
