@@ -251,29 +251,29 @@ namespace RePlays.Recorders {
                     ReleaseEncoders();
                     return false;
                 }
+
+                //This is due to a bug in System.Diagnostics.Process (process.HasExited) Class https://www.giorgi.dev/net/access-denied-process-bugs/
+                bool processHasExited = false;
                 try
                 {
-                    if (SettingsService.Settings.captureSettings.useDisplayCapture && !process.HasExited)
-                    {
-                        Logger.WriteLine("Attempting to use display capture instead");
-                        StartDisplayCapture();
-                    }
-                    else
-                    {
-                        ReleaseOutput();
-                        ReleaseSources();
-                        ReleaseEncoders();
-                        return false;
-                    }
+                    processHasExited = process.HasExited;
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    //This is due to a bug in System.Diagnostics.Process (process.HasExited) Class https://www.giorgi.dev/net/access-denied-process-bugs/
-                    Logger.WriteLine("Exception: " + e.Message);
-                    if (SettingsService.Settings.captureSettings.useDisplayCapture)
-                    {
-                        StartDisplayCapture();
-                    }
+                    Logger.WriteLine("Could not get process exit status: " + ex.ToString());
+                }
+
+                if (SettingsService.Settings.captureSettings.useDisplayCapture && !processHasExited)
+                {
+                    Logger.WriteLine("Attempting to use display capture instead");
+                    StartDisplayCapture();
+                }
+                else
+                {
+                    ReleaseOutput();
+                    ReleaseSources();
+                    ReleaseEncoders();
+                    return false;
                 }
             }
             retryAttempt = 0;
