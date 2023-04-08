@@ -268,8 +268,8 @@ namespace RePlays.Recorders {
                 }
                 catch (Exception e)
                 {
-                    //This is due to a bug in System.Diagnostics.Process Class https://www.giorgi.dev/net/access-denied-process-bugs/
-                    Logger.WriteLine("Could not retrieve info about if the process has exited: " + e.Message);
+                    //This is due to a bug in System.Diagnostics.Process (process.HasExited) Class https://www.giorgi.dev/net/access-denied-process-bugs/
+                    Logger.WriteLine("Exception: " + e.Message);
                     if (SettingsService.Settings.captureSettings.useDisplayCapture)
                     {
                         StartDisplayCapture();
