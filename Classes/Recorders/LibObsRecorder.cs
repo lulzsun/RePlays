@@ -251,16 +251,29 @@ namespace RePlays.Recorders {
                     ReleaseEncoders();
                     return false;
                 }
- 
-                if (SettingsService.Settings.captureSettings.useDisplayCapture && !process.HasExited) {
-                    Logger.WriteLine("Attempting to use display capture instead");
-                    StartDisplayCapture();
+                try
+                {
+                    if (SettingsService.Settings.captureSettings.useDisplayCapture && !process.HasExited)
+                    {
+                        Logger.WriteLine("Attempting to use display capture instead");
+                        StartDisplayCapture();
+                    }
+                    else
+                    {
+                        ReleaseOutput();
+                        ReleaseSources();
+                        ReleaseEncoders();
+                        return false;
+                    }
                 }
-                else {
-                    ReleaseOutput();
-                    ReleaseSources();
-                    ReleaseEncoders();
-                    return false;
+                catch (Exception e)
+                {
+                    //This is due to a bug in System.Diagnostics.Process Class https://www.giorgi.dev/net/access-denied-process-bugs/
+                    Logger.WriteLine("Could not retrieve info about if the process has exited: " + e.Message);
+                    if (SettingsService.Settings.captureSettings.useDisplayCapture)
+                    {
+                        StartDisplayCapture();
+                    }
                 }
             }
             retryAttempt = 0;
