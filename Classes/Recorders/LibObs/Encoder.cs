@@ -43,7 +43,7 @@ namespace obs_net{
 
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_output_set_audio_encoder(obs_output_t output, obs_encoder_t encoder, UIntPtr idx);
-        
+
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_encoder_set_video(obs_encoder_t encoder, video_t video);
 

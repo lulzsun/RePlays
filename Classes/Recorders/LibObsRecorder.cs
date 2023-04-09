@@ -123,7 +123,6 @@ namespace RePlays.Recorders {
                 signalOutputStop = true;
             });
 
-
             Connected = true;
             Logger.WriteLine("Successfully started LibObs!");
         }
@@ -193,21 +192,38 @@ namespace RePlays.Recorders {
 
             Logger.WriteLine($"Preparing to create libobs output [{bnum_allocs()}]...");
 
-            // SETUP NEW AUDIO SOURCES
+            // SETUP NEW AUDIO SOURCES & ENCODERS
             // - Create sources for output and input devices
+            // TODO: isolate game audio and discord app audio
+            // TODO: have user adjustable audio tracks, especially if the user is trying to use more than 6 tracks (6 is the limit)
+            //       as of now, if the audio sources exceed 6 tracks, then those tracks will be defaulted to track 6 (index = 5)
             int totalDevices = 0;
+            audioEncoders.TryAdd("combined", obs_audio_encoder_create("ffmpeg_aac", "combined", IntPtr.Zero, 0, IntPtr.Zero));
+            obs_encoder_set_audio(audioEncoders["combined"], obs_get_audio());
             foreach (var (outputDevice, index) in SettingsService.Settings.captureSettings.outputDevices.WithIndex()) {
-                audioSources.TryAdd("output_" + outputDevice.deviceId, obs_audio_source_create("wasapi_output_capture", "output_" + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
-                obs_set_output_source((uint)(index + 1), audioSources["output_" + outputDevice.deviceId]);
-                obs_source_set_audio_mixers(audioSources["output_" + outputDevice.deviceId], 1 | (uint)(1 << 0));
-                obs_source_set_volume(audioSources["output_" + outputDevice.deviceId], outputDevice.deviceVolume / (float)100);
+                audioSources.TryAdd("(output) " + outputDevice.deviceId, obs_audio_source_create("wasapi_output_capture", "(output) " + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
+                obs_set_output_source((uint)(index + 1), audioSources["(output) " + outputDevice.deviceId]);
+                obs_source_set_audio_mixers(audioSources["(output) " + outputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + 1, 5)));
+                obs_source_set_volume(audioSources["(output) " + outputDevice.deviceId], outputDevice.deviceVolume / (float)100);
+                if (index + 1 < 6) {
+                    audioEncoders.TryAdd("(output) " + outputDevice.deviceId, obs_audio_encoder_create("ffmpeg_aac", "(output) " + outputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)index + 1, IntPtr.Zero));
+                    obs_encoder_set_audio(audioEncoders["(output) " + outputDevice.deviceId], obs_get_audio());
+                }
+                else
+                    Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + 1}), cannot add another track (max = 6)");
                 totalDevices++;
             }
             foreach (var (inputDevice, index) in SettingsService.Settings.captureSettings.inputDevices.WithIndex()) {
-                audioSources.TryAdd("input_" + inputDevice.deviceId, obs_audio_source_create("wasapi_input_capture", "input_" + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
-                obs_set_output_source((uint)(index + totalDevices + 1), audioSources["input_" + inputDevice.deviceId]);
-                obs_source_set_audio_mixers(audioSources["input_" + inputDevice.deviceId], 1 | (uint)(1 << 1));
-                obs_source_set_volume(audioSources["input_" + inputDevice.deviceId], inputDevice.deviceVolume / (float)100);
+                audioSources.TryAdd("(input) " + inputDevice.deviceId, obs_audio_source_create("wasapi_input_capture", "(input) " + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
+                obs_set_output_source((uint)(index + totalDevices + 1), audioSources["(input) " + inputDevice.deviceId]);
+                obs_source_set_audio_mixers(audioSources["(input) " + inputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + totalDevices + 1, 5)));
+                obs_source_set_volume(audioSources["(input) " + inputDevice.deviceId], inputDevice.deviceVolume / (float)100);
+                if (index + totalDevices + 1 < 6) {
+                    audioEncoders.TryAdd("(input) " + inputDevice.deviceId, obs_audio_encoder_create("ffmpeg_aac", "(input) " + inputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
+                    obs_encoder_set_audio(audioEncoders["(input) " + inputDevice.deviceId], obs_get_audio());
+                }
+                else
+                    Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + totalDevices + 1}), cannot add another track (max = 6)");
             }
 
             // SETUP NEW VIDEO SOURCE
@@ -217,11 +233,6 @@ namespace RePlays.Recorders {
             obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
             videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
-
-            // SETUP AUDIO ENCODERS
-            // - Each audio source needs an audio encoder, IF we plan to separate audio tracks in the future
-            audioEncoders.TryAdd("aac0", obs_audio_encoder_create("ffmpeg_aac", "aac0", IntPtr.Zero, (UIntPtr)0, IntPtr.Zero));
-            obs_encoder_set_audio(audioEncoders["aac0"], obs_get_audio());
 
             // SETUP VIDEO ENCODER
             string encoder = SettingsService.Settings.captureSettings.encoder;
@@ -254,22 +265,18 @@ namespace RePlays.Recorders {
 
                 //This is due to a bug in System.Diagnostics.Process (process.HasExited) Class https://www.giorgi.dev/net/access-denied-process-bugs/
                 bool processHasExited = false;
-                try
-                {
+                try {
                     processHasExited = process.HasExited;
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     Logger.WriteLine("Could not get process exit status: " + ex.ToString());
                 }
 
-                if (SettingsService.Settings.captureSettings.useDisplayCapture && !processHasExited)
-                {
+                if (SettingsService.Settings.captureSettings.useDisplayCapture && !processHasExited) {
                     Logger.WriteLine("Attempting to use display capture instead");
                     StartDisplayCapture();
                 }
-                else
-                {
+                else {
                     ReleaseOutput();
                     ReleaseSources();
                     ReleaseEncoders();
@@ -287,9 +294,12 @@ namespace RePlays.Recorders {
             obs_data_set_string(outputSettings, "path", videoSavePath);
             obs_output_update(output, outputSettings);
             obs_data_release(outputSettings);
-            
             obs_output_set_video_encoder(output, videoEncoders[encoder]);
-            obs_output_set_audio_encoder(output, audioEncoders["aac0"], (UIntPtr)0);
+            nuint idx = 0;
+            foreach (var audioEncoder in audioEncoders) {
+                obs_output_set_audio_encoder(output, audioEncoder.Value, idx);
+                idx++;
+            }
 
             // some quick checks on initializations before starting output
             bool canStartCapture = obs_output_can_begin_data_capture(output, 0);
@@ -349,8 +359,7 @@ namespace RePlays.Recorders {
             obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
             obs_data_set_string(videoEncoderSettings, "profile", "high");
             //Didn't really know how to handle the presets so it's just hacked for now.
-            switch (encoder)
-            {
+            switch (encoder) {
                 case "Hardware (NVENC)":
                     obs_data_set_string(videoEncoderSettings, "preset", "Quality");
                     break;
@@ -383,17 +392,16 @@ namespace RePlays.Recorders {
             obs_data_release(videoSourceSettings);
             obs_set_output_source(0, videoSources["display"]);
         }
+
         public void GetAvailableEncoders() {
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
             List<string> availableEncoders = new();
-            while (obs_enum_encoder_types(idx, ref id))
-            {
+            while (obs_enum_encoder_types(idx, ref id)) {
                 idx = UIntPtr.Add(idx, 1);
                 if (id == string.Empty)
                     continue;
-                switch (id)
-                {
+                switch (id) {
                     case "jim_nvenc":
                         availableEncoders.Add("Hardware (NVENC)");
                         break;

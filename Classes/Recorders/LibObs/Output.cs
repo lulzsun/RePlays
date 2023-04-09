@@ -71,6 +71,16 @@ namespace obs_net{
         /// <param name="output"></param>
         /// <param name="mixers"></param>
         [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern void obs_output_set_mixer(obs_output_t output, size_t mixer_idx);
+
+        /// <summary>
+        /// <para>https://obsproject.com/docs/reference-outputs.html?highlight=obs_output_update#c.obs_output_set_mixers</para>
+        /// <para>Sets the current audio mixers (via mask) for non-encoded multi-track outputs.</para>
+        /// <para>If used with single-track outputs, the single-track output will use either the first set mixer track in the bitmask, or the first track if none is set in the bitmask.</para>
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="mixers"></param>
+        [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_output_set_mixers(obs_output_t output, size_t mixers);
 
         [DllImport(importLibrary, CallingConvention = importCall)]
