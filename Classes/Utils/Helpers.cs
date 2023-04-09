@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -279,9 +278,12 @@ namespace RePlays.Utils {
 
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
             string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
-            string thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".png");
+            string[] thumbnailExtensions = new string[] { ".png", ".webp" };
+            string thumbnailPath = thumbnailExtensions.Select(ext => Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ext))
+                .FirstOrDefault(File.Exists);
 
-            if (File.Exists(thumbnailPath)) return thumbnailPath;
+            if (thumbnailPath != null) return thumbnailPath;
+            else thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".webp");
             if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
             if (duration == 0) {
@@ -343,30 +345,38 @@ namespace RePlays.Utils {
                 return metadata;
             }
         }
-        public static void BackupBookmarks(string videoName, string json)
-        {
-            try
-            {
+
+        public static void DeleteVideo(string filePath) {
+            var metaPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\");
+            string[] metaFileExtensions = new string[] { ".png", ".webp", ".metadata" };
+            IEnumerable<string> metaFilesToDelete = metaFileExtensions.SelectMany(ext => Directory.GetFiles(metaPath, Path.GetFileNameWithoutExtension(filePath) + ext));
+
+            Logger.WriteLine($"Deleting file: {filePath}");
+            File.Delete(filePath);
+            foreach (string metaFile in metaFilesToDelete) {
+                Logger.WriteLine($"Deleting file: {metaFile}");
+                File.Delete(metaFile);
+            }
+        }
+
+        public static void BackupBookmarks(string videoName, string json) {
+            try {
                 Logger.WriteLine($"Backing up bookmarks for video: {videoName}");
                 string BookmarkBackupFilePath = Path.Join(GetTempFolder(), videoName + "_bookmarks.bak");
                 Logger.WriteLine($"Backup file location: {BookmarkBackupFilePath}");
                 File.WriteAllText(BookmarkBackupFilePath, json);
             }
-            catch(Exception ex)
-            {
+            catch(Exception ex) {
                 Logger.WriteLine($"Could not backup {videoName}. Exception: {ex.Message}");
             }
         }
 
-        public static void LoadBackupBookmarks()
-        {
-            try
-            {
+        public static void LoadBackupBookmarks() {
+            try {
                 string[] bookmarkBackupFiles = Directory.GetFiles(GetTempFolder(), "*_bookmarks.bak", SearchOption.TopDirectoryOnly);
                 if (bookmarkBackupFiles.Length == 0) return;
                 Logger.WriteLine($"Loading {bookmarkBackupFiles.Length} bookmark backups");
-                foreach (string bookmarkBackupFile in bookmarkBackupFiles)
-                {
+                foreach (string bookmarkBackupFile in bookmarkBackupFiles) {
                     Logger.WriteLine($"Loading {bookmarkBackupFile}");
                     string json = File.ReadAllText(bookmarkBackupFile);
                     WebMessage webMessage = new();
@@ -377,8 +387,7 @@ namespace RePlays.Utils {
                     Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
                 }
             }
-            catch(Exception ex)
-            {
+            catch(Exception ex) {
                 Logger.WriteLine($"Could not load backup bookmarks. Exception: {ex.Message}");
             }
         }
@@ -509,8 +518,7 @@ namespace RePlays.Utils {
         private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll", SetLastError = true)]
         static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-        public static int GetForegroundProcessId()
-        {
+        public static int GetForegroundProcessId() {
             IntPtr handle = GetForegroundWindow();
             if (handle == IntPtr.Zero)
                 return 0;
@@ -520,14 +528,12 @@ namespace RePlays.Utils {
             return processId;
         }
 
-        public static int GetGPUUsage(int pid)
-        {
+        public static int GetGPUUsage(int pid) {
             ObjectQuery winQuery = new ObjectQuery("SELECT * FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine");
 
             ManagementObjectSearcher searcher = new ManagementObjectSearcher(winQuery);
 
-            foreach (ManagementObject obj in searcher.Get())
-            {
+            foreach (ManagementObject obj in searcher.Get()) {
                 var match = Regex.Match(obj["Name"].ToString(), @"^pid_(\d+)_luid.+$");
                 if (match.Success && int.Parse(match.Groups[1].Value) == pid)
                 {
@@ -537,17 +543,15 @@ namespace RePlays.Utils {
             return 0;
         }
 
-        public static string GetReadableFileSize(double bytes)
-        {
+        public static string GetReadableFileSize(double bytes) {
             string[] sizes = { "B", "KB", "MB", "GB", "TB" };
             int order = 0;
-            while (bytes >= 1024 && order < sizes.Length - 1)
-            {
+            while (bytes >= 1024 && order < sizes.Length - 1) {
                 order++;
                 bytes = bytes / 1024;
             }
 
-            return String.Format("{0:0.##} {1}", bytes, sizes[order]);
+            return string.Format("{0:0.##} {1}", bytes, sizes[order]);
         }
 
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {

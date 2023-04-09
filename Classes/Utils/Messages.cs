@@ -249,21 +249,19 @@ namespace RePlays.Utils {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
                             var realFilePath = Path.Join(GetPlaysFolder(), filePath);
-                            var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"\.thumbs\", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
                             var successfulDelete = false;
                             var failedLoops = 0;
                             while(!successfulDelete) {
                                 try {
-                                    File.Delete(realFilePath);
-                                    File.Delete(thumbPath);
+                                    DeleteVideo(realFilePath);
                                     successfulDelete = true;
                                 }
-                                catch (Exception) {
+                                catch (Exception e) {
                                     if(failedLoops == 5) {
-                                        DisplayModal("Failed to delete file (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
+                                        DisplayModal("Failed to delete video (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
+                                        Logger.WriteLine(String.Format("Failed to delete video: {0}", e.Message));
                                         break;
                                     }
-                                    Logger.WriteLine(String.Format("Failed to delete file(s): {0} {1} will retry in 2 seconds", realFilePath, thumbPath));
                                     await Task.Delay(2000);
                                     failedLoops++;
                                 }
