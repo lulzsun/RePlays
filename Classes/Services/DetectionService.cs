@@ -31,16 +31,15 @@ namespace RePlays.Services {
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
         private static List<string> blacklistList = new() { "splashscreen", "launcher", "cheat", "sdl_app" };
+
         public static void Start() {
             LoadDetections();
 
-            //Get device paths for mounted drive letters
-            for (char letter = 'A'; letter <= 'Z'; letter++)
-            {
+            // Get device paths for mounted drive letters
+            for (char letter = 'A'; letter <= 'Z'; letter++) {
                 string driveLetter = letter + ":";
                 StringBuilder s = new StringBuilder();
-                if (QueryDosDevice(driveLetter, s, 1000))
-                {
+                if (QueryDosDevice(driveLetter, s, 1000)) {
                     drivePaths.Add(s.ToString(), driveLetter);
                 }
             }
@@ -67,18 +66,14 @@ namespace RePlays.Services {
         static void ProcessCreation_EventArrived(object sender, EventArrivedEventArgs e) {
             if (RecordingService.IsRecording) return;
 
-            try
-            {
-                if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription)
-                {
+            try {
+                if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription) {
                     int processId = int.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
                     var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
                     //var cmdLine = instanceDescription.GetPropertyValue("CommandLine"); may or may not be useful in the future
 
-                    if (executablePath != null)
-                    {
-                        if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\"))
-                        {   // if this program is starting from here,
+                    if (executablePath != null) {
+                        if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
                             return;                                                             // we can assume it is not a game
                         }
                     }
@@ -90,27 +85,22 @@ namespace RePlays.Services {
             e.NewEvent.Dispose();
         }
 
-        public static void CheckAlreadyRunningPrograms()
-        {
+        public static void CheckAlreadyRunningPrograms() {
             Process[] processCollection = Array.Empty<Process>();
 
-            try
-            {
+            try {
                 processCollection = Process.GetProcesses()
                 .Where(p => (long)p.MainWindowHandle != 0)
                 .ToArray();
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteLine($"Error: {ex.Message}");
             }
                 
-            foreach (Process process in processCollection)
-            {             
+            foreach (Process process in processCollection) {             
                 if (RecordingService.IsRecording) return;
 
-                try
-                {
+                try {
                     if (!process.HasExited) AutoDetectGame(process.Id);
                 }
                 catch (Exception ex) {
@@ -118,17 +108,15 @@ namespace RePlays.Services {
                 }
             }
         }
+
         static void ProcessDeletion_EventArrived(object sender, EventArrivedEventArgs e) {
             if (!RecordingService.IsRecording) return;
 
-            try
-            {
-                if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription)
-                {
+            try {
+                if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription) {
                     int processId = int.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
 
-                    if (processId != 0)
-                    {
+                    if (processId != 0) {
                         if (RecordingService.GetCurrentSession().Pid == processId)
                             RecordingService.StopRecording();
                     }
@@ -138,11 +126,10 @@ namespace RePlays.Services {
 
             e.NewEvent.Dispose();
         }
-        static void WhenActiveForegroundChanges(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
-        {
+
+        static void WhenActiveForegroundChanges(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
             int pid = GetForegroundProcessId();
-            if (RecordingService.IsRecording)
-            {
+            if (RecordingService.IsRecording) {
                 if (pid == RecordingService.GetCurrentSession().Pid) RecordingService.GainedFocus();
                 else if (RecordingService.GameInFocus) RecordingService.LostFocus();
                 return;
@@ -186,50 +173,40 @@ namespace RePlays.Services {
         /// <para>3. contains any graphics dll modules (directx, opengl)</para>
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
-        public static async void AutoDetectGame(int processId, bool autoRecord = true)
-        {
+        public static async void AutoDetectGame(int processId, bool autoRecord = true) {
             Process process;
             string executablePath;
-            try
-            {
+            try {
                 process = Process.GetProcessById(processId);
             }
-            catch (Exception ex)
-            {
-                Logger.WriteLine($"Failed to open process: [{processId}]. Error: [{ex.Message}");
+            catch (Exception ex) {
+                Logger.WriteLine($"Failed to open process: [{processId}]. Error: {ex.Message}");
                 return;
             }
-            try
-            {
+            try {
                 executablePath = process.MainModule.FileName;
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 IntPtr processHandle = OpenProcess(0x1000, false, process.Id);
-                if (processHandle != IntPtr.Zero)
-                {
+                if (processHandle != IntPtr.Zero) {
                     StringBuilder stringBuilder = new(1024);
-                    if (!GetProcessImageFileName(processHandle, stringBuilder, out int size))
-                    {
-                        Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: [{ex.Message}");
+                    if (!GetProcessImageFileName(processHandle, stringBuilder, out int size)) {
+                        Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: {ex.Message}");
                         return;
                     }
                     string s = stringBuilder.ToString();
-                    foreach (var drivePath in drivePaths)
-                    {
+                    foreach (var drivePath in drivePaths) {
                         if (s.Contains(drivePath.Key)) s = s.Replace(drivePath.Key, drivePath.Value);
                     }
 
                     executablePath = s;
                     CloseHandle(processHandle);
                 }
-                else
-                {
-                    Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: [{ex.Message}");
+                else {
+                    Logger.WriteLine($"Failed to get process: [{processId}][{process.ProcessName}] full path. Error: {ex.Message}");
                     return;
                 }
             }
-            
 
             // If the windowHandle we captured is problematic, just return nothing
             // Problematic handles are created if the application for example,
@@ -240,8 +217,7 @@ namespace RePlays.Services {
             var className = ActiveRecorder.GetClassName(windowHandle);
             string gameTitle = GetGameTitle(executablePath);
             string fileName = Path.GetFileName(executablePath);
-            try
-            {
+            try {
                 FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
                 bool hasBadWordInDescription = fileInformation.FileDescription != null ? blacklistList.Where(bannedWord => fileInformation.FileDescription.ToLower().Contains(bannedWord)).Any() : false;
                 bool hasBadWordInClassName = blacklistList.Where(bannedWord => className.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
@@ -252,15 +228,13 @@ namespace RePlays.Services {
                 if (isBlocked) return;
                 
             }
-            catch(Exception e)
-            {
+            catch(Exception e) {
                 Logger.WriteLine($"Failed to check blacklist for application: {executablePath} with error message: {e.Message}");
             }
 
             if (IsMatchedNonGame(executablePath)) return;
 
-            if (!autoRecord)
-            {
+            if (!autoRecord) {
                 // This is a manual record event so lets just yolo it and assume user knows best
                 RecordingService.SetCurrentSession(processId, gameTitle, executablePath);
                 return;
@@ -268,40 +242,32 @@ namespace RePlays.Services {
 
             bool isGame = IsMatchedGame(executablePath);
 
-            if (!isGame && !executablePath.Contains(@":\Windows"))
-            {
+            if (!isGame && !executablePath.Contains(@":\Windows")) {
                 Logger.WriteLine($"Process [{processId}][{Path.GetFileName(executablePath)}] isn't in the game detection list, checking if it might be a game");
-                try
-                {
+                try {
                     var usage = GetGPUUsage(process.Id);
                     Logger.WriteLine($"PROCESS GPU USAGE [{process.Id}]: {usage}");
-                    if (usage > 10)
-                    {
+                    if (usage > 10) {
                         Logger.WriteLine(
                             $"This process [{processId}][{Path.GetFileName(executablePath)}], appears to be a game.");
                         isGame = true;
                     }
                 }
-                catch (Exception e)
-                {
+                catch (Exception e) {
                     Logger.WriteLine(
                         $"Failed to evaluate gpu usage for [{Path.GetFileName(executablePath)}] isGame: {isGame}, reason: {e.Message}");
                 }
             }
 
-            if (isGame)
-            {
+            if (isGame) {
                 int tries = 0;
-                while (tries < 40)
-                {
+                while (tries < 40) {
                     process.Refresh();
-                    if (process.MainWindowHandle == IntPtr.Zero)
-                    {
+                    if (process.MainWindowHandle == IntPtr.Zero) {
                         Logger.WriteLine($"Process [{processId}][{Path.GetFileName(executablePath)}]: Got no MainWindow. Retrying... {tries}/40");
                         await Task.Delay(1000);
                     }
-                    else
-                    {
+                    else {
                         Logger.WriteLine($"Process [{processId}][{Path.GetFileName(executablePath)}]: Got MainWindow [{process.MainWindowTitle}]");
                         break;
                     }
@@ -321,13 +287,13 @@ namespace RePlays.Services {
             process.Dispose();
         }
 
-        public static bool HasBadWordInClassName(IntPtr windowHandle)
-        {
+        public static bool HasBadWordInClassName(IntPtr windowHandle) {
             var className = ActiveRecorder.GetClassName(windowHandle);
             bool hasBadWordInClassName = blacklistList.Any(bannedWord => className.ToLower().Contains(bannedWord)) || blacklistList.Any(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord));
             if (hasBadWordInClassName) windowHandle = IntPtr.Zero;
             return windowHandle == IntPtr.Zero;
         }
+
         public static bool IsMatchedGame(string exeFile) {
             exeFile = exeFile.ToLower();
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
