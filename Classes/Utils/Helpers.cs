@@ -176,19 +176,32 @@ namespace RePlays.Utils {
         }
 
         public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
+            var videoExtensions = new[] { ".mp4", ".mkv" };
             List<string> allfiles = new();
             switch (SortBy) {
                 case "Latest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).CreationTime));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderByDescending(d => new FileInfo(d).CreationTime)
+                        .ToList();
                     break;
                 case "Oldest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).CreationTime));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderBy(d => new FileInfo(d).CreationTime)
+                        .ToList();
                     break;
                 case "Smallest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).Length));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderBy(d => new FileInfo(d).Length)
+                        .ToList();
                     break;
                 case "Largest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).Length));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderByDescending(d => new FileInfo(d).Length)
+                        .ToList();
                     break;
                 default:
                     return null;
@@ -204,7 +217,8 @@ namespace RePlays.Utils {
             Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
 
             foreach (string file in allfiles) {
-                if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-man.mp4") || file.EndsWith("-clp.mp4")) || !File.Exists(file)) continue;
+                var fileWithoutExt = Path.GetFileNameWithoutExtension(file);
+                if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !File.Exists(file)) continue;
 
                 Video video = new();
                 video.size = new FileInfo(file).Length;
@@ -226,7 +240,7 @@ namespace RePlays.Utils {
                 if (!File.Exists(thumb)) continue;
                 video.thumbnail = Path.GetFileName(thumb);
 
-                if (file.EndsWith("-ses.mp4") || file.EndsWith("-man.mp4")) {
+                if (fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man")) {
                     videoList.sessions.Add(video);
                     videoList.sessionsSize += video.size;
                 }
