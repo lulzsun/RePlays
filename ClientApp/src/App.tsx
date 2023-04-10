@@ -30,10 +30,12 @@ function App() {
   const [gameList, setGameList] = useState([]);
   // @ts-ignore
   const [clips, setClips] = useState<Video[]>(null);
+  const [clipTotal, setClipTotal] = useState(0);
+  const [clipScroll, setClipScroll] = useState(0);
   // @ts-ignore
   const [sessions, setSessions] = useState<Video[]>(null);
-  const [clipTotal, setClipTotal] = useState(0);
   const [sessionTotal, setSessionTotal] = useState(0);
+  const [sessionScroll, setSessionScroll] = useState(0);
   const [userSettings, setUserSettings] = useState<UserSettings>();
 
   function handleWebViewMessages(event: Event) {
@@ -270,8 +272,8 @@ function App() {
 
               <div className="flex-auto overflow-hidden h-full p-7 text-gray-900 dark:text-white">
                 <Switch>
-                  <Route exact path="/">         <VideosPage key={"Sessions"} videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
-                  <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
+                  <Route exact path="/">         <VideosPage key={"Sessions"} videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal} scrollPos={sessionScroll} setScrollPos={setSessionScroll}/></Route>
+                  <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal} scrollPos={clipScroll} setScrollPos={setClipScroll}/></Route>
                   {/* <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route> */}
                   <Route exact path="/settings/:page"> <Settings userSettings={userSettings} setUserSettings={setUserSettings}/></Route>
                   <Route exact path="/player/:game/:video/:videoType"><Player videos={sessions != null ? sessions.concat(clips) : []}/></Route>
