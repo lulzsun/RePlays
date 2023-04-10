@@ -65,7 +65,7 @@ namespace RePlays {
             };
             Process process = null;
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:3000/");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:3000/index.html");
             request.AllowAutoRedirect = false;
             request.Method = "HEAD";
 
@@ -73,7 +73,7 @@ namespace RePlays {
                 request.GetResponse();
             }
             catch (WebException) {
-                if(process == null) process = Process.Start(startInfo);
+                process ??= Process.Start(startInfo);
             }
 #endif
 
