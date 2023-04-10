@@ -122,6 +122,6 @@ jobs:
           name: ${{ format('Nightly RePlays v{0}', needs.prep.outputs.version )}}
           artifacts: |
             ./bin/Deployment/Releases/RELEASES
-            ./bin/Deployment/Releases/Setup.exe
+            ./bin/Deployment/Releases/RePlaysSetup.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
