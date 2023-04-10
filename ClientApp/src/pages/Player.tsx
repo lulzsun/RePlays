@@ -4,9 +4,8 @@ import { secondsToHHMMSS } from '../helpers/utils';
 import { SyntheticEvent, useContext, useEffect, useRef, useState } from 'react';
 import { ContextMenuContext, ModalContext } from '../App';
 import { postMessage } from '../helpers/messenger';
-import UploadModal from './UploadModal';
+import UploadModal from '../components/UploadModal';
 import Bookmark from '../components/Bookmark';
-import { Console } from 'console';
 import { BookmarkType, BookmarkInterface } from '../index';
 
 interface Props {

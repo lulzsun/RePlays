@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { formatBytes } from '../helpers/utils';
 import { postMessage } from '../helpers/messenger';
 import { ModalContext } from '../App';
-import UploadModal from '../pages/UploadModal';
+import UploadModal from './UploadModal';
 
 interface Props {
   game?: string;

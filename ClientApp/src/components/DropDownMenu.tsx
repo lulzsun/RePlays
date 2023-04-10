@@ -23,26 +23,24 @@ export const DropDownMenu: React.FC<Props> = ({text, groups=[null], items, width
               else return item.name === e.target.value;
             })?.onClick!();
           }}>
-        {groups.map((group) => {
-          if (group === "" || group === null) {
-            return <><option hidden selected/>
+          {groups[0] !== null ? groups.map((group, i) => {
+            return <optgroup key={i} label={group!}><option hidden/>
+              {items && items.map((item, i) => {
+                if(group != item.group) return;
+                return <option key={i} tabIndex={i} value={item.id == undefined ? item.name : item.id}
+                className={`bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-400`}>{item.name}</option>
+              })}
+            </optgroup>
+          })
+          :
+          <><option hidden/>
             {items && items.map((item, i) => {
               return <option key={i} tabIndex={i} value={item.id == undefined ? item.name : item.id}
               className={`bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-400`}>{item.name}</option>
             })}
-            </>
-          } 
-          else {
-            return <optgroup label={group}><option hidden selected/>
-            {items && items.map((item, i) => {
-              if(group != item.group) return;
-              return <option key={i} tabIndex={i} value={item.id == undefined ? item.name : item.id}
-              className={`bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-400`}>{item.name}</option>
-            })}
-          </optgroup>
+          </>
           }
-        })}
-      </select>
+        </select>
       </button>
     </div>
 	)

@@ -3,21 +3,14 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
-
 export enum BookmarkType {
-    Manual,
-    Kill
+  Manual,
+  Kill
 }
 export interface BookmarkInterface {
-    id: number,
-    type: BookmarkType
-    time: number,
+  id: number,
+  type: BookmarkType
+  time: number,
 }
 
 declare global {
@@ -161,3 +154,10 @@ declare global {
     CreateBookmark: string[],
   }
 }
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
