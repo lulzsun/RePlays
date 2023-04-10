@@ -176,8 +176,10 @@ namespace RePlays.Services {
         public static async void AutoDetectGame(int processId, bool autoRecord = true) {
             Process process;
             string executablePath;
+            string processName = "";
             try {
                 process = Process.GetProcessById(processId);
+                processName = process.ProcessName;
             }
             catch (Exception ex) {
                 Logger.WriteLine($"Failed to open process: [{processId}]. Error: {ex.Message}");
@@ -203,7 +205,7 @@ namespace RePlays.Services {
                     CloseHandle(processHandle);
                 }
                 else {
-                    Logger.WriteLine($"Failed to get process: [{processId}][{process.ProcessName}] full path. Error: {ex.Message}");
+                    Logger.WriteLine($"Failed to get process: [{processId}][{processName}] full path. Error: {ex.Message}");
                     return;
                 }
             }
