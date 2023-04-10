@@ -3,6 +3,13 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 
+// https://github.com/Microsoft/TypeScript/issues/14975#issuecomment-290995090
+// TODO: don't use enums, change this to a type (see ModalIcon for example)
+// this is a dumb typescript fix for enums, not sure why but 
+// if the two lines below aren't here, it will cause runtime issues
+enum BookmarkType { Manual, Kill }
+(window as { BookmarkType?: typeof BookmarkType }).BookmarkType = BookmarkType;
+
 declare global {
   type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success';
   interface Window { 
@@ -68,7 +75,7 @@ declare global {
     type: BookmarkType
     time: number,
   }
-  enum BookmarkType {
+  enum BookmarkType { // this exact same enum is to stop typescript IntelliSense from complaining
     Manual,
     Kill
   }
