@@ -3,16 +3,6 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 
-export enum BookmarkType {
-  Manual,
-  Kill
-}
-export interface BookmarkInterface {
-  id: number,
-  type: BookmarkType
-  time: number,
-}
-
 declare global {
   type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success';
   interface Window { 
@@ -73,7 +63,15 @@ declare global {
     x: number, 
     y: number,
   }
-
+  interface BookmarkInterface {
+    id: number,
+    type: BookmarkType
+    time: number,
+  }
+  enum BookmarkType {
+    Manual,
+    Kill
+  }
   // userSettings
   interface UserSettings {
     generalSettings: GeneralSettings

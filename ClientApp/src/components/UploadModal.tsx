@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
-import { ModalContext } from "../App";
 import { postMessage } from '../helpers/messenger';
+import { ModalContext } from "../Contexts";
 
 interface Props {
     video: string;

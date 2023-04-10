@@ -1,7 +1,6 @@
-import Logo from './logo.svg';
 import Player from './pages/Player';
 import VideosPage from './pages/VideosPage';
-import { createContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HashRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
 import ContextMenu from './components/ContextMenu';
@@ -9,10 +8,7 @@ import { useRef } from 'react';
 import Settings from './pages/Settings';
 import Modal from './components/Modal';
 import Toast from './components/Toast';
-import {BookmarkType} from './index';
-
-export const ContextMenuContext = createContext<ContextMenuOptions | null>(null);
-export const ModalContext = createContext<ModalOptions | null>(null);
+import { ContextMenuContext, ModalContext } from './Contexts';
 
 function App() {
   const sideBarEle = useRef<HTMLDivElement | null>(null);
@@ -170,11 +166,11 @@ function App() {
                     <path d="M2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3zm2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1zm2.765 5.576A.5.5 0 0 0 6 7v5a.5.5 0 0 0 .765.424l4-2.5a.5.5 0 0 0 0-.848l-4-2.5z"/>
                     <path d="M1.5 14.5A1.5 1.5 0 0 1 0 13V6a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 16 6v7a1.5 1.5 0 0 1-1.5 1.5h-13zm13-1a.5.5 0 0 0 .5-.5V6a.5.5 0 0 0-.5-.5h-13A.5.5 0 0 0 1 6v7a.5.5 0 0 0 .5.5h13z"/>
                   </svg> */}
-                  <img src={Logo} className="w-12 h-12 pr-4" alt="logo" />
+                  <img src={'/logo.svg'} className="w-12 h-12 pr-4" alt="logo" />
                   RePlays
                 </div>
 
-                <Link to="/" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
+                <Link to="/" className="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
                 onClick={() => {
                   sideBarEle.current!.classList.toggle("-translate-x-full");
                 }}>
@@ -183,7 +179,7 @@ function App() {
                   </svg>
                   Sessions
                 </Link>
-                <Link to="/clips" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
+                <Link to="/clips" className="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
                 onClick={() => {
                   sideBarEle.current!.classList.toggle("-translate-x-full");
                 }}>
