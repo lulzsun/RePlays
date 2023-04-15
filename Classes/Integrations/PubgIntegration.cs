@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace RePlays.Integrations
@@ -55,29 +56,47 @@ namespace RePlays.Integrations
 
         public class KillPlayerData
         {
+            [JsonPropertyName("*e8199c40d3")]
             public string killerNetId { get; set; }
+            [JsonPropertyName("*3a79bf88c2")]
             public string killerName { get; set; }
             public string victimNetId { get; set; }
+            [JsonPropertyName("*c7a98fdd12")]
             public string victimName { get; set; }
+            [JsonPropertyName("*83180ea500")]
             public string damageCauseClassName { get; set; }
+            [JsonPropertyName("*834975f626")]
             public string damageTypeCategory { get; set; }
+            [JsonPropertyName("*532cd7df97")]
             public string damageReason { get; set; }
+            [JsonPropertyName("*967d42d4a0")]
             public bool bGroggy { get; set; }
+            [JsonPropertyName("*af4e5308f0")]
             public string killerPlayerId { get; set; }
+            [JsonPropertyName("*7441984e8b")]
             public string victimPlayerId { get; set; }
         }
 
         public class DownedData
         {
+            [JsonPropertyName("*e8199c40d3")]
             public string instigatorNetId { get; set; }
+            [JsonPropertyName("*3a79bf88c2")]
             public string instigatorName { get; set; }
             public string victimNetId { get; set; }
+            [JsonPropertyName("*c7a98fdd12")]
             public string victimName { get; set; }
+            [JsonPropertyName("*83180ea500")]
             public string damageCauseClassName { get; set; }
+            [JsonPropertyName("*834975f626")]
             public string damageTypeCategory { get; set; }
+            [JsonPropertyName("*532cd7df97")]
             public string damageReason { get; set; }
+            [JsonPropertyName("*967d42d4a0")]
             public bool bGroggy { get; set; }
+            [JsonPropertyName("*af4e5308f0")]
             public string instigatorPlayerId { get; set; }
+            [JsonPropertyName("*7441984e8b")]
             public string victimPlayerId { get; set; }
         }
 
@@ -161,7 +180,6 @@ namespace RePlays.Integrations
                     {
                         type = Bookmark.BookmarkType.Kill
                     };
-                    Logger.WriteLine(bookmarkDateTime.ToLongDateString() + " " + bookmarkDateTime.ToLongTimeString());
                     BookmarkService.AddBookmark(bookmark, bookmarkDateTime);
                 }
             }
@@ -199,7 +217,6 @@ namespace RePlays.Integrations
                         {
                             type = Bookmark.BookmarkType.Kill
                         };
-                        Logger.WriteLine(bookmarkDateTime.ToLongDateString() + " " + bookmarkDateTime.ToLongTimeString());
                         BookmarkService.AddBookmark(bookmark, bookmarkDateTime);
                     }
                 }
