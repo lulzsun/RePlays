@@ -193,7 +193,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
-            defaultChecked={getQualityPresetName(settings) === 'ultra'} />
+            defaultChecked={getQualityPresetName(settings) === 'ultra'}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
         </label>
         <label className="inline-flex items-center">
