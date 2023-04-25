@@ -113,6 +113,20 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
     return;            
   }, [setAvailableRateControls, updateSettings]);
 
+  function getQualityPresetName(settings: CaptureSettings | undefined): 'low' | 'medium' | 'high' | 'ultra' | 'custom' {
+    if (settings?.resolution === 480 && settings.frameRate === 15 && settings.bitRate === 5) {
+      return 'low';
+    } else if (settings?.resolution === 720 && settings.frameRate === 30 && settings.bitRate === 25) {
+      return 'medium';
+    } else if (settings?.resolution === 1080 && settings.frameRate === 60 && settings.bitRate === 35) {
+      return 'high';
+    } else if ((settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080)) && settings?.frameRate === 60 && settings.bitRate === 50) {
+      return 'ultra';
+    } else {
+      return 'custom';
+    }
+  }
+
 	return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7"> 
       <h1 className="font-semibold text-2xl">Capture Mode</h1>
@@ -164,26 +178,27 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
       }>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="low"
-            defaultChecked={(settings?.resolution === 480 && settings?.frameRate === 15 && settings?.bitRate === 5 ? true : false)}/>
+            defaultChecked={getQualityPresetName(settings) === 'low'}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">Low</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="medium"
-            defaultChecked={(settings?.resolution === 720 && settings?.frameRate === 30 && settings?.bitRate === 25 ? true : false)}/>
+            defaultChecked={getQualityPresetName(settings) === 'medium'}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">Medium</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="high"
-            defaultChecked={(settings?.resolution === 1080 && settings?.frameRate === 60 && settings?.bitRate === 35 ? true : false)}/>
+            defaultChecked={getQualityPresetName(settings) === 'high'}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">High</span>
         </label>
         <label className="inline-flex items-center">
           <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="ultra"
-            defaultChecked={(settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080) && settings?.frameRate === 60 && settings?.bitRate === 50 ? true : false)} />
+            defaultChecked={getQualityPresetName(settings) === 'ultra'} />
           <span className="px-2 text-gray-700 dark:text-gray-400">Ultra</span>
         </label>
         <label className="inline-flex items-center">
-          <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality} />
+          <input type="radio" name="quality" className="form-checkbox h-4 w-4 text-gray-600" value="custom" ref={customVideoQuality}
+          defaultChecked={getQualityPresetName(settings) === 'custom'}/>
           <span className="px-2 text-gray-700 dark:text-gray-400">Custom</span>
         </label>
       </div>
