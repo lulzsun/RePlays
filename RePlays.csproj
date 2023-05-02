@@ -46,9 +46,9 @@
   
   <ItemGroup>
     <PackageReference Include="Clowd.Squirrel" Version="2.8.40" />
+    <PackageReference Include="JsonPath.Net" Version="0.5.2" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.0.1" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1054.31" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NuGet.CommandLine" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

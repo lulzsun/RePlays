@@ -229,7 +229,7 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
                 }}>
                     <option value="JSON">JSON</option>
                     <option value="TEXT">Text</option>
-                    <option value="XML">XML</option>
+                    {/*<option value="XML">XML</option>*/}
                 </select>
             </div>
             <div className="flex flex-col">
@@ -240,7 +240,9 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
                         settings.customUploaderSettings.responsePath = e.target.value;
                     updateSettings();
                 }}/> 
-                <p className="text-xs text-gray-500">The url to the video using <a href="https://jsonpath.com/" target="_blank" rel="noreferrer">JSONPath</a> or  <a href="http://xpather.com/" target="_blank" rel="noreferrer">XPath</a></p>
+                <p className="text-xs text-gray-500">The url to the video using <a href="https://jsonpath.com/" target="_blank" rel="noreferrer">JSONPath</a> 
+                    {/*or  <a href="http://xpather.com/" target="_blank" rel="noreferrer">XPath</a>*/}
+                </p>
             </div>
         </div>
     )

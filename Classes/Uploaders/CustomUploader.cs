@@ -1,11 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using Json.Path;
 using RePlays.Services;
 using RePlays.Utils;
 
@@ -42,10 +43,10 @@ namespace RePlays.Uploaders
                         httpClient.DefaultRequestHeaders.Accept.Add(
                             new MediaTypeWithQualityHeaderValue("application/json"));
                         break;
-                    case "XML":
-                        httpClient.DefaultRequestHeaders.Accept.Add(
-                            new MediaTypeWithQualityHeaderValue("application/xml"));
-                        break;
+                    // case "XML":
+                    //     httpClient.DefaultRequestHeaders.Accept.Add(
+                    //         new MediaTypeWithQualityHeaderValue("application/xml"));
+                    //     break;
                     case "TEXT":
                         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
                         break;
@@ -92,11 +93,11 @@ namespace RePlays.Uploaders
                     switch (customSettings.responseType)
                     {
                         case "JSON":
-                            result = JsonPath.Get(content, customSettings.responsePath);
+                            result = CustomUploaderJsonPath.Get(content, customSettings.responsePath);
                             break;
-                        case "XML":
-                            result = XmlPath.Get(content, customSettings.responsePath);
-                            break;
+                        // case "XML":
+                        //     result = XmlPath.Get(content, customSettings.responsePath);
+                        //     break;
                         case "TEXT":
                             result = content;
                             break;
@@ -109,29 +110,18 @@ namespace RePlays.Uploaders
             }
         }
 
-        // define JsonPath and XmlPath classes
-        public class JsonPath
+        private static class CustomUploaderJsonPath
         {
-            public static string Get(string json, string path)
+            public static string Get(string json, string jsonPath)
             {
-                var jObject = JObject.Parse(json);
-                var file = jObject.SelectToken(path);
-                return file != null ? file.ToString() : throw new Exception("JsonPath not found");
-            }
-        }
-       
+                PathResult results = null;
+                if (JsonPath.TryParse(jsonPath, out var path))
+                {
+                    results = path.Evaluate(JsonNode.Parse(json));
+                }
 
-        public class XmlPath
-        {
-            public static string Get(string xml, string path)
-            {
-                var doc = new System.Xml.XmlDocument();
-                doc.LoadXml(xml);
-                var parts = path.Split('/');
-                var current = parts.Aggregate(doc.DocumentElement,
-                    (current1, part) => (System.Xml.XmlElement)current1.SelectSingleNode(part));
-
-                return current != null ? current.InnerText : string.Empty;
+                var jsonNode = results?.Matches?[0].Value;
+                return jsonNode != null ? jsonNode?.ToString() : string.Empty;
             }
         }
     }
