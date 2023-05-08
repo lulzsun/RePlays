@@ -137,6 +137,15 @@ declare global {
     localFolderSettings: {
       dir: string,
     },
+    customUploaderSettings: {
+      url: string,
+      method: string,
+      headers:  {Key: string, Value: string}[],
+      urlparams: {Key: string, Value: string}[],
+      responseType: string,
+      responsePath: string,
+    }
+    
   }
   interface StorageSettings {
     videoSaveDir: string,
