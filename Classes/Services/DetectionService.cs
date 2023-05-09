@@ -27,6 +27,7 @@ namespace RePlays.Services {
 
         static JsonElement[] gameDetectionsJson;
         static JsonElement[] nonGameDetectionsJson;
+        static HashSet<String> nonGameDetectionsCache = new HashSet<String>();
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
@@ -142,6 +143,7 @@ namespace RePlays.Services {
         public static void LoadDetections() {
             gameDetectionsJson = DownloadDetections(gameDetectionsFile, "game_detections.json");
             nonGameDetectionsJson = DownloadDetections(nonGameDetectionsFile, "nongame_detections.json");
+            loadNonGameCache();
         }
         public static void DisposeDetections() {
             gameDetectionsJson = null;
@@ -186,7 +188,7 @@ namespace RePlays.Services {
                 return;
             }
             try {
-                executablePath = process.MainModule.FileName;
+                executablePath = Path.GetFullPath(process.MainModule.FileName);
             }
             catch (Exception ex) {
                 IntPtr processHandle = OpenProcess(0x1000, false, process.Id);
@@ -374,32 +376,46 @@ namespace RePlays.Services {
             return "Game Unknown";
         }
 
-        public static bool IsMatchedNonGame(string exeFile) {
-            if (exeFile == null)
-                return false;
+        public static bool IsMatchedNonGame(string executablePath)
+        {
+            if (executablePath is null) return false;
+            
+            executablePath = executablePath.ToLower();
 
-            exeFile = exeFile.ToLower();
-
-            if (SettingsService.Settings.detectionSettings.blacklist.Contains(exeFile)) {
+            if (SettingsService.Settings.detectionSettings.blacklist.Contains(executablePath))
+            {
                 return true;
             }
-            for (int x = 0; x < nonGameDetectionsJson.Length; x++) {
-                JsonElement[] gameDetections = nonGameDetectionsJson[x].GetProperty("detections").EnumerateArray().ToArray();
 
-                for (int y = 0; y < gameDetections.Length; y++) {
+            if(nonGameDetectionsCache.Contains(Path.GetFileName(executablePath))) {
+                return true;
+            }
 
-                    if (gameDetections[y].TryGetProperty("detect_exe", out JsonElement detection)) {
-                        string[] jsonExeStr = detection.GetString().ToLower().Split('|');
-                        
-                        for (int z = 0; z < jsonExeStr.Length; z++) {
-                            // TODO: use proper regex to check fullpaths instead of just filenames
-                            if (Path.GetFileName(jsonExeStr[z]).Equals(Path.GetFileName(exeFile)) && jsonExeStr[z].Length > 0)
-                                return true;
+            return false;
+        }
+
+        private static void loadNonGameCache()
+        {
+            nonGameDetectionsCache.Clear();
+            foreach (JsonElement nonGameDetection in nonGameDetectionsJson)
+            {
+                JsonElement[] detections = nonGameDetection.GetProperty("detections").EnumerateArray().ToArray();
+
+                //Each "non-game" can have multiple .exe-files
+                foreach (JsonElement detection in detections)
+                {
+                    //Get the exe filename
+                    if (detection.TryGetProperty("detect_exe", out JsonElement detectExe))
+                    {
+                        string[] jsonExePaths = detectExe.GetString().ToLower().Split('|');
+
+                        foreach (string jsonExePath in jsonExePaths)
+                        {
+                            nonGameDetectionsCache.Add(Path.GetFileName(jsonExePath));
                         }
                     }
                 }
             }
-            return false;
         }
 
         [DllImport("user32.dll")]
