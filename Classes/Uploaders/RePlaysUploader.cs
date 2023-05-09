@@ -1,17 +1,15 @@
-﻿using System;
+﻿using RePlays.Services;
+using RePlays.Utils;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using RePlays.Services;
-using RePlays.Utils;
-using SharpCompress.Common;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Uploaders {
@@ -21,25 +19,21 @@ namespace RePlays.Uploaders {
             public int status { get; set; }
         }
 
-        public class RePlaysStatus
-        {
+        public class RePlaysStatus {
             public string title { get; set; }
             public string content { get; set; }
         }
 
         public override async Task<string> Upload(string id, string title, string file, string game) {
-            try
-            {
-                using (var httpClient = new HttpClient())
-                {
+            try {
+                using (var httpClient = new HttpClient()) {
                     httpClient.Timeout = Timeout.InfiniteTimeSpan; // sometimes, uploading can take long
                     var rePlaysSettings = SettingsService.Settings.uploadSettings.rePlaysSettings;
-                    if(String.IsNullOrEmpty(rePlaysSettings.email) || String.IsNullOrEmpty(rePlaysSettings.password))
-                    {
+                    if (String.IsNullOrEmpty(rePlaysSettings.email) || String.IsNullOrEmpty(rePlaysSettings.password)) {
                         WebMessage.DisplayModal("Enter your account credentials: Settings -> Upload -> Replays", "Wrong Credentials", "warning");
                         return null;
                     }
-                    
+
                     var credentials = $"{rePlaysSettings.email}:{DecryptString(rePlaysSettings.password)}";
                     var authorization = Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authorization);
@@ -48,19 +42,16 @@ namespace RePlays.Uploaders {
                     int uploadFileLimit = int.Parse(await uploadLimitResponse.Content.ReadAsStringAsync());
 
                     int localFileSize = (int)(new FileInfo(file).Length / (1024.0 * 1024.0));
-                    if (localFileSize > uploadFileLimit)
-                    {
+                    if (localFileSize > uploadFileLimit) {
                         WebMessage.DisplayModal("Max file size is " + uploadFileLimit + " MB. Your file is " + localFileSize + " MB", "Warning", "warning");
                         return null;
                     }
 
-                    using (var formDataContent = new MultipartFormDataContent())
-                    {
+                    using (var formDataContent = new MultipartFormDataContent()) {
                         var titleContent = new StringContent(title);
                         var gameContent = new StringContent(game);
                         var fileContent = new ProgressableStreamContent(new StreamContent(File.OpenRead(file)), 4096,
-                            (sent, total) =>
-                            {
+                            (sent, total) => {
                                 WebMessage.DisplayToast(id, title, "Upload", "none", (long)((float)sent / total * 100), 100);
                             }
                         );
@@ -71,8 +62,7 @@ namespace RePlays.Uploaders {
                         var content = response.Content.ReadAsStringAsync().Result;
                         Logger.WriteLine(response.StatusCode.ToString() + " " + content);
                         var result = JsonSerializer.Deserialize<RePlaysResult>(content);
-                        if (result.shortcode != null)
-                        {
+                        if (result.shortcode != null) {
                             Process browserProcess = new Process();
                             browserProcess.StartInfo.UseShellExecute = true;
                             browserProcess.StartInfo.FileName = "https://replays.app/Video/" + result.shortcode;
@@ -86,30 +76,24 @@ namespace RePlays.Uploaders {
                     }
                 }
             }
-            catch
-            {
-                try
-                {
+            catch {
+                try {
                     string clientVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                    using (var httpClient = new HttpClient())
-                    {
+                    using (var httpClient = new HttpClient()) {
                         HttpResponseMessage uploadLimitResponse = await httpClient.GetAsync("https://replays.app/Status/" + clientVersion);
                         string statusContent = await uploadLimitResponse.Content.ReadAsStringAsync();
                         var result = JsonSerializer.Deserialize<RePlaysStatus>(statusContent);
-                        if (result.title != "OK")
-                        {
+                        if (result.title != "OK") {
                             WebMessage.DisplayModal(result.content, result.title, "warning");
                         }
-                        else
-                        {
+                        else {
                             WebMessage.DisplayModal("An unexpected error occured.", "Warning", "warning");
                         }
                     }
                     WebMessage.DestroyToast(id);
                     return null;
                 }
-                catch
-                {
+                catch {
                     WebMessage.DisplayModal("An unexpected error occured.", "Warning", "warning");
                     WebMessage.DestroyToast(id);
                     return null;

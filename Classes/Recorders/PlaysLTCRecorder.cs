@@ -1,8 +1,8 @@
 ﻿using PlaysLTCWrapper;
 using RePlays.Services;
+using RePlays.Utils;
 using System.IO;
 using System.Threading.Tasks;
-using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Recorders {
@@ -85,7 +85,7 @@ namespace RePlays.Recorders {
                     RecordingService.StartRecording();
             };
 
-            ltc.ProcessTerminated += (sender, msg) => {                
+            ltc.ProcessTerminated += (sender, msg) => {
                 if (RecordingService.GetCurrentSession().Pid == msg.Pid)
                     RecordingService.StopRecording();
             };
@@ -117,12 +117,10 @@ namespace RePlays.Recorders {
             return Task.FromResult(true);
         }
 
-        public override void LostFocus()
-        {
+        public override void LostFocus() {
         }
 
-        public override void GainedFocus()
-        {
+        public override void GainedFocus() {
         }
     }
 }

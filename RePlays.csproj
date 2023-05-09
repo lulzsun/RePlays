@@ -13,6 +13,11 @@
 	<PublishTrimmed>false</PublishTrimmed>
 	<TrimMode>Link</TrimMode>
   </PropertyGroup>
+	
+  <PropertyGroup>
+    <AnalysisMode>Recommended</AnalysisMode>
+	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
   
   <PropertyGroup>
     <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
@@ -160,5 +165,13 @@
 	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
 	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases --framework net7" />
   </Target>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="$(SolutionDir).editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(SolutionDir).editorconfig" />
+  </ItemGroup>
 
 </Project>

@@ -2,7 +2,6 @@ using Squirrel;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Windows.Forms;
 
 namespace RePlays.Utils {
     public class VideoList {
@@ -42,8 +41,9 @@ namespace RePlays.Utils {
     // Settings Objects
     public class GeneralSettings {
         private bool _launchStartup = true;
-        public bool launchStartup { get { return _launchStartup; } 
-            set { 
+        public bool launchStartup {
+            get { return _launchStartup; }
+            set {
                 _launchStartup = value;
                 try {
                     using (var manager = new UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
@@ -72,7 +72,7 @@ namespace RePlays.Utils {
 
     public class AudioDevice {
         public AudioDevice() { }
-        public AudioDevice(string deviceId, string deviceLabel) { 
+        public AudioDevice(string deviceId, string deviceLabel) {
             _deviceId = deviceId;
             _deviceLabel = deviceLabel;
         }
@@ -150,8 +150,7 @@ namespace RePlays.Utils {
 
         private StreamableSettings _streamableSettings = new();
         public StreamableSettings streamableSettings { get { return _streamableSettings; } set { _streamableSettings = value; } }
-        public class RePlaysSettings
-        {
+        public class RePlaysSettings {
             private string _email = "";
             public string email { get { return _email; } set { _email = value; } }
             private string _password = "";
@@ -168,34 +167,33 @@ namespace RePlays.Utils {
 
         private LocalFolderSettings _localFolderSettings = new();
         public LocalFolderSettings localFolderSettings { get { return _localFolderSettings; } set { _localFolderSettings = value; } }
-        
-        public class CustomUploaderSettings
-        {
+
+        public class CustomUploaderSettings {
 
             private string _method = "POST";
             public string method { get { return _method; } set { _method = value; } }
-            
+
             private string _url = "";
             public string url { get { return _url; } set { _url = value; } }
-            
+
             private KeyValuePair<string, string>[] _headers = Array.Empty<KeyValuePair<string, string>>();
             public KeyValuePair<string, string>[] headers { get { return _headers; } set { _headers = value; } }
-            
+
             private KeyValuePair<string, string>[] _urlparams = Array.Empty<KeyValuePair<string, string>>();
             public KeyValuePair<string, string>[] urlparams { get { return _urlparams; } set { _urlparams = value; } }
-            
+
             private string _responseType = "TEXT";
             public string responseType { get { return _responseType; } set { _responseType = value; } }
-            
+
             private string _responsePath = "";
             public string responsePath { get { return _responsePath; } set { _responsePath = value; } }
-            
+
 
         }
         private CustomUploaderSettings _customUploaderSettings = new();
         public CustomUploaderSettings customUploaderSettings { get { return _customUploaderSettings; } set { _customUploaderSettings = value; } }
 
-        
+
     }
 
     public class DetectionSettings {
@@ -205,16 +203,14 @@ namespace RePlays.Utils {
         public List<string> blacklist { get { return _blacklist; } set { _blacklist = value; } }
     }
 
-    public struct CustomGame
-    {
-        public CustomGame(string gameExe, string gameName)
-        {
+    public struct CustomGame {
+        public CustomGame(string gameExe, string gameName) {
             this._gameExe = gameExe;
             this._gameName = gameName;
         }
 
         private string _gameExe;
-        public string gameExe { get { return _gameExe;} set { _gameExe = value; } }
+        public string gameExe { get { return _gameExe; } set { _gameExe = value; } }
         private string _gameName;
         public string gameName { get { return _gameName; } set { _gameName = value; } }
     }

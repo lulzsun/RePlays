@@ -5,25 +5,20 @@ using System.IO;
 using System.Threading.Tasks;
 using static RePlays.Utils.Functions;
 
-namespace RePlays.Utils
-{
-    public static class Compression
-    {
+namespace RePlays.Utils {
+    public static class Compression {
         static Dictionary<int, double> fileTime = new Dictionary<int, double>();
-        public static void CompressFile(string filePath, string game)
-        {
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
+        public static void CompressFile(string filePath, string game) {
+            ProcessStartInfo startInfo = new ProcessStartInfo {
                 FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
-                Arguments = string.Format("-i \"{0}\" -vcodec libx264 -crf 28 \"{1}\"", filePath, filePath.Replace(".mp4", "-compressed.mp4")),            
+                Arguments = string.Format("-i \"{0}\" -vcodec libx264 -crf 28 \"{1}\"", filePath, filePath.Replace(".mp4", "-compressed.mp4")),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
             };
 
-            Process process = new Process
-            {
+            Process process = new Process {
                 StartInfo = startInfo,
                 EnableRaisingEvents = true
             };
@@ -40,32 +35,26 @@ namespace RePlays.Utils
             WebMessage.DisplayToast(process.Id.ToString(), game, "Compressing", "none", (long)0, 100);
         }
 
-        static void ffmpeg_input(string e, Process process, string game)
-        {
+        static void ffmpeg_input(string e, Process process, string game) {
             if (e == null)
                 return;
 
-            if (e.Contains("Duration: "))
-            {
+            if (e.Contains("Duration: ")) {
                 fileTime[process.Id] = TimeSpan.Parse(e.ToString().Trim().Substring(10, 11)).TotalSeconds;
             }
 
-            if (e.Contains("frame=") && e.Contains("speed=") && !e.Contains("Lsize="))
-            {              
+            if (e.Contains("frame=") && e.Contains("speed=") && !e.Contains("Lsize=")) {
                 Logger.WriteLine(e);
-                try
-                {
+                try {
                     WebMessage.DisplayToast(process.Id.ToString(), game, "Compressing", "none", Convert.ToInt32(TimeSpan.Parse(e.Trim().Substring(48, 11)).TotalSeconds), Convert.ToInt32(fileTime[process.Id]));
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     Logger.WriteLine("Error: {}", ex.Message);
                 }
             }
         }
 
-        static async Task p_ExitedAsync(object sender, EventArgs e, string filePathOriginal, Process process)
-        {
+        static async Task p_ExitedAsync(object sender, EventArgs e, string filePathOriginal, Process process) {
             WebMessage.DestroyToast(process.Id.ToString());
             process.Kill();
 
@@ -73,22 +62,19 @@ namespace RePlays.Utils
 
             long originalFileSize = new FileInfo(filePathOriginal).Length;
             long compressedFileSize = new FileInfo(filePathCompressed).Length;
-            
-            if (compressedFileSize > originalFileSize || compressedFileSize == 0)
-            {
-                if(compressedFileSize == 0) WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
-                if(compressedFileSize > originalFileSize) WebMessage.DisplayModal("The compressed file turned out to be larger than the original file. We will keep the original file.", "Compression size", "warning");
+
+            if (compressedFileSize > originalFileSize || compressedFileSize == 0) {
+                if (compressedFileSize == 0) WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
+                if (compressedFileSize > originalFileSize) WebMessage.DisplayModal("The compressed file turned out to be larger than the original file. We will keep the original file.", "Compression size", "warning");
                 System.IO.File.Delete(filePathCompressed);
                 return;
             }
 
-            try
-            {
+            try {
                 System.IO.File.Delete(filePathOriginal);
                 System.IO.File.Move(filePathCompressed, filePathOriginal);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteLine($"Error: {ex.Message}");
                 WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
                 return;

@@ -1,20 +1,16 @@
-﻿using RePlays.Services;
+﻿using RePlays.Classes.Services.Hotkeys;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using RePlays.Classes.Services.Hotkeys;
 
-namespace RePlays.Services
-{
-    public static class HotkeyService
-    {
+namespace RePlays.Services {
+    public static class HotkeyService {
         public delegate IntPtr CallbackDelegate(int Code, IntPtr W, IntPtr L);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct KBDLLHookStruct
-        {
+        public struct KBDLLHookStruct {
             public Int32 vkCode;
             public Int32 scanCode;
             public Int32 flags;
@@ -38,8 +34,7 @@ namespace RePlays.Services
         private static IntPtr HookID;
         static CallbackDelegate TheHookCB = null;
 
-        public static void Start()
-        { 
+        public static void Start() {
             //Create hotkeys
             _hotkeys.Add(new BookmarkHotkey());
             _hotkeys.Add(new RecordingHotkey());
@@ -49,33 +44,27 @@ namespace RePlays.Services
             Logger.WriteLine("Loaded KeyboardHook...");
         }
 
-        public static void Stop()
-        {
+        public static void Stop() {
             _hotkeys.Clear();
             UnhookWindowsHookEx(HookID);
             Logger.WriteLine("Unloaded KeyboardHook...");
         }
 
-        private static IntPtr KeybHookProc(int Code, IntPtr W, IntPtr L)
-        {
+        private static IntPtr KeybHookProc(int Code, IntPtr W, IntPtr L) {
             if (Code < 0)
                 return CallNextHookEx(HookID, Code, W, L);
 
-            try
-            {
+            try {
                 KeyEvents kEvent = (KeyEvents)W;
-                if (kEvent == KeyEvents.KeyDown)
-                {
+                if (kEvent == KeyEvents.KeyDown) {
                     Keys vkCode = (Keys)Marshal.ReadInt32(L);
                     vkCode |= Control.ModifierKeys;
-                    foreach (Hotkey h in _hotkeys)
-                    {
+                    foreach (Hotkey h in _hotkeys) {
                         if (vkCode == h.Keybind) h.Action();
                     }
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 Logger.WriteLine("Error getting current keypress: " + e.ToString());
             }
 
@@ -83,8 +72,7 @@ namespace RePlays.Services
         }
 
 
-        public enum KeyEvents
-        {
+        public enum KeyEvents {
             KeyDown = 0x0100,
             KeyUp = 0x0101
         }

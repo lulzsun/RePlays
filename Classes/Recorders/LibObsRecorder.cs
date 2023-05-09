@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using obs_net;
-using static obs_net.Obs;
+﻿using obs_net;
 using RePlays.Services;
 using RePlays.Utils;
-using static RePlays.Utils.Functions;
-using System.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+using static obs_net.Obs;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
@@ -72,7 +72,7 @@ namespace RePlays.Recorders {
                         // a very crude way to see if game_capture source has successfully hooked/capture application....
                         // does game_capture source provide any signals that we can alternatively use?
                         if (formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
-                            if(signalGCHookSuccess && RecordingService.IsRecording) {
+                            if (signalGCHookSuccess && RecordingService.IsRecording) {
                                 // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
                                 // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
                                 Rect currentSize = GetWindowSize(windowHandle);
@@ -89,8 +89,7 @@ namespace RePlays.Recorders {
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                             signalGCHookSuccess = false;
                         }
-                        else if(formattedMsg.Contains("No space left on device"))
-                        {
+                        else if (formattedMsg.Contains("No space left on device")) {
                             WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
                             RecordingService.StopRecording();
                         }
@@ -304,7 +303,7 @@ namespace RePlays.Recorders {
             // some quick checks on initializations before starting output
             bool canStartCapture = obs_output_can_begin_data_capture(output, 0);
             if (!canStartCapture) {
-                while(!obs_output_initialize_encoders(output, 0) && retryAttempt < maxRetryAttempts) {
+                while (!obs_output_initialize_encoders(output, 0) && retryAttempt < maxRetryAttempts) {
                     Logger.WriteLine($"Waiting for encoders to finish initializing... retry attempt #{retryAttempt}");
                     await Task.Delay(retryInterval);
                     retryAttempt++;
@@ -320,7 +319,7 @@ namespace RePlays.Recorders {
             retryAttempt = 0;
 
             // another null check just incase
-            if(output == IntPtr.Zero) {
+            if (output == IntPtr.Zero) {
                 Logger.WriteLine("LibObs output returned null, something really went wrong (this isn't suppose to happen)...");
                 ReleaseOutput();
                 ReleaseSources();
@@ -337,7 +336,8 @@ namespace RePlays.Recorders {
                 ReleaseSources();
                 ReleaseEncoders();
                 return false;
-            } else {
+            }
+            else {
                 Logger.WriteLine($"LibObs started recording [{session.Pid}] [{session.GameTitle}] [{windowClassNameId}]");
             }
 
@@ -488,7 +488,7 @@ namespace RePlays.Recorders {
 
             // Down audio source mix to mono
             // TODO: make this a user configurable setting instead
-            if(mono) {
+            if (mono) {
                 uint flags = obs_source_get_flags(source) | (1 << 1);
                 obs_source_set_flags(source, flags);
             }

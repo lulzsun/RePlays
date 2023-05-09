@@ -1,15 +1,15 @@
+using RePlays.Recorders;
+using RePlays.Services;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Collections.Generic;
-using RePlays.Recorders;
-using RePlays.Services;
-using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Utils {
     public class RetrieveVideos {
@@ -29,17 +29,13 @@ namespace RePlays.Utils {
         }
     }
 
-    public class CompressClip
-    {
+    public class CompressClip {
         private string _filePath;
-        public string filePath
-        {
-            get
-            {
+        public string filePath {
+            get {
                 return _filePath.Replace("/", "\\");
             }
-            set
-            {
+            set {
                 _filePath = value;
             }
         }
@@ -104,14 +100,11 @@ namespace RePlays.Utils {
             }
         }
         private string _game;
-        public string game
-        {
-            get
-            {
+        public string game {
+            get {
                 return _game;
             }
-            set
-            {
+            set {
                 _game = value;
             }
         }
@@ -207,8 +200,7 @@ namespace RePlays.Utils {
                     }
 
                     break;
-                case "OpenLink":
-                    {
+                case "OpenLink": {
                         Process browserProcess = new Process();
                         browserProcess.StartInfo.UseShellExecute = true;
                         browserProcess.StartInfo.FileName = webMessage.data;
@@ -217,8 +209,7 @@ namespace RePlays.Utils {
 
                     break;
 
-                case "CompressClip":
-                    {
+                case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
                         string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
                         CompressFile(filePath, data.game);
@@ -251,13 +242,13 @@ namespace RePlays.Utils {
                             var realFilePath = Path.Join(GetPlaysFolder(), filePath);
                             var successfulDelete = false;
                             var failedLoops = 0;
-                            while(!successfulDelete) {
+                            while (!successfulDelete) {
                                 try {
                                     DeleteVideo(realFilePath);
                                     successfulDelete = true;
                                 }
                                 catch (Exception e) {
-                                    if(failedLoops == 5) {
+                                    if (failedLoops == 5) {
                                         DisplayModal("Failed to delete video (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
                                         Logger.WriteLine(String.Format("Failed to delete video: {0}", e.Message));
                                         break;
@@ -265,7 +256,7 @@ namespace RePlays.Utils {
                                     await Task.Delay(2000);
                                     failedLoops++;
                                 }
-                            } 
+                            }
                         }
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                         SendMessage(t);
@@ -287,7 +278,7 @@ namespace RePlays.Utils {
                 case "UploadVideo": {
                         UploadVideo data = JsonSerializer.Deserialize<UploadVideo>(webMessage.data);
                         var filePath = Path.Join(GetPlaysFolder(), data.file);
-                        if(File.Exists(filePath)) {
+                        if (File.Exists(filePath)) {
                             Logger.WriteLine($"Preparing to upload {filePath} to {data.destination}");
                             UploadService.Upload(data.destination, data.title, filePath, data.game);
                         }
@@ -308,8 +299,7 @@ namespace RePlays.Utils {
                         fbd.Filter = "Executable files (*.exe)|*.exe";
                         DialogResult result = fbd.ShowDialog();
                         if (result != DialogResult.OK && string.IsNullOrWhiteSpace(fbd.FileName)) break;
-                        switch (list)
-                        {
+                        switch (list) {
                             case "blacklist":
                                 Settings.detectionSettings.blacklist.Add(fbd.FileName.ToLower());
                                 Logger.WriteLine($"Added {fbd.FileName} to blacklist");
@@ -392,15 +382,13 @@ namespace RePlays.Utils {
             SendMessage(JsonSerializer.Serialize(webMessage));
         }
 
-        public static void SetBookmarks(string videoName, List<Bookmark> bookmarks, double elapsed)
-        {
+        public static void SetBookmarks(string videoName, List<Bookmark> bookmarks, double elapsed) {
             string json = "{" +
                     "\"videoname\": \"" + videoName + "\", " +
                     "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
                     "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
 
-            if (frmMain.webView2 != null)
-            {
+            if (frmMain.webView2 != null) {
                 WebMessage webMessage = new();
                 webMessage.message = "SetBookmarks";
                 webMessage.data = json;
@@ -408,8 +396,7 @@ namespace RePlays.Utils {
                 Logger.WriteLine("Successfully sent bookmarks to frontend");
 
             }
-            else
-            {
+            else {
                 BackupBookmarks(videoName, json);
             }
         }

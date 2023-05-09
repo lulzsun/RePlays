@@ -1,3 +1,4 @@
+using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,7 +13,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms; // exists for Application.StartupPath
-using RePlays.Services;
 
 namespace RePlays.Utils {
     public static class Functions {
@@ -39,16 +39,13 @@ namespace RePlays.Utils {
 
         public static string GetPlaysFolder() {
             var videoSaveDir = SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
-            if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any())
-            {
+            if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any()) {
                 SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
                 SettingsService.SaveSettings();
-                if (frmMain.webView2 == null)
-                {
+                if (frmMain.webView2 == null) {
                     Task.Run(() => SendDisplayModalWithDelay("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info", 10000));
                 }
-                else
-                {
+                else {
                     WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
                 }
                 return SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
@@ -59,8 +56,7 @@ namespace RePlays.Utils {
             return videoSaveDir;
         }
 
-        public static async Task SendDisplayModalWithDelay(string context, string title, string icon, int delay)
-        {
+        public static async Task SendDisplayModalWithDelay(string context, string title, string icon, int delay) {
             await Task.Delay(delay);
             WebMessage.DisplayModal(context, title, icon);
         }
@@ -145,7 +141,7 @@ namespace RePlays.Utils {
                     if (id.StartsWith("{0.0.0.00000000}")) outputCache.Add(dev);
                     else inputCache.Add(dev);
                     Logger.WriteLine(dev.deviceId + " | " + dev.deviceLabel);
-                    
+
                 }
             }
             if (SettingsService.Settings.captureSettings.inputDevices.Count == 0) {
@@ -281,7 +277,7 @@ namespace RePlays.Utils {
                 // if exception happens, usually means video is not valid?
                 Logger.WriteLine($"Issue retrieving duration of video? exception: '{e.Message}'");
                 Logger.WriteLine($"arguments: {startInfo.Arguments}");
-                Logger.WriteLine($"reason: {stdout+stderr}");
+                Logger.WriteLine($"reason: {stdout + stderr}");
                 duration = 0;
             }
             process.WaitForExit();
@@ -314,7 +310,7 @@ namespace RePlays.Utils {
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
-                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", 
+                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"",
                     (duration / 2).ToString(CultureInfo.InvariantCulture), videoPath, thumbnailPath),
             };
 
@@ -380,7 +376,7 @@ namespace RePlays.Utils {
                 Logger.WriteLine($"Backup file location: {BookmarkBackupFilePath}");
                 File.WriteAllText(BookmarkBackupFilePath, json);
             }
-            catch(Exception ex) {
+            catch (Exception ex) {
                 Logger.WriteLine($"Could not backup {videoName}. Exception: {ex.Message}");
             }
         }
@@ -401,7 +397,7 @@ namespace RePlays.Utils {
                     Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
                 }
             }
-            catch(Exception ex) {
+            catch (Exception ex) {
                 Logger.WriteLine($"Could not load backup bookmarks. Exception: {ex.Message}");
             }
         }
@@ -549,8 +545,7 @@ namespace RePlays.Utils {
 
             foreach (ManagementObject obj in searcher.Get()) {
                 var match = Regex.Match(obj["Name"].ToString(), @"^pid_(\d+)_luid.+$");
-                if (match.Success && int.Parse(match.Groups[1].Value) == pid)
-                {
+                if (match.Success && int.Parse(match.Groups[1].Value) == pid) {
                     return int.Parse(obj["UtilizationPercentage"].ToString());
                 }
             }

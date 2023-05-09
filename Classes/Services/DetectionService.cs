@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RePlays.Utils;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,9 +12,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using RePlays.Utils;
-using static RePlays.Utils.Functions;
 using static RePlays.Services.RecordingService;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class DetectionService {
@@ -97,8 +97,8 @@ namespace RePlays.Services {
             catch (Exception ex) {
                 Logger.WriteLine($"Error: {ex.Message}");
             }
-                
-            foreach (Process process in processCollection) {             
+
+            foreach (Process process in processCollection) {
                 if (RecordingService.IsRecording) return;
 
                 try {
@@ -143,7 +143,7 @@ namespace RePlays.Services {
         public static void LoadDetections() {
             gameDetectionsJson = DownloadDetections(gameDetectionsFile, "game_detections.json");
             nonGameDetectionsJson = DownloadDetections(nonGameDetectionsFile, "nongame_detections.json");
-            loadNonGameCache();
+            LoadNonGameCache();
         }
         public static void DisposeDetections() {
             gameDetectionsJson = null;
@@ -161,7 +161,7 @@ namespace RePlays.Services {
             catch (System.Exception e) {
                 Logger.WriteLine(e.Message);
 
-                if(File.Exists(dlPath)) {
+                if (File.Exists(dlPath)) {
                     return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
                 }
             }
@@ -230,9 +230,9 @@ namespace RePlays.Services {
 
                 bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
                 if (isBlocked) return;
-                
+
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 Logger.WriteLine($"Failed to check blacklist for application: {executablePath} with error message: {e.Message}");
             }
 
@@ -371,46 +371,39 @@ namespace RePlays.Services {
             }
             // Check to see if path is a steam game, and parse name
             // TODO: also parse Epic games/Origin games
-            if(exeFile.ToLower().Replace("\\", "/").Contains("/steamapps/common/"))
+            if (exeFile.ToLower().Replace("\\", "/").Contains("/steamapps/common/"))
                 return Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0];
             return "Game Unknown";
         }
 
-        public static bool IsMatchedNonGame(string executablePath)
-        {
+        public static bool IsMatchedNonGame(string executablePath) {
             if (executablePath is null) return false;
-            
+
             executablePath = executablePath.ToLower();
 
-            if (SettingsService.Settings.detectionSettings.blacklist.Contains(executablePath))
-            {
+            if (SettingsService.Settings.detectionSettings.blacklist.Contains(executablePath)) {
                 return true;
             }
 
-            if(nonGameDetectionsCache.Contains(Path.GetFileName(executablePath))) {
+            if (nonGameDetectionsCache.Contains(Path.GetFileName(executablePath))) {
                 return true;
             }
 
             return false;
         }
 
-        private static void loadNonGameCache()
-        {
+        private static void LoadNonGameCache() {
             nonGameDetectionsCache.Clear();
-            foreach (JsonElement nonGameDetection in nonGameDetectionsJson)
-            {
+            foreach (JsonElement nonGameDetection in nonGameDetectionsJson) {
                 JsonElement[] detections = nonGameDetection.GetProperty("detections").EnumerateArray().ToArray();
 
                 //Each "non-game" can have multiple .exe-files
-                foreach (JsonElement detection in detections)
-                {
+                foreach (JsonElement detection in detections) {
                     //Get the exe filename
-                    if (detection.TryGetProperty("detect_exe", out JsonElement detectExe))
-                    {
+                    if (detection.TryGetProperty("detect_exe", out JsonElement detectExe)) {
                         string[] jsonExePaths = detectExe.GetString().ToLower().Split('|');
 
-                        foreach (string jsonExePath in jsonExePaths)
-                        {
+                        foreach (string jsonExePath in jsonExePaths) {
                             nonGameDetectionsCache.Add(Path.GetFileName(jsonExePath));
                         }
                     }

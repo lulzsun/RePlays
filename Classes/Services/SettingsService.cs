@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using RePlays.Recorders;
+using RePlays.Utils;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Windows.Forms;
-using RePlays.Recorders;
-using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
@@ -28,7 +27,7 @@ namespace RePlays.Services {
             private DetectionSettings _detectionSettings = new();
             public DetectionSettings detectionSettings { get { return _detectionSettings; } set { _detectionSettings = value; } }
 
-            private Dictionary<string, string[]> _keybindings = new Dictionary<string, string[]>() {};
+            private Dictionary<string, string[]> _keybindings = new Dictionary<string, string[]>() { };
             public Dictionary<string, string[]> keybindings { get { return _keybindings; } set { _keybindings = value; } }
         }
 
@@ -51,9 +50,9 @@ namespace RePlays.Services {
 
         public static void SaveSettings(WebMessage webMessage) {
             SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data);
-            data.uploadSettings.streamableSettings.password = 
-                data.uploadSettings.streamableSettings.password != Settings.uploadSettings.streamableSettings.password 
-                ? EncryptString(data.uploadSettings.streamableSettings.password) 
+            data.uploadSettings.streamableSettings.password =
+                data.uploadSettings.streamableSettings.password != Settings.uploadSettings.streamableSettings.password
+                ? EncryptString(data.uploadSettings.streamableSettings.password)
                 : Settings.uploadSettings.streamableSettings.password;
             data.uploadSettings.rePlaysSettings.password =
                 data.uploadSettings.rePlaysSettings.password != Settings.uploadSettings.rePlaysSettings.password
@@ -62,15 +61,14 @@ namespace RePlays.Services {
             SaveSettings(data);
         }
 
-        public static void SaveSettings(SettingsJson settings=null) {
+        public static void SaveSettings(SettingsJson settings = null) {
             SettingsJson oldSettings = Settings;
             if (settings == null) settings = Settings;
             _Settings = settings;
             var options = new JsonSerializerOptions { WriteIndented = true };
             File.WriteAllText(settingsFile, JsonSerializer.Serialize(settings, options));
             Logger.WriteLine("Saved userSettings.json");
-            if(oldSettings.captureSettings.encoder != Settings.captureSettings.encoder)
-            {
+            if (oldSettings.captureSettings.encoder != Settings.captureSettings.encoder) {
                 ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls();
             }
         }

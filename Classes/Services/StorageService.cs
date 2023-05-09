@@ -1,7 +1,7 @@
-﻿using System;
+﻿using RePlays.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
@@ -15,7 +15,7 @@ namespace RePlays.Services {
 
             Logger.WriteLine(string.Format("VideoSaveDir '{0}' size is {1} gbs", folderPath, folderSizeGb));
 
-            if(SettingsService.Settings.storageSettings.manageSpaceLimit == -1 || SettingsService.Settings.storageSettings.manageTimeLimit == -1) {
+            if (SettingsService.Settings.storageSettings.manageSpaceLimit == -1 || SettingsService.Settings.storageSettings.manageTimeLimit == -1) {
                 Logger.WriteLine($"Automatically managing space if exceeds 90% of folder's disk. Currently at {percentOfUsedDisk}%");
                 if (percentOfUsedDisk > 90) {
                     Logger.WriteLine("Disk is over 90% capacity, purging sessions");
@@ -59,7 +59,8 @@ namespace RePlays.Services {
                         DeleteVideo(filePath);
                         Logger.WriteLine(filePath + " deleted due to being over maxAge");
                     }
-                } else {
+                }
+                else {
                     return;
                 }
             }

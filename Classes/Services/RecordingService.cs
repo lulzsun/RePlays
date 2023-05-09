@@ -1,12 +1,11 @@
 ﻿using RePlays.Recorders;
 using RePlays.Utils;
 using System;
+using System.Media;
 using System.Threading.Tasks;
 using System.Timers;
-using System.Media;
 
-namespace RePlays.Services
-{
+namespace RePlays.Services {
     public static class RecordingService {
         public static BaseRecorder ActiveRecorder;
 
@@ -23,7 +22,7 @@ namespace RePlays.Services
             public int Pid { get; internal set; }
             public string GameTitle { get; internal set; }
             public string Exe { get; internal set; }
-            public Session(int _Pid, string _GameTitle, string _Exe=null) {
+            public Session(int _Pid, string _GameTitle, string _Exe = null) {
                 Pid = _Pid;
                 GameTitle = _GameTitle;
                 Exe = _Exe;
@@ -34,8 +33,7 @@ namespace RePlays.Services
 
             Logger.WriteLine("RecordingService starting...");
             DetectionService.Start();
-            if (type == typeof(PlaysLTCRecorder))
-            {
+            if (type == typeof(PlaysLTCRecorder)) {
                 ActiveRecorder = new PlaysLTCRecorder();
                 ActiveRecorder.Start();
                 return;
@@ -68,23 +66,22 @@ namespace RePlays.Services
             Logger.WriteLine("Still allowed to record: " + (!IsRecording && result).ToString());
             if (!IsRecording && result) {
                 Logger.WriteLine("Current Session PID: " + currentSession.Pid.ToString());
-                
+
                 startTime = DateTime.Now;
                 recordingTimer.Elapsed += OnTimedEvent;
                 recordingTimer.Start();
-                
+
                 Logger.WriteLine($"Start Recording: {currentSession.Pid}, {currentSession.GameTitle}");
                 IsRecording = true;
                 IsPreRecording = false;
                 GameInFocus = true;
 
-                if (SettingsService.Settings.captureSettings.useRecordingStartSound)
-                {
+                if (SettingsService.Settings.captureSettings.useRecordingStartSound) {
                     System.IO.Stream soundStream = Properties.Resources.start_recording;
                     SoundPlayer startRecordingSound = new SoundPlayer(soundStream);
                     startRecordingSound.Play();
                 }
-                
+
             }
             if (!result) {
                 // recorder failed to start properly so lets restart the currentSession Pid
@@ -103,7 +100,7 @@ namespace RePlays.Services
             bool result = await ActiveRecorder.StopRecording();
 
             if (IsRecording && result) {
-                if(currentSession.Pid != 0) {
+                if (currentSession.Pid != 0) {
                     recordingTimer.Elapsed -= OnTimedEvent;
                     recordingTimer.Stop();
                     Logger.WriteLine(string.Format("Stop Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
@@ -132,27 +129,23 @@ namespace RePlays.Services
             IsRestarting = false;
         }
 
-        public static void LostFocus()
-        {
+        public static void LostFocus() {
             GameInFocus = false;
             ActiveRecorder.LostFocus();
         }
 
-        public static void GainedFocus()
-        {
+        public static void GainedFocus() {
             GameInFocus = true;
             ActiveRecorder.GainedFocus();
         }
 
-        public static int GetTotalRecordingTimeInSeconds()
-        {
+        public static int GetTotalRecordingTimeInSeconds() {
             return (int)(DateTime.Now - startTime).TotalSeconds;
         }
-        public static double GetTotalRecordingTimeInSecondsWithDecimals(DateTime? dateTime = null)
-        {
-            if(dateTime == null ) dateTime = DateTime.Now;
+        public static double GetTotalRecordingTimeInSecondsWithDecimals(DateTime? dateTime = null) {
+            if (dateTime == null) dateTime = DateTime.Now;
 
-            return (dateTime.Value - startTime).TotalMilliseconds/1000;
+            return (dateTime.Value - startTime).TotalMilliseconds / 1000;
         }
     }
 }

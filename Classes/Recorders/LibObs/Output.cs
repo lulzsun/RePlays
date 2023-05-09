@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace obs_net{
-    using obs_output_t = IntPtr;
-    using obs_data_t = IntPtr;
-    using signal_handler_t = IntPtr;
-    using video_t = IntPtr;
+namespace obs_net {
     using audio_t = IntPtr;
+    using obs_data_t = IntPtr;
+    using obs_output_t = IntPtr;
+    using signal_handler_t = IntPtr;
     using size_t = UIntPtr;
+    using video_t = IntPtr;
 
     public partial class Obs {
         [DllImport(importLibrary, CallingConvention = importCall, CharSet = importCharSet)]
