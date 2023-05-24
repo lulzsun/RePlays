@@ -12,7 +12,7 @@ namespace RePlays.Services {
         private static Timer recordingTimer = new Timer(100);
         public static DateTime startTime;
         public static double lastVideoDuration = 0;
-        private static Session currentSession = new(0, "Game Unknown");
+        private static Session currentSession = new(0, 0, "Game Unknown");
         public static bool IsRecording { get; internal set; }
         private static bool IsPreRecording { get; set; }
         private static bool IsRestarting { get; set; }
@@ -20,10 +20,12 @@ namespace RePlays.Services {
 
         public class Session {
             public int Pid { get; internal set; }
+            public nint WindowHandle { get; internal set; }
             public string GameTitle { get; internal set; }
             public string Exe { get; internal set; }
-            public Session(int _Pid, string _GameTitle, string _Exe = null) {
+            public Session(int _Pid, nint _WindowHandle, string _GameTitle, string _Exe = null) {
                 Pid = _Pid;
+                WindowHandle = _WindowHandle;
                 GameTitle = _GameTitle;
                 Exe = _Exe;
             }
@@ -45,8 +47,8 @@ namespace RePlays.Services {
             await Task.Run(() => DetectionService.CheckAlreadyRunningPrograms());
         }
 
-        public static void SetCurrentSession(int _Pid, string _GameTitle, string exeFile) {
-            currentSession = new Session(_Pid, _GameTitle, exeFile);
+        public static void SetCurrentSession(int _Pid, nint _WindowHandle, string _GameTitle, string exeFile) {
+            currentSession = new Session(_Pid, _WindowHandle, _GameTitle, exeFile);
         }
 
         public static Session GetCurrentSession() {

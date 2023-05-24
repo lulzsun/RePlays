@@ -136,12 +136,9 @@ namespace RePlays.Recorders {
             var session = RecordingService.GetCurrentSession();
 
             // If session is empty, this is a manual record attempt. Lets try to yolo record the foregroundwindow
-            if (session.Pid == 0) {
-                int processId = GetForegroundProcessId();
-                // if processId is 0, there was something wrong retrieving foreground process (this shouldn't normally happen)
-                if (processId == 0)
-                    return false;
-                DetectionService.AutoDetectGame(processId, autoRecord: false);
+            if (session.Pid == 0 && GetForegroundProcess(out int processId, out nint hwid)) {
+                DetectionService.GetExecutablePathFromWindowHandle(hwid, out string executablePath);
+                DetectionService.AutoDetectGame(processId, executablePath, hwid, autoRecord: false);
                 session = RecordingService.GetCurrentSession();
             }
 

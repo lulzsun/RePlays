@@ -528,28 +528,24 @@ namespace RePlays.Utils {
         private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll", SetLastError = true)]
         static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-        public static int GetForegroundProcessId() {
+        public static bool GetForegroundProcess(out int processId, out nint hwid) {
             IntPtr handle = GetForegroundWindow();
-            if (handle == IntPtr.Zero)
-                return 0;
-            if (GetWindowThreadProcessId(handle, out int processId) == 0)
-                return 0;
 
-            return processId;
-        }
-
-        public static int GetGPUUsage(int pid) {
-            ObjectQuery winQuery = new ObjectQuery("SELECT * FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine");
-
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(winQuery);
-
-            foreach (ManagementObject obj in searcher.Get()) {
-                var match = Regex.Match(obj["Name"].ToString(), @"^pid_(\d+)_luid.+$");
-                if (match.Success && int.Parse(match.Groups[1].Value) == pid) {
-                    return int.Parse(obj["UtilizationPercentage"].ToString());
-                }
+            if (handle == IntPtr.Zero) {
+                hwid = 0;
+                processId = 0;
+                return false;
             }
-            return 0;
+            else hwid = handle;
+
+            if (GetWindowThreadProcessId(handle, out int id) == 0) {
+                hwid = 0;
+                processId = 0;
+                return false;
+            }
+            else processId = id;
+
+            return true;
         }
 
         public static string GetReadableFileSize(double bytes) {
