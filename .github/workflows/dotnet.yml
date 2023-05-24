@@ -31,7 +31,7 @@ jobs:
         id: check_commit
         continue-on-error: true
         if: ${{ github.event_name == 'schedule' }}
-        run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "::set-output name=should_run::false"
+        run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
       
       - name: 'if not, do not build'
         if: ${{ steps.check_commit.outputs.should_run == 'false' }}
@@ -51,9 +51,9 @@ jobs:
         id: previoustag
         run: |
           if [ "${{steps.nightly.outputs.id}}" == "" ]; then
-            echo "::set-output name=tag::$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))"
+            echo "tag=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=tag::$(echo ${{steps.nightly.outputs.name}} | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')"
+            echo "tag=$(echo ${{steps.nightly.outputs.name}} | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')" >> $GITHUB_OUTPUT
           fi
         
       - name: 'Get next version'
@@ -81,7 +81,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 18.x
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v2
@@ -122,6 +122,6 @@ jobs:
           name: ${{ format('Nightly RePlays v{0}', needs.prep.outputs.version )}}
           artifacts: |
             ./bin/Deployment/Releases/RELEASES
-            ./bin/Deployment/Releases/Setup.exe
+            ./bin/Deployment/Releases/RePlaysSetup.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg

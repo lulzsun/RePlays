@@ -1,7 +1,7 @@
 @echo off
 
-set OBS_STUDIO_VERSION=29.0.0
-set OBS_DEPS_RELEASE_DATE=2022-11-21
+set OBS_STUDIO_VERSION=29.1.1
+set OBS_DEPS_RELEASE_DATE=2023-04-12
 
 set BASE_DIR=%CD%
 set OBS_STUDIO_BUILD_DIR=%BASE_DIR%\obs-studio-build
@@ -25,10 +25,10 @@ if not exist "%WINDOWS_DEPS_DIR%" (
 )
 :: download the official release of obs studio (to copy signed win-capture)
 if not exist "%OBS_STUDIO_RELEASE_DIR%" (
-	if not exist "OBS-Studio-29.0-Full-x64.zip" (
-		curl -kLO "https://github.com/obsproject/obs-studio/releases/download/%OBS_STUDIO_VERSION%/OBS-Studio-29.0-Full-x64.zip" -f --retry 5 -C -
+	if not exist "OBS-Studio-29.1.1.zip" (
+		curl -kLO "https://github.com/obsproject/obs-studio/releases/download/%OBS_STUDIO_VERSION%/OBS-Studio-29.1.1.zip" -f --retry 5 -C -
 	)
-	7z x "OBS-Studio-29.0-Full-x64.zip" -o"%OBS_STUDIO_RELEASE_DIR%"
+	7z x "OBS-Studio-29.1.1.zip" -o"%OBS_STUDIO_RELEASE_DIR%"
 )
 
 :: clean build folder if it exists from previous attempt

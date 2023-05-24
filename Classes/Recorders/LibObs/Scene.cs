@@ -2,9 +2,9 @@
 using System.Runtime.InteropServices;
 
 namespace obs_net {
-    using obs_source_t = IntPtr;
     using obs_scene_t = IntPtr;
     using obs_sceneitem_t = IntPtr;
+    using obs_source_t = IntPtr;
 
     public partial class Obs {
         [DllImport(importLibrary, CallingConvention = importCall, CharSet = importCharSet)]

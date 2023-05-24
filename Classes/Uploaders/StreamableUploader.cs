@@ -1,4 +1,6 @@
-﻿using System;
+﻿using RePlays.Services;
+using RePlays.Utils;
+using System;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -6,8 +8,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using RePlays.Services;
-using RePlays.Utils;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Uploaders {
@@ -22,7 +22,7 @@ namespace RePlays.Uploaders {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan; // sometimes, uploading can take long
                 var streamableSettings = SettingsService.Settings.uploadSettings.streamableSettings;
                 var credentials = $"{streamableSettings.email}:{DecryptString(streamableSettings.password)}";
-                
+
                 var authorization = Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authorization);
 
@@ -30,7 +30,7 @@ namespace RePlays.Uploaders {
                     var titleContent = new StringContent(title);
                     var fileContent = new ProgressableStreamContent(new StreamContent(File.OpenRead(file)), 4096,
                         (sent, total) => {
-                            WebMessage.DisplayToast(id, title, "Upload", "none", (long)((float)sent/total*100), 100);
+                            WebMessage.DisplayToast(id, title, "Upload", "none", (long)((float)sent / total * 100), 100);
                         }
                     );
                     formDataContent.Add(fileContent, "file", "video.mp4");
@@ -42,7 +42,8 @@ namespace RePlays.Uploaders {
                     var result = JsonSerializer.Deserialize<StreamableResult>(content);
                     if (result.shortcode != null) {
                         return "https://streamable.com/" + result.shortcode;
-                    } else {
+                    }
+                    else {
                         throw new NullReferenceException($"shortcode is null, but response is {(int)response.StatusCode}: {response.StatusCode}");
                     }
                 }

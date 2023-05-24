@@ -2,12 +2,10 @@ import Clip from '../components/Clip';
 import { useParams } from 'react-router-dom';
 import { secondsToHHMMSS } from '../helpers/utils';
 import { SyntheticEvent, useContext, useEffect, useRef, useState } from 'react';
-import { ContextMenuContext, ModalContext } from '../App';
 import { postMessage } from '../helpers/messenger';
-import UploadModal from './UploadModal';
+import UploadModal from '../components/UploadModal';
 import Bookmark from '../components/Bookmark';
-import { Console } from 'console';
-import { BookmarkType, BookmarkInterface } from '../index';
+import { ContextMenuContext, ModalContext } from '../Contexts';
 
 interface Props {
   videos: Video[];
@@ -391,7 +389,7 @@ export const Player: React.FC<Props> = ({videos}) => {
             })}
 
             {bookmarks && bookmarks.map((bookmark, i) => {
-                return <Bookmark key={bookmark.id} ref={e => bookmarksRef.current[i] = e!} id={bookmark.id} time={bookmark.time} type={bookmark.type} />
+              return <Bookmark key={bookmark.id} ref={e => bookmarksRef.current[i] = e!} id={bookmark.id} time={bookmark.time} type={bookmark.type} />
             })}
           </div>
           <div ref={targetSeekElement} style={{ height: 'calc(100%)', width: '6px', left: '3px'}} className="relative bg-green-500 rounded-lg h-full cursor-ew-resize"/>

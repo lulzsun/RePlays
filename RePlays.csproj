@@ -25,6 +25,11 @@
 	<PublishTrimmed>false</PublishTrimmed>
 	<TrimMode>Link</TrimMode>
   </PropertyGroup>
+	
+  <PropertyGroup>
+    <AnalysisMode>Recommended</AnalysisMode>
+	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
   
   <PropertyGroup>
     <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
@@ -62,7 +67,9 @@
   
   <ItemGroup>
     <PackageReference Include="Clowd.Squirrel" Version="2.8.40" />
-    <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="JsonPath.Net" Version="0.5.2" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.0.1" />
+	<PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1661.34" />
     <PackageReference Include="NuGet.CommandLine" Version="6.0.0">
@@ -88,20 +95,20 @@
 	</Exec>
 	<Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
 	<Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
-	<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
   </Target>
 
-  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(OS)' == 'Windows_NT' And '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net7.0-windows\obs.dll') ">
-	<Error Condition="!Exists('$(SolutionDir)obs-studio-build\obs-studio-29.0.0\build\rundir\Release\bin\64bit\obs.dll')" Text="Could not find 'obs.dll' in 'obs-studio-build\obs-studio-29.0.0\build\rundir\Release\bin\64bit\'. Run `build-libobs.cmd` to build." />
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net7.0-windows\obs.dll') ">
+	<Error Condition="!Exists('$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\obs.dll')" Text="Could not find 'obs.dll' in 'obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\'. Run `build-libobs.cmd` to build." />
 	<ItemGroup>
-	   <LIBOBSDEBUG Include="$(SolutionDir)obs-studio-build\obs-studio-29.0.0\build\rundir\Release\bin\64bit\**\*.*" />
+	   <LIBOBSDEBUG Include="$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\**\*.*" />
 	</ItemGroup>
 	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net7.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
 	<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
-	<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
 
 	<!-- Include the newly-built files in the publish output -->
@@ -170,5 +177,13 @@
 	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
 	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases --framework net7" />
   </Target>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="$(SolutionDir).editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(SolutionDir).editorconfig" />
+  </ItemGroup>
 
 </Project>

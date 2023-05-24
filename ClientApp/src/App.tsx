@@ -1,7 +1,7 @@
-import Logo from './logo.svg';
+import { ReactComponent as Logo } from './logo.svg';
 import Player from './pages/Player';
 import VideosPage from './pages/VideosPage';
-import { createContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HashRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
 import ContextMenu from './components/ContextMenu';
@@ -9,10 +9,7 @@ import { useRef } from 'react';
 import Settings from './pages/Settings';
 import Modal from './components/Modal';
 import Toast from './components/Toast';
-import {BookmarkType} from './index';
-
-export const ContextMenuContext = createContext<ContextMenuOptions | null>(null);
-export const ModalContext = createContext<ModalOptions | null>(null);
+import { ContextMenuContext, ModalContext } from './Contexts';
 
 function App() {
   const sideBarEle = useRef<HTMLDivElement | null>(null);
@@ -34,10 +31,12 @@ function App() {
   const [gameList, setGameList] = useState([]);
   // @ts-ignore
   const [clips, setClips] = useState<Video[]>(null);
+  const [clipTotal, setClipTotal] = useState(0);
+  const [clipScroll, setClipScroll] = useState(0);
   // @ts-ignore
   const [sessions, setSessions] = useState<Video[]>(null);
-  const [clipTotal, setClipTotal] = useState(0);
   const [sessionTotal, setSessionTotal] = useState(0);
+  const [sessionScroll, setSessionScroll] = useState(0);
   const [userSettings, setUserSettings] = useState<UserSettings>();
 
   function handleWebViewMessages(event: Event) {
@@ -170,11 +169,11 @@ function App() {
                     <path d="M2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3zm2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1zm2.765 5.576A.5.5 0 0 0 6 7v5a.5.5 0 0 0 .765.424l4-2.5a.5.5 0 0 0 0-.848l-4-2.5z"/>
                     <path d="M1.5 14.5A1.5 1.5 0 0 1 0 13V6a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 16 6v7a1.5 1.5 0 0 1-1.5 1.5h-13zm13-1a.5.5 0 0 0 .5-.5V6a.5.5 0 0 0-.5-.5h-13A.5.5 0 0 0 1 6v7a.5.5 0 0 0 .5.5h13z"/>
                   </svg> */}
-                  <img src={Logo} className="w-12 h-12 pr-4" alt="logo" />
+                  <Logo className="w-12 h-12 pr-4" />
                   RePlays
                 </div>
 
-                <Link to="/" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
+                <Link to="/" className="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
                 onClick={() => {
                   sideBarEle.current!.classList.toggle("-translate-x-full");
                 }}>
@@ -183,7 +182,7 @@ function App() {
                   </svg>
                   Sessions
                 </Link>
-                <Link to="/clips" className="flex items-center block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
+                <Link to="/clips" className="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
                 onClick={() => {
                   sideBarEle.current!.classList.toggle("-translate-x-full");
                 }}>
@@ -260,8 +259,8 @@ function App() {
 
               <div className="flex-auto overflow-hidden h-full p-7 text-gray-900 dark:text-white">
                 <Switch>
-                  <Route exact path="/">         <VideosPage key={"Sessions"} videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal}/></Route>
-                  <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route>
+                  <Route exact path="/">         <VideosPage key={"Sessions"} videoType={"Sessions"} gameList={gameList} game={game} sortBy={sortBy} videos={sessions} size={sessionTotal} scrollPos={sessionScroll} setScrollPos={setSessionScroll}/></Route>
+                  <Route exact path="/clips">    <VideosPage key={"Clips"} videoType={"Clips"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal} scrollPos={clipScroll} setScrollPos={setClipScroll}/></Route>
                   {/* <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route> */}
                   <Route exact path="/settings/:page"> <Settings userSettings={userSettings} setUserSettings={setUserSettings}/></Route>
                   <Route exact path="/player/:game/:video/:videoType"><Player videos={sessions != null ? sessions.concat(clips) : []}/></Route>

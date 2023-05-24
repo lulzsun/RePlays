@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace obs_net{
-    using obs_output_t = IntPtr;
-    using obs_data_t = IntPtr;
-    using signal_handler_t = IntPtr;
-    using video_t = IntPtr;
+namespace obs_net {
     using audio_t = IntPtr;
+    using obs_data_t = IntPtr;
+    using obs_output_t = IntPtr;
+    using signal_handler_t = IntPtr;
     using size_t = UIntPtr;
+    using video_t = IntPtr;
 
     public partial class Obs {
         [DllImport(importLibrary, CallingConvention = importCall, CharSet = importCharSet)]
@@ -67,6 +67,16 @@ namespace obs_net{
         /// <summary>
         /// <para>https://obsproject.com/docs/reference-outputs.html?highlight=obs_output_update#c.obs_output_set_mixers</para>
         /// <para>Sets the current audio mixer for non-encoded outputs. For multi-track outputs, this would be the equivalent of setting the mask only for the specified mixer index.</para>
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="mixers"></param>
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern void obs_output_set_mixer(obs_output_t output, size_t mixer_idx);
+
+        /// <summary>
+        /// <para>https://obsproject.com/docs/reference-outputs.html?highlight=obs_output_update#c.obs_output_set_mixers</para>
+        /// <para>Sets the current audio mixers (via mask) for non-encoded multi-track outputs.</para>
+        /// <para>If used with single-track outputs, the single-track output will use either the first set mixer track in the bitmask, or the first track if none is set in the bitmask.</para>
         /// </summary>
         /// <param name="output"></param>
         /// <param name="mixers"></param>

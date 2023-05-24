@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using RePlays.Utils;
 using System.Threading;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Diagnostics;
@@ -27,6 +28,8 @@ namespace RePlays {
         [STAThread]
         [Obsolete]
         static void Main(string[] args) {
+            CultureInfo.DefaultThreadCurrentCulture = new("en-US");
+
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
             string debugArg = "-debug";
@@ -62,7 +65,7 @@ namespace RePlays {
             };
             Process process = null;
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:3000/");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:3000/index.html");
             request.AllowAutoRedirect = false;
             request.Method = "HEAD";
 

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace obs_net{
-    using obs_output_t = IntPtr;
-    using obs_encoder_t = IntPtr;
-    using obs_data_t = IntPtr;
-    using video_t = IntPtr;
+namespace obs_net {
     using audio_t = IntPtr;
+    using obs_data_t = IntPtr;
+    using obs_encoder_t = IntPtr;
+    using obs_output_t = IntPtr;
     using size_t = UIntPtr;
+    using video_t = IntPtr;
     public partial class Obs {
         /// <summary>
         /// https://obsproject.com/docs/reference-encoders.html?highlight=obs_video_encoder_create#c.obs_video_encoder_create
@@ -43,7 +43,7 @@ namespace obs_net{
 
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_output_set_audio_encoder(obs_output_t output, obs_encoder_t encoder, UIntPtr idx);
-        
+
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern void obs_encoder_set_video(obs_encoder_t encoder, video_t video);
 

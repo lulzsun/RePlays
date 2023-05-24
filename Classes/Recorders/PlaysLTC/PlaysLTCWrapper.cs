@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Text.Json;
 using System.Runtime.CompilerServices;
-using System.Collections.Generic;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace PlaysLTCWrapper {
     public class LTCProcess {
@@ -60,8 +60,7 @@ namespace PlaysLTCWrapper {
                 streamByte = ns.ReadByte();
                 stringBuilder = new List<byte>();
 
-                while (streamByte != 12)
-                {
+                while (streamByte != 12) {
                     stringBuilder.Add(Convert.ToByte(streamByte));
                     streamByte = ns.ReadByte();
                 }
@@ -75,123 +74,123 @@ namespace PlaysLTCWrapper {
 
                 switch (type) {
                     case "LTC:handshake": {
-                        connectionHandshakeArgs = new ConnectionHandshakeArgs {
-                            Version = data.GetProperty("version").ToString(),
-                            IntegrityCheck = data.GetProperty("integrityCheck").ToString(),
-                        };
-                        OnConnectionHandshake(connectionHandshakeArgs);
-                        WriteToLog("INFO", string.Format("Connection Handshake: {0}, {1}", connectionHandshakeArgs.Version, connectionHandshakeArgs.IntegrityCheck));
-                        break;
-                    }
-                    case "LTC:processCreated": {
-                        processCreatedArgs = new ProcessCreatedArgs {
-                            Pid = data.GetProperty("pid").GetInt32(),
-                            ExeFile = data.GetProperty("exeFile").GetString(),
-                            CmdLine = data.GetProperty("cmdLine").GetString()
-                        };
-                        OnProcessCreated(processCreatedArgs);
-                        WriteToLog("INFO", string.Format("Process Created: {0}, {1}, {2}", processCreatedArgs.Pid, processCreatedArgs.ExeFile, processCreatedArgs.CmdLine));
-                        break;
-                    }
-                    case "LTC:processTerminated": {
-                        processTerminatedArgs = new ProcessTerminatedArgs {
-                            Pid = data.GetProperty("pid").GetInt32(),
-                        };
-                        OnProcessTerminated(processTerminatedArgs);
-                        WriteToLog("INFO", string.Format("Process Terminated: {0}", processTerminatedArgs.Pid));
-                        break;
-                    }
-                    case "LTC:graphicsLibLoaded": {
-                        graphicsLibLoadedArgs = new GraphicsLibLoadedArgs {
-                            Pid = data.GetProperty("pid").GetInt32(),
-                            ModuleName = data.GetProperty("moduleName").GetString()
-                        };
-                        OnGraphicsLibLoaded(graphicsLibLoadedArgs);
-                        WriteToLog("INFO", string.Format("Graphics Lib Loaded: {0}, {1}", graphicsLibLoadedArgs.Pid, graphicsLibLoadedArgs.ModuleName));
-                        break;
-                    }
-                    case "LTC:moduleLoaded": {
-                        moduleLoadedArgs = new ModuleLoadedArgs {
-                            Pid = data.GetProperty("pid").GetInt32(),
-                            ModuleName = data.GetProperty("moduleName").GetString()
-                        };
-                        OnModuleLoaded(moduleLoadedArgs);
-                        WriteToLog("INFO", string.Format("Plays-ltc Recording Module Loaded: {0}, {1}", moduleLoadedArgs.Pid, moduleLoadedArgs.ModuleName));
-                        break;
-                    }
-                    case "LTC:gameLoaded": {
-                        gameLoadedArgs = new GameLoadedArgs {
-                            Pid = data.GetProperty("pid").GetInt32(),
-                            Width = data.GetProperty("size").GetProperty("width").GetInt32(),
-                            Height = data.GetProperty("size").GetProperty("height").GetInt32(),
-                        };
-                        OnGameLoaded(gameLoadedArgs);
-                        WriteToLog("INFO", string.Format("Game finished loading: {0}, {1}x{2}", gameLoadedArgs.Pid, gameLoadedArgs.Width, gameLoadedArgs.Height));
-                        break;
-                    }
-                    case "LTC:gameBehaviorDetected": {
-                        gameBehaviorDetectedArgs = new GameBehaviorDetectedArgs {
-                            Pid = data.GetProperty("pid").GetInt32()
-                        };
-                        OnGameBehaviorDetected(gameBehaviorDetectedArgs);
-                        WriteToLog("INFO", string.Format("Game behavior detected for pid: {0}", gameBehaviorDetectedArgs.Pid));
-                        break;
-                    }
-                    case "LTC:videoCaptureReady": {
-                        videoCaptureReadyArgs = new VideoCaptureReadyArgs {
-                            Pid = data.GetProperty("pid").GetInt32()
-                        };
-                        OnVideoCaptureReady(videoCaptureReadyArgs);
-                        WriteToLog("INFO", string.Format("Video capture ready, can start recording: {0}", videoCaptureReadyArgs.Pid));
-                        break;
-                    }
-                    case "LTC:recordingError": {
-                        int errorCode = data.GetProperty("code").GetInt32();
-                        string errorDetails = "";
-                        switch (errorCode) {
-                            case 11:
-                                errorDetails = "- Issue with video directory";
-                                break;
-                            case 12:
-                                errorDetails = "- Issue with temp directory";
-                                break;
-                            case 16:
-                                errorDetails = "- Issue with disk space";
-                                break;
-                            default:
-                                break;
+                            connectionHandshakeArgs = new ConnectionHandshakeArgs {
+                                Version = data.GetProperty("version").ToString(),
+                                IntegrityCheck = data.GetProperty("integrityCheck").ToString(),
+                            };
+                            OnConnectionHandshake(connectionHandshakeArgs);
+                            WriteToLog("INFO", string.Format("Connection Handshake: {0}, {1}", connectionHandshakeArgs.Version, connectionHandshakeArgs.IntegrityCheck));
+                            break;
                         }
-                        WriteToLog("ERROR", string.Format("Recording Error code: {0} {1}", errorCode, errorDetails));
-                        break;
-                    }
+                    case "LTC:processCreated": {
+                            processCreatedArgs = new ProcessCreatedArgs {
+                                Pid = data.GetProperty("pid").GetInt32(),
+                                ExeFile = data.GetProperty("exeFile").GetString(),
+                                CmdLine = data.GetProperty("cmdLine").GetString()
+                            };
+                            OnProcessCreated(processCreatedArgs);
+                            WriteToLog("INFO", string.Format("Process Created: {0}, {1}, {2}", processCreatedArgs.Pid, processCreatedArgs.ExeFile, processCreatedArgs.CmdLine));
+                            break;
+                        }
+                    case "LTC:processTerminated": {
+                            processTerminatedArgs = new ProcessTerminatedArgs {
+                                Pid = data.GetProperty("pid").GetInt32(),
+                            };
+                            OnProcessTerminated(processTerminatedArgs);
+                            WriteToLog("INFO", string.Format("Process Terminated: {0}", processTerminatedArgs.Pid));
+                            break;
+                        }
+                    case "LTC:graphicsLibLoaded": {
+                            graphicsLibLoadedArgs = new GraphicsLibLoadedArgs {
+                                Pid = data.GetProperty("pid").GetInt32(),
+                                ModuleName = data.GetProperty("moduleName").GetString()
+                            };
+                            OnGraphicsLibLoaded(graphicsLibLoadedArgs);
+                            WriteToLog("INFO", string.Format("Graphics Lib Loaded: {0}, {1}", graphicsLibLoadedArgs.Pid, graphicsLibLoadedArgs.ModuleName));
+                            break;
+                        }
+                    case "LTC:moduleLoaded": {
+                            moduleLoadedArgs = new ModuleLoadedArgs {
+                                Pid = data.GetProperty("pid").GetInt32(),
+                                ModuleName = data.GetProperty("moduleName").GetString()
+                            };
+                            OnModuleLoaded(moduleLoadedArgs);
+                            WriteToLog("INFO", string.Format("Plays-ltc Recording Module Loaded: {0}, {1}", moduleLoadedArgs.Pid, moduleLoadedArgs.ModuleName));
+                            break;
+                        }
+                    case "LTC:gameLoaded": {
+                            gameLoadedArgs = new GameLoadedArgs {
+                                Pid = data.GetProperty("pid").GetInt32(),
+                                Width = data.GetProperty("size").GetProperty("width").GetInt32(),
+                                Height = data.GetProperty("size").GetProperty("height").GetInt32(),
+                            };
+                            OnGameLoaded(gameLoadedArgs);
+                            WriteToLog("INFO", string.Format("Game finished loading: {0}, {1}x{2}", gameLoadedArgs.Pid, gameLoadedArgs.Width, gameLoadedArgs.Height));
+                            break;
+                        }
+                    case "LTC:gameBehaviorDetected": {
+                            gameBehaviorDetectedArgs = new GameBehaviorDetectedArgs {
+                                Pid = data.GetProperty("pid").GetInt32()
+                            };
+                            OnGameBehaviorDetected(gameBehaviorDetectedArgs);
+                            WriteToLog("INFO", string.Format("Game behavior detected for pid: {0}", gameBehaviorDetectedArgs.Pid));
+                            break;
+                        }
+                    case "LTC:videoCaptureReady": {
+                            videoCaptureReadyArgs = new VideoCaptureReadyArgs {
+                                Pid = data.GetProperty("pid").GetInt32()
+                            };
+                            OnVideoCaptureReady(videoCaptureReadyArgs);
+                            WriteToLog("INFO", string.Format("Video capture ready, can start recording: {0}", videoCaptureReadyArgs.Pid));
+                            break;
+                        }
+                    case "LTC:recordingError": {
+                            int errorCode = data.GetProperty("code").GetInt32();
+                            string errorDetails = "";
+                            switch (errorCode) {
+                                case 11:
+                                    errorDetails = "- Issue with video directory";
+                                    break;
+                                case 12:
+                                    errorDetails = "- Issue with temp directory";
+                                    break;
+                                case 16:
+                                    errorDetails = "- Issue with disk space";
+                                    break;
+                                default:
+                                    break;
+                            }
+                            WriteToLog("ERROR", string.Format("Recording Error code: {0} {1}", errorCode, errorDetails));
+                            break;
+                        }
                     case "LTC:gameScreenSizeChanged": {
-                        WriteToLog("INFO", string.Format("Game screen size changed, {0}x{1}", data.GetProperty("width").GetInt32(), data.GetProperty("height").GetInt32()));
-                        break;
-                    }
+                            WriteToLog("INFO", string.Format("Game screen size changed, {0}x{1}", data.GetProperty("width").GetInt32(), data.GetProperty("height").GetInt32()));
+                            break;
+                        }
                     case "LTC:fullscreenStateChanged": {
-                        break;
-                    }
+                            break;
+                        }
                     case "LTC:saveStarted": {
-                        WriteToLog("INFO", string.Format("Started saving recording to file, {0}", data.GetProperty("filename").GetString()));
-                        break;
+                            WriteToLog("INFO", string.Format("Started saving recording to file, {0}", data.GetProperty("filename").GetString()));
+                            break;
                         }
                     case "LTC:saveFinished": {
-                        saveFinishedArgs = new SaveFinishedArgs {
-                            FileName = data.GetProperty("fileName").GetString(),
-                            Width = data.GetProperty("width").GetInt32(),
-                            Height = data.GetProperty("height").GetInt32(),
-                            Duration = data.GetProperty("duration").GetInt32(),
-                            RecMode = data.GetProperty("recMode").GetInt32(),
-                        };
-                        OnSaveFinished(saveFinishedArgs);
-                        WriteToLog("INFO", string.Format("Finished saving recording to file, {0}, {1}x{2}, {3}, {4}",
-                            saveFinishedArgs.FileName,
-                            saveFinishedArgs.Width,
-                            saveFinishedArgs.Height,
-                            saveFinishedArgs.Duration,
-                            saveFinishedArgs.RecMode));
-                        break;
-                    }
+                            saveFinishedArgs = new SaveFinishedArgs {
+                                FileName = data.GetProperty("fileName").GetString(),
+                                Width = data.GetProperty("width").GetInt32(),
+                                Height = data.GetProperty("height").GetInt32(),
+                                Duration = data.GetProperty("duration").GetInt32(),
+                                RecMode = data.GetProperty("recMode").GetInt32(),
+                            };
+                            OnSaveFinished(saveFinishedArgs);
+                            WriteToLog("INFO", string.Format("Finished saving recording to file, {0}, {1}x{2}, {3}, {4}",
+                                saveFinishedArgs.FileName,
+                                saveFinishedArgs.Width,
+                                saveFinishedArgs.Height,
+                                saveFinishedArgs.Duration,
+                                saveFinishedArgs.RecMode));
+                            break;
+                        }
                     default:
                         WriteToLog("WARNING", string.Format("WAS SENT AN EVENT THAT DOES NOT MATCH CASE: {0}", msg));
                         break;
@@ -295,7 +294,7 @@ namespace PlaysLTCWrapper {
         }
 
         // setMicRecordingDevice accepts two empty string parameters for default setting
-        public void SetMicRecordingDevice(string deviceId="", string deviceLabel="") {
+        public void SetMicRecordingDevice(string deviceId = "", string deviceLabel = "") {
             string data =
             "{" +
                 "'deviceId': '" + deviceId + "', " +
@@ -333,7 +332,7 @@ namespace PlaysLTCWrapper {
             data = data.Replace("'", "\"");
             string json = "{ \"type\": \"" + type + "\", \"data\": " + data + " }\f";
 
-            if(ns != null && server != null) {
+            if (ns != null && server != null) {
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
                 ns.Write(jsonBytes, 0, jsonBytes.Length);     //sending the message
                 WriteToLog("SENT", json);
@@ -353,7 +352,7 @@ namespace PlaysLTCWrapper {
             public string File { get; internal set; }
             public int Line { get; internal set; }
         }
-        public void WriteToLog(string _Title, string _Message, 
+        public void WriteToLog(string _Title, string _Message,
                 [CallerFilePath] string _File = null,
                 [CallerLineNumber] int _Line = 0) {
             LogArgs logArgs = new LogArgs {
@@ -382,7 +381,7 @@ namespace PlaysLTCWrapper {
         #endregion
 
         #region ProcessCreated
-        public struct ProcessCreatedArgs { 
+        public struct ProcessCreatedArgs {
             public int Pid { get; internal set; }
             public string ExeFile { get; internal set; }
             public string CmdLine { get; internal set; }

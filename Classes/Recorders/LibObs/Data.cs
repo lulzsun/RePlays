@@ -2,8 +2,8 @@
 using System.Runtime.InteropServices;
 
 namespace obs_net {
-    using obs_data_t = IntPtr;
     using obs_data_array_t = IntPtr;
+    using obs_data_t = IntPtr;
     using size_t = UIntPtr;
 
     public partial class Obs {
@@ -36,7 +36,7 @@ namespace obs_net {
         [DllImport(importLibrary, CallingConvention = importCall, CharSet = importCharSet)]
         public static extern void obs_data_set_array(
             obs_data_t data,
-            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(UTF8StringMarshaler))] string name, 
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(UTF8StringMarshaler))] string name,
             obs_data_array_t array);
 
         [DllImport(importLibrary, CallingConvention = importCall)]
@@ -53,7 +53,7 @@ namespace obs_net {
 
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern size_t obs_data_array_push_back(
-            obs_data_array_t array, 
+            obs_data_array_t array,
             obs_data_t obj);
 
         [DllImport(importLibrary, CallingConvention = importCall)]

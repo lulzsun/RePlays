@@ -1,4 +1,7 @@
+using RePlays.Recorders;
+using RePlays.Services;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -9,6 +12,7 @@ using RePlays.Services;
 using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Utils {
     public class RetrieveVideos {
@@ -28,17 +32,13 @@ namespace RePlays.Utils {
         }
     }
 
-    public class CompressClip
-    {
+    public class CompressClip {
         private string _filePath;
-        public string filePath
-        {
-            get
-            {
+        public string filePath {
+            get {
                 return _filePath.Replace("/", "\\");
             }
-            set
-            {
+            set {
                 _filePath = value;
             }
         }
@@ -103,14 +103,11 @@ namespace RePlays.Utils {
             }
         }
         private string _game;
-        public string game
-        {
-            get
-            {
+        public string game {
+            get {
                 return _game;
             }
-            set
-            {
+            set {
                 _game = value;
             }
         }
@@ -224,8 +221,7 @@ namespace RePlays.Utils {
                         Process.Start("explorer.exe", path);
                     }
                     break;
-                case "OpenLink":
-                    {
+                case "OpenLink": {
                         Process browserProcess = new Process();
                         browserProcess.StartInfo.UseShellExecute = true;
                         browserProcess.StartInfo.FileName = webMessage.data;
@@ -234,8 +230,7 @@ namespace RePlays.Utils {
 
                     break;
 
-                case "CompressClip":
-                    {
+                case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
                         string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
                         CompressFile(filePath, data.game);
@@ -265,25 +260,23 @@ namespace RePlays.Utils {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
                             var realFilePath = Path.Join(GetPlaysFolder(), filePath);
-                            var thumbPath = Path.Join(Path.GetDirectoryName(realFilePath), @"/.thumbs/", Path.GetFileNameWithoutExtension(realFilePath) + ".png");
                             var successfulDelete = false;
                             var failedLoops = 0;
-                            while(!successfulDelete) {
+                            while (!successfulDelete) {
                                 try {
-                                    File.Delete(realFilePath);
-                                    File.Delete(thumbPath);
+                                    DeleteVideo(realFilePath);
                                     successfulDelete = true;
                                 }
-                                catch (Exception) {
-                                    if(failedLoops == 5) {
-                                        DisplayModal("Failed to delete file (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
+                                catch (Exception e) {
+                                    if (failedLoops == 5) {
+                                        DisplayModal("Failed to delete video (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
+                                        Logger.WriteLine(String.Format("Failed to delete video: {0}", e.Message));
                                         break;
                                     }
-                                    Logger.WriteLine(String.Format("Failed to delete file(s): {0} {1} will retry in 2 seconds", realFilePath, thumbPath));
                                     await Task.Delay(2000);
                                     failedLoops++;
                                 }
-                            } 
+                            }
                         }
                         var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
                         SendMessage(t);
@@ -305,7 +298,7 @@ namespace RePlays.Utils {
                 case "UploadVideo": {
                         UploadVideo data = JsonSerializer.Deserialize<UploadVideo>(webMessage.data);
                         var filePath = Path.Join(GetPlaysFolder(), data.file);
-                        if(File.Exists(filePath)) {
+                        if (File.Exists(filePath)) {
                             Logger.WriteLine($"Preparing to upload {filePath} to {data.destination}");
                             UploadService.Upload(data.destination, data.title, filePath, data.game);
                         }
@@ -327,8 +320,7 @@ namespace RePlays.Utils {
                         fbd.Filter = "Executable files (*.exe)|*.exe";
                         System.Windows.Forms.DialogResult result = fbd.ShowDialog();
                         if (result != System.Windows.Forms.DialogResult.OK && string.IsNullOrWhiteSpace(fbd.FileName)) break;
-                        switch (list)
-                        {
+                        switch (list) {
                             case "blacklist":
                                 Settings.detectionSettings.blacklist.Add(fbd.FileName.ToLower());
                                 Logger.WriteLine($"Added {fbd.FileName} to blacklist");

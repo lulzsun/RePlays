@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
-import { ModalContext } from "../App";
 import { postMessage } from '../helpers/messenger';
+import { ModalContext } from "../Contexts";
 
 interface Props {
     video: string;
@@ -43,6 +43,7 @@ export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
               <option value="Streamable">Streamable</option>
               {/* <option value="Youtube">Youtube</option> */}
               <option value="LocalFolder">Local Folder</option>
+              <option value="Custom">Custom</option>  
             </select>
           </div>
         </div>

@@ -17,11 +17,11 @@ namespace RePlays.Recorders {
         public abstract void LostFocus();
         public abstract void GainedFocus();
 
-        public IntPtr GetWindowHandleByProcessId(int processId, bool lazy=false) {
+        public IntPtr GetWindowHandleByProcessId(int processId, bool lazy = false) {
             IntPtr handle;
             try {
-                if(!lazy)   handle = EnumerateProcessWindowHandles(processId).First();
-                else        handle = Process.GetProcessById(processId).MainWindowHandle;
+                if (!lazy) handle = EnumerateProcessWindowHandles(processId).First();
+                else handle = Process.GetProcessById(processId).MainWindowHandle;
             }
             catch (Exception e) {
                 Logger.WriteLine($"There was an issue retrieving the window handle for process id [{processId}]: {e.Message}");
@@ -67,8 +67,7 @@ namespace RePlays.Recorders {
         [DllImport("user32.dll")]
         private static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
 
-        public bool IsFullscreen(IntPtr wndHandle, Screen screen)
-        {
+        public bool IsFullscreen(IntPtr wndHandle, Screen screen) {
             Rect r = new Rect();
             GetWindowRect(wndHandle, ref r);
             return new Rectangle(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top)

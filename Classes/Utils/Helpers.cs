@@ -1,3 +1,4 @@
+using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -45,7 +46,12 @@ namespace RePlays.Utils {
             if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any()) {
                 SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
                 SettingsService.SaveSettings();
-                WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
+                if (frmMain.webView2 == null) {
+                    Task.Run(() => SendDisplayModalWithDelay("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info", 10000));
+                }
+                else {
+                    WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
+                }
                 return SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
             }
 
@@ -54,8 +60,7 @@ namespace RePlays.Utils {
             return videoSaveDir;
         }
 
-        public static async Task SendDisplayModalWithDelay(string context, string title, string icon, int delay)
-        {
+        public static async Task SendDisplayModalWithDelay(string context, string title, string icon, int delay) {
             await Task.Delay(delay);
             WebMessage.DisplayModal(context, title, icon);
         }
@@ -150,7 +155,7 @@ namespace RePlays.Utils {
                     if (id.StartsWith("{0.0.0.00000000}")) outputCache.Add(dev);
                     else inputCache.Add(dev);
                     Logger.WriteLine(dev.deviceId + " | " + dev.deviceLabel);
-                    
+
                 }
             }
             if (SettingsService.Settings.captureSettings.inputDevices.Count == 0) {
@@ -181,19 +186,32 @@ namespace RePlays.Utils {
         }
 
         public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
+            var videoExtensions = new[] { ".mp4", ".mkv" };
             List<string> allfiles = new();
             switch (SortBy) {
                 case "Latest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).CreationTime));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderByDescending(d => new FileInfo(d).CreationTime)
+                        .ToList();
                     break;
                 case "Oldest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).CreationTime));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderBy(d => new FileInfo(d).CreationTime)
+                        .ToList();
                     break;
                 case "Smallest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderBy(d => new FileInfo(d).Length));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderBy(d => new FileInfo(d).Length)
+                        .ToList();
                     break;
                 case "Largest":
-                    allfiles = new List<string>(Directory.GetFiles(GetPlaysFolder(), "*.mp4*", SearchOption.AllDirectories).OrderByDescending(d => new FileInfo(d).Length));
+                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
+                        .OrderByDescending(d => new FileInfo(d).Length)
+                        .ToList();
                     break;
                 default:
                     return null;
@@ -209,7 +227,8 @@ namespace RePlays.Utils {
             Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
 
             foreach (string file in allfiles) {
-                if (!(file.EndsWith("-ses.mp4") || file.EndsWith("-man.mp4") || file.EndsWith("-clp.mp4")) || !File.Exists(file)) continue;
+                var fileWithoutExt = Path.GetFileNameWithoutExtension(file);
+                if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !File.Exists(file)) continue;
 
                 Video video = new();
                 video.size = new FileInfo(file).Length;
@@ -233,7 +252,7 @@ namespace RePlays.Utils {
                 if (!File.Exists(thumb)) continue;
                 video.thumbnail = Path.GetFileName(thumb);
 
-                if (file.EndsWith("-ses.mp4") || file.EndsWith("-man.mp4")) {
+                if (fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man")) {
                     videoList.sessions.Add(video);
                     videoList.sessionsSize += video.size;
                 }
@@ -274,7 +293,7 @@ namespace RePlays.Utils {
                 // if exception happens, usually means video is not valid?
                 Logger.WriteLine($"Issue retrieving duration of video? exception: '{e.Message}'");
                 Logger.WriteLine($"arguments: {startInfo.Arguments}");
-                Logger.WriteLine($"reason: {stdout+stderr}");
+                Logger.WriteLine($"reason: {stdout + stderr}");
                 duration = 0;
             }
             process.WaitForExit();
@@ -284,10 +303,13 @@ namespace RePlays.Utils {
         }
 
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".png");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string[] thumbnailExtensions = new string[] { ".png", ".webp" };
+            string thumbnailPath = thumbnailExtensions.Select(ext => Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ext))
+                .FirstOrDefault(File.Exists);
 
-            if (File.Exists(thumbnailPath)) return thumbnailPath;
+            if (thumbnailPath != null) return thumbnailPath;
+            else thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".webp");
             if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
             if (duration == 0) {
@@ -303,8 +325,8 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg"),
-                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"", 
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"",
                     (duration / 2).ToString(CultureInfo.InvariantCulture), videoPath, thumbnailPath),
             };
 
@@ -349,6 +371,20 @@ namespace RePlays.Utils {
                 return metadata;
             }
         }
+
+        public static void DeleteVideo(string filePath) {
+            var metaPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\");
+            string[] metaFileExtensions = new string[] { ".png", ".webp", ".metadata" };
+            IEnumerable<string> metaFilesToDelete = metaFileExtensions.SelectMany(ext => Directory.GetFiles(metaPath, Path.GetFileNameWithoutExtension(filePath) + ext));
+
+            Logger.WriteLine($"Deleting file: {filePath}");
+            File.Delete(filePath);
+            foreach (string metaFile in metaFilesToDelete) {
+                Logger.WriteLine($"Deleting file: {metaFile}");
+                File.Delete(metaFile);
+            }
+        }
+
         public static void BackupBookmarks(string videoName, string json) {
             try {
                 Logger.WriteLine($"Backing up bookmarks for video: {videoName}");
@@ -356,7 +392,7 @@ namespace RePlays.Utils {
                 Logger.WriteLine($"Backup file location: {BookmarkBackupFilePath}");
                 File.WriteAllText(BookmarkBackupFilePath, json);
             }
-            catch(Exception ex) {
+            catch (Exception ex) {
                 Logger.WriteLine($"Could not backup {videoName}. Exception: {ex.Message}");
             }
         }
@@ -378,7 +414,7 @@ namespace RePlays.Utils {
                     Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
                 }
             }
-            catch(Exception ex) {
+            catch (Exception ex) {
                 Logger.WriteLine($"Could not load backup bookmarks. Exception: {ex.Message}");
             }
         }
@@ -517,45 +553,35 @@ namespace RePlays.Utils {
         private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll", SetLastError = true)]
         static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-        public static int GetForegroundProcessId()
-        {
+        public static bool GetForegroundProcess(out int processId, out nint hwid) {
             IntPtr handle = GetForegroundWindow();
-            if (handle == IntPtr.Zero)
-                return 0;
-            if (GetWindowThreadProcessId(handle, out int processId) == 0)
-                return 0;
 
-            return processId;
-        }
-
-        public static int GetGPUUsage(int pid)
-        {
-            ObjectQuery winQuery = new ObjectQuery("SELECT * FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine");
-
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(winQuery);
-
-            foreach (ManagementObject obj in searcher.Get())
-            {
-                var match = Regex.Match(obj["Name"].ToString(), @"^pid_(\d+)_luid.+$");
-                if (match.Success && int.Parse(match.Groups[1].Value) == pid)
-                {
-                    return int.Parse(obj["UtilizationPercentage"].ToString());
-                }
+            if (handle == IntPtr.Zero) {
+                hwid = 0;
+                processId = 0;
+                return false;
             }
-            return 0;
+            else hwid = handle;
+
+            if (GetWindowThreadProcessId(handle, out int id) == 0) {
+                hwid = 0;
+                processId = 0;
+                return false;
+            }
+            else processId = id;
+
+            return true;
         }
 
-        public static string GetReadableFileSize(double bytes)
-        {
+        public static string GetReadableFileSize(double bytes) {
             string[] sizes = { "B", "KB", "MB", "GB", "TB" };
             int order = 0;
-            while (bytes >= 1024 && order < sizes.Length - 1)
-            {
+            while (bytes >= 1024 && order < sizes.Length - 1) {
                 order++;
                 bytes = bytes / 1024;
             }
 
-            return String.Format("{0:0.##} {1}", bytes, sizes[order]);
+            return string.Format("{0:0.##} {1}", bytes, sizes[order]);
         }
 
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {

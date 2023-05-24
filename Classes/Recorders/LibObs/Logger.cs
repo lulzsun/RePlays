@@ -4,10 +4,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace obs_net
-{
-    public partial class Obs
-    {
+namespace obs_net {
+    public partial class Obs {
         public enum LogErrorLevel { error = 100, warning = 200, info = 300, debug = 400 };
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = true)]
@@ -17,10 +15,8 @@ namespace obs_net
         public static extern void base_set_log_handler(log_handler_t handler, IntPtr param);
     }
 
-    public class va_list_Helper
-    {
-        public static unsafe object[] VaListToArray(string format, IntPtr va_list)
-        {
+    public class va_list_Helper {
+        public static unsafe object[] VaListToArray(string format, IntPtr va_list) {
             var vaList = new va_list(va_list);
             return vaList.GetObjectsByFormat(format);
         }
@@ -36,12 +32,10 @@ namespace obs_net
 	 * https://github.com/GoaLitiuM/libobs-sharp/blob/7b93185d4c51702a852565c03a14c9661fa50c61/libobs-sharp/src/Utility/va_list.cs#L24
 	 * Licensed under the GNU General Public License.
 	*/
-    public static class Printf
-    {
+    public static class Printf {
         /// <summary> Determines whether the specified value is of numeric type. </summary>
         /// <param name="o"> The object to check. </param>
-        public static bool IsNumericType(object o)
-        {
+        public static bool IsNumericType(object o) {
             return (o is byte ||
                 o is sbyte ||
                 o is short ||
@@ -58,10 +52,8 @@ namespace obs_net
         /// <summary> Determines whether the specified value is positive. </summary>
         /// <param name="value"> The value. </param>
         /// <param name="zeroIsPositive"> Treat value 0 as positive. </param>
-        public static bool IsPositive(object value, bool zeroIsPositive)
-        {
-            switch (Type.GetTypeCode(value.GetType()))
-            {
+        public static bool IsPositive(object value, bool zeroIsPositive) {
+            switch (Type.GetTypeCode(value.GetType())) {
                 case TypeCode.SByte:
                     return (zeroIsPositive ? (sbyte)value >= 0 : (sbyte)value > 0);
                 case TypeCode.Int16:
@@ -93,11 +85,9 @@ namespace obs_net
 
         /// <summary> Converts the boxed type to its corresponding unsigned type. </summary>
         /// <param name="value"> The value. </param>
-        public static object ToUnsigned(object value)
-        {
+        public static object ToUnsigned(object value) {
             TypeCode code = Type.GetTypeCode(value.GetType());
-            switch (code)
-            {
+            switch (code) {
                 case TypeCode.SByte:
                     return (byte)((sbyte)value);
                 case TypeCode.Int16:
@@ -125,10 +115,8 @@ namespace obs_net
         /// <summary> Converts the boxed type to integer type </summary>
         /// <param name="value"> The value. </param>
         /// <param name="round"> Round floating-point values to nearest integer. </param>
-        public static object ToInteger(object value, bool round)
-        {
-            switch (Type.GetTypeCode(value.GetType()))
-            {
+        public static object ToInteger(object value, bool round) {
+            switch (Type.GetTypeCode(value.GetType())) {
                 case TypeCode.SByte:
                 case TypeCode.Int16:
                 case TypeCode.Int32:
@@ -151,10 +139,8 @@ namespace obs_net
             }
         }
 
-        public static int UnboxToInt(object value, bool round)
-        {
-            switch (Type.GetTypeCode(value.GetType()))
-            {
+        public static int UnboxToInt(object value, bool round) {
+            switch (Type.GetTypeCode(value.GetType())) {
                 case TypeCode.SByte:
                     return (int)((sbyte)value);
                 case TypeCode.Int16:
@@ -185,35 +171,29 @@ namespace obs_net
             }
         }
 
-        public static void printf(string format, params object[] args)
-        {
+        public static void printf(string format, params object[] args) {
             Console.Write(Printf.sprintf(format, args));
         }
 
-        public static void fprintf(TextWriter dest, string format, params object[] args)
-        {
+        public static void fprintf(TextWriter dest, string format, params object[] args) {
             dest.Write(Printf.sprintf(format, args));
         }
 
-        public static void puts(string format)
-        {
+        public static void puts(string format) {
             Console.WriteLine(format);
         }
 
-        public static void fputs(TextWriter dest, string format)
-        {
+        public static void fputs(TextWriter dest, string format) {
             dest.WriteLine(format);
         }
 
-        public static string[] GetFormatSpecifiers(string format)
-        {
+        public static string[] GetFormatSpecifiers(string format) {
             if (format.IndexOf('%') == -1)
                 return null;
 
             // find specifiers from format string 
             List<int> indices = new List<int>();
-            for (int j = 0; j < format.Length; j++)
-            {
+            for (int j = 0; j < format.Length; j++) {
                 j = format.IndexOf('%', j);
 
                 if (j == -1)
@@ -229,8 +209,7 @@ namespace obs_net
                 return null;
 
             List<string> formats = new List<string>(indices.Count);
-            for (int mi = 0; mi < indices.Count; mi++)
-            {
+            for (int mi = 0; mi < indices.Count; mi++) {
                 string formatSpecifier = format.Substring(indices[mi], (mi + 1 < indices.Count ? indices[mi + 1] : format.Length) - indices[mi]);
                 if (!string.IsNullOrWhiteSpace(formatSpecifier))
                     formats.Add(formatSpecifier);
@@ -239,8 +218,7 @@ namespace obs_net
             return formats.ToArray();
         }
 
-        public class FormatSpecificationInfo
-        {
+        public class FormatSpecificationInfo {
             public string specification;
             //public int parameter;
             public char type;
@@ -250,8 +228,7 @@ namespace obs_net
         };
 
         [Flags]
-        public enum FormatFlags
-        {
+        public enum FormatFlags {
             // Type length 
             IsLong = 0x0001,        // l
             IsLongLong = 0x0002,    // ll
@@ -273,13 +250,11 @@ namespace obs_net
             DynamicPrecision = 0x20000,
         };
 
-        public static FormatSpecificationInfo GetFormatSpecifierInfo(string specification)
-        {
+        public static FormatSpecificationInfo GetFormatSpecifierInfo(string specification) {
             if (string.IsNullOrWhiteSpace(specification))
                 return null;
 
-            FormatSpecificationInfo info = new FormatSpecificationInfo()
-            {
+            FormatSpecificationInfo info = new FormatSpecificationInfo() {
                 type = '\0',
                 width = int.MinValue,
                 precision = 6,
@@ -292,12 +267,10 @@ namespace obs_net
 
             // TODO: parse parameter index 
 
-            for (int i = 0; i < specification.Length && info.type == '\0'; i++)
-            {
+            for (int i = 0; i < specification.Length && info.type == '\0'; i++) {
                 char c = specification[i];
 
-                switch (c)
-                {
+                switch (c) {
                     case '%':
                         if (start == -1)
                             start = i;
@@ -328,10 +301,8 @@ namespace obs_net
                         break;
 
                     // precision
-                    case '.':
-                        {
-                            for (int j = i + 1; j < specification.Length; j++)
-                            {
+                    case '.': {
+                            for (int j = i + 1; j < specification.Length; j++) {
                                 if (specification[j] == '*')
                                     info.flags |= FormatFlags.DynamicPrecision;
                                 else if (char.IsNumber(specification[j]))
@@ -365,17 +336,14 @@ namespace obs_net
                         info.flags |= FormatFlags.DynamicWidth;
                         break;
 
-                    default:
-                        {
-                            if (char.IsNumber(c))
-                            {
+                    default: {
+                            if (char.IsNumber(c)) {
                                 if (width == "" && c == '0')
                                     info.flags |= FormatFlags.ZeroPad;
                                 else
                                     width += c;
                             }
-                            else if (char.IsLetter(c) && info.type == '\0')
-                            {
+                            else if (char.IsLetter(c) && info.type == '\0') {
                                 info.type = c;
                                 info.specification = specification.Substring(start, i + 1 - start);
                                 fsLength = i + 1;
@@ -396,8 +364,7 @@ namespace obs_net
             if (info.type == 's' ||
                 info.type == 'c' ||
                 Char.ToUpper(info.type) == 'X' ||
-                info.type == 'o')
-            {
+                info.type == 'o') {
                 info.precision = int.MinValue;
             }
 
@@ -409,8 +376,7 @@ namespace obs_net
             return info;
         }
 
-        public static string sprintf(string format, params object[] args)
-        {
+        public static string sprintf(string format, params object[] args) {
             string[] formatSpecifiers = GetFormatSpecifiers(format);
             if (formatSpecifiers == null)
                 return format;
@@ -422,8 +388,7 @@ namespace obs_net
             int shift = 0;
 
             // walkthrough every found specifier
-            foreach (string spec in formatSpecifiers)
-            {
+            foreach (string spec in formatSpecifiers) {
                 var info = GetFormatSpecifierInfo(spec);
                 specifierPosition = format.IndexOf("%", specifierPosition);
 
@@ -449,8 +414,7 @@ namespace obs_net
                 int paramIx = defaultParamIx;
                 object o = null;
 
-                if (info.flags.HasFlag(FormatFlags.DynamicWidth))
-                {
+                if (info.flags.HasFlag(FormatFlags.DynamicWidth)) {
                     fieldLength = (int)args[paramIx];
                     paramIx++;
                     defaultParamIx++;
@@ -458,8 +422,7 @@ namespace obs_net
                 if (info.flags.HasFlag(FormatFlags.ArchSize))
                     fieldLength = IntPtr.Size * 2;
 
-                if (info.flags.HasFlag(FormatFlags.DynamicPrecision))
-                {
+                if (info.flags.HasFlag(FormatFlags.DynamicPrecision)) {
                     fieldPrecision = (int)args[paramIx];
                     paramIx++;
                     defaultParamIx++;
@@ -470,8 +433,7 @@ namespace obs_net
                     o = args[paramIx];
 
                 // convert value parameters to a string depending on the formatSpecifier
-                switch (formatSpecifier)
-                {
+                switch (formatSpecifier) {
                     case '%':   // % character
                         w = "%";
                         break;
@@ -585,22 +547,19 @@ namespace obs_net
         private static string FormatOct(string specifier, bool alternate,
                                             int fieldLength, int fieldPrecision,
                                             bool leftToRight,
-                                            char padding, object value)
-        {
+                                            char padding, object value) {
             if (!IsNumericType(value))
                 return String.Empty;
 
             string w = Convert.ToString(UnboxToInt(value, true), 8);
 
-            if (leftToRight || padding == ' ')
-            {
+            if (leftToRight || padding == ' ') {
                 if (alternate && w != "0")
                     w = "0" + w;
                 if (fieldLength != int.MinValue)
                     w = String.Format("{0," + (leftToRight ? "-" : String.Empty) + fieldLength.ToString() + "}", w);
             }
-            else
-            {
+            else {
                 if (fieldLength != int.MinValue)
                     w = w.PadLeft(fieldLength - (alternate && w != "0" ? 1 : 0), padding);
                 if (alternate && w != "0")
@@ -613,8 +572,7 @@ namespace obs_net
         private static string FormatHex(string specifier, bool alternate,
                                             int fieldLength, int fieldPrecision,
                                             bool leftToRight,
-                                            char padding, object value)
-        {
+                                            char padding, object value) {
             if (!IsNumericType(value))
                 return String.Empty;
 
@@ -622,15 +580,13 @@ namespace obs_net
                                             fieldPrecision.ToString() :
                                             String.Empty) + "}", value);
 
-            if (leftToRight || padding == ' ')
-            {
+            if (leftToRight || padding == ' ') {
                 if (alternate)
                     w = (specifier == "x" ? "0x" : "0X") + w;
                 if (fieldLength != int.MinValue)
                     w = String.Format("{0," + (leftToRight ? "-" : String.Empty) + fieldLength.ToString() + "}", w);
             }
-            else
-            {
+            else {
                 if (fieldPrecision != int.MinValue && fieldPrecision < fieldLength)
                     padding = ' ';
                 if (fieldLength != int.MinValue)
@@ -646,22 +602,19 @@ namespace obs_net
                                             int fieldLength, int fieldPrecision,
                                             bool leftToRight,
                                             bool positiveSign, bool positiveSpace,
-                                            char padding, object value)
-        {
+                                            char padding, object value) {
             if (!IsNumericType(value))
                 return String.Empty;
 
             string w = String.Empty;
 
-            if (fieldPrecision == int.MinValue)
-            {
+            if (fieldPrecision == int.MinValue) {
                 if (specifier == "d" && value is double)
                     w = ((int)(double)value).ToString();
                 else
                     w = value.ToString();
             }
-            else
-            {
+            else {
                 string numberFormat;
                 if (Char.ToUpper(specifier[0]) == 'E')
                     numberFormat = "{0:0." + new string('0', fieldPrecision) + specifier + "+00}";
@@ -674,16 +627,14 @@ namespace obs_net
                     w = String.Format(numberFormat, value);
             }
 
-            if (leftToRight || padding == ' ')
-            {
+            if (leftToRight || padding == ' ') {
                 if (IsPositive(value, true))
                     w = (positiveSign ?
                             "+" : (positiveSpace ? " " : String.Empty)) + w;
                 if (fieldLength != int.MinValue)
                     w = String.Format("{0," + (leftToRight ? "-" : String.Empty) + fieldLength.ToString() + "}", w);
             }
-            else
-            {
+            else {
                 if (w.StartsWith("-"))
                     w = w.Substring(1);
                 if (fieldLength != int.MinValue)
@@ -701,27 +652,23 @@ namespace obs_net
         }
     }
 
-    public class va_list : IDisposable
-    {
+    public class va_list : IDisposable {
         internal IntPtr instance;    //unmanaged pointer to va_list
 
         // pointers to allocated unmanaged memory
         private List<IntPtr> allocPtrs = new List<IntPtr>();
 
-        public va_list(IntPtr ptr)
-        {
+        public va_list(IntPtr ptr) {
             instance = ptr;
         }
 
-        public va_list(object[] args)
-        {
+        public va_list(object[] args) {
             // small valuetypes (char, short) are always promoted to int
             // so the offset is always incremented by at least size of int
 
             // calculate total size for allocation
             int totalSize = 0;
-            foreach (object obj in args)
-            {
+            foreach (object obj in args) {
                 Type type = obj.GetType();
                 int size = (type == typeof(string)) ? Marshal.SizeOf(typeof(IntPtr)) :
                     Math.Max(Marshal.SizeOf(type), Marshal.SizeOf(typeof(Int32)));
@@ -736,19 +683,16 @@ namespace obs_net
 
             // write objects to unmanaged memory
             int offset = 0;
-            foreach (object obj in args)
-            {
+            foreach (object obj in args) {
                 Type type = obj.GetType();
                 int size = (type == typeof(string)) ? Marshal.SizeOf(typeof(IntPtr)) : Marshal.SizeOf(type);
 
-                if (type == typeof(string))
-                {
+                if (type == typeof(string)) {
                     IntPtr s = Marshal.StringToHGlobalAnsi((string)obj);
                     Marshal.WriteIntPtr(instance, offset, s);
                     allocPtrs.Add(s);
                 }
-                else
-                {
+                else {
                     byte[] bytes = null;
                     int boff = 0;
 
@@ -786,8 +730,7 @@ namespace obs_net
             }
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             foreach (IntPtr rel in allocPtrs)
                 Marshal.FreeHGlobal(rel);
 
@@ -797,15 +740,13 @@ namespace obs_net
         }
 
         /// <summary> Returns unmanaged pointer to argument list. </summary>
-        public IntPtr GetPointer()
-        {
+        public IntPtr GetPointer() {
             return instance;
         }
 
         /// <summary> Returns array of objects with help of printf format string. </summary>
         /// <param name="msg"> printf format string. </param>
-        public object[] GetObjectsByFormat(string format)
-        {
+        public object[] GetObjectsByFormat(string format) {
             return GetObjectsByFormat(format, this);
         }
 
@@ -814,8 +755,7 @@ namespace obs_net
         /// </summary>
         /// <param name="msg"> printf format string. </param>
         /// <param name="args"> va_list of function parameters. </param>
-        public static unsafe object[] GetObjectsByFormat(string format, va_list va_list)
-        {
+        public static unsafe object[] GetObjectsByFormat(string format, va_list va_list) {
             string[] formatSpecifiers = Printf.GetFormatSpecifiers(format);
             if (formatSpecifiers == null || va_list == null || va_list.GetPointer() == IntPtr.Zero)
                 return null;
@@ -824,22 +764,19 @@ namespace obs_net
             List<object> objects = new List<object>(formatSpecifiers.Length);
 
             int offset = 0;
-            foreach (string spec in formatSpecifiers)
-            {
+            foreach (string spec in formatSpecifiers) {
                 var info = Printf.GetFormatSpecifierInfo(spec);
                 if (info.type == '\0')
                     continue;
 
                 // dynamic width and precision arguments
                 // these are stored in stack before the actual value
-                if (info.flags.HasFlag(Printf.FormatFlags.DynamicWidth))
-                {
+                if (info.flags.HasFlag(Printf.FormatFlags.DynamicWidth)) {
                     int widthArg = Marshal.ReadInt32(args, offset);
                     objects.Add(widthArg);
                     offset += Marshal.SizeOf(typeof(IntPtr));
                 }
-                if (info.flags.HasFlag(Printf.FormatFlags.DynamicPrecision))
-                {
+                if (info.flags.HasFlag(Printf.FormatFlags.DynamicPrecision)) {
                     int precArg = Marshal.ReadInt32(args, offset);
                     objects.Add(precArg);
                     offset += Marshal.SizeOf(typeof(IntPtr));
@@ -849,8 +786,7 @@ namespace obs_net
                     ? Marshal.SizeOf(typeof(Int64)) : Marshal.SizeOf(typeof(IntPtr));
 
                 // marshal objects from pointer
-                switch (info.type)
-                {
+                switch (info.type) {
                     // 8/16-bit integers
                     // char / wchar_t (promoted to int)
                     case 'c':
@@ -862,8 +798,7 @@ namespace obs_net
                     // signed integers
                     case 'd':
                     case 'i':
-                    case 'I':
-                        {
+                    case 'I': {
                             if (info.flags.HasFlag(Printf.FormatFlags.IsShort)) // h
                             {
                                 short sh = (short)Marshal.ReadInt32(args, offset);
@@ -889,8 +824,7 @@ namespace obs_net
                     case 'u':
                     case 'o':
                     case 'x':
-                    case 'X':
-                        {
+                    case 'X': {
                             if (info.flags.HasFlag(Printf.FormatFlags.IsShort)) // h
                             {
                                 ushort su = (ushort)Marshal.ReadInt32(args, offset);
@@ -918,8 +852,7 @@ namespace obs_net
                     case 'e':
                     case 'E':
                     case 'g':
-                    case 'G':
-                        {
+                    case 'G': {
                             if (info.flags.HasFlag(Printf.FormatFlags.IsLongDouble))  // L
                             {
                                 // not really supported but read it as long
@@ -940,8 +873,7 @@ namespace obs_net
 
                     // string
                     case 's':
-                    case 'S':
-                        {
+                    case 'S': {
                             string s = null;
 
                             if (info.flags.HasFlag(Printf.FormatFlags.IsLong))

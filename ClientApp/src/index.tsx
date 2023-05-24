@@ -3,22 +3,12 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
-
-export enum BookmarkType {
-    Manual,
-    Kill
-}
-export interface BookmarkInterface {
-    id: number,
-    type: BookmarkType
-    time: number,
-}
+// https://github.com/Microsoft/TypeScript/issues/14975#issuecomment-290995090
+// TODO: don't use enums, change this to a type (see ModalIcon for example)
+// this is a dumb typescript fix for enums, not sure why but 
+// if the two lines below aren't here, it will cause runtime issues
+enum BookmarkType { Manual, Kill }
+(window as { BookmarkType?: typeof BookmarkType }).BookmarkType = BookmarkType;
 
 declare global {
   type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success';
@@ -84,7 +74,15 @@ declare global {
     x: number, 
     y: number,
   }
-
+  interface BookmarkInterface {
+    id: number,
+    type: BookmarkType
+    time: number,
+  }
+  enum BookmarkType { // this exact same enum is to stop typescript IntelliSense from complaining
+    Manual,
+    Kill
+  }
   // userSettings
   interface UserSettings {
     generalSettings: GeneralSettings
@@ -143,6 +141,15 @@ declare global {
     localFolderSettings: {
       dir: string,
     },
+    customUploaderSettings: {
+      url: string,
+      method: string,
+      headers:  {Key: string, Value: string}[],
+      urlparams: {Key: string, Value: string}[],
+      responseType: string,
+      responsePath: string,
+    }
+    
   }
   interface StorageSettings {
     videoSaveDir: string,
@@ -165,3 +172,10 @@ declare global {
     CreateBookmark: string[],
   }
 }
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);

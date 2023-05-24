@@ -39,8 +39,7 @@ namespace RePlays.Uploaders {
             }
 
             protected override Task SerializeToStreamAsync(Stream stream, TransportContext context) {
-                return Task.Run(async () =>
-                {
+                return Task.Run(async () => {
                     var buffer = new Byte[this.bufferSize];
                     long size;
                     TryComputeLength(out size);
