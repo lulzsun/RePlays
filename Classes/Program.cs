@@ -2,6 +2,7 @@ using RePlays.Utils;
 using Squirrel;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -18,6 +19,8 @@ namespace RePlays {
         [STAThread]
         [Obsolete]
         static void Main(string[] args) {
+            CultureInfo.DefaultThreadCurrentCulture = new("en-US");
+
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
             string debugArg = "-debug";
