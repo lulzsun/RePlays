@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -23,11 +26,21 @@ namespace RePlays.Services {
         static readonly HashSet<string> nonGameDetectionsCache = new();
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
+        private static Dictionary<string, string> drivePaths = new();
         private static List<string> blacklistList = new() { "splashscreen", "launcher", "cheat", "sdl_app", "console" };
         public static bool IsStarted { get; internal set; }
 
         public static void Start() {
             LoadDetections();
+
+            // Get device paths for mounted drive letters
+            for (char letter = 'A'; letter <= 'Z'; letter++) {
+                string driveLetter = letter + ":";
+                StringBuilder s = new StringBuilder();
+                if (QueryDosDevice(driveLetter, s, 1000)) {
+                    drivePaths.Add(s.ToString(), driveLetter);
+                }
+            }
 
             // watch process creation/deletion events
             messageWindow = new MessageWindow();
@@ -57,7 +70,7 @@ namespace RePlays.Services {
                 }
             }
             if (processId != 0 && AutoDetectGame((int)processId, executablePath, hwnd)) {
-                Logger.WriteLine(string.Format("WindowCreation -- {0} {1} {2}", processId, hwnd, executablePath));
+                Logger.WriteLine($"WindowCreation -- {processId} {hwnd} {executablePath}");
             }
         }
 
@@ -66,7 +79,7 @@ namespace RePlays.Services {
 
             if (processId != 0 && RecordingService.GetCurrentSession().Pid == processId && RecordingService.GetCurrentSession().WindowHandle == hwnd) {
                 GetExecutablePathFromWindowHandle(hwnd, out string executablePath);
-                Logger.WriteLine(string.Format("WindowDeletion -- {0} {1} {2}", processId, hwnd, executablePath));
+                Logger.WriteLine($"WindowDeletion -- {processId} {hwnd} {executablePath}");
                 RecordingService.StopRecording();
             }
         }
@@ -100,10 +113,32 @@ namespace RePlays.Services {
             Process process = Process.GetProcessById((int)processId);
 
             try {
-                executablePath = process.MainModule.FileName;
+                // if this raises an exception, then that means this process is most likely being covered by anti-cheat (EAC)
+                executablePath = Path.GetFullPath(process.MainModule.FileName);
             }
-            catch {
-                executablePath = "";
+            catch (Exception ex) {
+                // this method of using OpenProcess is reliable for getting the fullpath in case of anti-cheat
+                IntPtr processHandle = OpenProcess(0x1000, false, process.Id);
+                if (processHandle != IntPtr.Zero) {
+                    StringBuilder stringBuilder = new(1024);
+                    if (!GetProcessImageFileName(processHandle, stringBuilder, out int size)) {
+                        Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: {ex.Message}");
+                        executablePath = "";
+                        return;
+                    }
+                    string s = stringBuilder.ToString();
+                    foreach (var drivePath in drivePaths) {
+                        if (s.Contains(drivePath.Key)) s = s.Replace(drivePath.Key, drivePath.Value);
+                    }
+
+                    executablePath = s;
+                    CloseHandle(processHandle);
+                }
+                else {
+                    Logger.WriteLine($"Failed to get process: [{processId}][{process.ProcessName}] full path. Error: {ex.Message}");
+                    executablePath = "";
+                    return;
+                }
             }
         }
 
@@ -315,8 +350,25 @@ namespace RePlays.Services {
 
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
         [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+        static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, Int32 dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        [SuppressUnmanagedCodeSecurity]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("psapi.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        static extern bool GetProcessImageFileName(IntPtr hprocess, StringBuilder lpExeName, out int size);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
     }
 
     // https://stackoverflow.com/a/7033382
@@ -361,8 +413,10 @@ namespace RePlays.Services {
 
         [DllImport("user32.dll")]
         static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
         [DllImport("user32", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
         private static extern int RegisterShellHookWindow(IntPtr hWnd);
+
         [DllImport("user32", EntryPoint = "RegisterWindowMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
         private static extern int RegisterWindowMessage(string lpString);
     }
