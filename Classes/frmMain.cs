@@ -1,17 +1,17 @@
 ﻿#if WINDOWS
-using System.Diagnostics;
-using System.Drawing;
-using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using RePlays.Recorders;
 using RePlays.Services;
 using RePlays.Utils;
-using static RePlays.Utils.Functions;
-using System.Collections.Generic;
-using System.IO;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using static RePlays.Utils.Functions;
 
 namespace RePlays {
     public partial class frmMain : Form {
@@ -68,7 +68,7 @@ namespace RePlays {
         }
 
         private void RefreshLoader() {
-            pictureBox1.Size = new Size(128,128);
+            pictureBox1.Size = new Size(128, 128);
             pictureBox1.Location = new Point((this.Size.Width / 2) - (pictureBox1.Size.Width / 2),
                                             (this.Size.Height / 2) - (pictureBox1.Size.Height / 2));
             pictureBox1.Refresh();
@@ -79,7 +79,7 @@ namespace RePlays {
             RefreshLoader();
 
             try {
-                if(firstLaunch) {
+                if (firstLaunch) {
                     Logger.WriteLine("WebView2 Version: " + CoreWebView2Environment.GetAvailableBrowserVersionString());
                     firstLaunch = false;
                 }
@@ -227,7 +227,7 @@ namespace RePlays {
             PopulateRecentLinks(recentLinksToolStripMenuItem.DropDown.Items);
         }
 
-        public void PopulateRecentLinks(ToolStripItemCollection itemCollection=null) {
+        public void PopulateRecentLinks(ToolStripItemCollection itemCollection = null) {
             if (itemCollection == null) {
                 PopulateRecentLinks(recentLinksMenu.Items);
                 recentLinksMenu.Show(Cursor.Position);
@@ -275,7 +275,7 @@ namespace RePlays {
 
         bool _hasHotkeyTimeout = false;
         private void button1_KeyUp(object sender, KeyEventArgs e) {
-            if(HotkeyService.EditId != null && SettingsService.Settings.keybindings.ContainsKey(HotkeyService.EditId) && !_hasHotkeyTimeout) {
+            if (HotkeyService.EditId != null && SettingsService.Settings.keybindings.ContainsKey(HotkeyService.EditId) && !_hasHotkeyTimeout) {
                 SettingsService.Settings.keybindings[HotkeyService.EditId] = string.Join(" | ", PressedKeys.ToArray()).Split(" | ");
                 SettingsService.SaveSettings();
                 WebMessage.SendMessage(GetUserSettings());
@@ -286,9 +286,8 @@ namespace RePlays {
             else pictureBox1.Focus();
             _hasHotkeyTimeout = PressedKeys.Count >= 2;
         }
-        
-        public async void ClearKeys()
-        {
+
+        public async void ClearKeys() {
             await Task.Delay(1000);
             _hasHotkeyTimeout = false;
             PressedKeys.Clear();

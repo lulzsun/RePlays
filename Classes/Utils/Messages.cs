@@ -6,10 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using RePlays.Recorders;
-using RePlays.Services;
-using static RePlays.Utils.Functions;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
 using static RePlays.Utils.Functions;
@@ -139,7 +135,7 @@ namespace RePlays.Utils {
             }
             else
                 if (frmMain.webView2 != null && frmMain.webView2.CoreWebView2 != null)
-                    frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
 #else
             Program.window?.SendWebMessage(message);
 #endif
