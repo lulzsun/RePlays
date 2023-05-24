@@ -141,7 +141,7 @@
 
 	<!-- Include libobs in the publish output -->
 	<ItemGroup>
-		<DistFiles5 Include="$(SolutionDir)obs-studio-build\obs-studio-29.0.0\build\rundir\Release\bin\64bit\**" />
+		<DistFiles5 Include="$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\**" />
 		<ResolvedFileToPublish Include="@(DistFiles5->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
 			<RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
