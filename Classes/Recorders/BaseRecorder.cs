@@ -7,7 +7,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace RePlays.Recorders {
     public abstract class BaseRecorder {
@@ -67,11 +66,11 @@ namespace RePlays.Recorders {
         [DllImport("user32.dll")]
         private static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
 
-        public bool IsFullscreen(IntPtr wndHandle, Screen screen) {
-            Rect r = new Rect();
-            GetWindowRect(wndHandle, ref r);
+        public static bool IsFullscreen(nint windowHandle) {
+            Rect r = new();
+            GetWindowRect(windowHandle, ref r);
             return new Rectangle(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top)
-                                  .Contains(screen.Bounds);
+                                  .Contains(System.Windows.Forms.Screen.FromHandle(windowHandle).Bounds);
         }
 
         // http://www.pinvoke.net/default.aspx/user32.getclassname

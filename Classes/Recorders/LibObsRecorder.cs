@@ -230,7 +230,7 @@ namespace RePlays.Recorders {
             // SETUP NEW VIDEO SOURCE
             // - Create a source for the game_capture in channel 0
             IntPtr videoSourceSettings = obs_data_create();
-            obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle, System.Windows.Forms.Screen.PrimaryScreen) ? "any_fullscreen" : "window");
+            obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
             obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
             videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
@@ -349,10 +349,7 @@ namespace RePlays.Recorders {
 
         private void StartDisplayCapture() {
             ReleaseVideoSources();
-            IntPtr videoSourceSettings = obs_data_create();
-            videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
-            obs_data_release(videoSourceSettings);
-            obs_set_output_source(0, videoSources["display"]);
+            ResumeDisplayOutput();
             DisplayCapture = true;
         }
 
@@ -390,6 +387,8 @@ namespace RePlays.Recorders {
 
         public void ResumeDisplayOutput() {
             IntPtr videoSourceSettings = obs_data_create();
+            // obs_data_set_int(videoSourceSettings, "method", 0); // automatic
+            // obs_data_set_string(videoSourceSettings, "monitor_id", @"\\\\?\\DISPLAY#DELA024#5&d5f75a2&0&UID37124#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}"); // don't set for primary monitor
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
             obs_set_output_source(0, videoSources["display"]);
@@ -506,13 +505,14 @@ namespace RePlays.Recorders {
             bool resetAudioCode = obs_reset_audio(ref avi);
         }
 
-        public static void ResetVideo(int outputWidth = 1, int outputHeight = 1) {
+        public static void ResetVideo(nint windowHandle = 0, int outputWidth = 1, int outputHeight = 1) {
             //Screen ratio to calculate output width.
             double screenRatio = (double)outputWidth / (double)outputHeight;
 
 #if WINDOWS
-            var screenWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
-            var screenHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+            var screen = windowHandle == 0 ? System.Windows.Forms.Screen.PrimaryScreen : System.Windows.Forms.Screen.FromHandle(windowHandle);
+            var screenWidth = screen.Bounds.Width;
+            var screenHeight = screen.Bounds.Height;
 #else
             var screenWidth = -1;
             var screenHeight = -1;
