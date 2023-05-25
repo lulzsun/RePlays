@@ -150,8 +150,8 @@ namespace RePlays.Services {
         }
 
         public static void LoadDetections() {
-            gameDetectionsJson = DownloadDetections(gameDetectionsFile, "game_detections.json");
-            nonGameDetectionsJson = DownloadDetections(nonGameDetectionsFile, "nongame_detections.json");
+            gameDetectionsJson = DownloadDetections(gameDetectionsFile, "gameDetections.json");
+            nonGameDetectionsJson = DownloadDetections(nonGameDetectionsFile, "nonGameDetections.json");
             LoadNonGameCache();
         }
 
@@ -164,7 +164,7 @@ namespace RePlays.Services {
                 File.WriteAllText(dlPath, result);
             }
             catch (Exception e) {
-                Logger.WriteLine(e.Message);
+                Logger.WriteLine($"Unable to download detections: {file}. Error: {e.Message}");
 
                 if (File.Exists(dlPath)) {
                     return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
