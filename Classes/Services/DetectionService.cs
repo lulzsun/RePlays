@@ -159,7 +159,7 @@ namespace RePlays.Services {
             var result = string.Empty;
             try {
                 using (var webClient = new System.Net.WebClient()) {
-                    result = webClient.DownloadString("https://raw.githubusercontent.com/lulzsun/RePlaysTV/master/detections/" + file);
+                    result = webClient.DownloadString("https://raw.githubusercontent.com/lulzsun/RePlays/main/Resources/" + file);
                 }
                 File.WriteAllText(dlPath, result);
             }
@@ -185,7 +185,10 @@ namespace RePlays.Services {
                 Logger.WriteLine($"Process id should never be zero here, developer error?");
                 return false;
             }
-            if (executablePath != "" && IsMatchedNonGame(executablePath)) return false;
+            if (executablePath != "" && IsMatchedNonGame(executablePath)) {
+                Logger.WriteLine($"Blocked application: [{processId}][{executablePath}]");
+                return false;
+            }
 
             // If the windowHandle we captured is problematic, just return nothing
             // Problematic handles are created if the application for example,
