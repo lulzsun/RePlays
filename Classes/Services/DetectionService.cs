@@ -29,7 +29,7 @@ namespace RePlays.Services {
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
         private static List<string> classBlacklist = new() { "splashscreen", "launcher", "cheat", "sdl_app", "console" };
-        private static List<string> classWhitelist = new() { "unitywndclass" };
+        private static List<string> classWhitelist = new() { "unitywndclass", "unrealwindow" };
         public static bool IsStarted { get; internal set; }
 
         public static void Start() {
@@ -72,7 +72,7 @@ namespace RePlays.Services {
                 }
             }
             if (processId != 0 && AutoDetectGame((int)processId, executablePath, hwnd)) {
-                Logger.WriteLine($"WindowCreation -- {processId} {hwnd} {executablePath}");
+                Logger.WriteLine($"WindowCreation: [{processId}][{hwnd}][{executablePath}]");
             }
         }
 
@@ -81,7 +81,7 @@ namespace RePlays.Services {
 
             if (processId != 0 && RecordingService.GetCurrentSession().Pid == processId && RecordingService.GetCurrentSession().WindowHandle == hwnd) {
                 GetExecutablePathFromWindowHandle(hwnd, out string executablePath);
-                Logger.WriteLine($"WindowDeletion -- {processId} {hwnd} {executablePath}");
+                Logger.WriteLine($"WindowDeletion: [{processId}][{hwnd}][{executablePath}]");
                 RecordingService.StopRecording();
             }
         }
@@ -176,7 +176,7 @@ namespace RePlays.Services {
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
         public static bool AutoDetectGame(int processId, string executablePath, nint windowHandle = 0, bool autoRecord = true) {
-            if (IsMatchedNonGame(executablePath)) return false;
+            if (executablePath != "" && IsMatchedNonGame(executablePath)) return false;
 
             // If the windowHandle we captured is problematic, just return nothing
             // Problematic handles are created if the application for example,
@@ -190,14 +190,14 @@ namespace RePlays.Services {
             try {
                 if (!Path.Exists(executablePath)) return false;
                 FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
-                bool hasBadWordInDescription = fileInformation.FileDescription != null ? classBlacklist.Where(bannedWord => fileInformation.FileDescription.ToLower().Contains(bannedWord)).Any() : false;
-                bool hasBadWordInClassName = classBlacklist.Where(bannedWord => className.ToLower().Contains(bannedWord)).Any() || classBlacklist.Where(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
-                bool hasBadWordInGameTitle = classBlacklist.Where(bannedWord => gameTitle.ToLower().Contains(bannedWord)).Any() || classBlacklist.Where(bannedWord => gameTitle.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
-                bool hasBadWordInFileName = classBlacklist.Where(bannedWord => fileName.ToLower().Contains(bannedWord)).Any() || classBlacklist.Where(bannedWord => fileName.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
+                bool hasBadWordInDescription = fileInformation.FileDescription != null ? classBlacklist.Where(c => fileInformation.FileDescription.ToLower().Contains(c)).Any() : false;
+                bool hasBadWordInClassName = classBlacklist.Where(c => className.ToLower().Contains(c)).Any() || classBlacklist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
+                bool hasBadWordInGameTitle = classBlacklist.Where(c => gameTitle.ToLower().Contains(c)).Any() || classBlacklist.Where(c => gameTitle.ToLower().Replace(" ", "").Contains(c)).Any();
+                bool hasBadWordInFileName = classBlacklist.Where(c => fileName.ToLower().Contains(c)).Any() || classBlacklist.Where(c => fileName.ToLower().Replace(" ", "").Contains(c)).Any();
 
                 bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
                 if (isBlocked) {
-                    Logger.WriteLine($"Blocked application: {windowHandle} {className} {gameTitle} {executablePath}");
+                    Logger.WriteLine($"Blocked application: [{processId}][{className}][{executablePath}]");
                     return false;
                 }
             }
@@ -206,39 +206,52 @@ namespace RePlays.Services {
             }
 
             if (!autoRecord) {
-                // This is a manual record event so lets just yolo it and assume user knows best
+                // This is a manual/forced record event so lets just yolo it and assume user knows best
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
-                Logger.WriteLine($"Manual record start: [{processId}][{executablePath}], prepared to record");
+                Logger.WriteLine($"Forced record start: [{processId}][{className}][{executablePath}], prepared to record");
                 return true;
             }
 
             bool isGame = IsMatchedGame(executablePath);
 
-            if (isGame) {
-                RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
-                Logger.WriteLine(
-                    $"This process is a recordable game: [{processId}][{executablePath}], prepared to record");
-
-                bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
-                Logger.WriteLine("Is allowed to record: " + allowed);
-                if (allowed) RecordingService.StartRecording();
-            }
-            else {
+            // if there is no matched game, lets try to make assumptions from the process given the following information:
+            // 1. window size & aspect ratio
+            // 2. window class name (matches against whitelist)
+            // if all conditions are true, then we can assume it is a game
+            if (!isGame) {
                 var windowSize = BaseRecorder.GetWindowSize(windowHandle);
                 if (windowSize.GetWidth() <= 69 || windowSize.GetHeight() <= 69) {
                     return false;
                 }
-                Logger.WriteLine($"Unknown application: [{processId}]" +
-                    $"[{className}]" +
-                    $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}]" +
-                    $"[{executablePath}]");
+                var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
+                bool isValidAspectRatio = new[] { "64:27", "43:18", "21:9", "16:10", "16:9", "4:3" }.Contains(aspectRatio);
+                bool isWhitelistedClass = classBlacklist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
+                if (isWhitelistedClass && isValidAspectRatio) {
+                    Logger.WriteLine($"Assumed recordable game: [{processId}]" +
+                        $"[{className}]" +
+                        $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]" +
+                        $"[{executablePath}]");
+                    isGame = true;
+                }
+                else {
+                    Logger.WriteLine($"Unknown application: [{processId}]" +
+                        $"[{className}]" +
+                        $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]" +
+                        $"[{executablePath}]");
+                }
+            }
+
+            if (isGame) {
+                bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
+                Logger.WriteLine("Is allowed to record: " + allowed);
+                if (allowed) RecordingService.StartRecording();
             }
             return isGame;
         }
 
         public static bool HasBadWordInClassName(IntPtr windowHandle) {
             var className = RecordingService.ActiveRecorder.GetClassName(windowHandle);
-            bool hasBadWordInClassName = classBlacklist.Any(bannedWord => className.ToLower().Contains(bannedWord)) || classBlacklist.Any(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord));
+            bool hasBadWordInClassName = classBlacklist.Any(c => className.ToLower().Contains(c)) || classBlacklist.Any(c => className.ToLower().Replace(" ", "").Contains(c));
             if (hasBadWordInClassName) windowHandle = IntPtr.Zero;
             return windowHandle == IntPtr.Zero;
         }

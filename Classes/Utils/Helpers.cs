@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -557,6 +558,14 @@ namespace RePlays.Utils {
             }
 
             return string.Format("{0:0.##} {1}", bytes, sizes[order]);
+        }
+
+        public static string GetAspectRatio(int width, int height) {
+            BigInteger gcd = BigInteger.GreatestCommonDivisor(width, height);
+            int aspectWidth = width / (int)gcd;
+            int aspectHeight = height / (int)gcd;
+
+            return $"{aspectWidth}:{aspectHeight}";
         }
 
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {
