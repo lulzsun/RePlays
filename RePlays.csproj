@@ -6,6 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
 	<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
 	<SpaRoot>ClientApp\</SpaRoot>
+	<OBSBuildPath>$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\</OBSBuildPath>
 	<ApplicationIcon>Resources\replays logo.ico</ApplicationIcon>
     <RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
 	<DebugSymbols>true</DebugSymbols>
@@ -87,9 +88,9 @@
   </Target>
 
   <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net7.0-windows\obs.dll') ">
-	<Error Condition="!Exists('$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\obs.dll')" Text="Could not find 'obs.dll' in 'obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\'. Run `build-libobs.cmd` to build." />
+	<Error Condition="!Exists('$(OBSBuildPath)obs.dll')" Text="Could not copy 'obs.dll' from 'OBSBuildPath'. Run `build-libobs.cmd` to build." />
 	<ItemGroup>
-	   <LIBOBSDEBUG Include="$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\**\*.*" />
+	   <LIBOBSDEBUG Include="$(OBSBuildPath)**\*.*" />
 	</ItemGroup>
 	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net7.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
@@ -141,7 +142,7 @@
 
 	<!-- Include libobs in the publish output -->
 	<ItemGroup>
-		<DistFiles5 Include="$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\**" />
+		<DistFiles5 Include="$(OBSBuildPath)**" />
 		<ResolvedFileToPublish Include="@(DistFiles5->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
 			<RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
