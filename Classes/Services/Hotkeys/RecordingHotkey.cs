@@ -1,4 +1,5 @@
-﻿using RePlays.Services;
+﻿#if WINDOWS
+using RePlays.Services;
 
 namespace RePlays.Classes.Services.Hotkeys {
     public class RecordingHotkey : Hotkey {
@@ -15,3 +16,4 @@ namespace RePlays.Classes.Services.Hotkeys {
         }
     }
 }
+#endif

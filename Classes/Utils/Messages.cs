@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
 using static RePlays.Utils.Functions;
@@ -126,10 +125,24 @@ namespace RePlays.Utils {
         };
 
         public static void SendMessage(string message) {
-            frmMain.PostWebMessageAsJson(message);
+#if WINDOWS
+            if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return;
+            if (frmMain.webView2.InvokeRequired) {
+                // Call this same method but make sure it is on UI thread
+                frmMain.webView2.BeginInvoke((System.Windows.Forms.MethodInvoker)delegate {
+                    frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                });
+            }
+            else
+                if (frmMain.webView2 != null && frmMain.webView2.CoreWebView2 != null)
+                frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+#else
+            Program.window?.SendWebMessage(message);
+#endif
         }
 
         public static async Task<WebMessage> RecieveMessage(string message) {
+            if (message == null) return null;
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
             if (webMessage.message == "UpdateSettings")
@@ -139,7 +152,11 @@ namespace RePlays.Utils {
 
             switch (webMessage.message) {
                 case "BrowserReady": {
+#if WINDOWS
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
+#else
+                        Program.window?.Load(GetRePlaysURI());
+#endif
                         ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders(); //Another hacky fix for encoders not being loaded on first start.
                         ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls(); //Another hacky fix for rate conrols not being loaded on first start.
                         break;
@@ -167,6 +184,7 @@ namespace RePlays.Utils {
                         SendMessage(t);
                     }
                     break;
+#if WINDOWS
                 case "EditKeybind": {
                         var id = webMessage.data.Replace("\"", "");
                         frmMain.Instance.EditKeybind(id);
@@ -178,10 +196,9 @@ namespace RePlays.Utils {
                             case "extraSaveDir":
                                 break;
                             default:
-                                using (var fbd = new FolderBrowserDialog()) {
-                                    DialogResult result = fbd.ShowDialog();
-
-                                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
+                                using (var fbd = new System.Windows.Forms.FolderBrowserDialog()) {
+                                    System.Windows.Forms.DialogResult result = fbd.ShowDialog();
+                                    if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
                                         if (type == "videoSaveDir") Settings.storageSettings.videoSaveDir = fbd.SelectedPath;
                                         else if (type == "tempSaveDir") Settings.storageSettings.tempSaveDir = fbd.SelectedPath;
                                         else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
@@ -193,12 +210,12 @@ namespace RePlays.Utils {
                         }
                     }
                     break;
+#endif
                 case "ShowFolder": {
                         var path = webMessage.data.Replace("\"", "").Replace("\\\\", "\\");
                         Logger.WriteLine(path);
                         Process.Start("explorer.exe", path);
                     }
-
                     break;
                 case "OpenLink": {
                         Process browserProcess = new Process();
@@ -222,17 +239,16 @@ namespace RePlays.Utils {
                     }
                     break;
                 case "ShowLicense": {
-                        Process.Start("notepad.exe", Path.Join(Application.StartupPath, @"LICENSE"));
+                        Process.Start("notepad.exe", Path.Join(GetStartupPath(), @"LICENSE"));
                     }
                     break;
                 case "ShowLogs": {
-                        if (File.Exists(Path.GetFullPath(Path.Join(Application.StartupPath, "../cfg/logs.txt"))))
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(Application.StartupPath, "../cfg/logs.txt"))));
-                        else if (File.Exists(Path.GetFullPath(Path.Join(Application.StartupPath, "../../cfg/logs.txt"))))
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(Application.StartupPath, "../../cfg/logs.txt"))));
+                        if (File.Exists(Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"))))
+                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"))));
+                        else if (File.Exists(Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"))))
+                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"))));
                         else {
-                            MessageBox.Show("Logs could not be found, are you perhaps in Debug mode?");
-                            Logger.WriteLine("Current running application path: " + Application.StartupPath);
+                            Logger.WriteLine("Current running application path: " + GetStartupPath());
                         }
                     }
                     break;
@@ -285,6 +301,7 @@ namespace RePlays.Utils {
                         //DisplayModal($"{data.title} {data.destination}", "Error", "warning"));
                     }
                     break;
+#if WINDOWS
                 case "ShowRecentLinks": {
                         frmMain.Instance.PopulateRecentLinks();
                     }
@@ -295,10 +312,10 @@ namespace RePlays.Utils {
                     break;
                 case "AddProgram": {
                         var list = webMessage.data.Replace("\"", "");
-                        using var fbd = new OpenFileDialog();
+                        using var fbd = new System.Windows.Forms.OpenFileDialog();
                         fbd.Filter = "Executable files (*.exe)|*.exe";
-                        DialogResult result = fbd.ShowDialog();
-                        if (result != DialogResult.OK && string.IsNullOrWhiteSpace(fbd.FileName)) break;
+                        System.Windows.Forms.DialogResult result = fbd.ShowDialog();
+                        if (result != System.Windows.Forms.DialogResult.OK && string.IsNullOrWhiteSpace(fbd.FileName)) break;
                         switch (list) {
                             case "blacklist":
                                 Settings.detectionSettings.blacklist.Add(fbd.FileName.ToLower());
@@ -313,6 +330,7 @@ namespace RePlays.Utils {
                         SendMessage(GetUserSettings());
                     }
                     break;
+#endif
                 case "RemoveProgram": {
                         RemoveProgram data = JsonSerializer.Deserialize<RemoveProgram>(webMessage.data);
                         Logger.WriteLine($"{data.exe} | {data.list}");
@@ -346,8 +364,8 @@ namespace RePlays.Utils {
                 "\"progress\": " + progress + ", " +
                 "\"progressMax\": " + progressMax + ", " +
                 "\"icon\": \"" + icon + "\"}";
-            if (frmMain.Instance.WindowState != FormWindowState.Minimized)
-                SendMessage(JsonSerializer.Serialize(webMessage));
+
+            SendMessage(JsonSerializer.Serialize(webMessage));
         }
 
         public static void DisplayToast(string id, string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
@@ -367,8 +385,7 @@ namespace RePlays.Utils {
             }
             else toastList.Add(id, webMessage);
 
-            if (frmMain.Instance.WindowState != FormWindowState.Minimized)
-                SendMessage(JsonSerializer.Serialize(webMessage));
+            SendMessage(JsonSerializer.Serialize(webMessage));
         }
 
         public static void DestroyToast(string id) {
@@ -394,7 +411,6 @@ namespace RePlays.Utils {
                 webMessage.data = json;
                 SendMessage(JsonSerializer.Serialize(webMessage));
                 Logger.WriteLine("Successfully sent bookmarks to frontend");
-
             }
             else {
                 BackupBookmarks(videoName, json);

@@ -1,4 +1,5 @@
-﻿using Microsoft.Web.WebView2.Core;
+﻿#if WINDOWS
+using Microsoft.Web.WebView2.Core;
 using RePlays.Recorders;
 using RePlays.Services;
 using RePlays.Utils;
@@ -88,21 +89,8 @@ namespace RePlays {
                 Logger.WriteLine("Prompting user to install WebView2");
                 DialogResult result =
                     MessageBox.Show(
-                        "Microsoft Edge WebView2 Runtime is required to display interface. Would you like to run the installer?",
-                        "Missing Microsoft Edge WebView2 Runtime", MessageBoxButtons.YesNoCancel);
-                if (result == DialogResult.Yes) {
-                    var startInfo = new ProcessStartInfo {
-#if (DEBUG)
-                        FileName = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + @"/Resources/runtimes/win/MicrosoftEdgeWebview2Setup.exe",
-#elif (RELEASE)
-                        FileName = Application.StartupPath + @"/runtimes/win/MicrosoftEdgeWebview2Setup.exe",
-#endif
-                        Arguments = "/install"
-                    };
-                    var process = Process.Start(startInfo);
-                    process.WaitForExit();
-                    Logger.WriteLine("MicrosoftEdgeWebview2Setup.exe exited with code: " + process.ExitCode.ToString());
-                }
+                        "Microsoft Edge WebView2 Runtime is required to run this application.",
+                        "Missing Microsoft Edge WebView2 Runtime", MessageBoxButtons.OK);
             }
 
             if (webView2 == null || webView2.IsDisposed) {
@@ -145,23 +133,11 @@ namespace RePlays {
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
             webView2.CoreWebView2.Navigate("https://replays.app/preload.html");
+            Logger.WriteLine("wttff");
         }
 
         private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {
             e.State = CoreWebView2PermissionState.Allow;
-        }
-
-        public static void PostWebMessageAsJson(string message) {
-            if (webView2 == null || webView2.IsDisposed == true) return;
-            if (webView2.InvokeRequired) {
-                // Call this same method but make sure it is on UI thread
-                webView2.BeginInvoke((MethodInvoker)delegate {
-                    PostWebMessageAsJson(message);
-                });
-            }
-            else
-                if (webView2 != null && webView2.CoreWebView2 != null)
-                webView2.CoreWebView2.PostWebMessageAsJson(message);
         }
 
         bool firstTime = true;
@@ -325,3 +301,4 @@ namespace RePlays {
         }
     }
 }
+#endif

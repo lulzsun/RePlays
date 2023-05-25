@@ -1,4 +1,5 @@
-﻿using RePlays.Services;
+﻿#if WINDOWS
+using RePlays.Services;
 
 namespace RePlays.Classes.Services.Hotkeys {
     public class BookmarkHotkey : Hotkey {
@@ -14,3 +15,4 @@ namespace RePlays.Classes.Services.Hotkeys {
         }
     }
 }
+#endif

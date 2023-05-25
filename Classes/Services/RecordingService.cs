@@ -1,7 +1,6 @@
 ﻿using RePlays.Recorders;
 using RePlays.Utils;
 using System;
-using System.Media;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -79,9 +78,10 @@ namespace RePlays.Services {
                 GameInFocus = true;
 
                 if (SettingsService.Settings.captureSettings.useRecordingStartSound) {
-                    System.IO.Stream soundStream = Properties.Resources.start_recording;
-                    SoundPlayer startRecordingSound = new SoundPlayer(soundStream);
+#if WINDOWS
+                    System.Media.SoundPlayer startRecordingSound = new(Functions.GetResourcesFolder() + "start_recording.wav");
                     startRecordingSound.Play();
+#endif
                 }
 
             }

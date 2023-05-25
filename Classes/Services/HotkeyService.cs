@@ -1,4 +1,5 @@
-﻿using RePlays.Classes.Services.Hotkeys;
+﻿#if WINDOWS
+using RePlays.Classes.Services.Hotkeys;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
@@ -78,3 +79,4 @@ namespace RePlays.Services {
         }
     }
 }
+#endif

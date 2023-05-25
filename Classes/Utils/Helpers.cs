@@ -11,9 +11,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms; // exists for Application.StartupPath
 
 namespace RePlays.Utils {
     public static class Functions {
@@ -23,17 +21,21 @@ namespace RePlays.Utils {
             return ans.ToString("x");
         }
 
+        public static string GetStartupPath() {
+            return Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        }
+
         public static string GetRePlaysURI() {
 #if (DEBUG)
             //return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
             return "http://localhost:3000/#/";
 #elif (RELEASE)
-            return "file://" + Application.StartupPath + "/ClientApp/build/index.html";
+            return "file://" + GetStartupPath() + "/ClientApp/build/index.html";
 #endif
         }
 
         public static string GetPlaysLtcFolder() {
-            //var path = Path.Join(Application.StartupPath, @"Plays-ltc\0.54.7\"); this doesnt work for some reason, plays-ltc has to be in the localappdata folder
+            //var path = Path.Join(GetStartupPath(), @"Plays-ltc\0.54.7\"); this doesnt work for some reason, plays-ltc has to be in the localappdata folder
             var path = Environment.GetEnvironmentVariable("LocalAppData") + @"\Plays-ltc\0.54.7\";
             return path;
         }
@@ -70,18 +72,28 @@ namespace RePlays.Utils {
         }
 
         public static string GetCfgFolder() {
-            var cfgDir = Path.Join(Application.StartupPath, @"..\cfg\");
+            var cfgDir = Path.Join(GetStartupPath(), @"..\cfg\");
             if (!Directory.Exists(cfgDir))
                 Directory.CreateDirectory(cfgDir);
             return cfgDir;
         }
 
+        public static string GetResourcesFolder() {
+#if (DEBUG)
+            return Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + @"/Resources/";
+#elif (RELEASE)
+            return GetStartupPath() + @"/Resources/";
+#endif
+        }
+
         public static string GetFFmpegFolder() {
 
-#if DEBUG
+#if DEBUG && WINDOWS
             string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+#elif DEBUG && !WINDOWS
+            string ffmpegFolder = Path.Join(Environment.CurrentDirectory, @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #else
-            string ffmpegFolder = Path.Join(Application.StartupPath, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #endif
             if (Directory.Exists(ffmpegFolder)) {
                 return ffmpegFolder;
@@ -95,7 +107,7 @@ namespace RePlays.Utils {
 #if DEBUG
             string _7zipExecutable = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #else
-            string _7zipExecutable = Path.Join(Application.StartupPath, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
+            string _7zipExecutable = Path.Join(GetStartupPath(), @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #endif
             if (File.Exists(_7zipExecutable)) {
                 return _7zipExecutable;
@@ -223,10 +235,12 @@ namespace RePlays.Utils {
                 video.date = new FileInfo(file).CreationTime;
                 video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
-#if (DEBUG)
+#if DEBUG && WINDOWS
                 video.folder = "https://videos.replays.app/";
-#elif (RELEASE)
+#elif RELEASE && WINDOWS
                 video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+#else
+                video.folder = "http://localhost:3001/";
 #endif
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
@@ -259,7 +273,7 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffprobe.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
                 Arguments = string.Format("-i \"{0}\" -show_entries format=duration -v quiet -of csv=\"p = 0\"", videoPath),
             };
 
@@ -334,7 +348,7 @@ namespace RePlays.Utils {
         }
 
         public static VideoMetadata GetOrCreateMetadata(string videoPath) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
 
             if (File.Exists(metadataPath)) {
@@ -390,10 +404,11 @@ namespace RePlays.Utils {
                 foreach (string bookmarkBackupFile in bookmarkBackupFiles) {
                     Logger.WriteLine($"Loading {bookmarkBackupFile}");
                     string json = File.ReadAllText(bookmarkBackupFile);
-                    WebMessage webMessage = new();
-                    webMessage.message = "SetBookmarks";
-                    webMessage.data = json;
-                    frmMain.PostWebMessageAsJson(JsonSerializer.Serialize(webMessage));
+                    WebMessage webMessage = new() {
+                        message = "SetBookmarks",
+                        data = json
+                    };
+                    WebMessage.SendMessage(JsonSerializer.Serialize(webMessage));
                     File.Delete(bookmarkBackupFile);
                     Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
                 }
@@ -412,7 +427,7 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg"),
             };
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) {
@@ -510,19 +525,27 @@ namespace RePlays.Utils {
         }
 
         public static string EncryptString(string stringToEncrypt, string optionalEntropy = null) {
+#if WINDOWS
             return Convert.ToBase64String(
                 ProtectedData.Protect(
                     Encoding.UTF8.GetBytes(stringToEncrypt)
                     , optionalEntropy != null ? Encoding.UTF8.GetBytes(optionalEntropy) : null
                     , DataProtectionScope.CurrentUser));
+#else
+            return stringToEncrypt;
+#endif
         }
 
         public static string DecryptString(string encryptedString, string optionalEntropy = null) {
+#if WINDOWS
             return Encoding.UTF8.GetString(
                 ProtectedData.Unprotect(
                     Convert.FromBase64String(encryptedString)
                     , optionalEntropy != null ? Encoding.UTF8.GetBytes(optionalEntropy) : null
                     , DataProtectionScope.CurrentUser));
+#else
+            return encryptedString;
+#endif
         }
 
         [DllImport("user32.dll")]

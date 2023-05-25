@@ -21,6 +21,10 @@ declare global {
       }
     }
   }
+  interface External {
+    sendMessage: (message: any) => void
+    receiveMessage(callback: (message: string) => void): void
+  }
   interface Webview2Event extends Event {
     data: {
       data: string,

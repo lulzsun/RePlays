@@ -1,4 +1,5 @@
-﻿using RePlays.Services;
+﻿#if WINDOWS
+using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -45,3 +46,4 @@ namespace RePlays.Classes.Services.Hotkeys {
         protected abstract void SetKeybind();
     }
 }
+#endif
