@@ -188,7 +188,7 @@ namespace RePlays.Recorders {
             }
             else {
                 Logger.WriteLine($"Game capture window size: {windowSize.GetWidth()}x{windowSize.GetHeight()}");
-                ResetVideo(windowSize.GetWidth(), windowSize.GetHeight());
+                ResetVideo(windowHandle, windowSize.GetWidth(), windowSize.GetHeight());
             }
 
             Logger.WriteLine($"Preparing to create libobs output [{bnum_allocs()}]...");
