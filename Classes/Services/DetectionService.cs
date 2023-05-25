@@ -1,4 +1,5 @@
-﻿using RePlays.Utils;
+﻿using RePlays.Recorders;
+using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,7 +28,8 @@ namespace RePlays.Services {
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
-        private static List<string> blacklistList = new() { "splashscreen", "launcher", "cheat", "sdl_app", "console" };
+        private static List<string> classBlacklist = new() { "splashscreen", "launcher", "cheat", "sdl_app", "console" };
+        private static List<string> classWhitelist = new() { "unitywndclass" };
         public static bool IsStarted { get; internal set; }
 
         public static void Start() {
@@ -174,6 +176,8 @@ namespace RePlays.Services {
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
         public static bool AutoDetectGame(int processId, string executablePath, nint windowHandle = 0, bool autoRecord = true) {
+            if (IsMatchedNonGame(executablePath)) return false;
+
             // If the windowHandle we captured is problematic, just return nothing
             // Problematic handles are created if the application for example,
             // the game displays a splash screen (SplashScreenClass) before launching
@@ -184,11 +188,12 @@ namespace RePlays.Services {
             string gameTitle = GetGameTitle(executablePath);
             string fileName = Path.GetFileName(executablePath);
             try {
+                if (!Path.Exists(executablePath)) return false;
                 FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
-                bool hasBadWordInDescription = fileInformation.FileDescription != null ? blacklistList.Where(bannedWord => fileInformation.FileDescription.ToLower().Contains(bannedWord)).Any() : false;
-                bool hasBadWordInClassName = blacklistList.Where(bannedWord => className.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
-                bool hasBadWordInGameTitle = blacklistList.Where(bannedWord => gameTitle.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => gameTitle.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
-                bool hasBadWordInFileName = blacklistList.Where(bannedWord => fileName.ToLower().Contains(bannedWord)).Any() || blacklistList.Where(bannedWord => fileName.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
+                bool hasBadWordInDescription = fileInformation.FileDescription != null ? classBlacklist.Where(bannedWord => fileInformation.FileDescription.ToLower().Contains(bannedWord)).Any() : false;
+                bool hasBadWordInClassName = classBlacklist.Where(bannedWord => className.ToLower().Contains(bannedWord)).Any() || classBlacklist.Where(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
+                bool hasBadWordInGameTitle = classBlacklist.Where(bannedWord => gameTitle.ToLower().Contains(bannedWord)).Any() || classBlacklist.Where(bannedWord => gameTitle.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
+                bool hasBadWordInFileName = classBlacklist.Where(bannedWord => fileName.ToLower().Contains(bannedWord)).Any() || classBlacklist.Where(bannedWord => fileName.ToLower().Replace(" ", "").Contains(bannedWord)).Any();
 
                 bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
                 if (isBlocked) {
@@ -200,12 +205,11 @@ namespace RePlays.Services {
                 Logger.WriteLine($"Failed to check blacklist for application: {executablePath} with error message: {e.Message}");
             }
 
-            if (IsMatchedNonGame(executablePath)) return false;
-
             if (!autoRecord) {
                 // This is a manual record event so lets just yolo it and assume user knows best
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
-                return false;
+                Logger.WriteLine($"Manual record start: [{processId}][{executablePath}], prepared to record");
+                return true;
             }
 
             bool isGame = IsMatchedGame(executablePath);
@@ -213,18 +217,28 @@ namespace RePlays.Services {
             if (isGame) {
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
                 Logger.WriteLine(
-                    $"This process [{processId}] is a recordable game [{Path.GetFileName(executablePath)}], prepared to record");
+                    $"This process is a recordable game: [{processId}][{executablePath}], prepared to record");
 
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
                 Logger.WriteLine("Is allowed to record: " + allowed);
                 if (allowed) RecordingService.StartRecording();
+            }
+            else {
+                var windowSize = BaseRecorder.GetWindowSize(windowHandle);
+                if (windowSize.GetWidth() <= 69 || windowSize.GetHeight() <= 69) {
+                    return false;
+                }
+                Logger.WriteLine($"Unknown application: [{processId}]" +
+                    $"[{className}]" +
+                    $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}]" +
+                    $"[{executablePath}]");
             }
             return isGame;
         }
 
         public static bool HasBadWordInClassName(IntPtr windowHandle) {
             var className = RecordingService.ActiveRecorder.GetClassName(windowHandle);
-            bool hasBadWordInClassName = blacklistList.Any(bannedWord => className.ToLower().Contains(bannedWord)) || blacklistList.Any(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord));
+            bool hasBadWordInClassName = classBlacklist.Any(bannedWord => className.ToLower().Contains(bannedWord)) || classBlacklist.Any(bannedWord => className.ToLower().Replace(" ", "").Contains(bannedWord));
             if (hasBadWordInClassName) windowHandle = IntPtr.Zero;
             return windowHandle == IntPtr.Zero;
         }
