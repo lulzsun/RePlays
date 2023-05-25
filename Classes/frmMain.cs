@@ -133,7 +133,6 @@ namespace RePlays {
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
             webView2.CoreWebView2.Navigate("https://replays.app/preload.html");
-            Logger.WriteLine("wttff");
         }
 
         private void CoreWebView2PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e) {

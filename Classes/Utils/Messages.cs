@@ -157,8 +157,10 @@ namespace RePlays.Utils {
 #else
                         Program.window?.Load(GetRePlaysURI());
 #endif
-                        ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders(); //Another hacky fix for encoders not being loaded on first start.
-                        ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls(); //Another hacky fix for rate conrols not being loaded on first start.
+                        if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
+                            ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders(); //Another hacky fix for encoders not being loaded on first start.
+                            ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls(); //Another hacky fix for rate conrols not being loaded on first start.
+                        }
                         break;
                     }
                 case "Initialize": {

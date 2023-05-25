@@ -112,6 +112,11 @@ namespace RePlays.Services {
 
         public static void GetExecutablePathFromWindowHandle(nint hwnd, out string executablePath) {
             GetWindowThreadProcessId(hwnd, out uint processId);
+            if (processId == 0) {
+                Logger.WriteLine($"Failed to get process id, how is this even possible?");
+                executablePath = "";
+                return;
+            }
             Process process = Process.GetProcessById((int)processId);
 
             try {
@@ -176,6 +181,10 @@ namespace RePlays.Services {
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
         public static bool AutoDetectGame(int processId, string executablePath, nint windowHandle = 0, bool autoRecord = true) {
+            if (processId == 0) {
+                Logger.WriteLine($"Process id should never be zero here, developer error?");
+                return false;
+            }
             if (executablePath != "" && IsMatchedNonGame(executablePath)) return false;
 
             // If the windowHandle we captured is problematic, just return nothing
@@ -243,7 +252,10 @@ namespace RePlays.Services {
 
             if (isGame) {
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
-                Logger.WriteLine("Is allowed to record: " + allowed);
+                Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: [{processId}]" +
+                        $"[{className}]" +
+                        $"[{executablePath}]");
+                RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
                 if (allowed) RecordingService.StartRecording();
             }
             return isGame;
