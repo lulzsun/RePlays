@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -19,8 +20,8 @@ namespace RePlays.Services {
         static MessageWindow messageWindow;
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         private delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
-        static WinEventProc dele; // Keep delegate alive as long as class is alive.
-        static IntPtr winActiveHook = IntPtr.Zero;
+        static WinEventProc winActiveDele, winResizeDele; // Keep win event delegates alive as long as class is alive (if you dont do this, gc will clean up)
+        static nint winActiveHook, winResizeHook;
 
         static JsonElement[] gameDetectionsJson;
         static JsonElement[] nonGameDetectionsJson;
@@ -48,9 +49,13 @@ namespace RePlays.Services {
             messageWindow = new MessageWindow();
             IsStarted = true;
 
-            // watch active foreground window changes 
-            dele = WhenActiveForegroundChanges;
-            winActiveHook = SetWinEventHook(3, 3, IntPtr.Zero, dele, 0, 0, 0);
+            // watch active foreground window events 
+            winActiveDele = OnActiveForegroundEvent;
+            winActiveHook = SetWinEventHook(3, 3, IntPtr.Zero, winActiveDele, 0, 0, 0);
+
+            // watch window resize/move events 
+            winResizeDele = OnWindowResizeMoveEvent;
+            winResizeHook = SetWinEventHook(11, 11, IntPtr.Zero, winResizeDele, 0, 0, 0);
         }
 
         public static void Stop() {
@@ -59,7 +64,9 @@ namespace RePlays.Services {
                 messageWindow.Dispose();
             }
             UnhookWinEvent(winActiveHook);
-            dele = null;
+            UnhookWinEvent(winResizeHook);
+            winActiveDele = null;
+            winResizeDele = null;
         }
 
         public static void WindowCreation(IntPtr hwnd) {
@@ -101,11 +108,22 @@ namespace RePlays.Services {
             }
         }
 
-        static void WhenActiveForegroundChanges(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
+        static void OnActiveForegroundEvent(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
             GetForegroundProcess(out int pid, out _);
             if (RecordingService.IsRecording) {
                 if (pid == RecordingService.GetCurrentSession().Pid) RecordingService.GainedFocus();
                 else if (RecordingService.GameInFocus) RecordingService.LostFocus();
+                return;
+            }
+        }
+
+        static void OnWindowResizeMoveEvent(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
+            GetWindowThreadProcessId(hwnd, out uint pid);
+            if (RecordingService.IsRecording) {
+                if (pid == RecordingService.GetCurrentSession().Pid && hwnd == RecordingService.GetCurrentSession().WindowHandle) {
+                    var windowSize = BaseRecorder.GetWindowSize(hwnd);
+                    Logger.WriteLine($"WindowResize: [{hwnd}][{windowSize.GetWidth()}x{windowSize.GetHeight()}]");
+                }
                 return;
             }
         }
@@ -125,21 +143,22 @@ namespace RePlays.Services {
             }
             catch (Exception ex) {
                 // this method of using OpenProcess is reliable for getting the fullpath in case of anti-cheat
-                IntPtr processHandle = OpenProcess(0x1000, false, process.Id);
+                IntPtr processHandle = OpenProcess(0x00000400 | 0x00000010, false, process.Id);
                 if (processHandle != IntPtr.Zero) {
                     StringBuilder stringBuilder = new(1024);
                     if (!GetProcessImageFileName(processHandle, stringBuilder, out int size)) {
                         Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: {ex.Message}");
                         executablePath = "";
-                        return;
                     }
-                    string s = stringBuilder.ToString();
-                    foreach (var drivePath in drivePaths) {
-                        if (s.Contains(drivePath.Key)) s = s.Replace(drivePath.Key, drivePath.Value);
+                    else {
+                        string s = stringBuilder.ToString();
+                        foreach (var drivePath in drivePaths) {
+                            if (s.Contains(drivePath.Key)) s = s.Replace(drivePath.Key, drivePath.Value);
+                        }
+                        executablePath = s;
                     }
-
-                    executablePath = s;
                     CloseHandle(processHandle);
+                    return;
                 }
                 else {
                     Logger.WriteLine($"Failed to get process: [{processId}][{process.ProcessName}] full path. Error: {ex.Message}");
