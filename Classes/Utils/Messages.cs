@@ -118,26 +118,30 @@ namespace RePlays.Utils {
         public string message { get; set; }
         public string data { get; set; }
 
-        public static Dictionary<string, WebMessage> toastList = new();
-        public static VideoSortSettings videoSortSettings = new() {
+        static Dictionary<string, WebMessage> modalList = new();
+        static Dictionary<string, WebMessage> toastList = new();
+        static VideoSortSettings videoSortSettings = new() {
             game = "All Games",
             sortBy = "Latest"
         };
 
-        public static void SendMessage(string message) {
+        public static bool SendMessage(string message) {
 #if WINDOWS
-            if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return;
+            if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return false;
             if (frmMain.webView2.InvokeRequired) {
                 // Call this same method but make sure it is on UI thread
                 frmMain.webView2.BeginInvoke((System.Windows.Forms.MethodInvoker)delegate {
                     frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
                 });
+                return true; // this may be true, but we don't know for certain...
             }
-            else
-                if (frmMain.webView2 != null && frmMain.webView2.CoreWebView2 != null)
+            else {
                 frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                return true;
+            }
 #else
             Program.window?.SendWebMessage(message);
+            return true;
 #endif
         }
 
@@ -167,9 +171,15 @@ namespace RePlays.Utils {
                         // INIT USER SETTINGS
                         SendMessage(GetUserSettings());
 
-                        Logger.WriteLine(toastList.Count + " Initialized List");
+                        Logger.WriteLine($"Initializing {toastList.Count} Toasts");
                         foreach (var toast in toastList) {
                             SendMessage(JsonSerializer.Serialize(toast.Value));
+                        }
+
+                        Logger.WriteLine($"Initializing {modalList.Count} Modals");
+                        foreach (var modal in modalList) {
+                            SendMessage(JsonSerializer.Serialize(modal.Value));
+                            modalList.Remove(modal.Key);
                         }
                     }
                     break;
@@ -367,7 +377,11 @@ namespace RePlays.Utils {
                 "\"progressMax\": " + progressMax + ", " +
                 "\"icon\": \"" + icon + "\"}";
 
-            SendMessage(JsonSerializer.Serialize(webMessage));
+            bool success = SendMessage(JsonSerializer.Serialize(webMessage));
+            if (!success) {
+                // if message was not successful (interface was probably minimized), save to list to show later
+                modalList.Add(context, webMessage);
+            }
         }
 
         public static void DisplayToast(string id, string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
