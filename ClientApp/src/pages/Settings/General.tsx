@@ -15,7 +15,7 @@ export const General: React.FC<Props> = ({settings, updateSettings}) => {
         <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
           defaultChecked={settings === undefined ? false : settings.launchStartup}
           onChange={(e) => {settings!.launchStartup = e.target.checked; updateSettings();}}/>
-        <span className="ml-2 text-gray-700 dark:text-gray-400">Launch app when Windows starts</span>
+        <span className="ml-2 text-gray-700 dark:text-gray-400">Launch app on system startup</span>
       </label>
       <label className="inline-flex items-center">
         <input type="checkbox" className="form-checkbox h-4 w-4 text-gray-600"
