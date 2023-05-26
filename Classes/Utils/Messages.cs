@@ -183,6 +183,10 @@ namespace RePlays.Utils {
                         }
                     }
                     break;
+                case "CheckForUpdates": {
+                        Updater.CheckForUpdates(webMessage.data == "true");
+                    }
+                    break;
                 case "UpdateSettings": {
                         SaveSettings(webMessage);
                         SendMessage(GetUserSettings());
@@ -237,7 +241,6 @@ namespace RePlays.Utils {
                     }
 
                     break;
-
                 case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
                         string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');

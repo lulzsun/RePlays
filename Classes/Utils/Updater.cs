@@ -5,10 +5,15 @@ namespace RePlays.Utils {
     internal class Updater {
         public static string currentVersion = "?";
         public static string latestVersion = "Offline";
-        public static async void CheckForUpdates() {
+        public static bool applyingUpdate { get; internal set; }
+        public static async void CheckForUpdates(bool forceUpdate = false) {
+            if (applyingUpdate) {
+                Logger.WriteLine($"Currently in the middle of applying an update. Cannot check for updates.");
+                return;
+            }
             try {
-                using var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays", null, null, null,
-                    SettingsService.Settings.generalSettings.updateChannel != "Stable");
+                using var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays",
+                    prerelease: SettingsService.Settings.generalSettings.updateChannel != "Stable");
                 if (manager.CurrentlyInstalledVersion() != null) {
                     currentVersion = manager.CurrentlyInstalledVersion().ToString();
                 }
@@ -20,12 +25,24 @@ namespace RePlays.Utils {
                 if (updateInfo.ReleasesToApply.Count > 0) {
                     if (SettingsService.Settings.generalSettings.update == "automatic") {
                         Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
+                        applyingUpdate = true;
                         await manager.UpdateApp();
+                        applyingUpdate = false;
                         Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
-                        WebMessage.DisplayModal("New update applied! Restart to take effect.", "Automatic Updates", "info");
+                        WebMessage.DisplayModal("New update applied! Update will apply on next restart.", "Automatic Updates", "info");
                     }
                     else { // manual
-                        WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
+                        if (forceUpdate) {
+                            Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
+                            WebMessage.DisplayToast("ManualUpdate", "Applying update...", "Update", "info");
+                            applyingUpdate = true;
+                            await manager.UpdateApp();
+                            applyingUpdate = false;
+                            WebMessage.DestroyToast("ManualUpdate");
+                            Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
+                            WebMessage.DisplayModal("New update applied! Update will apply on next restart.", "Manual Update", "info");
+                        }
+                        else WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
                     }
                 }
                 else {
@@ -35,6 +52,7 @@ namespace RePlays.Utils {
             catch (System.Exception exception) {
                 Logger.WriteLine("Error: Issue fetching update releases: " + exception.ToString());
             }
+            applyingUpdate = false;
         }
     }
 }

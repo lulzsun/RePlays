@@ -1,5 +1,6 @@
 import Button from "../../components/Button";
 import DropDownMenu from "../../components/DropDownMenu";
+import { postMessage } from '../../helpers/messenger';
 
 interface Props {
   updateSettings: () => void;
@@ -61,7 +62,12 @@ export const General: React.FC<Props> = ({settings, updateSettings}) => {
 
       <span className="text-gray-700 dark:text-gray-400">Current Version: {settings?.currentVersion}</span>
       <span className="text-gray-700 dark:text-gray-400">Latest Version: {settings?.latestVersion}</span>
-      <Button text="Change logs" width={"auto"}/>
+      {/* <Button text="Change logs" width={"auto"}/> */}
+      <Button text={settings?.currentVersion === settings?.latestVersion ? "Check for Updates" : "Update to Latest"} 
+      width={"auto"} onClick={() => { 
+        let forceUpdate = settings?.currentVersion === settings?.latestVersion;
+        postMessage("CheckForUpdates", forceUpdate.toString());
+      }}/>
     </div>
 	)
 }
