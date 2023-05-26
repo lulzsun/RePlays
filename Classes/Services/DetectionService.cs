@@ -236,7 +236,7 @@ namespace RePlays.Services {
                     return false;
                 }
                 var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
-                bool isValidAspectRatio = new[] { "64:27", "43:18", "21:9", "16:10", "16:9", "4:3" }.Contains(aspectRatio);
+                bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
                 bool isWhitelistedClass = classBlacklist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
                 if (isWhitelistedClass && isValidAspectRatio) {
                     Logger.WriteLine($"Assumed recordable game: [{processId}]" +

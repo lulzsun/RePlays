@@ -591,6 +591,10 @@ namespace RePlays.Utils {
             return $"{aspectWidth}:{aspectHeight}";
         }
 
+        public static bool IsValidAspectRatio(int width, int height) {
+            return new[] { "64:27", "43:18", "21:9", "16:10", "16:9", "4:3" }.Contains(GetAspectRatio(width, height));
+        }
+
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {
             return source.Select((item, index) => (item, index));
         }

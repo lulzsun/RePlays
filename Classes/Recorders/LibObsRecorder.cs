@@ -77,6 +77,7 @@ namespace RePlays.Recorders {
                                 // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
                                 Rect currentSize = GetWindowSize(windowHandle);
                                 if ((currentSize.GetWidth() > 1 && currentSize.GetHeight() > 1) && // fullscreen tabbing check
+                                    (IsValidAspectRatio(currentSize.GetWidth(), currentSize.GetHeight())) && // if it is (assumed) valid game aspect ratio for recording
                                     (currentSize.GetWidth() != windowSize.GetWidth() || currentSize.GetHeight() != windowSize.GetHeight())) {
                                     RestartRecording();
                                 }
