@@ -28,6 +28,7 @@ namespace RePlays {
         [STAThread]
         [Obsolete]
         static void Main(string[] args) {
+            Logger.WriteLine($"System Culture: {CultureInfo.DefaultThreadCurrentCulture.Name}");
             CultureInfo.DefaultThreadCurrentCulture = new("en-US");
 
             // redirect console output to parent process;
