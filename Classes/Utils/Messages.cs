@@ -118,9 +118,9 @@ namespace RePlays.Utils {
         public string message { get; set; }
         public string data { get; set; }
 
-        static Dictionary<string, WebMessage> modalList = new();
-        static Dictionary<string, WebMessage> toastList = new();
-        static VideoSortSettings videoSortSettings = new() {
+        public static Dictionary<string, WebMessage> modalList = new();
+        public static Dictionary<string, WebMessage> toastList = new();
+        public static VideoSortSettings videoSortSettings = new() {
             game = "All Games",
             sortBy = "Latest"
         };
