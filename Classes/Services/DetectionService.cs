@@ -205,7 +205,7 @@ namespace RePlays.Services {
                 return false;
             }
             if (executablePath != "" && IsMatchedNonGame(executablePath)) {
-                Logger.WriteLine($"Blocked application: [{processId}][{executablePath}]");
+                //Logger.WriteLine($"Blacklisted application: [{processId}][{executablePath}]");
                 return false;
             }
 
