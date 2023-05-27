@@ -236,7 +236,7 @@ namespace RePlays.Utils {
                 video.fileName = Path.GetFileName(file);
                 video.game = Path.GetFileName(Path.GetDirectoryName(file));
 #if DEBUG && WINDOWS
-                video.folder = "https://videos.replays.app/";
+                video.folder = "http://localhost:3001/"; //if not using static server: https://videos.replays.app/
 #elif RELEASE && WINDOWS
                 video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
 #else

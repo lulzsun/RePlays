@@ -9,7 +9,6 @@ using System.Net;
 using System.Diagnostics;
 #if !WINDOWS
 using PhotinoNET;
-using RePlays.Classes.Utils;
 #else
 using Squirrel;
 using System.Windows.Forms;
@@ -78,7 +77,10 @@ namespace RePlays {
                 if (process == null) process = Process.Start(startInfo);
             }
 #endif
-
+#if DEBUG || !WINDOWS
+            // this will serve video files/thumbnails to allow the react app to use them
+            Classes.Utils.StaticServer.Start();
+#endif
 #if WINDOWS
             // squirrel configuration
             try {
@@ -101,8 +103,6 @@ namespace RePlays {
             Application.Run(new frmMain());
         }
 #else
-            // this will serve video files/thumbnails to allow the react app to use them
-            StaticServer.Start();
             Thread uiThread = new(OpenInterface);
             try {
                 uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
