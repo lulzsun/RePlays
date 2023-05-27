@@ -28,9 +28,6 @@ namespace RePlays {
         [STAThread]
         [Obsolete]
         static void Main(string[] args) {
-            Logger.WriteLine($"System Culture: {CultureInfo.DefaultThreadCurrentCulture.Name}");
-            CultureInfo.DefaultThreadCurrentCulture = new("en-US");
-
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
             string debugArg = "-debug";
@@ -43,6 +40,10 @@ namespace RePlays {
             else {
                 Logger.Purge();
             }
+
+            // log current culture and set culture to en-US
+            Logger.WriteLine($"System Culture: {CultureInfo.CurrentCulture.Name}");
+            CultureInfo.DefaultThreadCurrentCulture = new("en-US");
 
             // log all exceptions
             AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) => {
