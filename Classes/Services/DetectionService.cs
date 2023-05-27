@@ -8,7 +8,6 @@ using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -370,11 +369,18 @@ namespace RePlays.Services {
 
         public static bool IsMatchedNonGame(string executablePath) {
             if (executablePath is null) return false;
-
             executablePath = executablePath.ToLower();
 
-            if (SettingsService.Settings.detectionSettings.blacklist.Contains(executablePath)) {
-                return true;
+            // if this exe is in the user whitelist, then it should not be a non-game
+            foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
+                // we are only checking for fileName here, which is a bad idea
+                // TODO: do proper full path check (also fix IsMatchedGame() to do the same)
+                if (game.gameExe.ToLower() == Path.GetFileName(executablePath)) return false;
+            }
+
+            foreach (var path in SettingsService.Settings.detectionSettings.blacklist) {
+                float result = CalculateStringSimilarity(path.ToLower(), executablePath);
+                if (result > 0.75) return true;
             }
 
             if (nonGameDetectionsCache.Contains(Path.GetFileName(executablePath))) {
