@@ -136,8 +136,11 @@ namespace RePlays.Utils {
                 return true; // this may be true, but we don't know for certain...
             }
             else {
-                frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
-                return true;
+                if (frmMain.webView2 != null && frmMain.webView2.CoreWebView2 != null) {
+                    frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                    return true;
+                }
+                return false;
             }
 #else
             Program.window?.SendWebMessage(message);
