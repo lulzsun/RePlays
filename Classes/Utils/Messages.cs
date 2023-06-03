@@ -130,17 +130,13 @@ namespace RePlays.Utils {
             if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return false;
             if (frmMain.webView2.InvokeRequired) {
                 // Call this same method but make sure it is on UI thread
-                frmMain.webView2.BeginInvoke((System.Windows.Forms.MethodInvoker)delegate {
-                    frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
-                });
-                return true; // this may be true, but we don't know for certain...
+                return frmMain.webView2.Invoke(new Func<bool>(() => {
+                    return SendMessage(message);
+                }));
             }
             else {
-                if (frmMain.webView2 != null && frmMain.webView2.CoreWebView2 != null) {
-                    frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
-                    return true;
-                }
-                return false;
+                frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                return true;
             }
 #else
             Program.window?.SendWebMessage(message);
