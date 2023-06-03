@@ -375,11 +375,11 @@ namespace RePlays.Recorders {
         }
 
         public override void LostFocus() {
-            if (DisplayCapture) PauseDisplayOutput();
+            //if (DisplayCapture) PauseDisplayOutput();
         }
 
         public override void GainedFocus() {
-            if (DisplayCapture) ResumeDisplayOutput();
+            //if (DisplayCapture) ResumeDisplayOutput();
         }
 
         public void PauseDisplayOutput() {
