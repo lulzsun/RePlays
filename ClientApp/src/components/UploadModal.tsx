@@ -32,7 +32,6 @@ export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
 
         <div className="flex flex-col">
           Destination
-          {/* TODO: modify DropDownMenu with this component? */}
           <div className="group relative w-full">
             <svg className="absolute w-5 h-5 -ml-8 mt-2 top-px left-full text-gray-700 group-hover:text-gray-700 cursor-pointer pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/>
@@ -41,7 +40,6 @@ export const UploadModal: React.FC<Props> = ({video, game, thumb}) => {
             name="destinationDdm" id="destinationDdm" defaultValue={destination} onChange={(e) => setDestination(e.target.value)}>
               <option value="RePlays">RePlays</option>
               <option value="Streamable">Streamable</option>
-              {/* <option value="Youtube">Youtube</option> */}
               <option value="LocalFolder">Local Folder</option>
               <option value="Custom">Custom</option>  
             </select>

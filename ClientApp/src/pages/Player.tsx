@@ -198,7 +198,7 @@ export const Player: React.FC<Props> = ({videos}) => {
   function handleUpload() {
     console.log(`${game} ${video} ${videoType} to upload`);
     var thumb = `${folder}/${game}/.thumbs/${video}`;
-    thumb = thumb.substr(0, thumb.lastIndexOf('.')) + ".png" || thumb + ".png";
+    thumb = thumb.substr(0, thumb.lastIndexOf('.')) + ".webp" || thumb + ".webp";
 
     modalCtx?.setData({title: "Upload", context: <UploadModal video={video} game={game} thumb={thumb}/>, cancel: true});
     modalCtx?.setOpen(true);
