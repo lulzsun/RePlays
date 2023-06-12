@@ -4,6 +4,7 @@ using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using RePlays.Integrations;
 using System.IO;
 using System.Threading.Tasks;
 using static obs_net.Obs;
@@ -463,6 +464,12 @@ namespace RePlays.Recorders {
             Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             DisplayCapture = false;
             RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
+
+            if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration) {
+                GetOrCreateMetadata(videoSavePath);
+                UpdateMetadataWithStats(videoSavePath, LeagueOfLegendsIntegration.stats);
+            }
+
             try {
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
                 WebMessage.SendMessage(t);

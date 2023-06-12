@@ -9,6 +9,9 @@ interface Props {
   game?: string;
   size?: number;
   duration?: number;
+  kills?: number;
+  assists?: number;
+  deaths?: number;
   date?: string;
   video?: string;
   videoType?: string;
@@ -18,7 +21,7 @@ interface Props {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, duration=0, video="", videoType="", folder="", checked, onChange}) => {
+export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, duration=0, kills, assists, deaths, video="", videoType="", folder="", checked, onChange}) => {
   const modalCtx = useContext(ModalContext);
   
   function handleUpload() {
@@ -61,6 +64,12 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
           <span className="absolute z-40 bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal" style={{backgroundColor: `rgba(0, 0, 0, 0.5)`}}>
             {duration > 3600 ? new Date(duration * 1000).toISOString().substr(11, 8).replace(/^0+/, '') : new Date(duration * 1000).toISOString().substring(14, 19)}
           </span>
+
+          {game === "League of Legends" && videoType === "Sessions" && (
+              <span className="absolute z-40 bottom-1 left-1 py-0.5 px-2 rounded-full text-xs font-normal" style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}>
+                  {`${kills}/${deaths}/${assists}`}
+              </span>
+          )}
           <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
           <img className="absolute z-20 w-full" alt="" src={`${folder}/${game}/.thumbs/${thumb}`}/>
           <img className="relative z-10 w-full" alt="" src={"video_thumbnail_placeholder.png"}/>

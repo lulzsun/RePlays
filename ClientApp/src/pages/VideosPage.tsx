@@ -101,6 +101,9 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
             date={videos[index].date}
             size={videos[index].size}
             duration={videos[index].metadata.duration}
+            kills={videos[index].metadata.kills !== undefined ? videos[index].metadata.kills : undefined}
+            assists={videos[index].metadata.assists !== undefined ? videos[index].metadata.assists : undefined}
+            deaths={videos[index].metadata.deaths !== undefined ? videos[index].metadata.deaths : undefined}
             thumb={videos[index].thumbnail}
             checked={checkedVideos[index]}
             onChange={(e) => onVideoSelected(e, index)}/>
