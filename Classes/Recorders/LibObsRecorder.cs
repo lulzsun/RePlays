@@ -226,6 +226,15 @@ namespace RePlays.Recorders {
                 }
                 else
                     Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + totalDevices + 1}), cannot add another track (max = 6)");
+
+                if (inputDevice.denoiser) {
+                    nint settings = obs_data_create();
+                    obs_data_set_string(settings, "method", "denoiser");
+                    obs_data_set_string(settings, "versioned_id", "noise_suppress_filter_v2");
+                    nint noiseSuppressFilter = obs_source_create("noise_suppress_filter", "Noise Suppression", settings, IntPtr.Zero);
+                    obs_source_filter_add(audioSources["(input) " + inputDevice.deviceId], noiseSuppressFilter);
+                    obs_data_release(settings);
+                }
             }
 
             // SETUP NEW VIDEO SOURCE

@@ -6,6 +6,7 @@ namespace obs_net {
     using obs_source_t = IntPtr;
     using profiler_name_store_t = IntPtr;
     using video_t = IntPtr;
+    using size_t = UIntPtr;
     public partial class Obs {
 
         public const string importLibrary = @"obs.dll";  //extension is handled automatically
@@ -282,6 +283,11 @@ namespace obs_net {
 
         [DllImport(importLibrary, CallingConvention = importCall)]
         public static extern float obs_source_get_volume(obs_source_t source);
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool obs_enum_filter_types(size_t idx, [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(UTF8StringMarshaler))] ref string id);
+        [DllImport(importLibrary, CallingConvention = importCall)]
+        public static extern void obs_source_filter_add(obs_source_t source, obs_source_t filter);
 
 
         public enum VideoResetError {

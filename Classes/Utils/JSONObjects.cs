@@ -72,9 +72,10 @@ namespace RePlays.Utils {
 
     public class AudioDevice {
         public AudioDevice() { }
-        public AudioDevice(string deviceId, string deviceLabel) {
+        public AudioDevice(string deviceId, string deviceLabel, bool denoiser = false) {
             _deviceId = deviceId;
             _deviceLabel = deviceLabel;
+            _denoiser = denoiser;
         }
         private string _deviceId = "";
         public string deviceId { get { return _deviceId; } set { _deviceId = value; } }
@@ -82,6 +83,8 @@ namespace RePlays.Utils {
         public string deviceLabel { get { return _deviceLabel; } set { _deviceLabel = value; } }
         private int _deviceVolume = 100;
         public int deviceVolume { get { return _deviceVolume; } set { _deviceVolume = value; } }
+        private bool _denoiser;
+        public bool denoiser { get { return _denoiser; } set { _denoiser = value; } }
     }
 
     public class CaptureSettings {
