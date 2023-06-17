@@ -4,7 +4,7 @@ import AudioDevice from "../../components/AudioDevice";
 
 interface Props {
   updateSettings: () => void;
-  settings: CaptureSettings;
+  settings: CaptureSettings | undefined;
 }
 
 export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
