@@ -259,7 +259,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
       <div className="flex flex-col">Output Devices</div>
       <div className="flex flex-col gap-4">
         {settings?.outputDevices && settings.outputDevices.map((item, i) => {
-            return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume} hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+          return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume} hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
             onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value); settings!.outputDevices[i].deviceVolume = value; }}
             onCheck={(e) => { let value = (e.target as HTMLInputElement).checked; settings!.inputDevices[i].denoiser = value; }}
             onMouseUpCapture={(e) => { updateSettings(); }}
