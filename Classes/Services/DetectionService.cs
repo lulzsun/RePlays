@@ -84,8 +84,9 @@ namespace RePlays.Services {
 
         public static void WindowDeletion(IntPtr hwnd) {
             GetWindowThreadProcessId(hwnd, out uint processId);
+            var currentSession = RecordingService.GetCurrentSession();
 
-            if (processId != 0 && RecordingService.GetCurrentSession().Pid == processId && RecordingService.GetCurrentSession().WindowHandle == hwnd) {
+            if (currentSession.Pid != 0 && (currentSession.Pid == processId || currentSession.WindowHandle == hwnd)) {
                 GetExecutablePathFromWindowHandle(hwnd, out string executablePath);
                 Logger.WriteLine($"WindowDeletion: [{processId}][{hwnd}][{executablePath}]");
                 RecordingService.StopRecording();
