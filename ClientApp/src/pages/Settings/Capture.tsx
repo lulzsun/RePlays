@@ -4,7 +4,7 @@ import AudioDevice from "../../components/AudioDevice";
 
 interface Props {
   updateSettings: () => void;
-  settings: CaptureSettings | undefined;
+  settings: CaptureSettings;
 }
 
 export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
@@ -27,7 +27,9 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         settings.inputDevices.push({
           deviceId: device.deviceId,
           deviceLabel: device.deviceLabel,
-          deviceVolume: 100
+          deviceVolume: 100,
+          denoiser: false,
+          isInput: true
         })
         updateSettings();
       }
@@ -39,7 +41,9 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         settings.inputDevices.push({
           deviceId: device.deviceId,
           deviceLabel: device.deviceLabel,
-          deviceVolume: 100
+          deviceVolume: 100,
+          denoiser: false,
+          isInput: true
         })
         updateSettings();
       }});
@@ -255,8 +259,9 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
       <div className="flex flex-col">Output Devices</div>
       <div className="flex flex-col gap-4">
         {settings?.outputDevices && settings.outputDevices.map((item, i) => {
-          return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume}
+            return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume} hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
             onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value); settings!.outputDevices[i].deviceVolume = value; }}
+            onCheck={(e) => { let value = (e.target as HTMLInputElement).checked; settings!.inputDevices[i].denoiser = value; }}
             onMouseUpCapture={(e) => { updateSettings(); }}
             onRemove={() => {settings!.outputDevices = settings!.outputDevices.filter((d) => d.deviceId !== item.deviceId); updateSettings();}}/>
         })}
@@ -265,9 +270,11 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
       <div className="flex flex-col">Input Devices</div>
       <div className="flex flex-col gap-4">
         {settings?.inputDevices && settings.inputDevices.map((item, i) => {
-          return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
-            onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value); settings!.inputDevices[i].deviceVolume = value; }}
-            onMouseUpCapture={() => { updateSettings(); }}
+          item.isInput = true;
+          return <AudioDevice key={item.deviceId} item={item} defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}  hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+            onChange={(e) => { let value = parseInt((e.target as HTMLInputElement).value);  settings!.inputDevices[i].deviceVolume = value; }}
+            onCheck={(e) => { let value = (e.target as HTMLInputElement).checked; settings!.inputDevices[i].denoiser = value; updateSettings();}}
+            onMouseUpCapture={() => {updateSettings(); }}
             onRemove={() => {settings!.inputDevices = settings!.inputDevices.filter((d) => d.deviceId !== item.deviceId); updateSettings();}}/>
         })}
       </div>

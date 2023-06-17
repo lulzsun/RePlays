@@ -106,6 +106,8 @@ declare global {
     deviceId: string,
     deviceLabel: string,
     deviceVolume: number,
+    denoiser?: boolean,
+    isInput?: boolean
   }
   interface CaptureSettings {
     recordingMode: string,
@@ -121,6 +123,7 @@ declare global {
     inputDevicesCache: AudioDevice[],
     outputDevices: AudioDevice[],
     outputDevicesCache: AudioDevice[],
+    hasNvidiaAudioSDK: boolean,
   }
   interface KeybindingsSettings {
       keybindings: Keybindings

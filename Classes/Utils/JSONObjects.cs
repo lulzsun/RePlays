@@ -122,6 +122,8 @@ namespace RePlays.Utils {
 
         private List<AudioDevice> _outputDevices = new();
         public List<AudioDevice> outputDevices { get { return _outputDevices; } set { _outputDevices = value; } }
+        private bool _hasNvidiaAudioSDK;
+        public bool hasNvidiaAudioSDK { get { return _hasNvidiaAudioSDK; } set { _hasNvidiaAudioSDK = value; } }
     }
 
     public class StorageSettings {
