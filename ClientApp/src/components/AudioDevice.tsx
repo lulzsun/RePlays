@@ -1,12 +1,16 @@
+import { postMessage } from "../helpers/messenger";
+
 interface Props {
   onChange: React.ChangeEventHandler<HTMLInputElement>;
+  onCheck: React.ChangeEventHandler<HTMLInputElement>;
   onMouseUpCapture: React.MouseEventHandler<HTMLInputElement>;
   onRemove: React.MouseEventHandler<HTMLDivElement>;
   defaultValue: number;
   item: AudioDevice;
+  hasNvidiaAudioSDK: boolean;
 }
 
-export const AudioDevice: React.FC<Props> = ({onChange, onMouseUpCapture, onRemove, defaultValue, item}) => {
+export const AudioDevice: React.FC<Props> = ({onChange, onCheck, onMouseUpCapture, onRemove, defaultValue, item, hasNvidiaAudioSDK}) => {
 	return (
     <div className={`group px-6 py-2 self-start bg-white border rounded-md dark:bg-gray-900 text-gray-700 dark:text-gray-400 border-gray-500 dark:border-gray-400`}>
       <div className="flex flex-row gap-2">
@@ -26,6 +30,29 @@ export const AudioDevice: React.FC<Props> = ({onChange, onMouseUpCapture, onRemo
           onChange={onChange} onMouseUpCapture={onMouseUpCapture}/>
         {item.deviceVolume + "%"}
       </div>
+      
+      {item.isInput && (
+          <div className="flex flex-row gap-2">
+              <label className="inline-flex items-center">
+                  <input
+                      type="checkbox"
+                      disabled={!hasNvidiaAudioSDK}
+                      className="form-checkbox h-4 w-4 text-gray-600"
+                      defaultChecked={item.denoiser ?? false}
+                      onChange={onCheck}
+                      onMouseUpCapture={onMouseUpCapture}
+                  />
+                  <span className="ml-2 text-gray-700 dark:text-gray-400">
+                      NVIDIA Noise Removal
+                  </span>
+              </label>
+              {!hasNvidiaAudioSDK && (
+                  <a onClick={() => { postMessage("DownloadNvidiaAudioSDK") }} className="text-blue-700 dark:text-blue-400 cursor-pointer">Download SDK</a>
+              )}
+          </div>
+      )}
+      
+
     </div>
 	)
 }

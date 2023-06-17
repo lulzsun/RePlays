@@ -1,3 +1,4 @@
+using RePlays.Recorders;
 using RePlays.Services;
 using System;
 using System.Collections.Generic;
@@ -6,12 +7,16 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net.Http;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Timers;
+using Process = System.Diagnostics.Process;
 
 namespace RePlays.Utils {
     public static class Functions {
@@ -136,8 +141,8 @@ namespace RePlays.Utils {
             inputCache.Clear();
             outputCache.Add(new("default", "Default Device"));
             outputCache.Add(new("communications", "Default Communication Device"));
-            inputCache.Add(new("default", "Default Device"));
-            inputCache.Add(new("communications", "Default Communication Device"));
+            inputCache.Add(new("default", "Default Device", false));
+            inputCache.Add(new("communications", "Default Communication Device", false));
             ManagementObjectSearcher searcher = new("Select * From Win32_PnPEntity");
             ManagementObjectCollection deviceCollection = searcher.Get();
             foreach (ManagementObject obj in deviceCollection) {
@@ -649,6 +654,107 @@ namespace RePlays.Utils {
             // our last action in the above loop was to switch d and p, so p now 
             // actually has the most recent cost counts
             return p[n];
+        }
+
+        private static int elapsedSeconds;
+        private static Timer checkForNvidiaUpdateTimer;
+
+        public static async void DownloadNvidiaAudioSDK() {
+            LibObsRecorder activeRecorder = (LibObsRecorder)RecordingService.ActiveRecorder;
+            if (activeRecorder.graphicsCard == null) {
+                WebMessage.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
+                return;
+            }
+
+            string graphicsCardVersion = activeRecorder.graphicsCard;
+
+            // Regex pattern to extract the graphics card version (Example: 3060, 4090 TI, 2070)
+            Regex regex = new Regex(@"\b[2-4]0[0-9]0\b");
+            Match match = regex.Match(graphicsCardVersion);
+            if (!match.Success) {
+                WebMessage.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
+                return;
+            }
+
+            int versionNumber = int.Parse(match.Value[..2]);
+            string url;
+
+            switch (versionNumber) {
+                case 20:
+                    url = "https://international.download.nvidia.com/Windows/broadcast/sdk/AFX/2022-12-22_nvidia_afx_sdk_win_v1.3.0.21_turing.exe";
+                    break;
+                case 30:
+                    url = "https://international.download.nvidia.com/Windows/broadcast/sdk/AFX/2022-12-22_nvidia_afx_sdk_win_v1.3.0.21_ampere.exe";
+                    break;
+                case 40:
+                    url = "https://international.download.nvidia.com/Windows/broadcast/sdk/AFX/2022-12-22_nvidia_afx_sdk_win_v1.3.0.21_ada.exe";
+                    break;
+                default:
+                    WebMessage.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
+                    return;
+            }
+
+            string savePath = Path.Join(GetTempFolder(), "nvidia.exe");
+
+            using (HttpClient client = new HttpClient()) {
+                using (HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead)) {
+                    response.EnsureSuccessStatusCode();
+
+                    long? totalBytes = response.Content.Headers.ContentLength;
+
+                    using (Stream contentStream = await response.Content.ReadAsStreamAsync()) {
+                        await ProcessContentStream(contentStream, totalBytes, savePath);
+                    }
+                }
+            }
+
+            WebMessage.DestroyToast("Nvidia");
+            Logger.WriteLine("Download completed!");
+
+            ProcessStartInfo startInfo = new ProcessStartInfo(savePath) {
+                UseShellExecute = true,
+                Verb = "runas"
+            };
+            Process.Start(startInfo);
+
+            elapsedSeconds = 0;
+            checkForNvidiaUpdateTimer = new Timer(1000);
+            checkForNvidiaUpdateTimer.Elapsed += TimerElapsed;
+            checkForNvidiaUpdateTimer.AutoReset = true;
+            checkForNvidiaUpdateTimer.Start();
+        }
+
+        private static void TimerElapsed(object sender, ElapsedEventArgs e) {
+            elapsedSeconds++;
+
+            LibObsRecorder activeRecorder = (LibObsRecorder)RecordingService.ActiveRecorder;
+            if (activeRecorder.HasNvidiaAudioSDK()) {
+                checkForNvidiaUpdateTimer.Stop();
+                WebMessage.SendMessage(GetUserSettings());
+            }
+
+            const int maxSeconds = 600;
+            if (elapsedSeconds >= maxSeconds) {
+                checkForNvidiaUpdateTimer.Stop();
+            }
+        }
+
+        static async Task ProcessContentStream(Stream contentStream, long? totalBytes, string savePath) {
+            long totalDownloaded = 0;
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+
+            using (FileStream fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true)) {
+                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0) {
+                    await fileStream.WriteAsync(buffer, 0, bytesRead);
+                    totalDownloaded += bytesRead;
+
+                    if (totalBytes.HasValue) {
+                        int progressPercentage = (int)((totalDownloaded * 100) / totalBytes.Value);
+                        WebMessage.DisplayToast("Nvidia", "Nvidia Audio SDK", "Downloading", "none", progressPercentage, 100);
+                    }
+                }
+            }
         }
     }
 }
