@@ -660,23 +660,30 @@ namespace RePlays.Utils {
         private static Timer checkForNvidiaUpdateTimer;
 
         public static async void DownloadNvidiaAudioSDK() {
-            LibObsRecorder activeRecorder = (LibObsRecorder)RecordingService.ActiveRecorder;
-            if (activeRecorder.graphicsCard == null) {
-                WebMessage.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
-                return;
-            }
-
-            string graphicsCardVersion = activeRecorder.graphicsCard;
+            var query = new ObjectQuery("SELECT * FROM Win32_VideoController");
+            var searcher = new ManagementObjectSearcher(query);
 
             // Regex pattern to extract the graphics card version (Example: 3060, 4090 TI, 2070)
             Regex regex = new Regex(@"\b[2-4]0[0-9]0\b");
-            Match match = regex.Match(graphicsCardVersion);
-            if (!match.Success) {
+            string gpuRTX = null;
+
+            // Retrieve and display the graphics card information
+            foreach (ManagementObject obj in searcher.Get()) {
+                string gpuName = obj["Name"].ToString();
+                Logger.WriteLine("Detected GPU: " + gpuName);
+                Match match = regex.Match(gpuName);
+
+                if (match.Success) {
+                    gpuRTX = match.Value;
+                }
+            }
+
+            if (gpuRTX == null) {
                 WebMessage.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
                 return;
             }
 
-            int versionNumber = int.Parse(match.Value[..2]);
+            int versionNumber = int.Parse(gpuRTX[..2]);
             string url;
 
             switch (versionNumber) {

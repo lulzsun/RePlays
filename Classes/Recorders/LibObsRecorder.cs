@@ -1,12 +1,10 @@
-﻿using Microsoft.Extensions.FileSystemGlobbing;
-using obs_net;
+﻿using obs_net;
 using RePlays.Services;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static obs_net.Obs;
 using static RePlays.Utils.Functions;
@@ -16,7 +14,6 @@ namespace RePlays.Recorders {
         public bool Connected { get; private set; }
         public bool DisplayCapture;
         public bool isStopping;
-        public string graphicsCard;
         static string videoSavePath = "";
         static string videoNameTimeStamp = "";
         static IntPtr windowHandle = IntPtr.Zero;
@@ -96,9 +93,6 @@ namespace RePlays.Recorders {
                         else if (formattedMsg.Contains("No space left on device")) {
                             WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
                             RecordingService.StopRecording();
-                        }
-                        else if (formattedMsg.Contains("Adapter 0: ")) {
-                            graphicsCard = formattedMsg.Replace("Adapter 0: ", "");
                         }
                     }
                 }
