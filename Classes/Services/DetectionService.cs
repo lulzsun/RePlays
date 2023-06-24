@@ -70,7 +70,7 @@ namespace RePlays.Services {
 
         public static void WindowCreation(IntPtr hwnd) {
             GetWindowThreadProcessId(hwnd, out uint processId);
-            GetExecutablePathFromWindowHandle(hwnd, out string executablePath);
+            GetExecutablePathFromProcessId(processId, out string executablePath);
 
             if (executablePath != null) {
                 if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
@@ -84,12 +84,21 @@ namespace RePlays.Services {
 
         public static void WindowDeletion(IntPtr hwnd) {
             GetWindowThreadProcessId(hwnd, out uint processId);
+            GetExecutablePathFromProcessId(processId, out string executablePath);
             var currentSession = RecordingService.GetCurrentSession();
 
-            if (currentSession.Pid != 0 && (currentSession.Pid == processId && currentSession.WindowHandle == hwnd)) {
-                GetExecutablePathFromWindowHandle(hwnd, out string executablePath);
-                Logger.WriteLine($"WindowDeletion: [{processId}][{hwnd}][{executablePath}]");
-                RecordingService.StopRecording();
+            if (currentSession.Pid != 0 && (currentSession.Pid == processId || currentSession.WindowHandle == hwnd)) {
+                try {
+                    var process = Process.GetProcessById(currentSession.Pid);
+                    if (process.HasExited) throw new Exception();
+                }
+                catch (Exception) {
+                    // Process no longer exits, must be safe to end recording(?)
+                    if (processId == 0) processId = (uint)currentSession.Pid;
+                    if (executablePath == "") executablePath = currentSession.Exe;
+                    Logger.WriteLine($"WindowDeletion: [{processId}][{hwnd}][{executablePath}]");
+                    RecordingService.StopRecording();
+                }
             }
         }
 
@@ -131,10 +140,8 @@ namespace RePlays.Services {
             }
         }
 
-        public static void GetExecutablePathFromWindowHandle(nint hwnd, out string executablePath) {
-            GetWindowThreadProcessId(hwnd, out uint processId);
+        public static void GetExecutablePathFromProcessId(uint processId, out string executablePath) {
             if (processId == 0) {
-                Logger.WriteLine($"Failed to get process id, how is this even possible?");
                 executablePath = "";
                 return;
             }
