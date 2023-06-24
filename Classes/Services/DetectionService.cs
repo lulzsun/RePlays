@@ -115,6 +115,9 @@ namespace RePlays.Services {
                 else if (RecordingService.GameInFocus) RecordingService.LostFocus();
                 return;
             }
+            else {
+                WindowCreation(hwnd);
+            }
         }
 
         static void OnWindowResizeMoveEvent(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
