@@ -56,10 +56,10 @@ namespace RePlays.Services {
 
         //[STAThread]
         public static async void StartRecording() {
-            Logger.WriteLine("Is PreRecording " + IsRecording.ToString());
-            Logger.WriteLine("Is Recording " + IsPreRecording.ToString());
-
-            if (IsRecording || IsPreRecording) return;
+            if (IsRecording || IsPreRecording) {
+                Logger.WriteLine($"Cannot start recording, already recording [{currentSession.Pid}][{currentSession.GameTitle}]");
+                return;
+            }
 
             IsPreRecording = true;
             bool result = await ActiveRecorder.StartRecording();
@@ -97,7 +97,10 @@ namespace RePlays.Services {
         }
 
         public static async void StopRecording() {
-            if (!IsRecording) return;
+            if (!IsRecording) {
+                Logger.WriteLine($"Cannot stop recording, no recording in progress");
+                return;
+            }
 
             bool result = await ActiveRecorder.StopRecording();
 
