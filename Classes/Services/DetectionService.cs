@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
+using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -16,6 +18,9 @@ using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class DetectionService {
+        static readonly ManagementEventWatcher pCreationWatcher = new(new EventQuery("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
+        static readonly ManagementEventWatcher pDeletionWatcher = new(new EventQuery("SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
+
         static MessageWindow messageWindow;
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         private delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
@@ -45,6 +50,23 @@ namespace RePlays.Services {
             }
 
             // watch process creation/deletion events
+            //pCreationWatcher.EventArrived += ...;
+            //pCreationWatcher.Start();
+            pDeletionWatcher.EventArrived += (object sender, EventArrivedEventArgs e) => {
+                try {
+                    if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription) {
+                        uint processId = uint.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
+                        //var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
+                        //var cmdLine = instanceDescription.GetPropertyValue("CommandLine");
+
+                        WindowDeletion(0, processId);
+                    }
+                }
+                catch (ManagementException) { }
+            };
+            pDeletionWatcher.Start();
+
+            // watch window creation/deletion events
             messageWindow = new MessageWindow();
             IsStarted = true;
 
@@ -62,14 +84,22 @@ namespace RePlays.Services {
                 messageWindow.Close();
                 messageWindow.Dispose();
             }
+            pCreationWatcher.Stop();
+            pDeletionWatcher.Stop();
+            pCreationWatcher.Dispose();
+            pDeletionWatcher.Dispose();
             UnhookWinEvent(winActiveHook);
             UnhookWinEvent(winResizeHook);
             winActiveDele = null;
             winResizeDele = null;
         }
 
-        public static void WindowCreation(IntPtr hwnd) {
-            GetWindowThreadProcessId(hwnd, out uint processId);
+        public static void WindowCreation(IntPtr hwnd, uint processId = 0, [CallerMemberName] string memberName = "") {
+            if (processId == 0 && hwnd != 0)
+                GetWindowThreadProcessId(hwnd, out processId);
+            else if (processId == 0 && hwnd == 0)
+                return;
+
             GetExecutablePathFromProcessId(processId, out string executablePath);
 
             if (executablePath != null) {
@@ -78,12 +108,19 @@ namespace RePlays.Services {
                 }
             }
             if (processId != 0 && AutoDetectGame((int)processId, executablePath, hwnd)) {
-                Logger.WriteLine($"WindowCreation: [{processId}][{hwnd}][{executablePath}]");
+                Logger.WriteLine($"WindowCreation: [{processId}][{hwnd}][{executablePath}]", memberName: memberName);
             }
         }
 
-        public static void WindowDeletion(IntPtr hwnd) {
-            GetWindowThreadProcessId(hwnd, out uint processId);
+        public static void WindowDeletion(IntPtr hwnd, uint processId = 0, [CallerMemberName] string memberName = "") {
+            if (!RecordingService.IsRecording)
+                return;
+
+            if (processId == 0 && hwnd != 0)
+                GetWindowThreadProcessId(hwnd, out processId);
+            else if (processId == 0 && hwnd == 0)
+                return;
+
             GetExecutablePathFromProcessId(processId, out string executablePath);
             var currentSession = RecordingService.GetCurrentSession();
 
@@ -93,10 +130,10 @@ namespace RePlays.Services {
                     if (process.HasExited) throw new Exception();
                 }
                 catch (Exception) {
-                    // Process no longer exits, must be safe to end recording(?)
+                    // Process no longer exists, must be safe to end recording(?)
                     if (processId == 0) processId = (uint)currentSession.Pid;
                     if (executablePath == "") executablePath = currentSession.Exe;
-                    Logger.WriteLine($"WindowDeletion: [{processId}][{hwnd}][{executablePath}]");
+                    Logger.WriteLine($"WindowDeletion: [{processId}][{hwnd}][{executablePath}]", memberName: memberName);
                     RecordingService.StopRecording();
                 }
             }
@@ -145,7 +182,15 @@ namespace RePlays.Services {
                 executablePath = "";
                 return;
             }
-            Process process = Process.GetProcessById((int)processId);
+
+            Process process;
+            try {
+                process = Process.GetProcessById((int)processId);
+            }
+            catch {
+                executablePath = "";
+                return;
+            }
 
             try {
                 // if this raises an exception, then that means this process is most likely being covered by anti-cheat (EAC)
