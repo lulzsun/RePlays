@@ -1,46 +1,19 @@
-# Getting Started with Create React App
+# RePlays - ClientApp
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the web front end portion of RePlays.
 
-## Available Scripts
+It is built upon React and Vite. Recommended Node version 17+.
 
-In the project directory, you can run:
+## Intracommunication
 
-### `npm start`
+> How does the frontend communicate with the backend?
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+On Windows, we communicate through [WebView2 messaging](https://learn.microsoft.com/en-us/microsoft-edge/webview2/how-to/communicate-btwn-web-native). We pass json object strings back and forth from native (C#) to web.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+(EXPERIMENTAL) On Linux, we communicate the same way, but with the WebKitGTK+ 2 (at the time of writing, we are using [Photino](https://www.tryphotino.io/) to get the native browser control of the OS)
 
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Linux communication is incomplete, thus warning that you do not try to develop features that require native calls. Only develop front-end on unix systems for basic frontend work.
 
 ## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
