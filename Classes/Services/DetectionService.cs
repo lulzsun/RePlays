@@ -184,8 +184,10 @@ namespace RePlays.Services {
             }
 
             Process process;
+            string processName = "Unknown";
             try {
                 process = Process.GetProcessById((int)processId);
+                processName = process.ProcessName;
             }
             catch {
                 executablePath = "";
@@ -198,10 +200,10 @@ namespace RePlays.Services {
             }
             catch (Exception ex) {
                 // this method of using OpenProcess is reliable for getting the fullpath in case of anti-cheat
-                IntPtr processHandle = OpenProcess(0x00000400 | 0x00000010, false, process.Id);
+                IntPtr processHandle = OpenProcess(0x00000400 | 0x00000010, false, (int)processId);
                 if (processHandle != IntPtr.Zero) {
                     StringBuilder stringBuilder = new(1024);
-                    if (!GetProcessImageFileName(processHandle, stringBuilder, out int size)) {
+                    if (!GetProcessImageFileName(processHandle, stringBuilder, out int _)) {
                         Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: {ex.Message}");
                         executablePath = "";
                     }
@@ -216,7 +218,7 @@ namespace RePlays.Services {
                     return;
                 }
                 else {
-                    Logger.WriteLine($"Failed to get process: [{processId}][{process.ProcessName}] full path. Error: {ex.Message}");
+                    Logger.WriteLine($"Failed to get process: [{processId}][{processName}] full path. Error: {ex.Message}");
                     executablePath = "";
                     return;
                 }
