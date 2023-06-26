@@ -258,7 +258,7 @@ namespace RePlays.Recorders {
 
             // attempt to wait for game_capture source to hook first
             Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
-            while (signalGCHookSuccess == false && retryAttempt - signalGCHookAttempt < maxRetryAttempts) {
+            while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
