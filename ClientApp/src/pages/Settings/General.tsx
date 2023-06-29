@@ -65,7 +65,7 @@ export const General: React.FC<Props> = ({settings, updateSettings}) => {
       {/* <Button text="Change logs" width={"auto"}/> */}
       <Button text={settings?.currentVersion === settings?.latestVersion ? "Check for Updates" : "Update to Latest"} 
       width={"auto"} onClick={() => { 
-        let forceUpdate = settings?.currentVersion === settings?.latestVersion;
+        let forceUpdate = settings?.currentVersion !== settings?.latestVersion;
         postMessage("CheckForUpdates", forceUpdate.toString());
       }}/>
     </div>

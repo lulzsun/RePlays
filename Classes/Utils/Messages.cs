@@ -184,7 +184,7 @@ namespace RePlays.Utils {
                     }
                     break;
                 case "CheckForUpdates": {
-                        Updater.CheckForUpdates(webMessage.data == "true");
+                        Updater.CheckForUpdates(webMessage.data.Contains("true"));
                     }
                     break;
                 case "UpdateSettings": {
