@@ -39,12 +39,11 @@ namespace RePlays.Utils {
                     else { // manual
                         if (forceUpdate) {
                             Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
-                            WebMessage.DisplayToast("ManualUpdate", "Applying update...", "Update", "info");
+                            WebMessage.DestroyToast("ManualUpdate");
                             applyingUpdate = true;
                             await manager.UpdateApp(progressCallback);
                             WebMessage.DestroyToast("UpdateProgress");
                             applyingUpdate = false;
-                            WebMessage.DestroyToast("ManualUpdate");
                             Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
                             WebMessage.DisplayModal("New update applied! Update will apply on next restart.", "Manual Update", "info");
                         }
