@@ -1,6 +1,7 @@
 ﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -26,16 +27,32 @@ namespace RePlays.Integrations {
                     try {
                         string result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/playerlist");
                         JsonDocument doc = JsonDocument.Parse(result);
-                        JsonElement root = doc.RootElement[0];
-                        int currentKills = root.GetProperty("scores").GetProperty("kills").GetInt32();
+                        JsonElement root = doc.RootElement;
+
+                        string username = root.GetProperty("activePlayer").GetProperty("summonerName").GetString();
+
+                        // Parsing all players
+                        JsonElement allPlayers = root.GetProperty("allPlayers");
+                        JsonElement currentPlayer = allPlayers
+                            .EnumerateArray()
+                            .FirstOrDefault(playerElement => playerElement.GetProperty("summonerName").GetString() == username);
+
+
+                        int currentKills = currentPlayer.GetProperty("scores").GetProperty("kills").GetInt32();
                         if (currentKills != stats.Kills) {
                             BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
                             Console.WriteLine("Kills changed to: " + currentKills);
                         }
 
-                        stats.Deaths = root.GetProperty("scores").GetProperty("deaths").GetInt32();
-                        stats.Assists = root.GetProperty("scores").GetProperty("assists").GetInt32();
                         stats.Kills = currentKills;
+                        stats.Deaths = currentPlayer.GetProperty("scores").GetProperty("deaths").GetInt32();
+                        stats.Assists = currentPlayer.GetProperty("scores").GetProperty("assists").GetInt32();
+                        stats.Champion = currentPlayer.GetProperty("scores").GetString();
+                        stats.Win = root.GetProperty("events").GetProperty("Events")
+                            .EnumerateArray()
+                            .Where(eventElement => eventElement.GetProperty("EventName").GetString() == "GameEnd")
+                            .Any(eventElement => eventElement.GetProperty("Result").GetString() == "Win");
+
                     }
                     catch {
                         if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
@@ -62,4 +79,6 @@ public class PlayerStats {
     public int Kills { get; set; }
     public int Assists { get; set; }
     public int Deaths { get; set; }
+    public string Champion { get; set; }
+    public bool Win { get; set; }
 }
