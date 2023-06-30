@@ -49,6 +49,7 @@ namespace RePlays.Recorders {
 
         static bool signalOutputStop = false;
         static bool signalGCHookSuccess = false;
+        static int signalGCHookAttempt = 0;
 
         static signal_callback_t outputStopCb;
 
@@ -90,6 +91,10 @@ namespace RePlays.Recorders {
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                             signalGCHookSuccess = false;
+                        }
+                        else if (formattedMsg.StartsWith("[game-capture: 'gameplay'] attempting to hook")) {
+                            Logger.WriteLine($"Waiting for successful graphics hook for... retry attempt #{signalGCHookAttempt}");
+                            signalGCHookAttempt++;
                         }
                         else if (formattedMsg.Contains("No space left on device")) {
                             WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
@@ -140,7 +145,7 @@ namespace RePlays.Recorders {
             // If session is empty, this is a manual record attempt. Lets try to yolo record the foregroundwindow
             if (session.Pid == 0 && GetForegroundProcess(out int processId, out nint hwid)) {
                 if (processId != 0 || hwid != 0) {
-                    DetectionService.GetExecutablePathFromWindowHandle(hwid, out string executablePath);
+                    DetectionService.GetExecutablePathFromProcessId((uint)processId, out string executablePath);
                     DetectionService.AutoDetectGame(processId, executablePath, hwid, autoRecord: false);
                     session = RecordingService.GetCurrentSession();
                 }
@@ -178,8 +183,7 @@ namespace RePlays.Recorders {
             // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension
             // this is a quick a dirty check: if there aren't more than 1120 pixels, we can assume it needs a retry
             while (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt < maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Waiting to retrieve correct window size (currently {1}x{2})... retry attempt #{0}",
-                    retryAttempt, windowSize.GetWidth(), windowSize.GetHeight()));
+                Logger.WriteLine($"Waiting to retrieve correct window size (currently {windowSize.GetWidth()}x{windowSize.GetHeight()})... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
                 windowSize = GetWindowSize(windowHandle);
@@ -227,6 +231,15 @@ namespace RePlays.Recorders {
                 }
                 else
                     Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + totalDevices + 1}), cannot add another track (max = 6)");
+
+                if (inputDevice.denoiser) {
+                    nint settings = obs_data_create();
+                    obs_data_set_string(settings, "method", "denoiser");
+                    obs_data_set_string(settings, "versioned_id", "noise_suppress_filter_v2");
+                    nint noiseSuppressFilter = obs_source_create("noise_suppress_filter", "Noise Suppression", settings, IntPtr.Zero);
+                    obs_source_filter_add(audioSources["(input) " + inputDevice.deviceId], noiseSuppressFilter);
+                    obs_data_release(settings);
+                }
             }
 
             // SETUP NEW VIDEO SOURCE
@@ -245,14 +258,15 @@ namespace RePlays.Recorders {
             obs_set_output_source(0, videoSources["gameplay"]);
 
             // attempt to wait for game_capture source to hook first
-            // this might take longer, so multiply maxRetryAttempts
-            while (signalGCHookSuccess == false && retryAttempt < maxRetryAttempts) {
-                Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]... retry attempt #{retryAttempt}");
+            Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
+            while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
+            signalGCHookAttempt = 0;
+
             if (retryAttempt >= maxRetryAttempts) {
-                Logger.WriteLine(string.Format("Unable to get graphics hook for [{0}]", windowClassNameId));
+                Logger.WriteLine($"Unable to get graphics hook for [{windowClassNameId}] after {retryAttempt} attempts");
 
                 Process process;
 
@@ -422,6 +436,15 @@ namespace RePlays.Recorders {
             if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder))
                 SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
             SettingsService.SaveSettings();
+        }
+
+        public bool HasNvidiaAudioSDK() {
+            bool exists = Path.Exists("C:\\Program Files\\NVIDIA Corporation\\NVIDIA Audio Effects SDK");
+            if (SettingsService.Settings.captureSettings.hasNvidiaAudioSDK != exists) {
+                SettingsService.Settings.captureSettings.hasNvidiaAudioSDK = exists;
+                SettingsService.SaveSettings();
+            }
+            return exists;
         }
 
         public void GetAvailableRateControls() {

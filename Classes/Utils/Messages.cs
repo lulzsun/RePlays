@@ -168,6 +168,7 @@ namespace RePlays.Utils {
                     }
                 case "Initialize": {
                         // INIT USER SETTINGS
+                        ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
                         SendMessage(GetUserSettings());
 
                         Logger.WriteLine($"Initializing {toastList.Count} Toasts");
@@ -313,6 +314,10 @@ namespace RePlays.Utils {
                             UploadService.Upload(data.destination, data.title, filePath, data.game);
                         }
                         //DisplayModal($"{data.title} {data.destination}", "Error", "warning"));
+                    }
+                    break;
+                case "DownloadNvidiaAudioSDK": {
+                        DownloadNvidiaAudioSDK();
                     }
                     break;
 #if WINDOWS

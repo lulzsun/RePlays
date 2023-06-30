@@ -14,7 +14,7 @@ namespace RePlays.Recorders {
             if (Connected) return;
 
             ltc.Log += (sender, msg) => {
-                Logger.WriteLine(string.Format("{0}: {1}", msg.Title, msg.Message), msg.File, msg.Line);
+                Logger.WriteLine($"{msg.Title}: {msg.Message}", msg.File, "", msg.Line);
             };
 
             ltc.ConnectionHandshake += (sender, msg) => {
