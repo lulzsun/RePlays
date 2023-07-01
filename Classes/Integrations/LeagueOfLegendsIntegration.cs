@@ -46,7 +46,7 @@ namespace RePlays.Integrations {
                         stats.Kills = currentKills;
                         stats.Deaths = currentPlayer.GetProperty("scores").GetProperty("deaths").GetInt32();
                         stats.Assists = currentPlayer.GetProperty("scores").GetProperty("assists").GetInt32();
-                        stats.Champion = currentPlayer.GetProperty("rawChampionName").GetString().Replace("game_character_displayname_","");
+                        stats.Champion = currentPlayer.GetProperty("rawChampionName").GetString().Replace("game_character_displayname_", "");
                         stats.Win = root.GetProperty("events").GetProperty("Events")
                             .EnumerateArray()
                             .Where(eventElement => eventElement.GetProperty("EventName").GetString() == "GameEnd")

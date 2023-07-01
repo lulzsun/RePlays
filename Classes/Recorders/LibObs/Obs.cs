@@ -5,8 +5,8 @@ namespace obs_net {
     using audio_t = IntPtr;
     using obs_source_t = IntPtr;
     using profiler_name_store_t = IntPtr;
-    using video_t = IntPtr;
     using size_t = UIntPtr;
+    using video_t = IntPtr;
     public partial class Obs {
 
         public const string importLibrary = @"obs.dll";  //extension is handled automatically
