@@ -1,5 +1,6 @@
 ﻿using RePlays.Services;
 using Squirrel;
+using System;
 
 namespace RePlays.Utils {
     internal class Updater {
@@ -23,10 +24,14 @@ namespace RePlays.Utils {
                 if (SettingsService.Settings.generalSettings.update == "none") return;
 
                 if (updateInfo.ReleasesToApply.Count > 0) {
+                    Action<int> progressCallback = (progressValue) => {
+                        WebMessage.DisplayToast("UpdateProgress", "Installing update", "Updating", "none", (long)progressValue, (long)100);
+                    };
                     if (SettingsService.Settings.generalSettings.update == "automatic") {
                         Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
                         applyingUpdate = true;
-                        await manager.UpdateApp();
+                        await manager.UpdateApp(progressCallback);
+                        WebMessage.DestroyToast("UpdateProgress");
                         applyingUpdate = false;
                         Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
                         WebMessage.DisplayModal("New update applied! Update will apply on next restart.", "Automatic Updates", "info");
@@ -34,11 +39,11 @@ namespace RePlays.Utils {
                     else { // manual
                         if (forceUpdate) {
                             Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
-                            WebMessage.DisplayToast("ManualUpdate", "Applying update...", "Update", "info");
-                            applyingUpdate = true;
-                            await manager.UpdateApp();
-                            applyingUpdate = false;
                             WebMessage.DestroyToast("ManualUpdate");
+                            applyingUpdate = true;
+                            await manager.UpdateApp(progressCallback);
+                            WebMessage.DestroyToast("UpdateProgress");
+                            applyingUpdate = false;
                             Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
                             WebMessage.DisplayModal("New update applied! Update will apply on next restart.", "Manual Update", "info");
                         }
