@@ -39,6 +39,11 @@ declare global {
     thumbnail: string,
     metadata: {
       duration: number,
+      kills?: number,
+      assists?: number,
+      deaths?: number,
+      champion?: string,
+      win?: boolean,
     };
     folder: string,
   }

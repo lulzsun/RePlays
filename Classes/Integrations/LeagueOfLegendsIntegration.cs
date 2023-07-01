@@ -1,6 +1,7 @@
 ﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -12,15 +13,11 @@ namespace RePlays.Integrations {
             Interval = 250,
         };
 
+        public static PlayerStats stats;
+
         public override async Task Start() {
             Logger.WriteLine("Starting League Of Legends integration");
-            int lastKills = 0;
-            string username = await GetCurrentPlayerName();
-
-            if (username == null) {
-                Logger.WriteLine("Could not get the current player name");
-                return;
-            }
+            stats = new PlayerStats();
 
             timer.Elapsed += async (sender, e) => {
                 using (var handler = new HttpClientHandler {
@@ -28,18 +25,36 @@ namespace RePlays.Integrations {
                 })
                 using (HttpClient client = new HttpClient(handler)) {
                     try {
-                        string result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/playerscores?summonerName=" + username);
+                        string result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/allgamedata");
                         JsonDocument doc = JsonDocument.Parse(result);
                         JsonElement root = doc.RootElement;
 
-                        int currentKills = root.GetProperty("kills").GetInt32();
-                        if (currentKills != lastKills) {
+                        string username = root.GetProperty("activePlayer").GetProperty("summonerName").GetString();
+
+                        // Parsing all players
+                        JsonElement allPlayers = root.GetProperty("allPlayers");
+                        JsonElement currentPlayer = allPlayers
+                            .EnumerateArray()
+                            .FirstOrDefault(playerElement => playerElement.GetProperty("summonerName").GetString() == username);
+
+                        int currentKills = currentPlayer.GetProperty("scores").GetProperty("kills").GetInt32();
+                        if (currentKills != stats.Kills) {
                             BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
                             Console.WriteLine("Kills changed to: " + currentKills);
-                            lastKills = currentKills;
                         }
+
+                        stats.Kills = currentKills;
+                        stats.Deaths = currentPlayer.GetProperty("scores").GetProperty("deaths").GetInt32();
+                        stats.Assists = currentPlayer.GetProperty("scores").GetProperty("assists").GetInt32();
+                        stats.Champion = currentPlayer.GetProperty("rawChampionName").GetString().Replace("game_character_displayname_","");
+                        stats.Win = root.GetProperty("events").GetProperty("Events")
+                            .EnumerateArray()
+                            .Where(eventElement => eventElement.GetProperty("EventName").GetString() == "GameEnd")
+                            .Any(eventElement => eventElement.GetProperty("Result").GetString() == "Win");
+
                     }
-                    catch {
+                    catch (Exception ex) {
+                        Logger.WriteLine(ex.Message);
                         if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
                             timer.Stop();
                             await Shutdown();
@@ -57,26 +72,13 @@ namespace RePlays.Integrations {
                 timer.Stop();
             }
         }
-
-        private async Task<string> GetCurrentPlayerName() {
-            using (var handler = new HttpClientHandler {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-            })
-            using (HttpClient client = new HttpClient(handler)) {
-                while (true) {
-                    try {
-                        return (await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/activeplayername")).Trim('\"');
-                    }
-                    catch (Exception ex) {
-                        if (RecordingService.IsRecording && RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
-                            Logger.WriteLine("Could not get player name, error: " + ex.Message);
-                            return null;
-                        }
-                        await Task.Delay(5000);
-                    }
-                }
-            }
-        }
-
     }
+}
+
+public class PlayerStats {
+    public int Kills { get; set; }
+    public int Assists { get; set; }
+    public int Deaths { get; set; }
+    public string Champion { get; set; }
+    public bool Win { get; set; }
 }
