@@ -374,7 +374,7 @@ export const Player: React.FC<Props> = ({videos}) => {
 
       <div className="flex flex-initial h-20 grid grid-flow-row">
         <div ref={timelineElement} className="w-full h-full overflow-x-scroll overflow-y-hidden bg-gray-400"> 
-          <div style={{ height: '1rem', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 grid grid-flow-col bg-gray-400 border-gray-300 border-l-2">
+          <div style={{ height: '1.1rem', width: `calc(${ZOOMS[currentZoom]}% - 12px)` }} className="inline-block mx-1.5 grid grid-flow-col bg-gray-400 border-gray-300 border-l-2">
             <div className="border-gray-300 border-r-2"></div>
             <div className="border-gray-300 border-r-2"></div>
             <div className="border-gray-300 border-r-2"></div>
