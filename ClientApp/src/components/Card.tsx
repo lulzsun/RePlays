@@ -12,6 +12,8 @@ interface Props {
   kills?: number;
   assists?: number;
   deaths?: number;
+  champion?: string;
+  win?: boolean;
   date?: string;
   video?: string;
   videoType?: string;
@@ -21,9 +23,11 @@ interface Props {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, duration=0, kills, assists, deaths, video="", videoType="", folder="", checked, onChange}) => {
+export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Unknown", thumb="video_thumbnail_placeholder.png", size=0, duration=0, kills, assists, deaths, champion, win, video="", videoType="", folder="", checked, onChange}) => {
   const modalCtx = useContext(ModalContext);
-  
+    const resultText = win === undefined ? undefined : win ? 'Win' : 'Loss';
+    const resultColor = win === undefined ? undefined : win ? 'text-green-500' : 'text-red-500';
+
   function handleUpload() {
     console.log(`${game} ${video} ${videoType} to upload`);
     var thumb = `${folder}/${game}/.thumbs/${video}`;
@@ -65,10 +69,11 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
             {duration > 3600 ? new Date(duration * 1000).toISOString().substr(11, 8).replace(/^0+/, '') : new Date(duration * 1000).toISOString().substring(14, 19)}
           </span>
 
-          {game === "League of Legends" && videoType === "Sessions" && (
-              <span className="absolute z-40 bottom-1 left-1 py-0.5 px-2 rounded-full text-xs font-normal" style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}>
-                  {`${kills}/${deaths}/${assists}`}
-              </span>
+          {game === "League of Legends" && videoType === "Sessions" && champion && (
+            <span className="absolute z-40 bottom-1 left-1 py-0.5 px-2 text-xs font-normal flex items-center" style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}>
+              <img className="mr-2" src={`https://ddragon.leagueoflegends.com/cdn/13.13.1/img/champion/${champion}.png`} style={{ width: "28px" }} alt={champion} />
+              <p>{`${kills}/${deaths}/${assists}`}{resultText && " - "}{resultText && <span className={`font-bold ${resultColor}`}>{resultText}</span>}</p>
+            </span>
           )}
           <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
           <img className="absolute z-20 w-full" alt="" src={`${folder}/${game}/.thumbs/${thumb}`}/>

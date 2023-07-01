@@ -42,6 +42,8 @@ declare global {
       kills?: number,
       assists?: number,
       deaths?: number,
+      champion?: string,
+      win?: boolean,
     };
     folder: string,
   }

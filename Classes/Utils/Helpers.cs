@@ -384,6 +384,8 @@ namespace RePlays.Utils {
                 metadata.kills = playerStats.Kills;
                 metadata.assists = playerStats.Assists;
                 metadata.deaths = playerStats.Deaths;
+                metadata.champion = playerStats.Champion;
+                metadata.win = playerStats.Win;
                 File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
             }
         }

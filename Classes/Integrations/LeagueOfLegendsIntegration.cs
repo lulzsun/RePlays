@@ -25,7 +25,7 @@ namespace RePlays.Integrations {
                 })
                 using (HttpClient client = new HttpClient(handler)) {
                     try {
-                        string result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/playerlist");
+                        string result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/allgamedata");
                         JsonDocument doc = JsonDocument.Parse(result);
                         JsonElement root = doc.RootElement;
 
@@ -37,7 +37,6 @@ namespace RePlays.Integrations {
                             .EnumerateArray()
                             .FirstOrDefault(playerElement => playerElement.GetProperty("summonerName").GetString() == username);
 
-
                         int currentKills = currentPlayer.GetProperty("scores").GetProperty("kills").GetInt32();
                         if (currentKills != stats.Kills) {
                             BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
@@ -47,14 +46,15 @@ namespace RePlays.Integrations {
                         stats.Kills = currentKills;
                         stats.Deaths = currentPlayer.GetProperty("scores").GetProperty("deaths").GetInt32();
                         stats.Assists = currentPlayer.GetProperty("scores").GetProperty("assists").GetInt32();
-                        stats.Champion = currentPlayer.GetProperty("scores").GetString();
+                        stats.Champion = currentPlayer.GetProperty("rawChampionName").GetString().Replace("game_character_displayname_","");
                         stats.Win = root.GetProperty("events").GetProperty("Events")
                             .EnumerateArray()
                             .Where(eventElement => eventElement.GetProperty("EventName").GetString() == "GameEnd")
                             .Any(eventElement => eventElement.GetProperty("Result").GetString() == "Win");
 
                     }
-                    catch {
+                    catch (Exception ex) {
+                        Logger.WriteLine(ex.Message);
                         if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
                             timer.Stop();
                             await Shutdown();
