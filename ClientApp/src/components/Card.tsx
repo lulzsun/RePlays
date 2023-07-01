@@ -68,11 +68,13 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
           <span className="absolute z-40 bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal" style={{backgroundColor: `rgba(0, 0, 0, 0.5)`}}>
             {duration > 3600 ? new Date(duration * 1000).toISOString().substr(11, 8).replace(/^0+/, '') : new Date(duration * 1000).toISOString().substring(14, 19)}
           </span>
-
           {game === "League of Legends" && videoType === "Sessions" && champion && (
-            <span className="absolute z-40 bottom-1 left-1 py-0.5 px-2 text-xs font-normal flex items-center" style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}>
-              <img className="mr-2" src={`https://ddragon.leagueoflegends.com/cdn/13.13.1/img/champion/${champion}.png`} style={{ width: "28px" }} alt={champion} />
-              <p>{`${kills}/${deaths}/${assists}`}{resultText && " - "}{resultText && <span className={`font-bold ${resultColor}`}>{resultText}</span>}</p>
+            <span className="absolute z-40 bottom-1 left-1 text-xs font-normal flex items-center">
+              <img className="border border-black -mr-4 z-40 rounded-full" src={`https://ddragon.leagueoflegends.com/cdn/13.13.1/img/champion/${champion}.png`} style={{ width: "20px" }} alt={champion}/>
+              <p className="py-0.5 pl-5 rounded-full p-2" style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}>
+                {`${kills}/${deaths}/${assists}`}{resultText && " - "}
+                {resultText && <span className={`font-bold ${resultColor}`}>{resultText}</span>}
+              </p>
             </span>
           )}
           <div className="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"/>
