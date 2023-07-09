@@ -1,10 +1,10 @@
 ﻿using obs_net;
+using RePlays.Integrations;
 using RePlays.Services;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using RePlays.Integrations;
 using System.IO;
 using System.Threading.Tasks;
 using static obs_net.Obs;
@@ -155,7 +155,7 @@ namespace RePlays.Recorders {
             }
 
             // attempt to retrieve process's window handle to retrieve class name and window title
-            windowHandle = GetWindowHandleByProcessId(session.Pid, true);
+            windowHandle = session.WindowHandle;
             while ((DetectionService.HasBadWordInClassName(windowHandle) || windowHandle == IntPtr.Zero) && retryAttempt < maxRetryAttempts) {
                 Logger.WriteLine($"Waiting to retrieve process handle... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
