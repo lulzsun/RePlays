@@ -604,9 +604,11 @@ namespace RePlays.Utils {
 
         public static string GetAspectRatio(int width, int height) {
             BigInteger gcd = BigInteger.GreatestCommonDivisor(width, height);
+            if (gcd == 0)
+                return $"0:0";
+
             int aspectWidth = width / (int)gcd;
             int aspectHeight = height / (int)gcd;
-
             return $"{aspectWidth}:{aspectHeight}";
         }
 
