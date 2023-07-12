@@ -301,18 +301,18 @@ namespace RePlays.Services {
             }
 
             bool isGame = IsMatchedGame(executablePath);
+            var windowSize = BaseRecorder.GetWindowSize(windowHandle);
+            var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
+            bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
 
             // if there is no matched game, lets try to make assumptions from the process given the following information:
             // 1. window size & aspect ratio
             // 2. window class name (matches against whitelist)
             // if all conditions are true, then we can assume it is a game
             if (!isGame) {
-                var windowSize = BaseRecorder.GetWindowSize(windowHandle);
                 if (windowSize.GetWidth() <= 69 || windowSize.GetHeight() <= 69) {
                     return false;
                 }
-                var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
-                bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
                 bool isWhitelistedClass = classBlacklist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
                 if (isWhitelistedClass && isValidAspectRatio) {
                     Logger.WriteLine($"Assumed recordable game: [{processId}]" +
@@ -328,8 +328,11 @@ namespace RePlays.Services {
                         $"[{executablePath}]");
                 }
             }
-
-            if (isGame) {
+            else {
+                if (!isValidAspectRatio) {
+                    Logger.WriteLine($"Found game window [{processId}][{className}][{executablePath}], but invalid resolution [{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}], ignoring start capture.");
+                    return false;
+                }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: [{processId}]" +
                         $"[{className}]" +

@@ -258,6 +258,7 @@ namespace RePlays.Recorders {
             obs_set_output_source(0, videoSources["gameplay"]);
 
             // attempt to wait for game_capture source to hook first
+            retryAttempt = 0;
             Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
             while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
                 await Task.Delay(retryInterval);
