@@ -87,6 +87,7 @@ namespace RePlays.Recorders {
                                     Logger.WriteLine("Fullscreen game coming into focus? Ignoring attempt to restart recording.");
                                 }
                             }
+                            Logger.WriteLine("Successful game capture hook!");
                             signalGCHookSuccess = true;
                         }
                         else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
@@ -266,7 +267,7 @@ namespace RePlays.Recorders {
             }
             signalGCHookAttempt = 0;
 
-            if (retryAttempt >= maxRetryAttempts) {
+            if (signalGCHookSuccess == false) {
                 Logger.WriteLine($"Unable to get graphics hook for [{windowClassNameId}] after {retryAttempt} attempts");
 
                 Process process;
