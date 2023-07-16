@@ -69,7 +69,7 @@ const RePlays: React.FC<Props> = ({ settings, updateSettings }) => {
                         updateSettings();
                     }} />
             </div>
-            <a onClick={(e) => { postMessage("OpenLink", "https://replays.app") }} className="underline text-gray-300 hover:text-gray-200 cursor-pointer">RePlays.app</a>
+            <a onClick={(e) => { postMessage("OpenLink", "https://replays.app") }} className="cursor-pointer" style={{color:"#17b2b0"}}>RePlays.app</a>
         </div>
     )
 }
@@ -100,7 +100,7 @@ const Streamable: React.FC<Props> = ({settings, updateSettings}) => {
               updateSettings();
             }}/>
       </div>
-      <a onClick={(e) => { postMessage("OpenLink", "https://streamable.com/") }} className="underline text-gray-300 hover:text-gray-200 cursor-pointer">Streamable.com</a>
+      <a onClick={(e) => { postMessage("OpenLink", "https://streamable.com/") }} className="cursor-pointer" style={{color:"#17b2b0"}}>Streamable.com</a>
     </div>
 	)
 }
