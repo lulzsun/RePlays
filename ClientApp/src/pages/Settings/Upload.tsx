@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Button from "../../components/Button";
+import DropDownMenu from "../../components/DropDownMenu";
 import DirectoryBrowser from "../../components/DirectoryBrowser";
 import { postMessage } from "../../helpers/messenger";
 
@@ -143,17 +144,12 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
             </div>
             <div className="flex flex-col">
                 Method
-                <select className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
-                        defaultValue={settings === undefined ? "" : settings.customUploaderSettings.method} onBlur={(e) => {
-                    if(settings !== undefined)
-                        settings.customUploaderSettings.method = e.target.value;
-                    updateSettings();
-                }}>
-                    <option value="POST">POST</option>
-                    <option value="GET">GET</option>
-                    <option value="PUT">PUT</option>
-                    <option value="PATCH">PATCH</option>
-                </select>
+                <DropDownMenu text={(settings === undefined ? "POST" : settings!.customUploaderSettings.method)} width={"auto"} zIndex={52}
+                    items={[
+                        { name: "POST", onClick: () => { settings!.customUploaderSettings.method = "POST";  updateSettings(); } },
+                        { name: "PUT", onClick: () => { settings!.customUploaderSettings.method = "PUT";  updateSettings(); } },
+                        { name: "PATCH", onClick: () => { settings!.customUploaderSettings.method = "PATCH";  updateSettings(); } },
+                    ]} /> 
             </div>
             <div className="flex flex-col">
                 Headers
@@ -213,7 +209,7 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
                     )
                 })
                 }
-                <Button text="Add Header"  width={"auto"} onClick={(e) => {
+                <Button text="Add URL Parameter"  width={"auto"} onClick={(e) => {
                     if(settings !== undefined)
                         settings.customUploaderSettings.urlparams.push({Key: "", Value: ""});
                     updateSettings();
@@ -221,16 +217,11 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
             </div>
             <div className="flex flex-col">
                 Response Type
-                <select className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
-                        defaultValue={settings === undefined ? "" : settings.customUploaderSettings.responseType} onBlur={(e) => {
-                    if(settings !== undefined)
-                        settings.customUploaderSettings.responseType = e.target.value;
-                    updateSettings();
-                }}>
-                    <option value="JSON">JSON</option>
-                    <option value="TEXT">Text</option>
-                    {/*<option value="XML">XML</option>*/}
-                </select>
+                <DropDownMenu text={(settings === undefined ? "JSON" : settings!.customUploaderSettings.responseType)} width={"auto"} zIndex={52}
+                    items={[
+                        { name: "JSON", onClick: () => { settings!.customUploaderSettings.responseType = "JSON"; updateSettings(); } },
+                        { name: "TEXT", onClick: () => { settings!.customUploaderSettings.responseType = "TEXT"; updateSettings(); } }
+                ]} /> 
             </div>
             <div className="flex flex-col">
                 Response Path
