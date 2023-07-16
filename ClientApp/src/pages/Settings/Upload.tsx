@@ -131,7 +131,7 @@ const LocalFolder: React.FC<Props> = ({settings, updateSettings}) => {
 
 const Custom: React.FC<Props> = ({settings, updateSettings}) => {
     return (
-        <div className="flex flex-col gap-2 font-medium text-base pb-7">
+        <div className="flex flex-col gap-2 font-medium text-base">
             <div className="font-semibold">Custom</div>
             <div className="flex flex-col">
                 URL
