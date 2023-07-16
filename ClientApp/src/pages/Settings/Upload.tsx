@@ -155,15 +155,15 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
                 Headers
                 {settings === undefined ? <></> : settings.customUploaderSettings.headers.map((header, index) => {
                     return (
-                        <div className="flex flex-row gap-2">
-                            <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
-                                   type="text" defaultValue={header.Key} onBlur={(e) => {
+                        <div className="flex flex-row gap-2 py-2">
+                            <input className={`inline-flex align-middle justify-center w-16 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
+                                   type="text" placeholder="Key" defaultValue={header.Key} onBlur={(e) => {
                                 if(settings !== undefined)
                                     settings.customUploaderSettings.headers[index].Key = e.target.value;
                                 updateSettings();
                             }}/>
-                            <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
-                                   type="text" defaultValue={header.Value} onBlur={(e) => {
+                            <input className={`inline-flex align-middle justify-center w-32 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
+                                   type="text" placeholder="Value" defaultValue={header.Value} onBlur={(e) => {
                                 if(settings !== undefined)
                                     settings.customUploaderSettings.headers[index].Value = e.target.value;
                                 updateSettings();
@@ -187,15 +187,15 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
                 URL Parameters
                 {settings === undefined ? <></> : settings.customUploaderSettings.urlparams.map((params, index) => {
                     return (
-                        <div className="flex flex-row gap-2">
-                            <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
-                                   type="text" defaultValue={params.Key} onBlur={(e) => {
+                        <div className="flex flex-row gap-2 py-2">
+                            <input className={`inline-flex align-middle justify-center w-16 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
+                                   type="text" placeholder="Key" defaultValue={params.Key} onBlur={(e) => {
                                 if(settings !== undefined)
                                     settings.customUploaderSettings.urlparams[index].Key = e.target.value;
                                 updateSettings();
                             }}/>
-                            <input className={`inline-flex align-middle justify-center w-64 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
-                                   type="text" defaultValue={params.Value} onBlur={(e) => {
+                            <input className={`inline-flex align-middle justify-center w-32 h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800`}
+                                   type="text" placeholder="Value" defaultValue={params.Value} onBlur={(e) => {
                                 if(settings !== undefined)
                                     settings.customUploaderSettings.urlparams[index].Value = e.target.value;
                                 updateSettings();
