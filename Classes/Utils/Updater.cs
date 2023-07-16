@@ -1,6 +1,7 @@
 ﻿using RePlays.Services;
 using Squirrel;
 using System;
+using static RePlays.Utils.Functions;
 
 namespace RePlays.Utils {
     internal class Updater {
@@ -20,7 +21,8 @@ namespace RePlays.Utils {
                 }
                 var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "Stable"); // if nightly, we ignore deltas
                 latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();
-
+                SettingsService.SaveSettings();
+                WebMessage.SendMessage(GetUserSettings());
                 if (SettingsService.Settings.generalSettings.update == "none") return;
 
                 if (updateInfo.ReleasesToApply.Count > 0) {
