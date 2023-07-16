@@ -26,18 +26,18 @@ export const Upload: React.FC<Props> = ({settings, updateSettings}) => {
           {/* <div onClick={() => setSubPage("YouTube")} className="cursor-pointer flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
             YouTube
           </div> */}
-          <div onClick={() => setSubPage("LocalFolder")} className="cursor-pointer flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
-            Local Folder
-          </div>
           <div onClick={() => setSubPage("Custom")} className="cursor-pointer flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
               Custom
           </div>  
+          <div onClick={() => setSubPage("LocalFolder")} className="cursor-pointer flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-blue-700 hover:text-white text-base font-medium">
+            Local Folder
+          </div>
         </div>
         <div className="flex-auto overflow-auto h-full w-full p-7 pt-0">
           {(subPage === 'RePlays' ? <RePlays settings={settings} updateSettings={updateSettings} /> : "")}
           {(subPage === 'Streamable' ? <Streamable settings={settings} updateSettings={updateSettings}/> : "")}
-          {(subPage === 'LocalFolder' ? <LocalFolder settings={settings} updateSettings={updateSettings}/> : "")}
           {(subPage === 'Custom' ? <Custom settings={settings} updateSettings={updateSettings}/> : "")}
+          {(subPage === 'LocalFolder' ? <LocalFolder settings={settings} updateSettings={updateSettings}/> : "")}
         </div>
       </div>
     </div>
