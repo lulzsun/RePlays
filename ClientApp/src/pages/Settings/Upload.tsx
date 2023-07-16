@@ -231,7 +231,7 @@ const Custom: React.FC<Props> = ({settings, updateSettings}) => {
                         settings.customUploaderSettings.responsePath = e.target.value;
                     updateSettings();
                 }}/> 
-                <p className="text-xs text-gray-500">The url to the video using <a href="https://jsonpath.com/" target="_blank" rel="noreferrer">JSONPath</a> 
+                <p className="text-xs text-gray-500">The url to the video using <a href="https://jsonpath.com/" style={{color:"#107e7d"}} target="_blank" rel="noreferrer">JSONPath</a> 
                     {/*or  <a href="http://xpather.com/" target="_blank" rel="noreferrer">XPath</a>*/}
                 </p>
             </div>
