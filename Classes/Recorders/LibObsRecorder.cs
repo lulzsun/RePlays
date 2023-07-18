@@ -386,6 +386,9 @@ namespace RePlays.Recorders {
             }
             obs_data_set_string(videoEncoderSettings, "rate_control", rate_controls[rateControl]);
             obs_data_set_int(videoEncoderSettings, "bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
+            if (SettingsService.Settings.captureSettings.rateControl == "VBR") {
+                obs_data_set_int(videoEncoderSettings, "max_bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
+            }
             IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
             obs_data_release(videoEncoderSettings);
             return encoderPtr;
