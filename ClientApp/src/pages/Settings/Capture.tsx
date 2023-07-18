@@ -124,7 +124,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
       return 'medium';
     } else if (settings?.resolution === 1080 && settings.frameRate === 60 && settings.bitRate === 35) {
       return 'high';
-    } else if ((settings!.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080)) && settings?.frameRate === 60 && settings.bitRate === 50) {
+    } else if (settings?.maxScreenResolution && (settings?.maxScreenResolution >= 1440 ? (settings?.resolution === 1440) : (settings?.resolution === 1080)) && settings?.frameRate === 60 && settings.bitRate === 50) {
       return 'ultra';
     } else {
       return 'custom';
@@ -172,7 +172,7 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
               settings!.resolution = 1080; settings!.frameRate = 60; settings!.bitRate = 35;
               break;
             case "ultra":
-              settings!.resolution = settings!.maxScreenResolution >= 1440 ? 1440 : 1080; settings!.frameRate = 60; settings!.bitRate = 50;
+              settings!.resolution = settings!.maxScreenResolution && settings!.maxScreenResolution >= 1440 ? 1440 : 1080; settings!.frameRate = 60; settings!.bitRate = 50;
               break;
             default:
               return;
@@ -210,12 +210,12 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
         <div className="flex flex-col">
           Resolution
           <DropDownMenu text={(settings === undefined ? "1080p" : settings.resolution + "p")} width={"auto"}
-          items={[
-            {name: "480p", onClick: () => {settings!.resolution = 480; customVideoQuality.current!.checked = true; updateSettings();}},
-            {name: "720p", onClick: () => {settings!.resolution = 720; updateSettings();}},
-            {name: "1080p", onClick: () => {settings!.resolution = 1080; updateSettings();}},
-              ...(settings!.maxScreenResolution >= 1440 ? [{ name: "1440p", onClick: () => { settings!.resolution = 1440; updateSettings(); } }] : []),
-          ]}/> 
+            items={[
+              {name: "480p", onClick: () => {settings!.resolution = 480; customVideoQuality.current!.checked = true; updateSettings();}},
+              {name: "720p", onClick: () => {settings!.resolution = 720; updateSettings();}},
+              {name: "1080p", onClick: () => {settings!.resolution = 1080; updateSettings();}},
+              ...(settings && settings.maxScreenResolution && settings.maxScreenResolution >= 1440 ? [{name: "1440p", onClick: () => {settings.resolution = 1440; updateSettings();}}] : []),
+            ]}/>
         </div>
         <div className="flex flex-col">
           Framerate
