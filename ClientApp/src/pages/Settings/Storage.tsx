@@ -13,14 +13,14 @@ export const Storage: React.FC<Props> = ({settings, updateSettings}) => {
       <h1 className="font-semibold text-2xl">Save Locations</h1>
       <div className="flex flex-col">
         <span className="text-gray-700 dark:text-gray-400">Game Recordings Directory</span>
-        <div className="flex flex-row">
+        <div className="flex flex-row gap-2">
           <DirectoryBrowser id="videoSaveDir" path={settings === undefined ? undefined : settings.videoSaveDir}/>
           <Button text="Open Folder" width={"auto"} onClick={(e) => {postMessage("ShowFolder", (settings === undefined ? "C:\\" : settings.videoSaveDir))}}/>
         </div>
       </div>
       <div className="flex flex-col">
         <span className="text-gray-700 dark:text-gray-400">Temporary Video Directory</span>
-        <div className="flex flex-row">
+        <div className="flex flex-row gap-2">
           <DirectoryBrowser id="tempSaveDir" path={settings === undefined ? undefined : settings.tempSaveDir}/>
           <Button text="Open Folder" width={"auto"}onClick={(e) => {postMessage("ShowFolder", (settings === undefined ? "C:\\" : settings.tempSaveDir))}}/>
         </div>
