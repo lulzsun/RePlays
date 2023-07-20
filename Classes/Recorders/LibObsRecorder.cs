@@ -161,10 +161,8 @@ namespace RePlays.Recorders {
                 Logger.WriteLine($"Waiting to retrieve process handle... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                if (retryAttempt % 2 == 1) // alternate, one or the other might get us a better handle
-                    windowHandle = GetWindowHandleByProcessId(session.Pid);
-                else
-                    windowHandle = GetWindowHandleByProcessId(session.Pid, true);
+                // alternate on retry attempts, one or the other might get us a better handle
+                windowHandle = GetWindowHandleByProcessId(session.Pid, retryAttempt % 2 == 1);
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
