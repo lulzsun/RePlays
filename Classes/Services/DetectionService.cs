@@ -34,7 +34,7 @@ namespace RePlays.Services {
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
         private static List<string> classBlacklist = new() { "splashscreen", "launcher", "cheat", "sdl_app", "console" };
-        private static List<string> classWhitelist = new() { "unitywndclass", "unrealwindow" };
+        private static List<string> classWhitelist = new() { "unitywndclass", "unrealwindow", "riotwindowclass" };
         public static bool IsStarted { get; internal set; }
 
         public static void Start() {
@@ -285,7 +285,7 @@ namespace RePlays.Services {
 
                 bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
                 if (isBlocked) {
-                    Logger.WriteLine($"Blocked application: [{processId}][{className}][{executablePath}]");
+                    Logger.WriteLine($"Blocked application: [{processId}][{windowHandle}][{className}][{executablePath}]");
                     return false;
                 }
             }
@@ -296,7 +296,7 @@ namespace RePlays.Services {
             if (!autoRecord) {
                 // This is a manual/forced record event so lets just yolo it and assume user knows best
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
-                Logger.WriteLine($"Forced record start: [{processId}][{className}][{executablePath}], prepared to record");
+                Logger.WriteLine($"Forced record start: [{processId}][{windowHandle}][{className}][{executablePath}], prepared to record");
                 return true;
             }
 
@@ -304,6 +304,7 @@ namespace RePlays.Services {
             var windowSize = BaseRecorder.GetWindowSize(windowHandle);
             var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
+            bool isWhitelistedClass = classWhitelist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
 
             // if there is no matched game, lets try to make assumptions from the process given the following information:
             // 1. window size & aspect ratio
@@ -313,30 +314,43 @@ namespace RePlays.Services {
                 if (windowSize.GetWidth() <= 69 || windowSize.GetHeight() <= 69) {
                     return false;
                 }
-                bool isWhitelistedClass = classBlacklist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
                 if (isWhitelistedClass && isValidAspectRatio) {
                     Logger.WriteLine($"Assumed recordable game: [{processId}]" +
+                        $"[{windowHandle}]" +
                         $"[{className}]" +
                         $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]" +
-                        $"[{executablePath}]");
+                        $"[{executablePath}]"
+                    );
                     isGame = true;
                 }
                 else {
                     Logger.WriteLine($"Unknown application: [{processId}]" +
+                        $"[{windowHandle}]" +
                         $"[{className}]" +
                         $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]" +
-                        $"[{executablePath}]");
+                        $"[{executablePath}]"
+                    );
                 }
             }
             else {
                 if (!isValidAspectRatio) {
-                    Logger.WriteLine($"Found game window [{processId}][{className}][{executablePath}], but invalid resolution [{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}], ignoring start capture.");
-                    return false;
+                    Logger.WriteLine($"Found game window " +
+                        $"[{processId}]" +
+                        $"[{windowHandle}]" +
+                        $"[{className}]" +
+                        $"[{executablePath}], " +
+                        $"but invalid resolution [{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}], " +
+                        (!isWhitelistedClass ? $"ignoring start capture." : "not ignoring due to whitelisted classname.")
+                    );
+                    if (!isWhitelistedClass) return false;
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
-                Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: [{processId}]" +
-                        $"[{className}]" +
-                        $"[{executablePath}]");
+                Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: " +
+                    $"[{processId}]" +
+                    $"[{windowHandle}]" +
+                    $"[{className}]" +
+                    $"[{executablePath}]"
+                );
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
                 if (allowed) RecordingService.StartRecording();
             }
