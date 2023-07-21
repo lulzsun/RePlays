@@ -9,9 +9,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Net.Sockets;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static RePlays.Utils.Functions;
+using System.Threading;
 
 namespace RePlays {
     public partial class frmMain : Form {
@@ -46,6 +50,9 @@ namespace RePlays {
                 RecordingService.Start(typeof(LibObsRecorder));
             }
             GetAudioDevices();
+
+            Thread socketThread = new(StartSocketServer);
+            socketThread.Start();
         }
 
         private void frmMain_Load(object sender, System.EventArgs e) {
@@ -178,7 +185,46 @@ namespace RePlays {
             }
         }
 
+        private static void StartSocketServer() {
+            int port = 3333;
+            IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
+            IPEndPoint localEndPoint = new(ipAddress, port);
+            Socket listener = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            try {
+                listener.Bind(localEndPoint);
+                listener.Listen(10);
+
+                while (true) {
+                    Socket handler = listener.Accept();
+                    string message = ReceiveMessage(handler);
+
+                    if (message == "BringToForeground") {
+                        Logger.WriteLine($"Got socket message: {message}");
+                        frmMain.Instance.Invoke((MethodInvoker)(() => frmMain.Instance.InitializeWebView2()));
+                        frmMain.Instance.Invoke((MethodInvoker)(() => frmMain.Instance.ActivateFormAndRestoreWindowState()));
+                    }
+
+                    handler.Shutdown(SocketShutdown.Both);
+                    handler.Close();
+                }
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Socket server exception: {ex.Message}");
+            }
+        }
+
+        static string ReceiveMessage(Socket socket) {
+            byte[] buffer = new byte[1024];
+            int bytesRead = socket.Receive(buffer);
+            return Encoding.UTF8.GetString(buffer, 0, bytesRead);
+        }
+
         private void notifyIcon1_DoubleClick(object sender, System.EventArgs e) {
+            ActivateFormAndRestoreWindowState();
+        }
+
+        private void ActivateFormAndRestoreWindowState() {
             this.Activate();
             if (this.WindowState == FormWindowState.Minimized) {
                 this.Opacity = 100;
