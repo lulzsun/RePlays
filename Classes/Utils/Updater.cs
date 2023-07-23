@@ -1,6 +1,7 @@
 ﻿using RePlays.Services;
 using Squirrel;
 using System;
+using System.Threading.Tasks;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Utils {
@@ -14,12 +15,22 @@ namespace RePlays.Utils {
                 return;
             }
             try {
+                if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)40, (long)100);
+
                 using var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays",
                     prerelease: SettingsService.Settings.generalSettings.updateChannel != "Stable");
+
+                if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)70, (long)100);
+
                 if (manager.CurrentlyInstalledVersion() != null) {
                     currentVersion = manager.CurrentlyInstalledVersion().ToString();
                 }
                 var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "Stable"); // if nightly, we ignore deltas
+                if (forceUpdate) {
+                    WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)100, (long)100);
+                    await Task.Delay(500);
+                    WebMessage.DestroyToast("CheckUpdateProgress");
+                }
                 latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();
                 SettingsService.SaveSettings();
                 WebMessage.SendMessage(GetUserSettings());
@@ -58,6 +69,10 @@ namespace RePlays.Utils {
             }
             catch (System.Exception exception) {
                 Logger.WriteLine("Error: Issue fetching update releases: " + exception.ToString());
+                if (forceUpdate) {
+                    WebMessage.DestroyToast("CheckUpdateProgress");
+                    WebMessage.DisplayModal("Failed to check for update. More information written to logs.", "Error", "warning");
+                }
             }
             applyingUpdate = false;
         }
