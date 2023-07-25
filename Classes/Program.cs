@@ -7,6 +7,8 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Diagnostics;
+using System.Net.Sockets;
+using System.Text;
 #if !WINDOWS
 using PhotinoNET;
 #else
@@ -58,7 +60,17 @@ namespace RePlays {
             // prevent multiple instances
             var mutex = new Mutex(true, @"Global\RePlays", out var createdNew);
             if (!createdNew) {
-                Logger.WriteLine("RePlays is already running! Exiting the application.");
+                Logger.WriteLine("RePlays is already running! Exiting the application and bringing the other instance to foreground.");
+                try {
+                    using (var sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)) {
+                        sender.Connect(new IPEndPoint(IPAddress.Loopback, 3333));
+                        sender.Send(Encoding.UTF8.GetBytes("BringToForeground"));
+                        Logger.WriteLine($"Sent BringToForeground to the other instance");
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Socket client exception: {ex.Message}");
+                }
                 return;
             }
 
