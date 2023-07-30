@@ -224,6 +224,8 @@ export const Capture: React.FC<Props> = ({settings, updateSettings}) => {
             {name: "15 fps", onClick: () => {settings!.frameRate = 15; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "30 fps", onClick: () => {settings!.frameRate = 30; customVideoQuality.current!.checked = true; updateSettings();}},
             {name: "60 fps", onClick: () => {settings!.frameRate = 60; customVideoQuality.current!.checked = true; updateSettings();}},
+            {name: "120 fps", onClick: () => {settings!.frameRate = 120; customVideoQuality.current!.checked = true; updateSettings();}},
+            {name: "144 fps", onClick: () => {settings!.frameRate = 144; customVideoQuality.current!.checked = true; updateSettings();}},
           ]}/> 
         </div>
         <div className="flex flex-col">
