@@ -332,7 +332,7 @@ namespace RePlays.Services {
                     );
                 }
             }
-            else {
+            if (isGame) {
                 if (!isValidAspectRatio) {
                     Logger.WriteLine($"Found game window " +
                         $"[{processId}]" +
