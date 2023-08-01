@@ -65,13 +65,30 @@ namespace RePlays.Recorders {
             return rect;
         }
         [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
+        static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
 
+        [DllImport("shell32.dll")]
+        static extern int SHQueryUserNotificationState(out QUERY_USER_NOTIFICATION_STATE pquns);
+        enum QUERY_USER_NOTIFICATION_STATE {
+            QUNS_NOT_PRESENT = 1,
+            QUNS_BUSY = 2,
+            QUNS_RUNNING_D3D_FULL_SCREEN = 3,
+            QUNS_PRESENTATION_MODE = 4,
+            QUNS_ACCEPTS_NOTIFICATIONS = 5,
+            QUNS_QUIET_TIME = 6
+        };
+
+        // https://stackoverflow.com/a/58755620
         public static bool IsFullscreen(nint windowHandle) {
-            Rect r = new();
-            GetWindowRect(windowHandle, ref r);
-            return new Rectangle(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top)
-                                  .Contains(System.Windows.Forms.Screen.FromHandle(windowHandle).Bounds);
+            int success = SHQueryUserNotificationState(out QUERY_USER_NOTIFICATION_STATE pquns);
+            if (success == 0 && (
+                pquns == QUERY_USER_NOTIFICATION_STATE.QUNS_RUNNING_D3D_FULL_SCREEN ||
+                pquns == QUERY_USER_NOTIFICATION_STATE.QUNS_BUSY ||
+                pquns == QUERY_USER_NOTIFICATION_STATE.QUNS_PRESENTATION_MODE)) {
+                Logger.WriteLine($"Detected windowHandle [{windowHandle}] to be fullscreen exclusive.");
+                return true;
+            }
+            return false;
         }
 
         // http://www.pinvoke.net/default.aspx/user32.getclassname
