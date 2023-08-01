@@ -67,27 +67,34 @@ namespace RePlays.Recorders {
         [DllImport("user32.dll")]
         static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
 
-        [DllImport("shell32.dll")]
-        static extern int SHQueryUserNotificationState(out QUERY_USER_NOTIFICATION_STATE pquns);
-        enum QUERY_USER_NOTIFICATION_STATE {
-            QUNS_NOT_PRESENT = 1,
-            QUNS_BUSY = 2,
-            QUNS_RUNNING_D3D_FULL_SCREEN = 3,
-            QUNS_PRESENTATION_MODE = 4,
-            QUNS_ACCEPTS_NOTIFICATIONS = 5,
-            QUNS_QUIET_TIME = 6
-        };
+        [DllImport("user32.dll", SetLastError = false)]
+        static extern IntPtr GetDesktopWindow();
 
-        // https://stackoverflow.com/a/58755620
+        [DllImport("user32.dll")]
+        static extern IntPtr GetShellWindow();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        // https://stackoverflow.com/a/55542400
         public static bool IsFullscreen(nint windowHandle) {
-            int success = SHQueryUserNotificationState(out QUERY_USER_NOTIFICATION_STATE pquns);
-            if (success == 0 && (
-                pquns == QUERY_USER_NOTIFICATION_STATE.QUNS_RUNNING_D3D_FULL_SCREEN ||
-                pquns == QUERY_USER_NOTIFICATION_STATE.QUNS_BUSY ||
-                pquns == QUERY_USER_NOTIFICATION_STATE.QUNS_PRESENTATION_MODE)) {
-                Logger.WriteLine($"Detected windowHandle [{windowHandle}] to be fullscreen exclusive.");
-                return true;
+            MONITORINFOEX monitorInfo = new();
+            monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
+            GetMonitorInfo(MonitorFromWindow(windowHandle, 1), ref monitorInfo);
+
+            if (windowHandle != GetDesktopWindow() && windowHandle != GetShellWindow()) {
+                Rect windowRect = new();
+                GetWindowRect(windowHandle, ref windowRect);
+
+                bool result = windowRect.Left == monitorInfo.rcMonitor.Left
+                    && windowRect.Right == monitorInfo.rcMonitor.Right
+                    && windowRect.Top == monitorInfo.rcMonitor.Top
+                    && windowRect.Bottom == monitorInfo.rcMonitor.Bottom;
+
+                Logger.WriteLine($"Window handle fullscreen exclusive: {result}");
+                return result;
             }
+            Logger.WriteLine("Window handle not detected as fullscreen exclusive.");
             return false;
         }
 
@@ -121,7 +128,7 @@ namespace RePlays.Recorders {
         public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
 
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        public static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] MONITORINFOEX info);
+        public static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] ref MONITORINFOEX info);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
         public class MONITORINFOEX {
@@ -154,7 +161,7 @@ namespace RePlays.Recorders {
                 MONITORINFOEX monitorInfo = new();
                 monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
                 try {
-                    if (GetMonitorInfo(hMonitor, monitorInfo)) {
+                    if (GetMonitorInfo(hMonitor, ref monitorInfo)) {
                         DisplayDevice d = new();
                         d.cb = Marshal.SizeOf(d);
                         string lpDevice = string.Join("", monitorInfo.szDevice).TrimEnd('\0');
