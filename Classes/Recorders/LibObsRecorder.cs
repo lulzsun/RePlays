@@ -172,6 +172,8 @@ namespace RePlays.Recorders {
             string dir = Path.Join(GetPlaysFolder(), "/" + MakeValidFolderNameSimple(session.GameTitle) + "/");
             Directory.CreateDirectory(dir);
             videoNameTimeStamp = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+
+            // CRC-TODO: Add this to settings for MKV.
             videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses.mp4");
 
             // Get the window class name
