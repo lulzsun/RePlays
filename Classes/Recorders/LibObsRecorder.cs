@@ -439,9 +439,16 @@ namespace RePlays.Recorders {
         }
 
         public void ResumeDisplayOutput() {
+            var monitor_id = "";
+#if WINDOWS
+            var screen = windowHandle == 0 ? System.Windows.Forms.Screen.PrimaryScreen : System.Windows.Forms.Screen.FromHandle(windowHandle);
+            monitor_id = GetMonitorId(screen.DeviceName);
+#endif
             IntPtr videoSourceSettings = obs_data_create();
             // obs_data_set_int(videoSourceSettings, "method", 0); // automatic
-            // obs_data_set_string(videoSourceSettings, "monitor_id", @"\\\\?\\DISPLAY#DELA024#5&d5f75a2&0&UID37124#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}"); // don't set for primary monitor
+            if (monitor_id != "") {
+                obs_data_set_string(videoSourceSettings, "monitor_id", monitor_id);
+            }
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
             obs_set_output_source(0, videoSources["display"]);

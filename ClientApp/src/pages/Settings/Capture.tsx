@@ -134,8 +134,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
 
         // If we dont have any file formats in the request, default to MP4 and MKV.
         if (availableFormats === null || availableFormats === undefined
-            || availableFormats.toString().trim() === '')
-        {
+            || availableFormats.toString().trim() === '') {
             fileFormatItems.push({
                 name: "MPEG-4 (.mp4) (Default)",
                 onClick: () => {
@@ -174,7 +173,6 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             });
         }
 
-        console.log("Available file formats: ", fileFormatItems);
         setAvailableFileFormats(fileFormatItems);
         return;
     }, [setAvailableFileFormats, updateSettings]);
@@ -268,7 +266,6 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                     <span className="px-2 text-gray-700 dark:text-gray-400">Custom</span>
                 </label>
             </div>
-
             <div className="flex gap-2">
                 <div className="flex flex-col">
                     Resolution
@@ -287,6 +284,8 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                             { name: "15 fps", onClick: () => { settings!.frameRate = 15; customVideoQuality.current!.checked = true; updateSettings(); } },
                             { name: "30 fps", onClick: () => { settings!.frameRate = 30; customVideoQuality.current!.checked = true; updateSettings(); } },
                             { name: "60 fps", onClick: () => { settings!.frameRate = 60; customVideoQuality.current!.checked = true; updateSettings(); } },
+                            { name: "120 fps", onClick: () => { settings!.frameRate = 120; customVideoQuality.current!.checked = true; updateSettings(); } },
+                            { name: "144 fps", onClick: () => { settings!.frameRate = 144; customVideoQuality.current!.checked = true; updateSettings(); } },
                         ]} />
                 </div>
                 <div className="flex flex-col">
@@ -313,6 +312,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                     <DropDownMenu text={(settings === undefined ? "x264" : settings!.encoder)} width={"auto"}
                         items={availableEncoders} />
                 </div>
+
                 <div className="flex flex-col">
                     Rate Control
                     <DropDownMenu text={(settings?.rateControl === undefined ? "VBR" : settings!.rateControl)} width={"auto"}
@@ -326,7 +326,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 </div>
             </div>
 
-            { (settings?.fileFormat?.format !== "mkv") && 
+            {(settings?.fileFormat?.format !== "mkv") &&
                 <div className="flex items-center bg-blue-500 text-white px-4 py-3 max-w-md" role="alert">
                     <div className="py-1"><svg className="fill-current h-6 w-6 text-teal-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" /></svg></div>
                     <div>
@@ -335,7 +335,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                     </div>
                 </div>
             }
-            
+
             <h1 className="font-semibold text-2xl mt-4">Audio Sources</h1>
 
             <div className="flex flex-col">Output Devices</div>
