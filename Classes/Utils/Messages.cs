@@ -169,6 +169,7 @@ namespace RePlays.Utils {
                 case "Initialize": {
                         // INIT USER SETTINGS
                         ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
+                        ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
                         SendMessage(GetUserSettings());
 
                         Logger.WriteLine($"Initializing {toastList.Count} Toasts");
