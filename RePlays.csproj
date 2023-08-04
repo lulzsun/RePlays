@@ -41,7 +41,6 @@
     <StartupObject />
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <TargetFramework>net7.0-windows</TargetFramework>
   </PropertyGroup>
   
   <ItemGroup>
