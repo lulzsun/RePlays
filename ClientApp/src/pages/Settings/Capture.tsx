@@ -124,8 +124,6 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
     }, [setAvailableRateControls, updateSettings]);
 
     useEffect(() => {
-        console.log("file Format Cache", settings);
-
         if (settings == null) return;
         if (settings.fileFormatsCache == null) return;
 
@@ -136,11 +134,11 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
         if (availableFormats === null || availableFormats === undefined
             || availableFormats.toString().trim() === '') {
             fileFormatItems.push({
-                name: "MPEG-4 (.mp4) (Default)",
+                name: "Fragmented MPEG-4 (.mp4) (Default)",
                 onClick: () => {
                     settings.fileFormat = {
                         title: "MPEG-4 (.mp4)",
-                        format: "mp4"
+                        format: "fragmented_mp4"
                     };
                     updateSettings();
                 }
@@ -190,6 +188,9 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             return 'custom';
         }
     }
+
+    var current_format: any = settings?.fileFormat?.format;
+    var is_interupttable: boolean = (current_format === "mkv") || (current_format === "fragmented_mp4") || (current_format === "fragmented_mov");
 
     return (
         <div className="flex flex-col gap-2 font-medium text-base pb-7">
@@ -326,12 +327,14 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 </div>
             </div>
 
-            {(settings?.fileFormat?.format !== "mkv") &&
+            { is_interupttable == false &&
                 <div className="flex items-center bg-blue-500 text-white px-4 py-3 max-w-md" role="alert">
                     <div className="py-1"><svg className="fill-current h-6 w-6 text-teal-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" /></svg></div>
                     <div>
-                        <p className="text-md font-bold">It is recommended that to use the MKV file format</p>
-                        <p className="text-xs">Using the Matroska MKV file format allows for recording recovery if the recording is abruptly ended like a computer crash or RePlays crashes.</p>
+                        <p className="text-md font-bold">It is recommended that to use the MKV or a fragmented file format</p>
+                        <p className="text-xs">
+                            Using a fragmented file format or MKV allows for partial recordings to be recovered in case of the recording being abruptly ended like a computer crash or RePlays crashes.
+                        </p>
                     </div>
                 </div>
             }

@@ -50,17 +50,16 @@ namespace RePlays.Recorders {
         };
 
 
-        private readonly FileFormat file_format_default = new FileFormat("mp4", "MPEG-4 (.mp4)");
+        private readonly FileFormat file_format_default = new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)");
         private List<FileFormat> file_formats = new() {
             new FileFormat("mp4", "MPEG-4 (.mp4)"),
             new FileFormat("mkv", "Matroska Video (.mkv)"),
-            new FileFormat("flv", "Flash Video (.flv)"),
-            new FileFormat("mov", "QuickTime (.mov)"),
-
-            // These formats need to be throughly texted.
             new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)"),
             new FileFormat("fragmented_mov", "Fragmented MOV (.mov)"),
-            new FileFormat("mpegts", "MPEG-TS (.ts)"),
+
+            new FileFormat("flv", "Flash Video (.flv)"),
+            new FileFormat("mov", "QuickTime (.mov)"),
+            new FileFormat("mpegts", "MPEG-TS (.ts)")
         };
 
         static bool signalOutputStop = false;
@@ -189,7 +188,6 @@ namespace RePlays.Recorders {
             Directory.CreateDirectory(dir);
             videoNameTimeStamp = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
-            // CRC-TODO: Add this to settings for MKV.
             FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MPEG-4 (.mp4)"));
             Logger.WriteLine($"Output file format: " + currentFileFormat.ToString());
             videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
@@ -414,11 +412,12 @@ namespace RePlays.Recorders {
 
             // See https://github.com/obsproject/obs-studio/blob/9d2715fe72849bb8c1793bb964ba3d9dc2f189fe/UI/window-basic-main-outputs.cpp#L1310C1-L1310C1
             bool is_fragmented = format.StartsWith("fragmented", StringComparison.OrdinalIgnoreCase);
-            bool is_lossless = rateControl == "Lossless";
+            bool is_lossless   = rateControl == "Lossless";
 
             if (is_fragmented && !is_lossless) {
                 string mux_frag = "movflags=frag_keyframe+empty_moov+delay_moov";
                 obs_data_set_string(videoEncoderSettings, "muxer_settings", mux_frag);
+                Logger.WriteLine("Video Encoder muxer flags: " + mux_frag);
             }
 
             IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
