@@ -1,0 +1,190 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <WebView2UseWinRT>False</WebView2UseWinRT>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <TargetFramework>net7.0</TargetFramework>
+	<UseWindowsForms>false</UseWindowsForms>
+  </PropertyGroup>
+
+  <PropertyGroup>
+	<OutputType>WinExe</OutputType>
+	<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
+	<SpaRoot>ClientApp\</SpaRoot>
+  <OBSBuildPath>$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\</OBSBuildPath>
+	<ApplicationIcon>Resources\logo.ico</ApplicationIcon>
+  <RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
+	<DebugSymbols>true</DebugSymbols>
+	<DebugType>embedded</DebugType>
+	<PublishTrimmed>false</PublishTrimmed>
+	<TrimMode>Link</TrimMode>
+  </PropertyGroup>
+	
+  <PropertyGroup>
+    <AnalysisMode>Recommended</AnalysisMode>
+	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
+    <SquirrelTools>$(PkgClowd_Squirrel)\tools</SquirrelTools>
+	<Version>1.0.0</Version>
+    <NuspecFile>RePlays.nuspec</NuspecFile>
+    <Nullable>annotations</Nullable>
+    <StartupObject />
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- Don't publish the SPA source files, but do show them in the project files list -->
+    <Content Remove="$(SpaRoot)**" />
+    <None Remove="$(SpaRoot)**" />
+    <None Remove="ClientApp\build\**" />
+    <None Remove="obs-studio-build\**" />
+    <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="Classes\Recorders\LibObs\LICENSE" />
+    <None Remove="Classes\Recorders\PlaysLTC\LICENSE" />
+    <None Remove="ClientApp\build\**" />
+    <Compile Remove="ClientApp\build\**" />
+    <Compile Remove="obs-studio-build\**" />
+    <EmbeddedResource Remove="ClientApp\build\**" />
+    <EmbeddedResource Remove="obs-studio-build\**" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="Resources\logo.ico" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Clowd.Squirrel" Version="2.8.40" />
+    <PackageReference Include="JsonPath.Net" Version="0.5.2" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.0.1" />
+	<PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1661.34" />
+    <PackageReference Include="NuGet.CommandLine" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Photino.NET" Version="2.3.2" />
+    <PackageReference Include="System.Management" Version="6.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
+	<!-- Ensure Node.js is installed -->
+	<Exec Command="node --version" ContinueOnError="true">
+	  <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+	</Exec>
+	<Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+	<Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
+  </Target>
+
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net7.0-windows\obs.dll') ">
+	<Error Condition="!Exists('$(OBSBuildPath)obs.dll')" Text="Could not copy 'obs.dll' from 'OBSBuildPath'. Run `build-libobs.cmd` to build." />
+	<ItemGroup>
+	   <LIBOBSDEBUG Include="$(OBSBuildPath)**\*.*" />
+	</ItemGroup>
+	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net7.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+	<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
+	<Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+
+	<!-- Include the newly-built files in the publish output -->
+	<ItemGroup>
+		<DistFiles1 Include="$(SpaRoot)build\**" />
+		<ResolvedFileToPublish Include="@(DistFiles1->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles1.Identity)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
+
+	<!-- Include ffmpeg binaries in the publish output -->
+	<ItemGroup>
+		<DistFiles2 Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
+		<ResolvedFileToPublish Include="@(DistFiles2->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles2.Identity)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
+
+	<!-- Include 7zip binaries in the publish output -->
+	<ItemGroup>
+		<DistFiles3 Include="$(SpaRoot)node_modules\7zip-bin\**" />
+		<ResolvedFileToPublish Include="@(DistFiles3->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(DistFiles3.Identity)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
+
+	<!-- Include resources in the publish output -->
+	<ItemGroup>
+		<DistFiles4 Include="$(SolutionDir)Resources\**" />
+		<ResolvedFileToPublish Include="@(DistFiles4->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>Resources\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
+
+	<!-- Include libobs in the publish output -->
+	<ItemGroup>
+		<DistFiles5 Include="$(OBSBuildPath)**" />
+		<ResolvedFileToPublish Include="@(DistFiles5->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+			<RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</ResolvedFileToPublish>
+	</ItemGroup>
+
+	<!-- Include a copy of the app's license -->
+	<ItemGroup>
+		<_license Include="$(SolutionDir)LICENSE" />
+	</ItemGroup>
+	<Copy SourceFiles="@(_license)" DestinationFolder="$(PublishDir)" />
+  </Target>
+
+  <Target Name="Package" AfterTargets="Publish" Condition=" '$(Configuration)' == 'Release' ">
+	<!-- Prepare Squirrel package -->
+	<XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
+		<Output TaskParameter="Result" ItemName="ID" />
+	</XmlPeek>
+
+	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
+	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases --framework net7" />
+  </Target>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="$(SolutionDir).editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(SolutionDir).editorconfig" />
+  </ItemGroup>
+
+</Project>
