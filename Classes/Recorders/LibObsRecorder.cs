@@ -411,7 +411,7 @@ namespace RePlays.Recorders {
 
             // See https://github.com/obsproject/obs-studio/blob/9d2715fe72849bb8c1793bb964ba3d9dc2f189fe/UI/window-basic-main-outputs.cpp#L1310C1-L1310C1
             bool is_fragmented = format.StartsWith("fragmented", StringComparison.OrdinalIgnoreCase);
-            bool is_lossless   = rateControl == "Lossless";
+            bool is_lossless = rateControl == "Lossless";
 
             if (is_fragmented && !is_lossless) {
                 string mux_frag = "movflags=frag_keyframe+empty_moov+delay_moov";

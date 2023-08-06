@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using Squirrel;
 using System;
 using System.Collections.Generic;
