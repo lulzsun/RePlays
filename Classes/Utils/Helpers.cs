@@ -190,7 +190,7 @@ namespace RePlays.Utils {
         }
 
         public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
-            var videoExtensions = new[] { ".mp4", ".mkv" };
+            var videoExtensions = new[] { ".mp4", ".mkv", ".mov", ".flv" };
             List<string> allfiles = new();
             switch (SortBy) {
                 case "Latest":

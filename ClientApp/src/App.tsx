@@ -108,6 +108,8 @@ function App() {
       case 'UserSettings':
         setUserSettings(data);
         localStorage.setItem("availableRateControls", data.captureSettings.rateControlCache); 
+        localStorage.setItem("availableFileFormats", JSON.stringify(data.captureSettings.fileFormatsCache)); 
+
         break;
       default:
         break;

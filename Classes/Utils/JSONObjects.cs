@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Squirrel;
 using System;
 using System.Collections.Generic;
@@ -95,24 +96,35 @@ namespace RePlays.Utils {
     public class CaptureSettings {
         private string _recordingMode = "automatic";
         public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
+
         private bool _useDisplayCapture = true;
         public bool useDisplayCapture { get { return _useDisplayCapture; } set { _useDisplayCapture = value; } }
+
         private bool _useRecordingStartSound = true;
         public bool useRecordingStartSound { get { return _useRecordingStartSound; } set { _useRecordingStartSound = value; } }
+
         private List<string> _encodersCache = new();
         public List<string> encodersCache { get { return _encodersCache; } set { _encodersCache = value; } }
+
         private string _encoder = string.Empty;
         public string encoder { get { return _encoder; } set { _encoder = value; } }
+
         private string _rateControl = string.Empty;
+
         private List<string> _rateControlCache = new();
         public List<string> rateControlCache { get { return _rateControlCache; } set { _rateControlCache = value; } }
+
         public string rateControl { get { return _rateControl; } set { _rateControl = value; } }
+
         private int _maxScreenResolution = 1080;
         public int maxScreenResolution { get { return _maxScreenResolution; } set { _maxScreenResolution = value; } }
+
         private int _resolution = 1080;
         public int resolution { get { return _resolution; } set { _resolution = value; } }
+
         private int _frameRate = 60;
         public int frameRate { get { return _frameRate; } set { _frameRate = value; } }
+
         private int _bitRate = 50;
         public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
 
@@ -127,8 +139,32 @@ namespace RePlays.Utils {
 
         private List<AudioDevice> _outputDevices = new();
         public List<AudioDevice> outputDevices { get { return _outputDevices; } set { _outputDevices = value; } }
+
         private bool _hasNvidiaAudioSDK;
         public bool hasNvidiaAudioSDK { get { return _hasNvidiaAudioSDK; } set { _hasNvidiaAudioSDK = value; } }
+
+        private List<FileFormat> _fileFormatCache = new() { new FileFormat("mp4", "MPEG-4 (.mp4)") }; // Initially set to MP4, Updated inside LibOBSRecorder when loaded.
+        public List<FileFormat> fileFormatsCache { get { return _fileFormatCache; } set { _fileFormatCache = value; } }
+        private FileFormat _fileFormat = new FileFormat("mp4", "MPEG-4 (.mp4)");
+        public FileFormat fileFormat { get { return _fileFormat; } set { _fileFormat = value; } }
+    }
+
+    public class FileFormat {
+        public string title { get; }
+        public string format { get; }
+
+        public FileFormat(string format, string title) {
+            this.format = format;
+            this.title = title;
+        }
+
+        public override string ToString() {
+            return $"File Format {{Format: {format}, Title: {title}}}";
+        }
+
+        public string GetFileExtension() {
+            return this.format.Replace("fragmented_", "");
+        }
     }
 
     public class StorageSettings {

@@ -114,6 +114,10 @@ declare global {
     denoiser?: boolean,
     isInput?: boolean
   }
+  interface FileFormat {
+    title: string,
+    format: string
+  }
   interface CaptureSettings {
     recordingMode: string,
     useDisplayCapture: boolean,
@@ -129,6 +133,8 @@ declare global {
     outputDevices: AudioDevice[],
     outputDevicesCache: AudioDevice[],
     hasNvidiaAudioSDK: boolean,
+    fileFormatsCache: FileFormat[]
+    fileFormat: FileFormat,
   }
   interface KeybindingsSettings {
       keybindings: Keybindings

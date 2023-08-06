@@ -11,7 +11,7 @@ namespace RePlays.Utils {
         public static void CompressFile(string filePath, string game) {
             ProcessStartInfo startInfo = new ProcessStartInfo {
                 FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
-                Arguments = string.Format("-i \"{0}\" -vcodec libx264 -crf 28 \"{1}\"", filePath, filePath.Replace(".mp4", "-compressed.mp4")),
+                Arguments = string.Format("-i \"{0}\" -vcodec libx264 -crf 28 \"{1}\"", filePath, filePath.Replace(".mkv", "-compressed.mkv").Replace(".mp4", "-compressed.mp4")),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

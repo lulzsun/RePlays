@@ -4,12 +4,12 @@
     <WebView2UseWinRT>False</WebView2UseWinRT>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'" >
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <TargetFramework>net7.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'" >
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
     <TargetFramework>net7.0</TargetFramework>
 	<UseWindowsForms>false</UseWindowsForms>
   </PropertyGroup>
