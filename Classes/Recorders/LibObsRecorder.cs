@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using static obs_net.Obs;
 using static RePlays.Utils.Functions;
-using static System.Windows.Forms.DataFormats;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
