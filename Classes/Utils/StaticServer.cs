@@ -8,7 +8,10 @@ namespace RePlays.Classes.Utils {
         static IWebHost server;
         public static void Start() {
             server = WebHost.CreateDefaultBuilder(new[] { "--urls=http://localhost:3001/" })
-                .Configure(config => config.UseStaticFiles())
+                .Configure(config => config.UseStaticFiles(
+                    new StaticFileOptions {
+                        ServeUnknownFileTypes = true
+                    }))
                 .UseWebRoot(Functions.GetPlaysFolder()).Build();
             server.RunAsync();
             Logger.WriteLine("Static file server started.");
