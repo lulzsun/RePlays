@@ -248,6 +248,9 @@ namespace RePlays.Utils {
         public List<string> blacklist { get { return _blacklist; } set { _blacklist = value; } }
     }
 
+    // Key = Action, Value = Key combination
+    public class KeybindSettings : Dictionary<string, string[]> { }
+
     public struct CustomGame {
         public CustomGame(string gameExe, string gameName) {
             this._gameExe = gameExe;

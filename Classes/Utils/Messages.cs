@@ -204,7 +204,7 @@ namespace RePlays.Utils {
 #if WINDOWS
                 case "EditKeybind": {
                         var id = webMessage.data.Replace("\"", "");
-                        frmMain.Instance.EditKeybind(id);
+                        Logger.WriteLine($"EditKeybind :: {id}");
                     }
                     break;
                 case "SelectFolder": {

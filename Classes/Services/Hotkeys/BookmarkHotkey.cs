@@ -9,8 +9,7 @@ namespace RePlays.Classes.Services.Hotkeys {
         }
 
         protected override void SetKeybind() {
-            string[] keybind;
-            SettingsService.Settings.keybindings.TryGetValue(key, out keybind);
+            SettingsService.Settings.keybindsSettings.TryGetValue(key, out string[] keybind);
             _keybind = ParseKeys(key, keybind);
         }
     }

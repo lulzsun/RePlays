@@ -35,7 +35,7 @@ namespace RePlays.Classes.Services.Hotkeys {
 
         private static string[] AddMissingHotkey(string keyReference) {
             defaultKeybindings.TryGetValue(keyReference, out string[] keys);
-            SettingsService.Settings.keybindings.Add(keyReference, keys);
+            SettingsService.Settings.keybindsSettings.Add(keyReference, keys);
             SettingsService.SaveSettings();
             return keys;
         }

@@ -4,7 +4,6 @@ using RePlays.Recorders;
 using RePlays.Services;
 using RePlays.Utils;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -303,46 +302,6 @@ namespace RePlays {
 
         public void HideRecentLinks() {
             recentLinksMenu.Hide();
-        }
-
-        private List<Keys> PressedKeys = new();
-        private void button1_KeyDown(object sender, KeyEventArgs e) {
-            Keys k = e.KeyCode;
-            if (k.ToString().Contains(e.Modifiers.ToString())) k = e.Modifiers;
-
-            if (!PressedKeys.Contains(k)) {
-                PressedKeys.Add(k);
-            }
-            PressedKeys.Sort();
-            PressedKeys.Reverse();
-            Logger.WriteLine(string.Join(" | ", PressedKeys.ToArray()));
-        }
-
-        bool _hasHotkeyTimeout = false;
-        private void button1_KeyUp(object sender, KeyEventArgs e) {
-            if (HotkeyService.EditId != null && SettingsService.Settings.keybindings.ContainsKey(HotkeyService.EditId) && !_hasHotkeyTimeout) {
-                SettingsService.Settings.keybindings[HotkeyService.EditId] = string.Join(" | ", PressedKeys.ToArray()).Split(" | ");
-                SettingsService.SaveSettings();
-                WebMessage.SendMessage(GetUserSettings());
-                HotkeyService.Start();
-                var cleanupTask = new Task(() => ClearKeys()); cleanupTask.Start();
-            }
-            if (webView2 != null) webView2.Focus();
-            else pictureBox1.Focus();
-            _hasHotkeyTimeout = PressedKeys.Count >= 2;
-        }
-
-        public async void ClearKeys() {
-            await Task.Delay(1000);
-            _hasHotkeyTimeout = false;
-            PressedKeys.Clear();
-        }
-
-        public void EditKeybind(string id) {
-            HotkeyService.EditId = id;
-            HotkeyService.Stop();
-            //button1 is a hacky way of logging keypresses
-            this.button1.Focus();
         }
     }
 }

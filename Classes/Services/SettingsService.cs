@@ -27,8 +27,8 @@ namespace RePlays.Services {
             private DetectionSettings _detectionSettings = new();
             public DetectionSettings detectionSettings { get { return _detectionSettings; } set { _detectionSettings = value; } }
 
-            private Dictionary<string, string[]> _keybindings = new Dictionary<string, string[]>() { };
-            public Dictionary<string, string[]> keybindings { get { return _keybindings; } set { _keybindings = value; } }
+            private KeybindSettings _keybindsSettings = new();
+            public KeybindSettings keybindsSettings { get { return _keybindsSettings; } set { _keybindsSettings = value; } }
         }
 
         public static void LoadSettings() {
@@ -44,7 +44,7 @@ namespace RePlays.Services {
                 }
             }
             else {
-                Logger.WriteLine(string.Format("{0} did not exist, using default values", settingsFile));
+                Logger.WriteLine($"{settingsFile} did not exist, using default values");
             }
         }
 
