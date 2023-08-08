@@ -90,13 +90,12 @@ declare global {
   }
   // userSettings
   interface UserSettings {
-    generalSettings: GeneralSettings
-    captureSettings: CaptureSettings
-    keybindingsSettings: KeybindingsSettings
-    uploadSettings: UploadSettings
-    storageSettings: StorageSettings
-    keybindings: Keybindings
-    detectionSettings: DetectionSettings
+    generalSettings: GeneralSettings,
+    captureSettings: CaptureSettings,
+    detectionSettings: DetectionSettings,
+    uploadSettings: UploadSettings,
+    storageSettings: StorageSettings,
+    keybindSettings: KeybindSettings,
   }
   interface GeneralSettings {
     launchStartup: boolean, 
@@ -136,9 +135,6 @@ declare global {
     fileFormatsCache: FileFormat[]
     fileFormat: FileFormat,
   }
-  interface KeybindingsSettings {
-      keybindings: Keybindings
-  }
   interface UploadSettings {
     recentLinks: string[],
     streamableSettings: {
@@ -158,7 +154,7 @@ declare global {
     customUploaderSettings: {
       url: string,
       method: string,
-      headers:  {Key: string, Value: string}[],
+      headers: {Key: string, Value: string}[],
       urlparams: {Key: string, Value: string}[],
       responseType: string,
       responsePath: string,
@@ -173,17 +169,21 @@ declare global {
     manageSpaceLimit: number,
     manageTimeLimit: number,
   }
-  interface DetectionSettings{
+  interface DetectionSettings {
     whitelist: CustomGame[],
     blacklist: string[],
+  }
+  interface KeybindSettings {
+    StartStopRecording: CustomKeybind,
+    CreateBookmark: CustomKeybind,
+  }
+  interface CustomKeybind {
+    disabled: boolean,
+    keys: string[],
   }
   interface CustomGame {
     gameExe: string,
     gameName: string,
-  }
-  interface Keybindings {
-    StartStopRecording: string[],
-    CreateBookmark: string[],
   }
 }
 

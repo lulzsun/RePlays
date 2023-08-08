@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, Route, HashRouter as Router, Switch, useParams } from "react-router-dom";
 import About from "./Settings/About";
 import Storage from "./Settings/Storage";
@@ -7,8 +6,8 @@ import General from "./Settings/General";
 import Help from "./Settings/Help";
 import Upload from "./Settings/Upload";
 import Detection from "./Settings/Detection"
+import KeyBind from "./Settings/Keybind";
 import { postMessage } from '../helpers/messenger';
-import Keybindings from "./Settings/Keybindings";
 
 type SettingsParams = {
   page: string;
@@ -41,8 +40,8 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
             <Link to="/settings/Detection" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Detection
             </Link>
-            <Link to="/settings/Keybindings" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
-              Keybindings
+            <Link to="/settings/Keybinds" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
+              Keybinds
             </Link>
             <Link to="/settings/Upload" className="flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium">
               Upload
@@ -61,12 +60,12 @@ export const Settings: React.FC<Props> = ({userSettings, setUserSettings}) => {
             <Switch>
               <Route exact path="/settings/general"> <General updateSettings={updateSettings} settings={userSettings?.generalSettings}/></Route>
               <Route exact path="/settings/capture"> <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings}/></Route>
-              <Route exact path="/settings/detection">  <Detection updateSettings={updateSettings} settings={userSettings?.detectionSettings} /></Route>
-              <Route exact path="/settings/keybindings">  <Keybindings updateSettings={updateSettings} settings={userSettings?.keybindingsSettings} keybindings={userSettings?.keybindings} /></Route>
-              <Route exact path="/settings/upload">  <Upload updateSettings={updateSettings} settings={userSettings?.uploadSettings}/></Route>
-              <Route exact path="/settings/storage"><Storage updateSettings={updateSettings} settings={userSettings?.storageSettings}/></Route>
-              <Route exact path="/settings/help">    <Help/></Route>
-              <Route exact path="/settings/about">   <About/></Route>
+              <Route exact path="/settings/detection"> <Detection updateSettings={updateSettings} settings={userSettings?.detectionSettings}/></Route>
+              <Route exact path="/settings/keybinds"> <KeyBind updateSettings={updateSettings} settings={userSettings?.keybindSettings}/></Route>
+              <Route exact path="/settings/upload"> <Upload updateSettings={updateSettings} settings={userSettings?.uploadSettings}/></Route>
+              <Route exact path="/settings/storage"> <Storage updateSettings={updateSettings} settings={userSettings?.storageSettings}/></Route>
+              <Route exact path="/settings/help"> <Help/></Route>
+              <Route exact path="/settings/about"> <About/></Route>
             </Switch>
           </div>
         </div>

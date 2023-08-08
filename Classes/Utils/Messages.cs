@@ -202,9 +202,14 @@ namespace RePlays.Utils {
                     }
                     break;
 #if WINDOWS
-                case "EditKeybind": {
+                case "EnterEditKeybind": {
                         var id = webMessage.data.Replace("\"", "");
-                        frmMain.Instance.EditKeybind(id);
+                        HotkeyService.EditId = id;
+                    }
+                    break;
+                case "ExitEditKeybind": {
+                        var id = webMessage.data.Replace("\"", "");
+                        HotkeyService.EditId = null;
                     }
                     break;
                 case "SelectFolder": {
