@@ -28,7 +28,7 @@ namespace RePlays {
             SettingsService.SaveSettings();
             ScreenSize.UpdateMaximumScreenResolution();
             StorageService.ManageStorage();
-            HotkeyService.Start();
+            KeybindService.Start();
             InitializeComponent();
             PurgeTempVideos();
             Updater.CheckForUpdates();

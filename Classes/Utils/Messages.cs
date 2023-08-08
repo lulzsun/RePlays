@@ -204,12 +204,12 @@ namespace RePlays.Utils {
 #if WINDOWS
                 case "EnterEditKeybind": {
                         var id = webMessage.data.Replace("\"", "");
-                        HotkeyService.EditId = id;
+                        KeybindService.EditId = id;
                     }
                     break;
                 case "ExitEditKeybind": {
                         var id = webMessage.data.Replace("\"", "");
-                        HotkeyService.EditId = null;
+                        KeybindService.EditId = null;
                     }
                     break;
                 case "SelectFolder": {

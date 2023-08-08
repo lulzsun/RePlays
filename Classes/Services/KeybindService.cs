@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace RePlays.Services {
-    public static class HotkeyService {
+    public static class KeybindService {
         public delegate IntPtr WinHookProc(int Code, IntPtr W, IntPtr L);
 
         [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
