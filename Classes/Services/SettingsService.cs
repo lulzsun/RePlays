@@ -27,8 +27,8 @@ namespace RePlays.Services {
             private DetectionSettings _detectionSettings = new();
             public DetectionSettings detectionSettings { get { return _detectionSettings; } set { _detectionSettings = value; } }
 
-            private KeybindSettings _keybindsSettings = new();
-            public KeybindSettings keybindsSettings { get { return _keybindsSettings; } set { _keybindsSettings = value; } }
+            private KeybindSettings _keybindSettings = new();
+            public KeybindSettings keybindSettings { get { return _keybindSettings; } set { _keybindSettings = value; } }
         }
 
         public static void LoadSettings() {

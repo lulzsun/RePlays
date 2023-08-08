@@ -1,3 +1,4 @@
+using RePlays.Classes.Services.Keybinds;
 using Squirrel;
 using System;
 using System.Collections.Generic;
@@ -248,8 +249,18 @@ namespace RePlays.Utils {
         public List<string> blacklist { get { return _blacklist; } set { _blacklist = value; } }
     }
 
-    // Key = Action, Value = Key combination
-    public class KeybindSettings : Dictionary<string, string[]> { }
+    public class KeybindSettings : Dictionary<string, CustomKeybind> { }
+
+    public struct CustomKeybind {
+        public CustomKeybind(bool disabled, string[] keys) {
+            this._disabled = disabled;
+            this._keys = keys;
+        }
+        private bool _disabled;
+        public bool disabled { get { return _disabled; } set { _disabled = value; } }
+        private string[] _keys;
+        public string[] keys { get { return _keys; } set { _keys = value; } }
+    }
 
     public struct CustomGame {
         public CustomGame(string gameExe, string gameName) {

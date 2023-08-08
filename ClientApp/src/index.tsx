@@ -90,12 +90,12 @@ declare global {
   }
   // userSettings
   interface UserSettings {
-    generalSettings: GeneralSettings
-    captureSettings: CaptureSettings
-    detectionSettings: DetectionSettings
-    uploadSettings: UploadSettings
-    storageSettings: StorageSettings
-    keybindSettings: KeybindSettings
+    generalSettings: GeneralSettings,
+    captureSettings: CaptureSettings,
+    detectionSettings: DetectionSettings,
+    uploadSettings: UploadSettings,
+    storageSettings: StorageSettings,
+    keybindSettings: KeybindSettings,
   }
   interface GeneralSettings {
     launchStartup: boolean, 
@@ -154,7 +154,7 @@ declare global {
     customUploaderSettings: {
       url: string,
       method: string,
-      headers:  {Key: string, Value: string}[],
+      headers: {Key: string, Value: string}[],
       urlparams: {Key: string, Value: string}[],
       responseType: string,
       responsePath: string,
@@ -174,8 +174,12 @@ declare global {
     blacklist: string[],
   }
   interface KeybindSettings {
-    StartStopRecording: string[],
-    CreateBookmark: string[],
+    StartStopRecording: CustomKeybind,
+    CreateBookmark: CustomKeybind,
+  }
+  interface CustomKeybind {
+    disabled: boolean,
+    keys: string[],
   }
   interface CustomGame {
     gameExe: string,

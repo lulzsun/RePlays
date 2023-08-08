@@ -1,8 +1,9 @@
 ﻿#if WINDOWS
-using RePlays.Classes.Services.Hotkeys;
+using RePlays.Classes.Services.Keybinds;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -19,15 +20,18 @@ namespace RePlays.Services {
         [DllImport("user32", CallingConvention = CallingConvention.StdCall)]
         private static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, IntPtr lParam);
 
-        private static readonly List<Hotkey> hotkeys = new();
+        private static readonly List<Keybind> keybinds = new();
         private static readonly HashSet<Keys> pressedKeys = new();
+        private static readonly HashSet<Keys> cachePressedKeys = new();
         static nint keyboardHook;
         static WinHookProc keyboardDele;
 
+        public static string EditId { get; internal set; }
+
         public static void Start() {
-            //Create hotkeys
-            hotkeys.Add(new BookmarkHotkey());
-            hotkeys.Add(new RecordingHotkey());
+            //Create keybinds
+            keybinds.Add(new BookmarkKeybind());
+            keybinds.Add(new RecordingKeybind());
 
             //Create hook
             keyboardDele = OnKeyEvent;
@@ -36,7 +40,7 @@ namespace RePlays.Services {
         }
 
         public static void Stop() {
-            hotkeys.Clear();
+            keybinds.Clear();
             UnhookWindowsHookEx(keyboardHook);
             Logger.WriteLine("Unloaded KeyboardHook...");
         }
@@ -48,19 +52,38 @@ namespace RePlays.Services {
             try {
                 KeyEvents kEvent = (KeyEvents)W;
                 Keys vkCode = (Keys)Marshal.ReadInt32(L);
-                if (kEvent == KeyEvents.KeyDown) {
+                if (kEvent == KeyEvents.KeyDown || kEvent == KeyEvents.SysKeyDown) {
                     pressedKeys.Add(vkCode);
-                    Logger.WriteLine($"Keys: [{string.Join(",", pressedKeys)}]");
-                    foreach (Hotkey h in hotkeys) {
-                        if (vkCode == h.Keybind) {
-                            h.Action();
-                            Logger.WriteLine($"Key: [{h.Keybind}], Action: [{h.GetType()}]");
+                    if (EditId == null) {
+                        foreach (Keybind h in keybinds) {
+                            if (string.Join(",", pressedKeys.OrderBy(s => s.ToString())) == string.Join(",", h.Keys.OrderBy(s => s.ToString())) &&
+                                !pressedKeys.SetEquals(cachePressedKeys) && !SettingsService.Settings.keybindSettings[h.Id].disabled) {
+                                h.Action();
+                                Logger.WriteLine($"Key: [{string.Join(",", h.Keys)}], Action: [{h.Id}]");
+                            }
                         }
                     }
+                    else {
+                        if (!pressedKeys.SetEquals(cachePressedKeys)) {
+                            Logger.WriteLine($"KeysDown: [{string.Join(",", pressedKeys)}]");
+                        }
+                    }
+                    cachePressedKeys.Add(vkCode);
                 }
-                else if (kEvent == KeyEvents.KeyUp) {
+                else if (kEvent == KeyEvents.KeyUp || kEvent == KeyEvents.SysKeyUp) {
+                    if (EditId != null) {
+                        int hkIndex = keybinds.FindIndex(h => h.Id == EditId);
+                        if (hkIndex == -1) {
+                            Logger.WriteLine($"Error, could not find keybind action: {EditId}");
+                        }
+                        else {
+                            keybinds[hkIndex].SetKeybind(pressedKeys.Select(p => p.ToString()).ToArray());
+                        }
+                        Logger.WriteLine($"Exiting keybind edit mode.");
+                        EditId = null;
+                    }
                     pressedKeys.Remove(vkCode);
-                    Logger.WriteLine($"Keys: [{string.Join(",", pressedKeys)}]");
+                    cachePressedKeys.Remove(vkCode);
                 }
             }
             catch (Exception e) {
@@ -72,7 +95,9 @@ namespace RePlays.Services {
 
         public enum KeyEvents {
             KeyDown = 0x0100,
-            KeyUp = 0x0101
+            KeyUp = 0x0101,
+            SysKeyDown = 0x0104,
+            SysKeyUp = 0x0105,
         }
     }
 }
