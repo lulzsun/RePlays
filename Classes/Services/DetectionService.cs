@@ -6,10 +6,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -233,11 +235,39 @@ namespace RePlays.Services {
 
         public static JsonElement[] DownloadDetections(string dlPath, string file) {
             var result = string.Empty;
+            var hash = "";
             try {
-                using (var webClient = new System.Net.WebClient()) {
-                    result = webClient.DownloadString("https://raw.githubusercontent.com/lulzsun/RePlays/main/Resources/" + file);
+                // check if current file sha matches remote or not, if it does, we are already up-to-date
+                if (File.Exists(dlPath)) {
+                    using var sha1 = SHA1.Create();
+                    using var stream = File.OpenRead(dlPath);
+                    byte[] contentBytes = Encoding.ASCII.GetBytes($"blob {stream.Length}\0");
+                    sha1.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+
+                    byte[] fileBytes = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = stream.Read(fileBytes, 0, fileBytes.Length)) > 0) {
+                        sha1.TransformBlock(fileBytes, 0, bytesRead, fileBytes, 0);
+                    }
+                    sha1.TransformFinalBlock(fileBytes, 0, 0);
+                    hash = BitConverter.ToString(sha1.Hash).Replace("-", "").ToLower();
+
+                    using var httpClient = new HttpClient();
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "RePlays Client");
+                    var getTask = httpClient.GetAsync("https://api.github.com/repos/lulzsun/RePlays/contents/Resources/" + file);
+                    getTask.Wait();
+                    if (hash != "" && getTask.Result.Headers.ETag.ToString().Contains(hash)) {
+                        return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
+                    }
+                }
+                // download detections
+                using (var httpClient = new HttpClient()) {
+                    var getTask = httpClient.GetStringAsync("https://raw.githubusercontent.com/lulzsun/RePlays/main/Resources/" + file);
+                    getTask.Wait();
+                    result = getTask.Result;
                 }
                 File.WriteAllText(dlPath, result);
+                Logger.WriteLine($"Downloaded {file} sha1={hash}");
             }
             catch (Exception e) {
                 Logger.WriteLine($"Unable to download detections: {file}. Error: {e.Message}");
