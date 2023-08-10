@@ -256,7 +256,7 @@ namespace RePlays.Services {
                     httpClient.DefaultRequestHeaders.Add("User-Agent", "RePlays Client");
                     var getTask = httpClient.GetAsync("https://api.github.com/repos/lulzsun/RePlays/contents/Resources/" + file);
                     getTask.Wait();
-                    if (hash != "" && getTask.Result.Headers.ETag.ToString().Contains(hash)) {
+                    if (hash != "" && getTask.Result.Headers.ETag != null && getTask.Result.Headers.ETag.ToString().Contains(hash)) {
                         return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
                     }
                 }
