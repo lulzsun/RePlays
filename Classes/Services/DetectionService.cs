@@ -429,7 +429,7 @@ namespace RePlays.Services {
                                 }
                             }
                             else {
-                                if (Regex.IsMatch(exeFile, "/" + exePattern, RegexOptions.IgnoreCase)) {
+                                if (Regex.IsMatch(exeFile, exePattern, RegexOptions.IgnoreCase)) {
                                     Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"{exePattern}\"");
                                     return (true, gameDetectionsJson[x].GetProperty("title").ToString());
                                 }
