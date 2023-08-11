@@ -43,13 +43,14 @@ namespace RePlays.Recorders {
 
             ltc.ProcessCreated += (sender, msg) => {
                 if (!RecordingService.IsRecording) { // If we aren't already recording something, lets look for a process to record
-                    bool isGame = DetectionService.IsMatchedGame(msg.ExeFile);
+                    var gameDetection = DetectionService.IsMatchedGame(msg.ExeFile);
+                    bool isGame = gameDetection.isGame;
                     bool isNonGame = DetectionService.IsMatchedNonGame(msg.ExeFile);
 
                     if (isGame && !isNonGame) {
                         Logger.WriteLine(string.Format("This process [{0}] is a recordable game, preparing to LoadGameModule", msg.Pid));
 
-                        string gameTitle = DetectionService.GetGameTitle(msg.ExeFile);
+                        string gameTitle = gameDetection.gameTitle;
                         //RecordingService.SetCurrentSession(msg.Pid, gameTitle);
                         ltc.SetGameName(gameTitle);
                         ltc.LoadGameModule(msg.Pid);

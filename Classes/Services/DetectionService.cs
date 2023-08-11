@@ -254,7 +254,7 @@ namespace RePlays.Services {
 
                     using var httpClient = new HttpClient();
                     httpClient.DefaultRequestHeaders.Add("User-Agent", "RePlays Client");
-                    var getTask = httpClient.GetAsync("https://api.github.com/repos/lulzsun/RePlays/contents/Resources/" + file);
+                    var getTask = httpClient.GetAsync("https://api.github.com/repos/lulzsun/RePlays/contents/Resources/detections/" + file);
                     getTask.Wait();
                     if (hash != "" && getTask.Result.Headers.ETag != null && getTask.Result.Headers.ETag.ToString().Contains(hash)) {
                         return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
@@ -262,7 +262,7 @@ namespace RePlays.Services {
                 }
                 // download detections
                 using (var httpClient = new HttpClient()) {
-                    var getTask = httpClient.GetStringAsync("https://raw.githubusercontent.com/lulzsun/RePlays/main/Resources/" + file);
+                    var getTask = httpClient.GetStringAsync("https://raw.githubusercontent.com/lulzsun/RePlays/main/Resources/detections/" + file);
                     getTask.Wait();
                     result = getTask.Result;
                 }
@@ -271,7 +271,10 @@ namespace RePlays.Services {
             }
             catch (Exception e) {
                 Logger.WriteLine($"Unable to download detections: {file}. Error: {e.Message}");
-
+#if DEBUG
+                dlPath = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"Resources/detections/", file);
+                Logger.WriteLine($"Debug: Using {file} from Resources folder instead.");
+#endif
                 if (File.Exists(dlPath)) {
                     return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
                 }
@@ -287,14 +290,14 @@ namespace RePlays.Services {
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
         public static bool AutoDetectGame(int processId, string executablePath, nint windowHandle = 0, bool autoRecord = true) {
-            if (processId == 0) {
-                Logger.WriteLine($"Process id should never be zero here, developer error?");
-                return false;
-            }
-            if (executablePath != "" && IsMatchedNonGame(executablePath)) {
+            if (processId == 0 || (executablePath != "" && IsMatchedNonGame(executablePath))) {
+                if (processId == 0)
+                    Logger.WriteLine($"Process id should never be zero here, developer error?");
+                //else
                 //Logger.WriteLine($"Blacklisted application: [{processId}][{executablePath}]");
                 return false;
             }
+            var gameDetection = IsMatchedGame(executablePath);
 
             // If the windowHandle we captured is problematic, just return nothing
             // Problematic handles are created if the application for example,
@@ -303,7 +306,7 @@ namespace RePlays.Services {
             // to approach this issue. (possibily fetch to see if the window size ratio is not standard?)
             if (windowHandle == 0) windowHandle = RecordingService.ActiveRecorder.GetWindowHandleByProcessId(processId, true);
             var className = RecordingService.ActiveRecorder.GetClassName(windowHandle);
-            string gameTitle = GetGameTitle(executablePath);
+            string gameTitle = gameDetection.gameTitle;
             string fileName = Path.GetFileName(executablePath);
             try {
                 if (!Path.Exists(executablePath)) return false;
@@ -330,7 +333,7 @@ namespace RePlays.Services {
                 return true;
             }
 
-            bool isGame = IsMatchedGame(executablePath);
+            bool isGame = gameDetection.isGame;
             var windowSize = BaseRecorder.GetWindowSize(windowHandle);
             var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
@@ -394,82 +397,55 @@ namespace RePlays.Services {
             return windowHandle == IntPtr.Zero;
         }
 
-        public static bool IsMatchedGame(string exeFile) {
-            exeFile = exeFile.ToLower();
+        public static (bool isGame, string gameTitle) IsMatchedGame(string exeFile) {
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
-                if (game.gameExe == exeFile) return true;
+                if (game.gameExe == exeFile) return (true, game.gameName);
             }
-            if (SettingsService.Settings.captureSettings.recordingMode == "whitelist") return false;
+            if (SettingsService.Settings.captureSettings.recordingMode == "whitelist") return (false, "Whitelist Mode");
 
-            for (int x = 0; x < gameDetectionsJson.Length; x++) {
-                JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
+            try {
+                for (int x = 0; x < gameDetectionsJson.Length; x++) {
+                    JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("game_detection").EnumerateArray().ToArray();
 
-                for (int y = 0; y < gameDetections.Length; y++) {
-                    bool d1 = gameDetections[y].TryGetProperty("gameexe", out JsonElement detection1);
-                    bool d2 = gameDetections[y].TryGetProperty("launchexe", out JsonElement detection2);
-                    string[] jsonExeStr = Array.Empty<string>();
+                    for (int y = 0; y < gameDetections.Length; y++) {
+                        bool d1 = gameDetections[y].TryGetProperty("gameexe", out JsonElement detection1);
+                        string exePattern = "";
 
-                    if (d1) {
-                        jsonExeStr = detection1.GetString().ToLower().Split('|');
-                    }
+                        if (d1) {
+                            exePattern = detection1.GetString();
+                        }
 
-                    if (!d1 && d2) {
-                        jsonExeStr = detection2.GetString().ToLower().Split('|');
-                    }
-
-                    if (jsonExeStr.Length > 0) {
-                        for (int z = 0; z < jsonExeStr.Length; z++) {
-                            // TODO: use proper regex to check fullpaths instead of just filenames
-                            if (Path.GetFileName(jsonExeStr[z]).Equals(Path.GetFileName(exeFile.ToLower())) && jsonExeStr[z].Length > 0) {
-                                return true;
+                        if (exePattern != null && exePattern.Length > 0) {
+                            exeFile = exeFile.Replace("\\", "/");
+                            // if the exeFile passed was not a fullpath
+                            if (exeFile == Path.GetFileName(exeFile)) {
+                                var exePatterns = exePattern.Split('|');
+                                for (int z = 0; z < exePatterns.Length; z++) {
+                                    exePattern = exePatterns[z].Split('/').Last();
+                                    if (exePatterns[z].Length > 0 && Regex.IsMatch(exeFile, "^" + exePattern + "$", RegexOptions.IgnoreCase)) {
+                                        Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"^{exePattern}\"$");
+                                        return (true, gameDetectionsJson[x].GetProperty("title").ToString());
+                                    }
+                                }
+                            }
+                            else {
+                                if (Regex.IsMatch(exeFile, "/" + exePattern, RegexOptions.IgnoreCase)) {
+                                    Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"{exePattern}\"");
+                                    return (true, gameDetectionsJson[x].GetProperty("title").ToString());
+                                }
                             }
                         }
                     }
                 }
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Exception occurred during gameDetections.json parsing: {ex.Message}");
             }
 
             // TODO: also parse Epic games/Origin games
             if (exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
-                return true;
-            return false;
-        }
-
-        public static string GetGameTitle(string exeFile) {
-            foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
-                if (game.gameExe == exeFile.ToLower()) return game.gameName;
-            }
-
-            for (int x = 0; x < gameDetectionsJson.Length; x++) {
-                JsonElement[] gameDetections = gameDetectionsJson[x].GetProperty("mapped").GetProperty("game_detection").EnumerateArray().ToArray();
-
-                for (int y = 0; y < gameDetections.Length; y++) {
-                    bool d1 = gameDetections[y].TryGetProperty("gameexe", out JsonElement detection1);
-                    bool d2 = gameDetections[y].TryGetProperty("launchexe", out JsonElement detection2);
-                    string[] jsonExeStr = Array.Empty<string>();
-
-                    if (d1) {
-                        jsonExeStr = detection1.GetString().ToLower().Split('|');
-                    }
-
-                    if (!d1 && d2) {
-                        jsonExeStr = detection2.GetString().ToLower().Split('|');
-                    }
-
-                    if (jsonExeStr.Length > 0) {
-                        for (int z = 0; z < jsonExeStr.Length; z++) {
-                            // TODO: use proper regex to check fullpaths instead of just filenames
-                            if (Path.GetFileName(jsonExeStr[z]).Equals(Path.GetFileName(exeFile.ToLower())) && jsonExeStr[z].Length > 0) {
-                                return gameDetectionsJson[x].GetProperty("title").ToString();
-                            }
-                        }
-                    }
-                }
-            }
-            // Check to see if path is a steam game, and parse name
-            // TODO: also parse Epic games/Origin games
-            if (exeFile.ToLower().Replace("\\", "/").Contains("/steamapps/common/"))
-                return Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0];
-            return "Game Unknown";
+                return (true, Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0]);
+            return (false, "Game Unknown");
         }
 
         public static bool IsMatchedNonGame(string executablePath) {
@@ -497,20 +473,25 @@ namespace RePlays.Services {
 
         private static void LoadNonGameCache() {
             nonGameDetectionsCache.Clear();
-            foreach (JsonElement nonGameDetection in nonGameDetectionsJson) {
-                JsonElement[] detections = nonGameDetection.GetProperty("detections").EnumerateArray().ToArray();
+            try {
+                foreach (JsonElement nonGameDetection in nonGameDetectionsJson) {
+                    JsonElement[] detections = nonGameDetection.GetProperty("detections").EnumerateArray().ToArray();
 
-                //Each "non-game" can have multiple .exe-files
-                foreach (JsonElement detection in detections) {
-                    //Get the exe filename
-                    if (detection.TryGetProperty("detect_exe", out JsonElement detectExe)) {
-                        string[] jsonExePaths = detectExe.GetString().ToLower().Split('|');
+                    //Each "non-game" can have multiple .exe-files
+                    foreach (JsonElement detection in detections) {
+                        //Get the exe filename
+                        if (detection.TryGetProperty("detect_exe", out JsonElement detectExe)) {
+                            string[] jsonExePaths = detectExe.GetString().ToLower().Split('|');
 
-                        foreach (string jsonExePath in jsonExePaths) {
-                            nonGameDetectionsCache.Add(Path.GetFileName(jsonExePath));
+                            foreach (string jsonExePath in jsonExePaths) {
+                                nonGameDetectionsCache.Add(Path.GetFileName(jsonExePath));
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Exception occurred during nonGameDetections.json parsing: {ex.Message}");
             }
         }
 
