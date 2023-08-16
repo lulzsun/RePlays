@@ -769,6 +769,28 @@ namespace RePlays.Utils {
             }
         }
 
+        public static string GetGitSHA1Hash(string filePath) {
+            var hash = "";
+            try {
+                using var sha1 = SHA1.Create();
+                using var stream = File.OpenRead(filePath);
+                byte[] contentBytes = Encoding.ASCII.GetBytes($"blob {stream.Length}\0");
+                sha1.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+
+                byte[] fileBytes = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = stream.Read(fileBytes, 0, fileBytes.Length)) > 0) {
+                    sha1.TransformBlock(fileBytes, 0, bytesRead, fileBytes, 0);
+                }
+                sha1.TransformFinalBlock(fileBytes, 0, 0);
+                hash = BitConverter.ToString(sha1.Hash).Replace("-", "").ToLower();
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Error retrieving sha1 file hash: {ex.Message}");
+            }
+            return hash;
+        }
+
         static async Task ProcessContentStream(Stream contentStream, long? totalBytes, string savePath) {
             long totalDownloaded = 0;
             byte[] buffer = new byte[8192];
