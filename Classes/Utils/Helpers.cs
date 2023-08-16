@@ -357,7 +357,14 @@ namespace RePlays.Utils {
             string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
 
             if (File.Exists(metadataPath)) {
-                return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                try {
+                    return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
+                    File.Delete(metadataPath);
+                    return GetOrCreateMetadata(videoPath);
+                }
             }
             else {
                 var metadata = new VideoMetadata();
