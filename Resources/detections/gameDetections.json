@@ -52814,6 +52814,20 @@
 	},
 	{
 		"region": null,
+		"title": "RedM",
+		"game_detection": [
+			{
+				"gameexe": "/RedM_b.*_GTAProcess\\.exe|/RedM.app/cache/subprocess/RedM_GTAProcess\\.exe",
+				"longname": "RedM"
+			},
+			{
+				"gameexe": "/cache/subprocess/RedM_GTAProcess\\.exe",
+				"longname": "RedM"
+			}
+		]
+	},
+	{
+		"region": null,
 		"title": "Crysis 3 Multiplayer Beta",
 		"game_detection": [
 			{
