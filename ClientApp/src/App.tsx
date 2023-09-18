@@ -94,7 +94,7 @@ function App() {
         let videoMetadata = JSON.parse(localStorage.getItem("videoMetadataBookmarks")!);
 
         let bookmarks: { id: number, type: BookmarkType, time: number }[] = [];
-            const map = [BookmarkType.Manual, BookmarkType.Kill, BookmarkType.Death, BookmarkType.Assist];
+        const map = [BookmarkType.Manual, BookmarkType.Kill, BookmarkType.Death, BookmarkType.Assist];
 
         data.bookmarks.forEach(function (bookmark: any) {
             let timeToSet = bookmark.time / (data.elapsed) * 100;
