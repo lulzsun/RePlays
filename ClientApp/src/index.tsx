@@ -7,7 +7,7 @@ import App from './App';
 // TODO: don't use enums, change this to a type (see ModalIcon for example)
 // this is a dumb typescript fix for enums, not sure why but 
 // if the two lines below aren't here, it will cause runtime issues
-enum BookmarkType { Manual, Kill }
+enum BookmarkType { Manual, Kill, Death, Assist }
 (window as { BookmarkType?: typeof BookmarkType }).BookmarkType = BookmarkType;
 
 declare global {
@@ -86,7 +86,9 @@ declare global {
   }
   enum BookmarkType { // this exact same enum is to stop typescript IntelliSense from complaining
     Manual,
-    Kill
+    Kill,
+    Death,
+    Assist
   }
   // userSettings
   interface UserSettings {
