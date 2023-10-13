@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -64,13 +63,37 @@ namespace RePlays.Recorders {
             return rect;
         }
         [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
+        static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
 
+        [DllImport("user32.dll", SetLastError = false)]
+        static extern IntPtr GetDesktopWindow();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetShellWindow();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        // https://stackoverflow.com/a/55542400
         public static bool IsFullscreen(nint windowHandle) {
-            Rect r = new();
-            GetWindowRect(windowHandle, ref r);
-            return new Rectangle(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top)
-                                  .Contains(System.Windows.Forms.Screen.FromHandle(windowHandle).Bounds);
+            MONITORINFOEX monitorInfo = new();
+            monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
+            GetMonitorInfo(MonitorFromWindow(windowHandle, 1), ref monitorInfo);
+
+            if (windowHandle != GetDesktopWindow() && windowHandle != GetShellWindow()) {
+                Rect windowRect = new();
+                GetWindowRect(windowHandle, ref windowRect);
+
+                bool result = windowRect.Left == monitorInfo.rcMonitor.Left
+                    && windowRect.Right == monitorInfo.rcMonitor.Right
+                    && windowRect.Top == monitorInfo.rcMonitor.Top
+                    && windowRect.Bottom == monitorInfo.rcMonitor.Bottom;
+
+                Logger.WriteLine($"Window handle fullscreen exclusive: {result}");
+                return result;
+            }
+            Logger.WriteLine("Window handle not detected as fullscreen exclusive.");
+            return false;
         }
 
         // http://www.pinvoke.net/default.aspx/user32.getclassname
@@ -96,6 +119,68 @@ namespace RePlays.Recorders {
             return className.ToString();
         }
 
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DisplayDevice lpDisplayDevice, uint dwFlags);
+        [DllImport("user32.dll")]
+        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
+        public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
+
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        public static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] ref MONITORINFOEX info);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
+        public class MONITORINFOEX {
+            public int cbSize = Marshal.SizeOf(typeof(MONITORINFOEX));
+            public Rect rcMonitor;
+            public Rect rcWork;
+            public int dwFlags;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public char[] szDevice = new char[32];
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct DisplayDevice {
+            public int cb;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string DeviceName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceString;
+            public int StateFlags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceID;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceKey;
+        }
+
+        public static string GetMonitorId(string deviceName) {
+            Logger.WriteLine($"Attempting to retrieve deviceId from {deviceName}");
+            Dictionary<string, string> monitorIds = new();
+            _ = EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData) => {
+                MONITORINFOEX monitorInfo = new();
+                monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
+                try {
+                    if (GetMonitorInfo(hMonitor, ref monitorInfo)) {
+                        DisplayDevice d = new();
+                        d.cb = Marshal.SizeOf(d);
+                        string lpDevice = string.Join("", monitorInfo.szDevice).TrimEnd('\0');
+                        EnumDisplayDevices(lpDevice, 0, ref d, 0x1);
+                        monitorIds.Add(lpDevice, d.DeviceID);
+                        Logger.WriteLine($"Found deviceId: {d.DeviceID} for {lpDevice}");
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Error in retrieval of monitor information: {ex.Message}");
+                    return false;
+                }
+                return true;
+            }, IntPtr.Zero);
+            if (!monitorIds.TryGetValue(deviceName, out string monitorId)) {
+                Logger.WriteLine($"Could not retrieve deviceId for {deviceName}");
+                return "";
+            }
+            Logger.WriteLine($"Retrieved deviceId: {monitorId} from {deviceName}");
+            return monitorId;
+        }
 
         delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 

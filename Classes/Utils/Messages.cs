@@ -169,6 +169,7 @@ namespace RePlays.Utils {
                 case "Initialize": {
                         // INIT USER SETTINGS
                         ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
+                        ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
                         SendMessage(GetUserSettings());
 
                         Logger.WriteLine($"Initializing {toastList.Count} Toasts");
@@ -201,9 +202,14 @@ namespace RePlays.Utils {
                     }
                     break;
 #if WINDOWS
-                case "EditKeybind": {
+                case "EnterEditKeybind": {
                         var id = webMessage.data.Replace("\"", "");
-                        frmMain.Instance.EditKeybind(id);
+                        KeybindService.EditId = id;
+                    }
+                    break;
+                case "ExitEditKeybind": {
+                        var id = webMessage.data.Replace("\"", "");
+                        KeybindService.EditId = null;
                     }
                     break;
                 case "SelectFolder": {

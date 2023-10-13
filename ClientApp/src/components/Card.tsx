@@ -38,7 +38,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
   }
   
   return (
-    <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-blue-500" : "border-gray-500")}>
+    <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-2 border-blue-500" : "border border-gray-500")}>
       <div className="absolute z-50 w-full flex justify-between">
         <div className={"m-2 group-hover:opacity-100 " + (checked ? "opacity-100" : "opacity-0")}>
           <input type="checkbox" className="h-4 w-4" checked={(checked === undefined || checked === false ? false : true)} onChange={(e) => {onChange(e);}}/>
@@ -64,7 +64,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
         </div>
       </div>
       <Link to={`/player/${game}/${video}/${videoType}`} onClick={() => {console.log(folder)}}>
-        <div className="relative w-full rounded-t-lg object-cover overflow-hidden items-center">
+        <div className="relative text-white w-full rounded-t-lg object-cover overflow-hidden items-center">
           <span className="absolute z-40 bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal" style={{backgroundColor: `rgba(0, 0, 0, 0.5)`}}>
             {duration > 3600 ? new Date(duration * 1000).toISOString().substr(11, 8).replace(/^0+/, '') : new Date(duration * 1000).toISOString().substring(14, 19)}
           </span>

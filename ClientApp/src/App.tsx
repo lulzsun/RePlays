@@ -106,8 +106,12 @@ function App() {
         localStorage.setItem("videoMetadataBookmarks", JSON.stringify(videoMetadata));
         break;
       case 'UserSettings':
+        //@ts-ignore
+        document.activeElement.blur();
         setUserSettings(data);
         localStorage.setItem("availableRateControls", data.captureSettings.rateControlCache); 
+        localStorage.setItem("availableFileFormats", JSON.stringify(data.captureSettings.fileFormatsCache)); 
+
         break;
       default:
         break;

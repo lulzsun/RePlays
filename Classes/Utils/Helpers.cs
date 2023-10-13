@@ -190,7 +190,7 @@ namespace RePlays.Utils {
         }
 
         public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
-            var videoExtensions = new[] { ".mp4", ".mkv" };
+            var videoExtensions = new[] { ".mp4", ".mkv", ".mov", ".flv" };
             List<string> allfiles = new();
             switch (SortBy) {
                 case "Latest":
@@ -357,7 +357,14 @@ namespace RePlays.Utils {
             string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
 
             if (File.Exists(metadataPath)) {
-                return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                try {
+                    return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
+                    File.Delete(metadataPath);
+                    return GetOrCreateMetadata(videoPath);
+                }
             }
             else {
                 var metadata = new VideoMetadata();
@@ -613,7 +620,7 @@ namespace RePlays.Utils {
         }
 
         public static bool IsValidAspectRatio(int width, int height) {
-            return new[] { "64:27", "43:18", "21:9", "16:10", "16:9", "4:3" }.Contains(GetAspectRatio(width, height));
+            return new[] { "64:27", "43:18", "21:9", "16:10", "16:9", "4:3", "32:9" }.Contains(GetAspectRatio(width, height));
         }
 
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {
@@ -760,6 +767,28 @@ namespace RePlays.Utils {
             if (elapsedSeconds >= maxSeconds) {
                 checkForNvidiaUpdateTimer.Stop();
             }
+        }
+
+        public static string GetGitSHA1Hash(string filePath) {
+            var hash = "";
+            try {
+                using var sha1 = SHA1.Create();
+                using var stream = File.OpenRead(filePath);
+                byte[] contentBytes = Encoding.ASCII.GetBytes($"blob {stream.Length}\0");
+                sha1.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+
+                byte[] fileBytes = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = stream.Read(fileBytes, 0, fileBytes.Length)) > 0) {
+                    sha1.TransformBlock(fileBytes, 0, bytesRead, fileBytes, 0);
+                }
+                sha1.TransformFinalBlock(fileBytes, 0, 0);
+                hash = BitConverter.ToString(sha1.Hash).Replace("-", "").ToLower();
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Error retrieving sha1 file hash: {ex.Message}");
+            }
+            return hash;
         }
 
         static async Task ProcessContentStream(Stream contentStream, long? totalBytes, string savePath) {

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static obs_net.Obs;
 using static RePlays.Utils.Functions;
@@ -15,7 +16,7 @@ namespace RePlays.Recorders {
         public bool Connected { get; private set; }
         public bool DisplayCapture;
         public bool isStopping;
-        static string videoSavePath = "";
+        static string videoSavePath { get; set; } = "";
         static string videoNameTimeStamp = "";
         static IntPtr windowHandle = IntPtr.Zero;
         static IntPtr output = IntPtr.Zero;
@@ -45,6 +46,19 @@ namespace RePlays.Recorders {
             { "Software (x264)", new List<string> { "VBR", "CBR", "CRF" } },
             { "Hardware (AMF)", new List<string> { "VBR", "CBR", "ABR", "CRF" } },
             { "Hardware (QSV)", new List<string> { "VBR", "CBR" } }
+        };
+
+
+        private readonly FileFormat file_format_default = new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)");
+        private List<FileFormat> file_formats = new() {
+            new FileFormat("mp4", "MPEG-4 (.mp4)"),
+            new FileFormat("mkv", "Matroska Video (.mkv)"),
+            new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)"),
+            new FileFormat("fragmented_mov", "Fragmented MOV (.mov)"),
+
+            new FileFormat("flv", "Flash Video (.flv)"),
+            new FileFormat("mov", "QuickTime (.mov)"),
+            new FileFormat("mpegts", "MPEG-TS (.ts)")
         };
 
         static bool signalOutputStop = false;
@@ -172,7 +186,10 @@ namespace RePlays.Recorders {
             string dir = Path.Join(GetPlaysFolder(), "/" + MakeValidFolderNameSimple(session.GameTitle) + "/");
             Directory.CreateDirectory(dir);
             videoNameTimeStamp = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
-            videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses.mp4");
+
+            FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MPEG-4 (.mp4)"));
+            Logger.WriteLine($"Output file format: " + currentFileFormat.ToString());
+            videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
 
             // Get the window class name
             var windowClassNameId = GetWindowTitle(windowHandle) + ":" + GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
@@ -252,7 +269,8 @@ namespace RePlays.Recorders {
             // SETUP VIDEO ENCODER
             string encoder = SettingsService.Settings.captureSettings.encoder;
             string rateControl = SettingsService.Settings.captureSettings.rateControl;
-            videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder, rateControl));
+            string fileFormat = SettingsService.Settings.captureSettings.fileFormat.format;
+            videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder, rateControl, fileFormat));
             obs_encoder_set_video(videoEncoders[encoder], obs_get_video());
             obs_set_output_source(0, videoSources["gameplay"]);
 
@@ -369,10 +387,11 @@ namespace RePlays.Recorders {
             DisplayCapture = true;
         }
 
-        private IntPtr GetVideoEncoder(string encoder, string rateControl) {
+        private IntPtr GetVideoEncoder(string encoder, string rateControl, string format) {
             IntPtr videoEncoderSettings = obs_data_create();
             obs_data_set_bool(videoEncoderSettings, "use_bufsize", true);
             obs_data_set_string(videoEncoderSettings, "profile", "high");
+
             //Didn't really know how to handle the presets so it's just hacked for now.
             switch (encoder) {
                 case "Hardware (NVENC)":
@@ -382,11 +401,24 @@ namespace RePlays.Recorders {
                     obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
                     break;
             }
+
             obs_data_set_string(videoEncoderSettings, "rate_control", rate_controls[rateControl]);
             obs_data_set_int(videoEncoderSettings, "bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
+
             if (SettingsService.Settings.captureSettings.rateControl == "VBR") {
                 obs_data_set_int(videoEncoderSettings, "max_bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
             }
+
+            // See https://github.com/obsproject/obs-studio/blob/9d2715fe72849bb8c1793bb964ba3d9dc2f189fe/UI/window-basic-main-outputs.cpp#L1310C1-L1310C1
+            bool is_fragmented = format.StartsWith("fragmented", StringComparison.OrdinalIgnoreCase);
+            bool is_lossless = rateControl == "Lossless";
+
+            if (is_fragmented && !is_lossless) {
+                string mux_frag = "movflags=frag_keyframe+empty_moov+delay_moov";
+                obs_data_set_string(videoEncoderSettings, "muxer_settings", mux_frag);
+                Logger.WriteLine("Video Encoder muxer flags: " + mux_frag);
+            }
+
             IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
             obs_data_release(videoEncoderSettings);
             return encoderPtr;
@@ -405,9 +437,16 @@ namespace RePlays.Recorders {
         }
 
         public void ResumeDisplayOutput() {
+            var monitor_id = "";
+#if WINDOWS
+            var screen = windowHandle == 0 ? System.Windows.Forms.Screen.PrimaryScreen : System.Windows.Forms.Screen.FromHandle(windowHandle);
+            monitor_id = GetMonitorId(screen.DeviceName);
+#endif
             IntPtr videoSourceSettings = obs_data_create();
             // obs_data_set_int(videoSourceSettings, "method", 0); // automatic
-            // obs_data_set_string(videoSourceSettings, "monitor_id", @"\\\\?\\DISPLAY#DELA024#5&d5f75a2&0&UID37124#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}"); // don't set for primary monitor
+            if (monitor_id != "") {
+                obs_data_set_string(videoSourceSettings, "monitor_id", monitor_id);
+            }
             videoSources.TryAdd("display", obs_source_create("monitor_capture", "display", videoSourceSettings, IntPtr.Zero));
             obs_data_release(videoSourceSettings);
             obs_set_output_source(0, videoSources["display"]);
@@ -459,6 +498,23 @@ namespace RePlays.Recorders {
                     SettingsService.Settings.captureSettings.rateControl = availableRateControls[0];
                 SettingsService.SaveSettings();
             }
+        }
+
+        public void GetAvailableFileFormats() {
+            Logger.WriteLine("File format: " + SettingsService.Settings.captureSettings.fileFormat);
+
+            var selectedFormat = SettingsService.Settings.captureSettings.fileFormat;
+
+            // Check if we have an invalid file format selected
+            if (selectedFormat == null
+                || file_formats.Where(x => x.format == selectedFormat.format).Any() == false) {
+                // Invalid file format, default to file_format_default.
+                selectedFormat = file_format_default;
+                SettingsService.Settings.captureSettings.fileFormat = selectedFormat;
+            }
+
+            SettingsService.Settings.captureSettings.fileFormatsCache = file_formats;
+            SettingsService.SaveSettings();
         }
 
         public override async Task<bool> StopRecording() {
@@ -610,5 +666,6 @@ namespace RePlays.Recorders {
             obs_output_release(output);
             output = IntPtr.Zero;
         }
+
     }
 }

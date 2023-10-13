@@ -90,13 +90,12 @@ declare global {
   }
   // userSettings
   interface UserSettings {
-    generalSettings: GeneralSettings
-    captureSettings: CaptureSettings
-    keybindingsSettings: KeybindingsSettings
-    uploadSettings: UploadSettings
-    storageSettings: StorageSettings
-    keybindings: Keybindings
-    detectionSettings: DetectionSettings
+    generalSettings: GeneralSettings,
+    captureSettings: CaptureSettings,
+    detectionSettings: DetectionSettings,
+    uploadSettings: UploadSettings,
+    storageSettings: StorageSettings,
+    keybindSettings: KeybindSettings,
   }
   interface GeneralSettings {
     launchStartup: boolean, 
@@ -114,6 +113,10 @@ declare global {
     denoiser?: boolean,
     isInput?: boolean
   }
+  interface FileFormat {
+    title: string,
+    format: string
+  }
   interface CaptureSettings {
     recordingMode: string,
     useDisplayCapture: boolean,
@@ -129,9 +132,8 @@ declare global {
     outputDevices: AudioDevice[],
     outputDevicesCache: AudioDevice[],
     hasNvidiaAudioSDK: boolean,
-  }
-  interface KeybindingsSettings {
-      keybindings: Keybindings
+    fileFormatsCache: FileFormat[]
+    fileFormat: FileFormat,
   }
   interface UploadSettings {
     recentLinks: string[],
@@ -152,7 +154,7 @@ declare global {
     customUploaderSettings: {
       url: string,
       method: string,
-      headers:  {Key: string, Value: string}[],
+      headers: {Key: string, Value: string}[],
       urlparams: {Key: string, Value: string}[],
       responseType: string,
       responsePath: string,
@@ -167,17 +169,21 @@ declare global {
     manageSpaceLimit: number,
     manageTimeLimit: number,
   }
-  interface DetectionSettings{
+  interface DetectionSettings {
     whitelist: CustomGame[],
     blacklist: string[],
+  }
+  interface KeybindSettings {
+    StartStopRecording: CustomKeybind,
+    CreateBookmark: CustomKeybind,
+  }
+  interface CustomKeybind {
+    disabled: boolean,
+    keys: string[],
   }
   interface CustomGame {
     gameExe: string,
     gameName: string,
-  }
-  interface Keybindings {
-    StartStopRecording: string[],
-    CreateBookmark: string[],
   }
 }
 

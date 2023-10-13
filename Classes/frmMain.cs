@@ -4,11 +4,14 @@ using RePlays.Recorders;
 using RePlays.Services;
 using RePlays.Utils;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static RePlays.Utils.Functions;
@@ -25,7 +28,7 @@ namespace RePlays {
             SettingsService.SaveSettings();
             ScreenSize.UpdateMaximumScreenResolution();
             StorageService.ManageStorage();
-            HotkeyService.Start();
+            KeybindService.Start();
             InitializeComponent();
             PurgeTempVideos();
             Updater.CheckForUpdates();
@@ -46,6 +49,9 @@ namespace RePlays {
                 RecordingService.Start(typeof(LibObsRecorder));
             }
             GetAudioDevices();
+
+            Thread socketThread = new(StartSocketServer);
+            socketThread.Start();
         }
 
         private void frmMain_Load(object sender, System.EventArgs e) {
@@ -178,7 +184,46 @@ namespace RePlays {
             }
         }
 
+        private static void StartSocketServer() {
+            int port = 3333;
+            IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
+            IPEndPoint localEndPoint = new(ipAddress, port);
+            Socket listener = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            try {
+                listener.Bind(localEndPoint);
+                listener.Listen(10);
+
+                while (true) {
+                    Socket handler = listener.Accept();
+                    string message = ReceiveMessage(handler);
+
+                    if (message == "BringToForeground") {
+                        Logger.WriteLine($"Got socket message: {message}");
+                        frmMain.Instance.Invoke((MethodInvoker)(() => frmMain.Instance.InitializeWebView2()));
+                        frmMain.Instance.Invoke((MethodInvoker)(() => frmMain.Instance.ActivateFormAndRestoreWindowState()));
+                    }
+
+                    handler.Shutdown(SocketShutdown.Both);
+                    handler.Close();
+                }
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Socket server exception: {ex.Message}");
+            }
+        }
+
+        static string ReceiveMessage(Socket socket) {
+            byte[] buffer = new byte[1024];
+            int bytesRead = socket.Receive(buffer);
+            return Encoding.UTF8.GetString(buffer, 0, bytesRead);
+        }
+
         private void notifyIcon1_DoubleClick(object sender, System.EventArgs e) {
+            ActivateFormAndRestoreWindowState();
+        }
+
+        private void ActivateFormAndRestoreWindowState() {
             this.Activate();
             if (this.WindowState == FormWindowState.Minimized) {
                 this.Opacity = 100;
@@ -257,46 +302,6 @@ namespace RePlays {
 
         public void HideRecentLinks() {
             recentLinksMenu.Hide();
-        }
-
-        private List<Keys> PressedKeys = new();
-        private void button1_KeyDown(object sender, KeyEventArgs e) {
-            Keys k = e.KeyCode;
-            if (k.ToString().Contains(e.Modifiers.ToString())) k = e.Modifiers;
-
-            if (!PressedKeys.Contains(k)) {
-                PressedKeys.Add(k);
-            }
-            PressedKeys.Sort();
-            PressedKeys.Reverse();
-            Logger.WriteLine(string.Join(" | ", PressedKeys.ToArray()));
-        }
-
-        bool _hasHotkeyTimeout = false;
-        private void button1_KeyUp(object sender, KeyEventArgs e) {
-            if (HotkeyService.EditId != null && SettingsService.Settings.keybindings.ContainsKey(HotkeyService.EditId) && !_hasHotkeyTimeout) {
-                SettingsService.Settings.keybindings[HotkeyService.EditId] = string.Join(" | ", PressedKeys.ToArray()).Split(" | ");
-                SettingsService.SaveSettings();
-                WebMessage.SendMessage(GetUserSettings());
-                HotkeyService.Start();
-                var cleanupTask = new Task(() => ClearKeys()); cleanupTask.Start();
-            }
-            if (webView2 != null) webView2.Focus();
-            else pictureBox1.Focus();
-            _hasHotkeyTimeout = PressedKeys.Count >= 2;
-        }
-
-        public async void ClearKeys() {
-            await Task.Delay(1000);
-            _hasHotkeyTimeout = false;
-            PressedKeys.Clear();
-        }
-
-        public void EditKeybind(string id) {
-            HotkeyService.EditId = id;
-            HotkeyService.Stop();
-            //button1 is a hacky way of logging keypresses
-            this.button1.Focus();
         }
     }
 }
