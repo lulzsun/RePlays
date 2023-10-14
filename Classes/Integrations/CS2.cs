@@ -16,27 +16,23 @@ namespace RePlays.Integrations {
         private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private HttpListener listener = new HttpListener();
 
-        public override async Task Start() {
-            InitializeListener();
-
-            while (listener.IsListening) {
-                try {
-                    HttpListenerContext context = await listener.GetContextAsync();
-
-                    await semaphore.WaitAsync();
-
-                    try {
-                        await HandleRequest(context);
-                    }
-                    finally {
-                        semaphore.Release();
-                    }
-                }
-                catch (Exception ex) {
-                    Logger.WriteLine(RecordingService.IsRecording ? $"The listener has stopped unexpectedly. Error {ex.Message}" : "The listener has stopped successfully");
-                    break;
-                }
+        private async Task EnsureConfigFileIsInstalledAsync() {
+            string installationPath = GetInstallationPath();
+            if (!File.Exists(installationPath)) {
+                File.Copy(Functions.GetResourcesFolder() + "cs2.cfg", installationPath);
             }
+        }
+
+        private string GetInstallationPath() {
+            const string searchPath = "\\bin\\win64\\cs2.exe";
+            const string replacePath = "\\csgo\\cfg\\gamestate_integration_replays.cfg";
+
+            var currentSession = RecordingService.GetCurrentSession();
+            if (currentSession == null || string.IsNullOrEmpty(currentSession.Exe)) {
+                throw new Exception("Could not get CS2 path, Session path: " + currentSession.Exe);
+            }
+
+            return currentSession.Exe.Replace(searchPath, replacePath);
         }
 
         private async Task HandleRequest(HttpListenerContext context) {
@@ -71,16 +67,16 @@ namespace RePlays.Integrations {
             Logger.WriteLine("Listening at http://127.0.0.1:1337/");
         }
 
-        private static async Task<string> ReadRequestBodyAsync(HttpListenerRequest request) {
+        private async Task<string> ReadRequestBodyAsync(HttpListenerRequest request) {
             using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
             return await reader.ReadToEndAsync();
         }
 
-        private static State DeserializeState(string body) {
+        private State DeserializeState(string body) {
             return JsonConvert.DeserializeObject<State>(body);
         }
 
-        static async Task WriteResponseAsync(HttpListenerResponse response) {
+        async Task WriteResponseAsync(HttpListenerResponse response) {
             byte[] buffer = Encoding.UTF8.GetBytes("");
             response.ContentLength64 = buffer.Length;
             using (Stream output = response.OutputStream) {
@@ -88,7 +84,7 @@ namespace RePlays.Integrations {
             }
         }
 
-        private static bool IsValidState(State newState, State oldState) {
+        private bool IsValidState(State newState, State oldState) {
             return newState?.Player?.MatchStats != null &&
                    newState.Player.SteamId == newState.Provider.SteamId &&
                    newState.Player.MatchStats.Kills > oldState?.Player?.MatchStats?.Kills &&
@@ -99,17 +95,12 @@ namespace RePlays.Integrations {
             return newState?.Map?.Phase != oldState?.Map?.Phase;
         }
 
-        public async override Task Shutdown() {
-            Logger.WriteLine("Shutting down CS2 integration");
-            listener.Close();
-        }
-
-        public class MatchStats {
+        private class MatchStats {
             [JsonProperty("kills")]
             public int Kills { get; set; }
         }
 
-        public class Player {
+        private class Player {
             [JsonProperty("steamid")]
             public string SteamId { get; set; }
 
@@ -117,24 +108,57 @@ namespace RePlays.Integrations {
             public MatchStats MatchStats { get; set; }
         }
 
-        public class Provider {
+        private class Provider {
             [JsonProperty("steamid")]
             public string SteamId { get; set; }
 
         }
 
-        public class Map {
+        private class Map {
             [JsonProperty("phase")]
             public string Phase { get; set; }
         }
 
-        public class State {
+        private class State {
             [JsonProperty("player")]
             public Player Player { get; set; }
             [JsonProperty("provider")]
             public Provider Provider { get; set; }
             [JsonProperty("map")]
             public Map Map { get; set; }
+        }
+        public override async Task Start() {
+            await EnsureConfigFileIsInstalledAsync();
+            InitializeListener();
+
+            while (listener.IsListening) {
+                try {
+                    HttpListenerContext context = await listener.GetContextAsync();
+
+                    await semaphore.WaitAsync();
+
+                    try {
+                        await HandleRequest(context);
+                    }
+                    finally {
+                        semaphore.Release();
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine(RecordingService.IsRecording ? $"The listener has stopped unexpectedly. Error {ex.Message}" : "The listener has stopped successfully");
+                    break;
+                }
+            }
+        }
+        public async override Task Shutdown() {
+            Logger.WriteLine("Shutting down CS2 integration");
+            try {
+                listener.Stop();
+                listener.Close();
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"{ex.Message}");
+            }
         }
     }
 }
