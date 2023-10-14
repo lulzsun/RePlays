@@ -43,9 +43,21 @@ namespace RePlays.Integrations {
                             Console.WriteLine("Kills changed to: " + currentKills);
                         }
 
+                        int currentDeaths = currentPlayer.GetProperty("scores").GetProperty("deaths").GetInt32();
+                        if (currentDeaths != stats.Deaths) {
+                            BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Death });
+                            Console.WriteLine("Deaths changed to: " + currentDeaths);
+                        }
+
+                        int currentAssists = currentPlayer.GetProperty("scores").GetProperty("assists").GetInt32();
+                        if (currentAssists != stats.Assists) {
+                            BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Assist });
+                            Console.WriteLine("Assists changed to: " + currentAssists);
+                        }
+
                         stats.Kills = currentKills;
-                        stats.Deaths = currentPlayer.GetProperty("scores").GetProperty("deaths").GetInt32();
-                        stats.Assists = currentPlayer.GetProperty("scores").GetProperty("assists").GetInt32();
+                        stats.Deaths = currentDeaths;
+                        stats.Assists = currentAssists;
                         stats.Champion = currentPlayer.GetProperty("rawChampionName").GetString().Replace("game_character_displayname_", "");
                         stats.Win = root.GetProperty("events").GetProperty("Events")
                             .EnumerateArray()

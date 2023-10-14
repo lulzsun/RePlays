@@ -46,7 +46,9 @@ namespace RePlays.Services {
     public class Bookmark {
         public enum BookmarkType {
             Manual,
-            Kill
+            Kill,
+            Death,
+            Assist
         }
         public BookmarkType type { get; set; }
         public double time { get; set; }
