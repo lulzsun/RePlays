@@ -59,6 +59,7 @@ namespace RePlays.Integrations {
 
             response.Close();
         }
+
         private void InitializeListener() {
             Logger.WriteLine("Starting CS2 integration");
             oldState = new State();
@@ -127,6 +128,7 @@ namespace RePlays.Integrations {
             [JsonProperty("map")]
             public Map Map { get; set; }
         }
+
         public override async Task Start() {
             await EnsureConfigFileIsInstalledAsync();
             InitializeListener();
@@ -150,6 +152,7 @@ namespace RePlays.Integrations {
                 }
             }
         }
+
         public async override Task Shutdown() {
             Logger.WriteLine("Shutting down CS2 integration");
             try {
