@@ -15173,13 +15173,17 @@
 		]
 	},
 	{
+		"force_display_capture": true,
 		"region": null,
-		"title": "Counter-Strike 2D",
+		"title": "Counter-Strike 2",
 		"game_detection": [
 			{
-				"launchexe": "/CounterStrike2D\\.exe",
-				"defaultdir": "c:/games/cs2d",
-				"longname": "CounterStrike 2D"
+				"gameexe": "cs2\\.exe$",
+				"launchexe": "/steam\\.exe",
+				"launchflags": "-applaunch 730",
+				"regkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Valve/Steam/InstallPath",
+				"longname": "Counter-Strike 2 -Steam",
+				"edition": "(Steam)"
 			}
 		]
 	},

@@ -258,33 +258,42 @@ namespace RePlays.Recorders {
                 }
             }
 
-            // SETUP NEW VIDEO SOURCE
-            // - Create a source for the game_capture in channel 0
-            IntPtr videoSourceSettings = obs_data_create();
-            obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
-            obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
-            videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
-            obs_data_release(videoSourceSettings);
-
-            // SETUP VIDEO ENCODER
             string encoder = SettingsService.Settings.captureSettings.encoder;
             string rateControl = SettingsService.Settings.captureSettings.rateControl;
             string fileFormat = SettingsService.Settings.captureSettings.fileFormat.format;
-            videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder, rateControl, fileFormat));
-            obs_encoder_set_video(videoEncoders[encoder], obs_get_video());
-            obs_set_output_source(0, videoSources["gameplay"]);
 
-            // attempt to wait for game_capture source to hook first
-            retryAttempt = 0;
-            Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
-            while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
-                await Task.Delay(retryInterval);
-                retryAttempt++;
+            if (session.ForceDisplayCapture == false) {
+                // SETUP NEW VIDEO SOURCE
+                // - Create a source for the game_capture in channel 0
+                IntPtr videoSourceSettings = obs_data_create();
+                obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
+                obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
+                videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
+                obs_data_release(videoSourceSettings);
+
+                // SETUP VIDEO ENCODER
+                videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder, rateControl, fileFormat));
+                obs_encoder_set_video(videoEncoders[encoder], obs_get_video());
+                obs_set_output_source(0, videoSources["gameplay"]);
+
+                // attempt to wait for game_capture source to hook first
+                retryAttempt = 0;
+                Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
+                while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
+                    await Task.Delay(retryInterval);
+                    retryAttempt++;
+                }
+            }
+            else {
+                videoEncoders.TryAdd(encoder, GetVideoEncoder(encoder, rateControl, fileFormat));
+                obs_encoder_set_video(videoEncoders[encoder], obs_get_video());
             }
             signalGCHookAttempt = 0;
 
             if (signalGCHookSuccess == false) {
-                Logger.WriteLine($"Unable to get graphics hook for [{windowClassNameId}] after {retryAttempt} attempts");
+                if (session.ForceDisplayCapture == false) {
+                    Logger.WriteLine($"Unable to get graphics hook for [{windowClassNameId}] after {retryAttempt} attempts");
+                }
 
                 Process process;
 

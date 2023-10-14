@@ -22,11 +22,13 @@ namespace RePlays.Services {
             public nint WindowHandle { get; internal set; }
             public string GameTitle { get; internal set; }
             public string Exe { get; internal set; }
-            public Session(int _Pid, nint _WindowHandle, string _GameTitle, string _Exe = null) {
+            public bool ForceDisplayCapture { get; internal set; }
+            public Session(int _Pid, nint _WindowHandle, string _GameTitle, string _Exe = null, bool _ForceDisplayCapture = false) {
                 Pid = _Pid;
                 WindowHandle = _WindowHandle;
                 GameTitle = _GameTitle;
                 Exe = _Exe;
+                ForceDisplayCapture = _ForceDisplayCapture;
             }
         }
 
@@ -46,8 +48,8 @@ namespace RePlays.Services {
             await Task.Run(() => DetectionService.CheckAlreadyRunningPrograms());
         }
 
-        public static void SetCurrentSession(int _Pid, nint _WindowHandle, string _GameTitle, string exeFile) {
-            currentSession = new Session(_Pid, _WindowHandle, _GameTitle, exeFile);
+        public static void SetCurrentSession(int _Pid, nint _WindowHandle, string _GameTitle, string exeFile, bool forceDisplayCapture = false) {
+            currentSession = new Session(_Pid, _WindowHandle, _GameTitle, exeFile, forceDisplayCapture);
         }
 
         public static Session GetCurrentSession() {
