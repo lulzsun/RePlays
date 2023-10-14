@@ -35,7 +35,7 @@ namespace RePlays.Services {
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static Dictionary<string, string> drivePaths = new();
-        private static List<string> classBlacklist = new() { "splashscreen", "launcher", "cheat", "sdl_app", "console" };
+        private static List<string> classBlacklist = new() { "splashscreen", "launcher", "cheat", "console" };
         private static List<string> classWhitelist = new() { "unitywndclass", "unrealwindow", "riotwindowclass" };
         public static bool IsStarted { get; internal set; }
 
@@ -235,6 +235,13 @@ namespace RePlays.Services {
 
         public static JsonElement[] DownloadDetections(string dlPath, string file) {
             var result = "[]";
+
+#if DEBUG
+            dlPath = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"Resources/detections/", file);
+            Logger.WriteLine($"Debug: Using {file} from Resources folder instead.");
+            return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
+#endif
+
             try {
                 // check if current file sha matches remote or not, if it does, we are already up-to-date
                 if (File.Exists(dlPath)) {
@@ -371,7 +378,8 @@ namespace RePlays.Services {
                     $"[{className}]" +
                     $"[{executablePath}]"
                 );
-                RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
+                bool forceDisplayCapture = gameDetection.forceDisplayCapture;
+                RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, forceDisplayCapture);
                 if (allowed) RecordingService.StartRecording();
             }
             return isGame;
@@ -384,11 +392,11 @@ namespace RePlays.Services {
             return windowHandle == IntPtr.Zero;
         }
 
-        public static (bool isGame, string gameTitle) IsMatchedGame(string exeFile) {
+        public static (bool isGame, bool forceDisplayCapture, string gameTitle) IsMatchedGame(string exeFile) {
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
-                if (game.gameExe == exeFile) return (true, game.gameName);
+                if (game.gameExe == exeFile) return (true, false, game.gameName);
             }
-            if (SettingsService.Settings.captureSettings.recordingMode == "whitelist") return (false, "Whitelist Mode");
+            if (SettingsService.Settings.captureSettings.recordingMode == "whitelist") return (false, false, "Whitelist Mode");
 
             try {
                 for (int x = 0; x < gameDetectionsJson.Length; x++) {
@@ -411,14 +419,14 @@ namespace RePlays.Services {
                                     exePattern = exePatterns[z].Split('/').Last();
                                     if (exePatterns[z].Length > 0 && Regex.IsMatch(exeFile, "^" + exePattern + "$", RegexOptions.IgnoreCase)) {
                                         Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"^{exePattern}\"$");
-                                        return (true, gameDetectionsJson[x].GetProperty("title").ToString());
+                                        return (true, HasForcedDisplayCapture(gameDetectionsJson[x]), gameDetectionsJson[x].GetProperty("title").ToString());
                                     }
                                 }
                             }
                             else {
                                 if (Regex.IsMatch(exeFile, exePattern, RegexOptions.IgnoreCase)) {
                                     Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"{exePattern}\"");
-                                    return (true, gameDetectionsJson[x].GetProperty("title").ToString());
+                                    return (true, HasForcedDisplayCapture(gameDetectionsJson[x]), gameDetectionsJson[x].GetProperty("title").ToString());
                                 }
                             }
                         }
@@ -431,8 +439,14 @@ namespace RePlays.Services {
 
             // TODO: also parse Epic games/Origin games
             if (exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
-                return (true, Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0]);
-            return (false, "Game Unknown");
+                return (true, false, Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0]);
+            return (false, false, "Game Unknown");
+        }
+
+        public static bool HasForcedDisplayCapture(JsonElement matchedGame) {
+            return matchedGame.TryGetProperty("force_display_capture", out JsonElement prop)
+                                            ? prop.GetBoolean()
+                                            : false;
         }
 
         public static bool IsMatchedNonGame(string executablePath) {
