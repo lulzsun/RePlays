@@ -419,14 +419,14 @@ namespace RePlays.Services {
                                     exePattern = exePatterns[z].Split('/').Last();
                                     if (exePatterns[z].Length > 0 && Regex.IsMatch(exeFile, "^" + exePattern + "$", RegexOptions.IgnoreCase)) {
                                         Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"^{exePattern}\"$");
-                                        return (true, gameDetectionsJson[x].GetProperty("force_display_capture").GetBoolean(), gameDetectionsJson[x].GetProperty("title").ToString());
+                                        return (true, HasForcedDisplayCapture(gameDetectionsJson[x]), gameDetectionsJson[x].GetProperty("title").ToString());
                                     }
                                 }
                             }
                             else {
                                 if (Regex.IsMatch(exeFile, exePattern, RegexOptions.IgnoreCase)) {
                                     Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"{exePattern}\"");
-                                    return (true, gameDetectionsJson[x].GetProperty("force_display_capture").GetBoolean(), gameDetectionsJson[x].GetProperty("title").ToString());
+                                    return (true, HasForcedDisplayCapture(gameDetectionsJson[x]), gameDetectionsJson[x].GetProperty("title").ToString());
                                 }
                             }
                         }
@@ -441,6 +441,12 @@ namespace RePlays.Services {
             if (exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
                 return (true, false, Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0]);
             return (false, false, "Game Unknown");
+        }
+
+        public static bool HasForcedDisplayCapture(JsonElement matchedGame) {
+            return matchedGame.TryGetProperty("force_display_capture", out JsonElement prop)
+                                            ? prop.GetBoolean()
+                                            : false;
         }
 
         public static bool IsMatchedNonGame(string executablePath) {
