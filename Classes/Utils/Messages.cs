@@ -168,9 +168,16 @@ namespace RePlays.Utils {
                     }
                 case "Initialize": {
                         // INIT USER SETTINGS
-                        ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
-                        ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
+                        if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
+                            ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
+                            ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
+                        }
                         SendMessage(GetUserSettings());
+
+#if DEBUG || !WINDOWS
+                        // Serve video files/thumbnails to allow the react app to use them
+                        Classes.Utils.StaticServer.Start();
+#endif
 
                         Logger.WriteLine($"Initializing {toastList.Count} Toasts");
                         foreach (var toast in toastList) {
@@ -255,8 +262,12 @@ namespace RePlays.Utils {
                     break;
                 case "ShowInFolder": {
                         ShowInFolder data = JsonSerializer.Deserialize<ShowInFolder>(webMessage.data);
-                        var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
+                        var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('\\', '/');
+#if WINDOWS
                         Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
+#else
+                        Process.Start("dolphin", string.Format("--select \"{0}\"", filePath));
+#endif
                     }
                     break;
                 case "ShowLicense": {
@@ -433,7 +444,7 @@ namespace RePlays.Utils {
                     "\"videoname\": \"" + videoName + "\", " +
                     "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
                     "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
-
+#if WINDOWS
             if (frmMain.webView2 != null) {
                 WebMessage webMessage = new();
                 webMessage.message = "SetBookmarks";
@@ -444,6 +455,7 @@ namespace RePlays.Utils {
             else {
                 BackupBookmarks(videoName, json);
             }
+#endif
         }
     }
 }

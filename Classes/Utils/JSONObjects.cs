@@ -1,5 +1,3 @@
-using RePlays.Classes.Services.Keybinds;
-using Squirrel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -51,17 +49,19 @@ namespace RePlays.Utils {
             get { return _launchStartup; }
             set {
                 _launchStartup = value;
+#if WINDOWS
                 try {
-                    using (var manager = new UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
+                    using (var manager = new Squirrel.UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
                         if (_launchStartup == true)
-                            manager.CreateShortcutsForExecutable("RePlays.exe", ShortcutLocation.Startup, false);
+                            manager.CreateShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup, false);
                         else
-                            manager.RemoveShortcutsForExecutable("RePlays.exe", ShortcutLocation.Startup);
+                            manager.RemoveShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup);
                     }
                 }
                 catch (Exception exception) {
                     Logger.WriteLine("Error: Issue editing program startup setting: " + exception.ToString());
                 }
+#endif
             }
         }
         private bool _startMinimized = false;

@@ -15,15 +15,18 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+#if WINDOWS
 using System.Windows.Forms;
+#endif
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class DetectionService {
         static readonly ManagementEventWatcher pCreationWatcher = new(new EventQuery("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
         static readonly ManagementEventWatcher pDeletionWatcher = new(new EventQuery("SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
-
+#if WINDOWS
         static MessageWindow messageWindow;
+#endif
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         private delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
         static WinEventProc winActiveDele, winResizeDele; // Keep win event delegates alive as long as class is alive (if you dont do this, gc will clean up)
@@ -67,7 +70,7 @@ namespace RePlays.Services {
                 catch (ManagementException) { }
             };
             pDeletionWatcher.Start();
-
+#if WINDOWS
             // watch window creation/deletion events
             messageWindow = new MessageWindow();
             IsStarted = true;
@@ -79,13 +82,16 @@ namespace RePlays.Services {
             // watch window resize/move events 
             winResizeDele = OnWindowResizeMoveEvent;
             winResizeHook = SetWinEventHook(11, 11, IntPtr.Zero, winResizeDele, 0, 0, 0);
+#endif
         }
 
         public static void Stop() {
+#if WINDOWS
             if (messageWindow != null) {
                 messageWindow.Close();
                 messageWindow.Dispose();
             }
+#endif
             pCreationWatcher.Stop();
             pDeletionWatcher.Stop();
             pCreationWatcher.Dispose();
@@ -525,6 +531,7 @@ namespace RePlays.Services {
         static extern bool QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
     }
 
+#if WINDOWS
     // https://stackoverflow.com/a/7033382
     class MessageWindow : Form {
         private readonly int msgNotify;
@@ -574,4 +581,5 @@ namespace RePlays.Services {
         [DllImport("user32", EntryPoint = "RegisterWindowMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
         private static extern int RegisterWindowMessage(string lpString);
     }
+#endif
 }

@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
+using Timer = System.Timers.Timer;
+
 
 namespace RePlays.Integrations {
     internal class LeagueOfLegendsIntegration : Integration {

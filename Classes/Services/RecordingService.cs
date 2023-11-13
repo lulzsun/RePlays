@@ -3,6 +3,8 @@ using RePlays.Utils;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
+using Timer = System.Timers.Timer;
+
 
 namespace RePlays.Services {
     public static class RecordingService {
@@ -35,7 +37,7 @@ namespace RePlays.Services {
         public static async void Start(Type type) {
 
             Logger.WriteLine("RecordingService starting...");
-            DetectionService.Start();
+            // DetectionService.Start();
             if (type == typeof(PlaysLTCRecorder)) {
                 ActiveRecorder = new PlaysLTCRecorder();
                 ActiveRecorder.Start();
@@ -45,7 +47,7 @@ namespace RePlays.Services {
             ActiveRecorder = new LibObsRecorder();
             Logger.WriteLine("Creating a new ActiveRecorder");
             await Task.Run(() => ActiveRecorder.Start());
-            await Task.Run(() => DetectionService.CheckAlreadyRunningPrograms());
+            // await Task.Run(() => DetectionService.CheckAlreadyRunningPrograms());
         }
 
         public static void SetCurrentSession(int _Pid, nint _WindowHandle, string _GameTitle, string exeFile, bool forceDisplayCapture = false) {

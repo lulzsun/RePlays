@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
 using Process = System.Diagnostics.Process;
+using Timer = System.Timers.Timer;
 
 namespace RePlays.Utils {
     public static class Functions {
@@ -50,12 +51,14 @@ namespace RePlays.Utils {
             if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any()) {
                 SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
                 SettingsService.SaveSettings();
+#if WINDOWS
                 if (frmMain.webView2 == null) {
                     Task.Run(() => SendDisplayModalWithDelay("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info", 10000));
                 }
                 else {
                     WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
                 }
+#endif
                 return SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
             }
 
@@ -77,7 +80,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetCfgFolder() {
-            var cfgDir = Path.Join(GetStartupPath(), @"..\cfg\");
+            var cfgDir = Path.Join(GetStartupPath(), @"../cfg/");
             if (!Directory.Exists(cfgDir))
                 Directory.CreateDirectory(cfgDir);
             return cfgDir;
@@ -307,7 +310,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string[] thumbnailExtensions = new string[] { ".png", ".webp" };
             string thumbnailPath = thumbnailExtensions.Select(ext => Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ext))
                 .FirstOrDefault(File.Exists);
@@ -329,7 +332,7 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg"),
                 Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"",
                     (duration / 2).ToString(CultureInfo.InvariantCulture), videoPath, thumbnailPath),
             };

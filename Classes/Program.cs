@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Text;
 #if !WINDOWS
 using PhotinoNET;
+using static RePlays.Utils.Functions;
 #else
 using Squirrel;
 using System.Windows.Forms;
@@ -94,10 +95,6 @@ namespace RePlays {
                 if (process == null) process = Process.Start(startInfo);
             }
 #endif
-#if DEBUG || !WINDOWS
-            // this will serve video files/thumbnails to allow the react app to use them
-            Classes.Utils.StaticServer.Start();
-#endif
 #if WINDOWS
             // squirrel configuration
             try {
@@ -134,14 +131,22 @@ namespace RePlays {
         private static void OpenInterface() {
             window = new PhotinoWindow()
                 .SetTitle("RePlays")
-                .Center()
+                .SetBrowserControlInitParameters(System.Text.Json.JsonSerializer.Serialize(new {
+                    set_hardware_acceleration_policy = 2,
+                }))
+                .SetUseOsDefaultSize(false)
+                .SetSize(1080, 600)
                 .SetResizable(true)
+                .Load(GetRePlaysURI())
                 .RegisterWebMessageReceivedHandler(async (object sender, string message) => {
                     await WebMessage.RecieveMessage(message);
                 }
             );
-            window.Load($"http://localhost:3000/") // Can be used with relative path strings or "new URI()" instance to load a website.
-                  .WaitForClose();
+#if DEBUG
+            if (File.Exists("./Resources/logo.png"))
+                window.SetIconFile("./Resources/logo.png");
+#endif
+            window.WaitForClose();
             ApplicationExitEvent.Set();
         }
 #endif
