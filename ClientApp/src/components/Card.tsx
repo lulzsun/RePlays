@@ -4,6 +4,7 @@ import { formatBytes } from '../helpers/utils';
 import { postMessage } from '../helpers/messenger';
 import UploadModal from './UploadModal';
 import { ModalContext } from '../Contexts';
+import { CompressModal } from './CompressModal';
 
 interface Props {
   game?: string;
@@ -36,6 +37,15 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
     modalCtx?.setData({title: "Upload", context: <UploadModal video={video} game={game} thumb={thumb}/>, cancel: true});
     modalCtx?.setOpen(true);
   }
+
+  function handleCompress() {
+    console.log(`${game} ${video} ${videoType} to compress`);
+    var thumb = `${folder}/${game}/.thumbs/${video}`;
+    thumb = thumb.substr(0, thumb.lastIndexOf('.')) + ".webp" || thumb + ".webp";
+
+    modalCtx?.setData({title: "Compress", context: <CompressModal video={video} game={game} thumb={thumb} />, cancel: true});
+    modalCtx?.setOpen(true);
+  }
   
   return (
     <div className={"relative w-full block h-full group rounded-lg border " + (checked ? "border-2 border-blue-500" : "border border-gray-500")}>
@@ -52,7 +62,7 @@ export const Card: React.FC<Props> = ({date=Date.now().toString(), game="Game Un
           <div className="opacity-0 invisible dropdown-menu transition-all duration-300 transform origin-top-right -translate-y-2 scale-95">
             <div className="absolute right-0 w-auto mt-2 origin-top-right bg-white border border-gray-500 divide-y divide-gray-100 rounded-md shadow-lg outline-none" aria-labelledby="headlessui-menu-button-1" id="headlessui-menu-items-117" role="menu">
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
-                onClick={() => { postMessage("CompressClip", { filePath: `${game}/${video}`, game: `${game}` }) }}>Compress</div>
+                onClick={() => {handleCompress()}}>Compress</div>
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
                 onClick={() => {postMessage("ShowInFolder", {filePath: `${game}/${video}`})}}>Show In Folder</div>
               <div className="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
