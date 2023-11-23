@@ -40,6 +40,7 @@ namespace RePlays.Utils {
         }
 
         public string game { get; set; }
+        public string quality { get; set; }
     }
 
     public class Delete {
@@ -250,7 +251,7 @@ namespace RePlays.Utils {
                 case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
                         string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
-                        CompressFile(filePath, data.game);
+                        CompressFile(filePath, data);
                     }
                     break;
                 case "ShowInFolder": {
