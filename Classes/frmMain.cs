@@ -21,6 +21,7 @@ namespace RePlays {
         public static Microsoft.Web.WebView2.WinForms.WebView2 webView2;
         public ContextMenuStrip recentLinksMenu;
         public static frmMain Instance;
+        private static Socket listener;
 
         public frmMain() {
             Instance = this;
@@ -188,7 +189,7 @@ namespace RePlays {
             int port = 3333;
             IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
             IPEndPoint localEndPoint = new(ipAddress, port);
-            Socket listener = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            listener = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             try {
                 listener.Bind(localEndPoint);
@@ -200,8 +201,8 @@ namespace RePlays {
 
                     if (message == "BringToForeground") {
                         Logger.WriteLine($"Got socket message: {message}");
-                        frmMain.Instance.Invoke((MethodInvoker)(() => frmMain.Instance.InitializeWebView2()));
-                        frmMain.Instance.Invoke((MethodInvoker)(() => frmMain.Instance.ActivateFormAndRestoreWindowState()));
+                        Instance.Invoke((MethodInvoker)(() => Instance.InitializeWebView2()));
+                        Instance.Invoke((MethodInvoker)(() => Instance.ActivateFormAndRestoreWindowState()));
                     }
 
                     handler.Shutdown(SocketShutdown.Both);
@@ -235,6 +236,7 @@ namespace RePlays {
         private void exitToolStripMenuItem_Click(object sender, System.EventArgs e) {
             notifyIcon1.Visible = false;
             this.Close();
+            listener.Dispose();
             Application.Exit();
         }
 

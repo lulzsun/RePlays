@@ -25,7 +25,7 @@ export const DropDownMenu: React.FC<Props> = ({text, groups=[null], items, width
             })?.onClick!();
           }}>
           {groups[0] !== null ? groups.map((group, i) => {
-            return <optgroup key={i} label={group!}><option hidden/>
+            return <optgroup key={i} label={group!} className={`bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-400`}><option hidden/>
               {items && items.map((item, i) => {
                 if(group != item.group) return;
                 return <option key={i} tabIndex={i} value={item.id == undefined ? item.name : item.id}

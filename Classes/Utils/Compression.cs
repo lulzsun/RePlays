@@ -8,10 +8,10 @@ using static RePlays.Utils.Functions;
 namespace RePlays.Utils {
     public static class Compression {
         static Dictionary<int, double> fileTime = new Dictionary<int, double>();
-        public static void CompressFile(string filePath, string game) {
+        public static void CompressFile(string filePath, CompressClip data) {
             ProcessStartInfo startInfo = new ProcessStartInfo {
                 FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
-                Arguments = string.Format("-i \"{0}\" -vcodec libx264 -crf 28 \"{1}\"", filePath, filePath.Replace(".mkv", "-compressed.mkv").Replace(".mp4", "-compressed.mp4")),
+                Arguments = string.Format("-i \"{0}\" -vcodec libx264 -preset \"{1}\" \"{2}\"", filePath, data.quality, filePath.Replace(".mkv", "-compressed.mkv").Replace(".mp4", "-compressed.mp4")),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -23,8 +23,8 @@ namespace RePlays.Utils {
                 EnableRaisingEvents = true
             };
 
-            process.OutputDataReceived += (s, e) => ffmpeg_input(e.Data, process, game);
-            process.ErrorDataReceived += (s, e) => ffmpeg_input(e.Data, process, game);
+            process.OutputDataReceived += (s, e) => ffmpeg_input(e.Data, process, data.game);
+            process.ErrorDataReceived += (s, e) => ffmpeg_input(e.Data, process, data.game);
             process.Start();
             process.Exited += async (sender, e) => await p_ExitedAsync(sender, e, filePath, process);
             process.BeginOutputReadLine();
@@ -32,7 +32,7 @@ namespace RePlays.Utils {
 
             fileTime.Add(process.Id, 0);
 
-            WebMessage.DisplayToast(process.Id.ToString(), game, "Compressing", "none", (long)0, 100);
+            WebMessage.DisplayToast(process.Id.ToString(), data.game, "Compressing", "none", (long)0, 100);
         }
 
         static void ffmpeg_input(string e, Process process, string game) {
