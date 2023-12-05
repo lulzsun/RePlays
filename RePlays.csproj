@@ -101,12 +101,12 @@
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
   </Target>
 
-  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net8.0-windows\obs.dll') ">
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And !Exists('$(MSBuildProjectDirectory)bin\Debug\net8.0-windows\obs.dll') ">
 	<Error Condition="!Exists('$(OBSBuildPath)obs.dll')" Text="Could not copy 'obs.dll' from 'OBSBuildPath'. Run `build-libobs.cmd` to build." />
 	<ItemGroup>
 	   <LIBOBSDEBUG Include="$(OBSBuildPath)**\*.*" />
 	</ItemGroup>
-	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
+	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(MSBuildProjectDirectory)bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
@@ -177,8 +177,8 @@
 		<Output TaskParameter="Result" ItemName="ID" />
 	</XmlPeek>
 
-	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
-	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases --framework net8" />
+	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(MSBuildProjectDirectory)bin\Deployment\GeneratedNugets" />
+	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(MSBuildProjectDirectory)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(MSBuildProjectDirectory)bin\Deployment\Releases --framework net8" />
   </Target>
 
   <ItemGroup>

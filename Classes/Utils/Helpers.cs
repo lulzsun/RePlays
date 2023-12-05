@@ -667,7 +667,7 @@ namespace RePlays.Utils {
 
                 for (i = 1; i <= n; i++) {
                     int cost = s[i - 1] == tJ ? 0 : 1; // cost
-                                                       // minimum of cell to the left+1, to the top+1, diagonally left and up +cost                
+                    // minimum of cell to the left+1, to the top+1, diagonally left and up +cost                
                     d[i] = Math.Min(Math.Min(d[i - 1] + 1, p[i] + 1), p[i - 1] + cost);
                 }
 

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using static LibObs.Obs;
 using static RePlays.Utils.Functions;
@@ -67,13 +68,27 @@ namespace RePlays.Recorders {
 
         static signal_callback_t outputStopCb;
 
+        [DllImport("libX11", EntryPoint = "XOpenDisplay")]
+        public static extern IntPtr XOpenDisplay(IntPtr display);
+
         public override void Start() {
             if (Connected) return;
 
             // STARTUP
+#if !WINDOWS
+            Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+            if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "libobs.so"))) {
+                throw new Exception("error: Missing libobs.so");
+            }
+#endif
             if (obs_initialized()) {
                 throw new Exception("error: obs already initialized");
             }
+
+#if !WINDOWS
+            obs_set_nix_platform(obs_nix_platform_type.OBS_NIX_PLATFORM_X11_EGL);
+            obs_set_nix_platform_display(XOpenDisplay(IntPtr.Zero));
+#endif
 
             // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
             // it will cause a System.ExecutionEngineException, something to do with illegal memory
@@ -127,12 +142,12 @@ namespace RePlays.Recorders {
             }
             obs_add_data_path("./data/libobs/");
             obs_add_module_path("./obs-plugins/64bit/", "./data/obs-plugins/%module%/");
-            obs_load_all_modules();
-            obs_log_loaded_modules();
 
             ResetAudio();
             ResetVideo();
 
+            obs_load_all_modules();
+            obs_log_loaded_modules();
             obs_post_load_modules();
 
             // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
@@ -610,13 +625,17 @@ namespace RePlays.Recorders {
             var screenWidth = screen.Bounds.Width;
             var screenHeight = screen.Bounds.Height;
 #else
-            var screenWidth = -1;
-            var screenHeight = -1;
+            var screenWidth = 1920;
+            var screenHeight = 1080;
 #endif
 
             obs_video_info ovi = new() {
                 adapter = 0,
+#if WINDOWS
                 graphics_module = "libobs-d3d11",
+#else
+                graphics_module = "libobs-opengl",
+#endif
                 fps_num = (uint)SettingsService.Settings.captureSettings.frameRate,
                 fps_den = 1,
                 base_width = (uint)(outputWidth > 1 ? outputWidth : screenWidth),

@@ -126,6 +126,8 @@ namespace RePlays {
                 Logger.WriteLine("PlatformNotSupportedException: " + ex.Message);
             }
             uiThread.Start();
+            SettingsService.LoadSettings();
+            SettingsService.SaveSettings();
             RecordingService.Start(typeof(LibObsRecorder));
             ApplicationExitEvent.Wait();
         }
