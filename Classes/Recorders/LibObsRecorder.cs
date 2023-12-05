@@ -1,4 +1,4 @@
-﻿using obs_net;
+﻿using LibObs;
 using RePlays.Integrations;
 using RePlays.Services;
 using RePlays.Utils;
@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static obs_net.Obs;
+using static LibObs.Obs;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Recorders {
@@ -79,42 +79,39 @@ namespace RePlays.Recorders {
             // it will cause a System.ExecutionEngineException, something to do with illegal memory
             base_set_log_handler(new log_handler_t((lvl, msg, args, p) => {
                 try {
-                    using (va_list arglist = new va_list(args)) {
-                        object[] objs = arglist.GetObjectsByFormat(msg);
-                        string formattedMsg = Printf.sprintf(msg, objs);
+                    string formattedMsg = MarshalUtils.GetLogMessage(msg, args);
 
-                        Logger.WriteLine(((LogErrorLevel)lvl).ToString() + ": " + formattedMsg);
+                    Logger.WriteLine(((LogErrorLevel)lvl).ToString() + ": " + formattedMsg);
 
-                        // a very crude way to see if game_capture source has successfully hooked/capture application....
-                        // does game_capture source provide any signals that we can alternatively use?
-                        if (formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
-                            if (signalGCHookSuccess && RecordingService.IsRecording) {
-                                // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
-                                // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
-                                Rect currentSize = GetWindowSize(windowHandle);
-                                if ((currentSize.GetWidth() > 1 && currentSize.GetHeight() > 1) && // fullscreen tabbing check
-                                    (IsValidAspectRatio(currentSize.GetWidth(), currentSize.GetHeight())) && // if it is (assumed) valid game aspect ratio for recording
-                                    (currentSize.GetWidth() != windowSize.GetWidth() || currentSize.GetHeight() != windowSize.GetHeight())) {
-                                    RestartRecording();
-                                }
-                                else {
-                                    Logger.WriteLine("Fullscreen game coming into focus? Ignoring attempt to restart recording.");
-                                }
+                    // a very crude way to see if game_capture source has successfully hooked/capture application....
+                    // does game_capture source provide any signals that we can alternatively use?
+                    if (formattedMsg == "[game-capture: 'gameplay'] Starting capture") {
+                        if (signalGCHookSuccess && RecordingService.IsRecording) {
+                            // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
+                            // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
+                            Rect currentSize = GetWindowSize(windowHandle);
+                            if ((currentSize.GetWidth() > 1 && currentSize.GetHeight() > 1) && // fullscreen tabbing check
+                                (IsValidAspectRatio(currentSize.GetWidth(), currentSize.GetHeight())) && // if it is (assumed) valid game aspect ratio for recording
+                                (currentSize.GetWidth() != windowSize.GetWidth() || currentSize.GetHeight() != windowSize.GetHeight())) {
+                                RestartRecording();
                             }
-                            Logger.WriteLine("Successful game capture hook!");
-                            signalGCHookSuccess = true;
+                            else {
+                                Logger.WriteLine("Fullscreen game coming into focus? Ignoring attempt to restart recording.");
+                            }
                         }
-                        else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
-                            signalGCHookSuccess = false;
-                        }
-                        else if (formattedMsg.StartsWith("[game-capture: 'gameplay'] attempting to hook")) {
-                            Logger.WriteLine($"Waiting for successful graphics hook for... retry attempt #{signalGCHookAttempt}");
-                            signalGCHookAttempt++;
-                        }
-                        else if (formattedMsg.Contains("No space left on device")) {
-                            WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
-                            RecordingService.StopRecording();
-                        }
+                        Logger.WriteLine("Successful game capture hook!");
+                        signalGCHookSuccess = true;
+                    }
+                    else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
+                        signalGCHookSuccess = false;
+                    }
+                    else if (formattedMsg.StartsWith("[game-capture: 'gameplay'] attempting to hook")) {
+                        Logger.WriteLine($"Waiting for successful graphics hook for... retry attempt #{signalGCHookAttempt}");
+                        signalGCHookAttempt++;
+                    }
+                    else if (formattedMsg.Contains("No space left on device")) {
+                        WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
+                        RecordingService.StopRecording();
                     }
                 }
                 catch (Exception e) {
