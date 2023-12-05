@@ -5,12 +5,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
 	<UseWindowsForms>false</UseWindowsForms>
   </PropertyGroup>
 
@@ -67,18 +67,18 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Clowd.Squirrel" Version="2.8.40" />
-    <PackageReference Include="JsonPath.Net" Version="0.5.2" />
-    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.0.1" />
+    <PackageReference Include="Clowd.Squirrel" Version="2.11.1" />
+    <PackageReference Include="JsonPath.Net" Version="0.6.7" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.6" />
 	<PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1661.34" />
-    <PackageReference Include="NuGet.CommandLine" Version="6.0.0">
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2151.40" />
+    <PackageReference Include="NuGet.CommandLine" Version="6.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Photino.NET" Version="2.3.2" />
-    <PackageReference Include="System.Management" Version="6.0.0" />
+    <PackageReference Include="Photino.NET" Version="2.5.2" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
   
   <ItemGroup>
@@ -99,12 +99,12 @@
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
   </Target>
 
-  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net7.0-windows\obs.dll') ">
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net8.0-windows\obs.dll') ">
 	<Error Condition="!Exists('$(OBSBuildPath)obs.dll')" Text="Could not copy 'obs.dll' from 'OBSBuildPath'. Run `build-libobs.cmd` to build." />
 	<ItemGroup>
 	   <LIBOBSDEBUG Include="$(OBSBuildPath)**\*.*" />
 	</ItemGroup>
-	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net7.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
+	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
@@ -176,7 +176,7 @@
 	</XmlPeek>
 
 	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
-	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases --framework net7" />
+	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases --framework net8" />
   </Target>
 
   <ItemGroup>

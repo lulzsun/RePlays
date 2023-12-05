@@ -101,14 +101,11 @@ namespace RePlays {
 #if WINDOWS
             // squirrel configuration
             try {
-                using (var manager = new UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
-                    SquirrelAwareApp.HandleEvents(
-                        onInitialInstall: v => manager.CreateShortcutForThisExe(),
-                        onAppUpdate: v => manager.CreateShortcutForThisExe(),
-                        onAppUninstall: v => manager.RemoveShortcutForThisExe(),
-                        onFirstRun: () => Logger.WriteLine("First launch")
-                    );
-                }
+                SquirrelAwareApp.HandleEvents(
+                    onInitialInstall: (_, tools) => tools.CreateShortcutForThisExe(),
+                    onAppUpdate: (_, tools) => tools.CreateShortcutForThisExe(),
+                    onAppUninstall: (_, tools) => tools.RemoveShortcutForThisExe()
+                );
             }
             catch (Exception exception) {
                 Logger.WriteLine(exception.ToString());
