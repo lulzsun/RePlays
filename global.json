@@ -8,6 +8,6 @@
     "**/platforms"
   ],
   "sdk": {
-    "version": "7.0.113"
+    "version": "8.0.100"
   }
 }
