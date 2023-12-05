@@ -17,7 +17,7 @@ namespace RePlays.Integrations {
 
         public static PlayerStats stats;
 
-        public override async Task Start() {
+        public override Task Start() {
             Logger.WriteLine("Starting League Of Legends integration");
             stats = new PlayerStats();
 
@@ -78,13 +78,16 @@ namespace RePlays.Integrations {
             };
             timer.Start();
             Logger.WriteLine("Successfully started League Of Legends integration");
+            return Task.CompletedTask;
         }
 
-        public async override Task Shutdown() {
+        public override Task Shutdown() {
             if (timer.Enabled) {
                 Logger.WriteLine("Shutting down League Of Legends integration");
                 timer.Stop();
             }
+
+            return Task.CompletedTask;
         }
     }
 }

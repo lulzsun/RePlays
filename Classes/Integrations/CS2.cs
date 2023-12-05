@@ -16,11 +16,13 @@ namespace RePlays.Integrations {
         private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private HttpListener listener = new HttpListener();
 
-        private async Task EnsureConfigFileIsInstalledAsync() {
+        private Task EnsureConfigFileIsInstalledAsync() {
             string installationPath = GetInstallationPath();
             if (!File.Exists(installationPath)) {
                 File.Copy(Functions.GetResourcesFolder() + "cs2.cfg", installationPath);
             }
+
+            return Task.CompletedTask;
         }
 
         private string GetInstallationPath() {
@@ -153,7 +155,7 @@ namespace RePlays.Integrations {
             }
         }
 
-        public async override Task Shutdown() {
+        public override Task Shutdown() {
             Logger.WriteLine("Shutting down CS2 integration");
             try {
                 listener.Stop();
@@ -162,7 +164,8 @@ namespace RePlays.Integrations {
             catch (Exception ex) {
                 Logger.WriteLine($"{ex.Message}");
             }
+
+            return Task.CompletedTask;
         }
     }
 }
-

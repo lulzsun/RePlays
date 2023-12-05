@@ -99,14 +99,14 @@ namespace RePlays.Integrations {
         };
         private readonly string demoDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"TslGame\Saved\Demos");
         private HashSet<string> oldDemos;
-        public override async Task Start() {
+        public override Task Start() {
             oldDemos = Directory.GetDirectories(demoDirectory).ToHashSet();
             Logger.WriteLine("Starting PUBG integration");
-            timer.Elapsed += async (sender, e) => {
+            timer.Elapsed += (sender, e) => {
                 try {
                     HashSet<string> demos = Directory.GetDirectories(demoDirectory).ToHashSet();
-                    if (demos.SetEquals(oldDemos)) return;
-
+                    if (demos.SetEquals(oldDemos))
+                        return;
                     HashSet<string> newDemos = demos.Where(x => !oldDemos.Any(y => y == x)).ToHashSet();
                     oldDemos = demos;
 
@@ -128,14 +128,15 @@ namespace RePlays.Integrations {
             };
             timer.Start();
             Logger.WriteLine("Successfully started PUBG integration");
+            return Task.CompletedTask;
         }
 
-        public async override Task Shutdown() {
+        public override Task Shutdown() {
             //Wait two second to make sure the bookmark file has been added 
             Logger.WriteLine("Shutting down PUBG integration");
             timer.Stop();
+            return Task.CompletedTask;
         }
-
 
         private void AddDownedBookmarks(string demoPath, MatchData matchData, HashSet<string> appliedBookmarks) {
             //All downing are saved as individual files (ex. groggy0, groggy1, groggy3)

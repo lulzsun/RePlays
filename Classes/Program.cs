@@ -9,9 +9,13 @@ using System.Net;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
+
+
 #if !WINDOWS
 using PhotinoNET;
 using static RePlays.Utils.Functions;
+using RePlays.Services;
+using RePlays.Recorders;
 #else
 using Squirrel;
 using System.Windows.Forms;
@@ -125,6 +129,7 @@ namespace RePlays {
                 Logger.WriteLine("PlatformNotSupportedException: " + ex.Message);
             }
             uiThread.Start();
+            RecordingService.Start(typeof(LibObsRecorder));
             ApplicationExitEvent.Wait();
         }
 
