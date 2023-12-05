@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-         fetch-depth: 0
+          fetch-depth: 0
 
       - name: 'check latest commit is less than a day'
         id: check_commit
@@ -77,6 +77,8 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
