@@ -76,7 +76,6 @@ namespace RePlays.Recorders {
 
             // STARTUP
 #if !WINDOWS
-            Directory.SetCurrentDirectory(AppContext.BaseDirectory);
             if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "libobs.so"))) {
                 throw new Exception("error: Missing libobs.so");
             }

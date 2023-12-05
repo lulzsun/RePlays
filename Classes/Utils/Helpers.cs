@@ -21,6 +21,15 @@ using Timer = System.Timers.Timer;
 
 namespace RePlays.Utils {
     public static class Functions {
+#if DEBUG
+        public static string GetSolutionPath() {
+            DirectoryInfo? directory = new(Directory.GetCurrentDirectory());
+            while (directory != null && !directory.GetFiles("*.sln").Any()) {
+                directory = directory.Parent;
+            }
+            return directory.FullName;
+        }
+#endif
         public static string GenerateShortID() {
             var ticks = new DateTime(2021, 1, 1).Ticks;
             var ans = DateTime.Now.Ticks - ticks;
@@ -32,10 +41,10 @@ namespace RePlays.Utils {
         }
 
         public static string GetRePlaysURI() {
-#if (DEBUG)
+#if DEBUG
             //return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
             return "http://localhost:3000/#/";
-#elif (RELEASE)
+#elif RELEASE
             return "file://" + GetStartupPath() + "/ClientApp/build/index.html";
 #endif
         }
@@ -99,7 +108,7 @@ namespace RePlays.Utils {
 #if DEBUG && WINDOWS
             string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #elif DEBUG && !WINDOWS
-            string ffmpegFolder = Path.Join(Environment.CurrentDirectory, @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
+            string ffmpegFolder = Path.Join(GetSolutionPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #else
             string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #endif

@@ -118,6 +118,7 @@ namespace RePlays {
             Application.Run(new frmMain());
         }
 #else
+            Directory.SetCurrentDirectory(AppContext.BaseDirectory); //Necessary for libobs in debug(?)
             Thread uiThread = new(OpenInterface);
             try {
                 uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
@@ -147,8 +148,9 @@ namespace RePlays {
                 }
             );
 #if DEBUG
-            if (File.Exists("./Resources/logo.png"))
-                window.SetIconFile("./Resources/logo.png");
+            var rootDir = GetSolutionPath();
+            if (File.Exists(Path.Combine(rootDir) + "/Resources/logo.png"))
+                window.SetIconFile(Path.Combine(rootDir) + "/Resources/logo.png");
 #endif
             window.WaitForClose();
             ApplicationExitEvent.Set();
