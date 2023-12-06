@@ -136,16 +136,17 @@ namespace RePlays.Services {
         public static bool IsStarted { get; internal set; }
 
         public static IntPtr GetWindowHandleByProcessId(int processId, bool lazy = false) {
-            IntPtr handle;
             try {
-                if (!lazy) handle = EnumerateProcessWindowHandles(processId).First();
-                else handle = Process.GetProcessById(processId).MainWindowHandle;
+#if WINDOWS
+                if (!lazy)
+                    return EnumerateProcessWindowHandles(processId).First();
+#endif
+                return Process.GetProcessById(processId).MainWindowHandle;
             }
             catch (Exception e) {
                 Logger.WriteLine($"There was an issue retrieving the window handle for process id [{processId}]: {e.Message}");
                 return IntPtr.Zero;
             }
-            return handle;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -182,6 +183,7 @@ namespace RePlays.Services {
 
         // https://stackoverflow.com/a/55542400
         public static bool IsFullscreen(nint windowHandle) {
+#if WINDOWS
             MONITORINFOEX monitorInfo = new();
             monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
             GetMonitorInfo(MonitorFromWindow(windowHandle, 1), ref monitorInfo);
@@ -199,6 +201,7 @@ namespace RePlays.Services {
                 return result;
             }
             Logger.WriteLine("Window handle not detected as fullscreen exclusive.");
+#endif
             return false;
         }
 
@@ -267,21 +270,6 @@ namespace RePlays.Services {
 
         delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
-        static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId) {
-            var handles = new List<IntPtr>();
-
-            try {
-                foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
-                    EnumThreadWindows(thread.Id,
-                        (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
-            }
-            catch (Exception) { }
-
-            if (handles.Count == 0)
-                handles.Add(IntPtr.Zero);
-
-            return handles;
-        }
         public static void Start() {
 #if WINDOWS
             // Get device paths for mounted drive letters
@@ -346,7 +334,7 @@ namespace RePlays.Services {
 
                                     if (windowPid <= 0) continue;
                                     if (!prevWindows.ContainsKey(window) && !x11Windows.ContainsKey(window)) {
-                                        DetectionService.WindowCreation(window, (uint)windowPid);
+                                        DetectionService.WindowCreation(window, windowPid);
                                     }
 
                                     x11Windows[window] = new X11Window {
@@ -361,7 +349,7 @@ namespace RePlays.Services {
                                 foreach (var window in destroyedWindows) {
                                     string windowName = prevWindows[window].title;
                                     int windowPid = prevWindows[window].pid;
-                                    DetectionService.WindowDeletion(window, (uint)windowPid);
+                                    DetectionService.WindowDeletion(window, windowPid);
                                 }
                                 XFree(prop);
                             }
@@ -393,6 +381,7 @@ namespace RePlays.Services {
             X11WindowWatcher.Join(); // Stop
 #endif
         }
+
         public static string GetWindowTitle(IntPtr window) {
             string windowName = "";
 #if !WINDOWS
@@ -461,8 +450,9 @@ namespace RePlays.Services {
 #if !WINDOWS
             processId = 0;
             return 0;
-#endif
+#else
             return _GetWindowThreadProcessId(hwnd, out processId);
+#endif
         }
 
         public static void GetExecutablePathFromProcessId(int processId, out string executablePath) {
@@ -545,6 +535,22 @@ namespace RePlays.Services {
             return false;
         }
 #else
+        static List<IntPtr> EnumerateProcessWindowHandles(int processId) {
+            var handles = new List<IntPtr>();
+
+            try {
+                foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+                    EnumThreadWindows(thread.Id,
+                        (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
+            }
+            catch (Exception) { }
+
+            if (handles.Count == 0)
+                handles.Add(IntPtr.Zero);
+
+            return handles;
+        }
+
         static void OnActiveForegroundEvent(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
             GetForegroundWindow(out int pid, out _);
             if (RecordingService.IsRecording) {
