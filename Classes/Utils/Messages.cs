@@ -288,7 +288,7 @@ namespace RePlays.Utils {
                 case "Delete": {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
-                            var realFilePath = Path.Join(GetPlaysFolder(), filePath);
+                            var realFilePath = Path.Join(GetPlaysFolder(), filePath.Replace("\\", "/"));
                             var successfulDelete = false;
                             var failedLoops = 0;
                             while (!successfulDelete) {
@@ -299,7 +299,7 @@ namespace RePlays.Utils {
                                 catch (Exception e) {
                                     if (failedLoops == 5) {
                                         DisplayModal("Failed to delete video (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
-                                        Logger.WriteLine(String.Format("Failed to delete video: {0}", e.Message));
+                                        Logger.WriteLine($"Failed to delete video: {e.Message}");
                                         break;
                                     }
                                     await Task.Delay(2000);
