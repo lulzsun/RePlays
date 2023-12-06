@@ -6,12 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 #if WINDOWS
 using System.Windows.Forms;
 using System.Management;
 using System.Runtime.ConstrainedExecution;
 using System.Security;
+#else
+using System.Threading;
 #endif
 
 namespace RePlays.Services {
@@ -176,8 +177,9 @@ namespace RePlays.Services {
                 Logger.WriteLine("Issue using GetClientRect");
                 return rect;
             }
+#else
+            // TODO
 #endif
-
             return rect;
         }
 
@@ -289,7 +291,7 @@ namespace RePlays.Services {
                     if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription) {
                         int processId = int.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
                         //var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
-                        //var cmdLine = instanceDescription.GetPropertyValue("CommandLine");
+                        //var cmdLineArgs = instanceDescription.GetPropertyValue("CommandLine");
 
                         DetectionService.WindowDeletion(0, processId);
                     }

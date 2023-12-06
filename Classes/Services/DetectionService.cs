@@ -30,7 +30,7 @@ namespace RePlays.Services {
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
         private static List<string> classBlacklist = ["splashscreen", "launcher", "cheat", "console"];
-        private static List<string> classWhitelist = ["unitywndclass", "unrealwindow", "riotwindowclass"];
+        private static List<string> classWhitelist = ["steam_app_", "unitywndclass", "unrealwindow", "riotwindowclass"];
 
         public static void Start() {
             LoadDetections();
@@ -107,7 +107,6 @@ namespace RePlays.Services {
             Logger.WriteLine($"Debug: Using {file} from Resources folder instead.");
             return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
 #endif
-
             try {
                 // check if current file sha matches remote or not, if it does, we are already up-to-date
                 if (File.Exists(dlPath)) {
@@ -131,10 +130,6 @@ namespace RePlays.Services {
             }
             catch (Exception e) {
                 Logger.WriteLine($"Unable to download detections: {file}. Error: {e.Message}");
-#if DEBUG
-                dlPath = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"Resources/detections/", file);
-                Logger.WriteLine($"Debug: Using {file} from Resources folder instead.");
-#endif
                 if (File.Exists(dlPath)) {
                     return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
                 }
@@ -150,11 +145,25 @@ namespace RePlays.Services {
         /// <para>If 2 and 3 are true, we will also assume it is a "game"</para>
         /// </summary>
         public static bool AutoDetectGame(int processId, string executablePath, nint windowHandle = 0, bool autoRecord = true) {
+#if !WINDOWS
+            // If process is launching as a wine executable
+            if (processId != 0 && Regex.IsMatch(executablePath, @".*(?:/wine64-preloader|/wine32-preloader)$")) {
+                string cmdLineArgs = File.ReadAllText($"/proc/{processId}/cmdline").Replace('\0', ' ');
+                // Retrieve .exe path from cmdLineArgs
+                Match match = Regex.Match(cmdLineArgs, @"[A-Za-z]:\\(.+\.exe)");
+                if (match.Success)
+                    executablePath = ("\\" + match.Groups[1].Value).Replace("\\", "/");
+                else
+                    Logger.WriteLine($"Could not extract .exe path from cmdLineArgs: {cmdLineArgs}");
+            }
+#endif
             if (processId == 0 || (executablePath != "" && IsMatchedNonGame(executablePath))) {
                 if (processId == 0)
                     Logger.WriteLine($"Process id should never be zero here, developer error?");
-                //else
-                //Logger.WriteLine($"Blacklisted application: [{processId}][{executablePath}]");
+#if DEBUG
+                else
+                    Logger.WriteLine($"Blacklisted application: [{processId}][{executablePath}]");
+#endif
                 return false;
             }
             var gameDetection = IsMatchedGame(executablePath);
@@ -164,7 +173,7 @@ namespace RePlays.Services {
             // the game displays a splash screen (SplashScreenClass) before launching
             // This detection is very primative and only covers specific cases, in the future we should find another way
             // to approach this issue. (possibily fetch to see if the window size ratio is not standard?)
-            if (windowHandle == 0) windowHandle = WindowService.GetWindowHandleByProcessId(processId, true);
+            if (windowHandle <= 0) windowHandle = WindowService.GetWindowHandleByProcessId(processId, true);
             var className = WindowService.GetClassName(windowHandle);
             string gameTitle = gameDetection.gameTitle;
             string fileName = Path.GetFileName(executablePath);
