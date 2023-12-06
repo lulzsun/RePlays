@@ -46,7 +46,7 @@ namespace RePlays.Services {
             ActiveRecorder = new LibObsRecorder();
             Logger.WriteLine("Creating a new ActiveRecorder");
             await Task.Run(() => ActiveRecorder.Start());
-            await Task.Run(() => DetectionService.CheckAlreadyRunningPrograms());
+            await Task.Run(() => DetectionService.CheckTopLevelWindows());
         }
 
         public static void SetCurrentSession(int _Pid, nint _WindowHandle, string _GameTitle, string exeFile, bool forceDisplayCapture = false) {

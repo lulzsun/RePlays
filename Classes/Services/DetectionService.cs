@@ -41,7 +41,7 @@ namespace RePlays.Services {
             WindowService.Stop();
         }
 
-        public static void WindowCreation(IntPtr hwnd, uint processId = 0, [CallerMemberName] string memberName = "") {
+        public static void WindowCreation(IntPtr hwnd, int processId = 0, [CallerMemberName] string memberName = "") {
             if (processId == 0 && hwnd != 0)
                 WindowService.GetWindowThreadProcessId(hwnd, out processId);
             else if (processId == 0 && hwnd == 0)
@@ -54,12 +54,12 @@ namespace RePlays.Services {
                     return;                                                             // we can assume it is not a game
                 }
             }
-            if (processId != 0 && AutoDetectGame((int)processId, executablePath, hwnd)) {
+            if (processId != 0 && AutoDetectGame(processId, executablePath, hwnd)) {
                 Logger.WriteLine($"WindowCreation: [{processId}][{hwnd}][{executablePath}]", memberName: memberName);
             }
         }
 
-        public static void WindowDeletion(IntPtr hwnd, uint processId = 0, [CallerMemberName] string memberName = "") {
+        public static void WindowDeletion(IntPtr hwnd, int processId = 0, [CallerMemberName] string memberName = "") {
             if (!RecordingService.IsRecording)
                 return;
 
@@ -78,7 +78,7 @@ namespace RePlays.Services {
                 }
                 catch (Exception) {
                     // Process no longer exists, must be safe to end recording(?)
-                    if (processId == 0) processId = (uint)currentSession.Pid;
+                    if (processId == 0) processId = currentSession.Pid;
                     if (executablePath == "") executablePath = currentSession.Exe;
                     Logger.WriteLine($"WindowDeletion: [{processId}][{hwnd}][{executablePath}]", memberName: memberName);
                     RecordingService.StopRecording();
@@ -86,21 +86,11 @@ namespace RePlays.Services {
             }
         }
 
-        public static void CheckAlreadyRunningPrograms() {
-#if WINDOWS
-            List<IntPtr> windowHandles = new();
-
-            EnumWindows((hWnd, lParam) => {
-                GCHandle handle = GCHandle.FromIntPtr(lParam);
-                List<IntPtr> handles = (List<IntPtr>)handle.Target;
-                handles.Add(hWnd);
-                return true;
-            }, GCHandle.ToIntPtr(GCHandle.Alloc(windowHandles)));
-
-            foreach (IntPtr handle in windowHandles) {
-                WindowCreation(handle);
+        public static void CheckTopLevelWindows() {
+            var windows = WindowService.GetTopLevelWindows();
+            foreach (IntPtr window in windows) {
+                WindowCreation(window);
             }
-#endif
         }
 
         public static void LoadDetections() {

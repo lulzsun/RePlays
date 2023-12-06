@@ -175,7 +175,7 @@ namespace RePlays.Recorders {
             // If session is empty, this is a manual record attempt. Lets try to yolo record the foregroundwindow
             if (session.Pid == 0 && WindowService.GetForegroundWindow(out int processId, out nint hwid)) {
                 if (processId != 0 || hwid != 0) {
-                    WindowService.GetExecutablePathFromProcessId((uint)processId, out string executablePath);
+                    WindowService.GetExecutablePathFromProcessId(processId, out string executablePath);
                     DetectionService.AutoDetectGame(processId, executablePath, hwid, autoRecord: false);
                     session = RecordingService.GetCurrentSession();
                 }
@@ -464,7 +464,7 @@ namespace RePlays.Recorders {
             var monitor_id = "";
 #if WINDOWS
             var screen = windowHandle == 0 ? System.Windows.Forms.Screen.PrimaryScreen : System.Windows.Forms.Screen.FromHandle(windowHandle);
-            monitor_id = GetMonitorId(screen.DeviceName);
+            monitor_id = WindowService.GetMonitorId(screen.DeviceName);
 #endif
             IntPtr videoSourceSettings = obs_data_create();
             // obs_data_set_int(videoSourceSettings, "method", 0); // automatic

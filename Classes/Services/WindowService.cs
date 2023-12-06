@@ -7,6 +7,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+#if WINDOWS
+using System.Windows.Forms;
+using System.Management;
+using System.Runtime.ConstrainedExecution;
+using System.Security;
+#endif
 
 namespace RePlays.Services {
     public static class WindowService {
@@ -19,9 +25,6 @@ namespace RePlays.Services {
         private delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
         static WinEventProc winActiveDele, winResizeDele; // Keep win event delegates alive as long as class is alive (if you dont do this, gc will clean up)
         static nint winActiveHook, winResizeHook;
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
         [DllImport("user32.dll")]
         static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
@@ -47,6 +50,38 @@ namespace RePlays.Services {
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
+
+        [DllImport("user32.dll", EntryPoint = "GetClassName", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern int _GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowText")]
+        static extern int _GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetClientRect(IntPtr hwnd, ref Rect lpRect);
+
+        [DllImport("user32.dll", EntryPoint = "GetForegroundWindow")]
+        private static extern IntPtr _GetForegroundWindow();
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowThreadProcessId", SetLastError = true)]
+        static extern uint _GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+
+        [DllImport("user32.dll")]
+        static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
+
+        [DllImport("user32.dll", SetLastError = false)]
+        static extern IntPtr GetDesktopWindow();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetShellWindow();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        // https://stackoverflow.com/a/67066227/8805016
+        [DllImport("user32.dll")]
+        static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
 #else
         private static Thread X11WindowWatcher;
         static IntPtr X11Display;
@@ -113,10 +148,6 @@ namespace RePlays.Services {
             return handle;
         }
 
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetClientRect(IntPtr hwnd, ref Rect lpRect);
-
         [StructLayout(LayoutKind.Sequential)]
         public struct Rect {
             public int Left, Top, Right, Bottom;
@@ -148,18 +179,6 @@ namespace RePlays.Services {
 
             return rect;
         }
-
-        [DllImport("user32.dll")]
-        static extern bool GetWindowRect(IntPtr hWnd, [In, Out] ref Rect rect);
-
-        [DllImport("user32.dll", SetLastError = false)]
-        static extern IntPtr GetDesktopWindow();
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetShellWindow();
-
-        [DllImport("user32.dll")]
-        static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
         // https://stackoverflow.com/a/55542400
         public static bool IsFullscreen(nint windowHandle) {
@@ -248,11 +267,6 @@ namespace RePlays.Services {
 
         delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
-        // https://stackoverflow.com/a/67066227/8805016
-        [DllImport("user32.dll")]
-        static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn,
-            IntPtr lParam);
-
         static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId) {
             var handles = new List<IntPtr>();
 
@@ -285,11 +299,11 @@ namespace RePlays.Services {
             pDeletionWatcher.EventArrived += (object sender, EventArrivedEventArgs e) => {
                 try {
                     if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription) {
-                        uint processId = uint.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
+                        int processId = int.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
                         //var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
                         //var cmdLine = instanceDescription.GetPropertyValue("CommandLine");
 
-                        WindowDeletion(0, processId);
+                        DetectionService.WindowDeletion(0, processId);
                     }
                 }
                 catch (ManagementException) { }
@@ -381,6 +395,7 @@ namespace RePlays.Services {
         }
         public static string GetWindowTitle(IntPtr window) {
             string windowName = "";
+#if !WINDOWS
             IntPtr windowNamePtr = IntPtr.Zero;
             IntPtr nameAtom = XInternAtom(X11Display, "_NET_WM_NAME", false);
             if (nameAtom != IntPtr.Zero) {
@@ -396,11 +411,19 @@ namespace RePlays.Services {
                 windowName = Marshal.PtrToStringAnsi(windowNamePtr);
                 XFree(windowNamePtr);
             }
+#else
+            StringBuilder buffer = new(256);
 
+            if (_GetWindowText(window, buffer, 256) == 0)
+                windowName = "";
+            else
+                windowName = buffer.ToString();
+#endif
             return windowName == "" ? "Unknown" : windowName;
         }
 
         public static string GetClassName(IntPtr window) {
+#if !WINDOWS
             XClassHint classHint = new();
             if (XGetClassHint(X11Display, window, ref classHint) != 0) {
                 string res_name = Marshal.PtrToStringAnsi(classHint.res_name);
@@ -409,11 +432,16 @@ namespace RePlays.Services {
                 XFree(classHint.res_class);
                 return $"{res_name}:{res_class}";
             }
-
             return "Unknown";
+#else
+            StringBuilder className = new(256);
+            _ = _GetClassName(window, className, className.Capacity);
+            return className.ToString();
+#endif
         }
 
         public static int GetWindowPid(IntPtr window) {
+#if !WINDOWS
             IntPtr pidAtom = XInternAtom(X11Display, "_NET_WM_PID", false);
 
             if (pidAtom != IntPtr.Zero) {
@@ -425,11 +453,19 @@ namespace RePlays.Services {
                     }
                 }
             }
-
+#endif
             return -1;
         }
 
-        public static void GetExecutablePathFromProcessId(uint processId, out string executablePath) {
+        public static uint GetWindowThreadProcessId(nint hwnd, out int processId) {
+#if !WINDOWS
+            processId = 0;
+            return 0;
+#endif
+            return _GetWindowThreadProcessId(hwnd, out processId);
+        }
+
+        public static void GetExecutablePathFromProcessId(int processId, out string executablePath) {
             if (processId == 0) {
                 executablePath = "";
                 return;
@@ -438,7 +474,7 @@ namespace RePlays.Services {
             Process process;
             string processName = "Unknown";
             try {
-                process = Process.GetProcessById((int)processId);
+                process = Process.GetProcessById(processId);
                 processName = process.ProcessName;
             }
             catch {
@@ -476,15 +512,24 @@ namespace RePlays.Services {
                 }
             }
         }
+
+        public static List<IntPtr> GetTopLevelWindows() {
+            List<IntPtr> windowHandles = new();
+#if WINDOWS
+            EnumWindows((hWnd, lParam) => {
+                GCHandle handle = GCHandle.FromIntPtr(lParam);
+                List<IntPtr> handles = (List<IntPtr>)handle.Target;
+                handles.Add(hWnd);
+                return true;
+            }, GCHandle.ToIntPtr(GCHandle.Alloc(windowHandles)));
+#endif
+            return windowHandles;
+        }
+
 #if !WINDOWS
         public static bool GetForegroundWindow(out int processId, out nint hwid) {
             processId = 0; hwid = 0;
             return false;
-        }
-
-        public static IntPtr GetWindowThreadProcessId(nint hwnd, out uint processId) {
-            processId = 0;
-            return IntPtr.Zero;
         }
 
         public static IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, Int32 dwProcessId) {
@@ -508,26 +553,23 @@ namespace RePlays.Services {
                 return;
             }
             else {
-                WindowCreation(hwnd);
+                DetectionService.WindowCreation(hwnd);
             }
         }
 
         static void OnWindowResizeMoveEvent(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
-            GetWindowThreadProcessId(hwnd, out uint pid);
+            GetWindowThreadProcessId(hwnd, out int pid);
             if (RecordingService.IsRecording) {
                 if (pid == RecordingService.GetCurrentSession().Pid && hwnd == RecordingService.GetCurrentSession().WindowHandle) {
-                    var windowSize = BaseRecorder.GetWindowSize(hwnd);
+                    var windowSize = GetWindowSize(hwnd);
                     Logger.WriteLine($"WindowResize: [{hwnd}][{windowSize.GetWidth()}x{windowSize.GetHeight()}]");
                 }
                 return;
             }
         }
-        [DllImport("user32.dll", EntryPoint = "GetForegroundProcess")]
-        private static extern IntPtr GetForegroundProcess();
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+
         public static bool GetForegroundWindow(out int processId, out nint hwid) {
-            IntPtr handle = GetForegroundProcess();
+            IntPtr handle = _GetForegroundWindow();
 
             if (handle == IntPtr.Zero) {
                 hwid = 0;
@@ -536,7 +578,7 @@ namespace RePlays.Services {
             }
             else hwid = handle;
 
-            if (GetWindowThreadProcessId(handle, out int id) == 0) {
+            if (_GetWindowThreadProcessId(handle, out int id) == 0) {
                 hwid = 0;
                 processId = 0;
                 return false;
@@ -544,28 +586,6 @@ namespace RePlays.Services {
             else processId = id;
 
             return true;
-        }
-        // http://www.pinvoke.net/default.aspx/user32.getclassname
-        [DllImport("user32.dll", EntryPoint = "GetClassName", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int _GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
-
-        [DllImport("user32.dll", EntryPoint = "GetWindowText")]
-        static extern int _GetWindowText(IntPtr hWnd, StringBuilder text, int count);
-
-        public static string GetWindowTitle(IntPtr hWnd) {
-            const int nChars = 256;
-            StringBuilder Buff = new StringBuilder(nChars);
-
-            if (_GetWindowText(hWnd, Buff, nChars) == 0)
-                return "";
-
-            return Buff.ToString();
-        }
-
-        public static string GetClassName(IntPtr handle) {
-            StringBuilder className = new(256);
-            _ = _GetClassName(handle, className, className.Capacity);
-            return className.ToString();
         }
     }
 
@@ -593,7 +613,7 @@ namespace RePlays.Services {
         }
 
         protected override void WndProc(ref Message m) {
-            if (DetectionService.IsStarted && m.Msg == msgNotify) {
+            if (WindowService.IsStarted && m.Msg == msgNotify) {
                 // Receive shell messages
                 switch (m.WParam.ToInt32()) {
                     case 1:  // HSHELL_WINDOWCREATED
