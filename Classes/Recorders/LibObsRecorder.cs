@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using static LibObs.Obs;
 using static RePlays.Utils.Functions;
+using Rect = RePlays.Services.WindowService.Rect;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
@@ -95,6 +96,9 @@ namespace RePlays.Recorders {
                 try {
                     string formattedMsg = MarshalUtils.GetLogMessage(msg, args);
 
+                    if (((LogErrorLevel)lvl).ToString() == "error" && formattedMsg.Contains("X Error: BadWindow"))
+                        return;
+
                     Logger.WriteLine(((LogErrorLevel)lvl).ToString() + ": " + formattedMsg);
 
                     // a very crude way to see if game_capture source has successfully hooked/capture application....
@@ -103,7 +107,7 @@ namespace RePlays.Recorders {
                         if (signalGCHookSuccess && RecordingService.IsRecording) {
                             // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
                             // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
-                            Rect currentSize = GetWindowSize(windowHandle);
+                            Rect currentSize = WindowService.GetWindowSize(windowHandle);
                             if ((currentSize.GetWidth() > 1 && currentSize.GetHeight() > 1) && // fullscreen tabbing check
                                 (IsValidAspectRatio(currentSize.GetWidth(), currentSize.GetHeight())) && // if it is (assumed) valid game aspect ratio for recording
                                 (currentSize.GetWidth() != windowSize.GetWidth() || currentSize.GetHeight() != windowSize.GetHeight())) {
@@ -169,9 +173,9 @@ namespace RePlays.Recorders {
             var session = RecordingService.GetCurrentSession();
 
             // If session is empty, this is a manual record attempt. Lets try to yolo record the foregroundwindow
-            if (session.Pid == 0 && GetForegroundProcess(out int processId, out nint hwid)) {
+            if (session.Pid == 0 && WindowService.GetForegroundWindow(out int processId, out nint hwid)) {
                 if (processId != 0 || hwid != 0) {
-                    DetectionService.GetExecutablePathFromProcessId((uint)processId, out string executablePath);
+                    WindowService.GetExecutablePathFromProcessId((uint)processId, out string executablePath);
                     DetectionService.AutoDetectGame(processId, executablePath, hwid, autoRecord: false);
                     session = RecordingService.GetCurrentSession();
                 }
@@ -187,7 +191,7 @@ namespace RePlays.Recorders {
                 await Task.Delay(retryInterval);
                 retryAttempt++;
                 // alternate on retry attempts, one or the other might get us a better handle
-                windowHandle = GetWindowHandleByProcessId(session.Pid, retryAttempt % 2 == 1);
+                windowHandle = WindowService.GetWindowHandleByProcessId(session.Pid, retryAttempt % 2 == 1);
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
@@ -203,17 +207,17 @@ namespace RePlays.Recorders {
             videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
 
             // Get the window class name
-            var windowClassNameId = GetWindowTitle(windowHandle) + ":" + GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
+            var windowClassNameId = WindowService.GetWindowTitle(windowHandle) + ":" + WindowService.GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
 
             // get game's window size and change output to match
-            windowSize = GetWindowSize(windowHandle);
+            windowSize = WindowService.GetWindowSize(windowHandle);
             // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension
             // this is a quick a dirty check: if there aren't more than 1120 pixels, we can assume it needs a retry
             while (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt < maxRetryAttempts) {
                 Logger.WriteLine($"Waiting to retrieve correct window size (currently {windowSize.GetWidth()}x{windowSize.GetHeight()})... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                windowSize = GetWindowSize(windowHandle);
+                windowSize = WindowService.GetWindowSize(windowHandle);
             }
             if (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt >= maxRetryAttempts) {
                 Logger.WriteLine($"Possible issue in getting correct window size {windowSize.GetWidth()}x{windowSize.GetHeight()}");
@@ -277,7 +281,7 @@ namespace RePlays.Recorders {
                 // SETUP NEW VIDEO SOURCE
                 // - Create a source for the game_capture in channel 0
                 IntPtr videoSourceSettings = obs_data_create();
-                obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
+                obs_data_set_string(videoSourceSettings, "capture_mode", WindowService.IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
                 obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
                 videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
                 obs_data_release(videoSourceSettings);

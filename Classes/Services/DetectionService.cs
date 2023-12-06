@@ -5,110 +5,49 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
-using System.Security;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
+
 #if WINDOWS
+using System.Security;
+using System.Security.Cryptography;
+using System.Runtime.ConstrainedExecution;
+using System.Management;
 using System.Windows.Forms;
 #endif
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class DetectionService {
-        static readonly ManagementEventWatcher pCreationWatcher = new(new EventQuery("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
-        static readonly ManagementEventWatcher pDeletionWatcher = new(new EventQuery("SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\""));
-#if WINDOWS
-        static MessageWindow messageWindow;
-#endif
-        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-        private delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
-        static WinEventProc winActiveDele, winResizeDele; // Keep win event delegates alive as long as class is alive (if you dont do this, gc will clean up)
-        static nint winActiveHook, winResizeHook;
-
         static JsonElement[] gameDetectionsJson;
         static JsonElement[] nonGameDetectionsJson;
-        static readonly HashSet<string> nonGameDetectionsCache = new();
+        static readonly HashSet<string> nonGameDetectionsCache = [];
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
-        private static Dictionary<string, string> drivePaths = new();
-        private static List<string> classBlacklist = new() { "splashscreen", "launcher", "cheat", "console" };
-        private static List<string> classWhitelist = new() { "unitywndclass", "unrealwindow", "riotwindowclass" };
-        public static bool IsStarted { get; internal set; }
+        private static List<string> classBlacklist = ["splashscreen", "launcher", "cheat", "console"];
+        private static List<string> classWhitelist = ["unitywndclass", "unrealwindow", "riotwindowclass"];
 
         public static void Start() {
             LoadDetections();
-
-            // Get device paths for mounted drive letters
-            for (char letter = 'A'; letter <= 'Z'; letter++) {
-                string driveLetter = letter + ":";
-                StringBuilder s = new StringBuilder();
-                if (QueryDosDevice(driveLetter, s, 1000)) {
-                    drivePaths.Add(s.ToString(), driveLetter);
-                }
-            }
-
-            // watch process creation/deletion events
-            //pCreationWatcher.EventArrived += ...;
-            //pCreationWatcher.Start();
-            pDeletionWatcher.EventArrived += (object sender, EventArrivedEventArgs e) => {
-                try {
-                    if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject instanceDescription) {
-                        uint processId = uint.Parse(instanceDescription.GetPropertyValue("Handle").ToString());
-                        //var executablePath = instanceDescription.GetPropertyValue("ExecutablePath");
-                        //var cmdLine = instanceDescription.GetPropertyValue("CommandLine");
-
-                        WindowDeletion(0, processId);
-                    }
-                }
-                catch (ManagementException) { }
-            };
-            pDeletionWatcher.Start();
-#if WINDOWS
-            // watch window creation/deletion events
-            messageWindow = new MessageWindow();
-            IsStarted = true;
-
-            // watch active foreground window events 
-            winActiveDele = OnActiveForegroundEvent;
-            winActiveHook = SetWinEventHook(3, 3, IntPtr.Zero, winActiveDele, 0, 0, 0);
-
-            // watch window resize/move events 
-            winResizeDele = OnWindowResizeMoveEvent;
-            winResizeHook = SetWinEventHook(11, 11, IntPtr.Zero, winResizeDele, 0, 0, 0);
-#endif
+            WindowService.Start();
         }
 
         public static void Stop() {
-#if WINDOWS
-            if (messageWindow != null) {
-                messageWindow.Close();
-                messageWindow.Dispose();
-            }
-#endif
-            pCreationWatcher.Stop();
-            pDeletionWatcher.Stop();
-            pCreationWatcher.Dispose();
-            pDeletionWatcher.Dispose();
-            UnhookWinEvent(winActiveHook);
-            UnhookWinEvent(winResizeHook);
-            winActiveDele = null;
-            winResizeDele = null;
+            WindowService.Stop();
         }
 
         public static void WindowCreation(IntPtr hwnd, uint processId = 0, [CallerMemberName] string memberName = "") {
             if (processId == 0 && hwnd != 0)
-                GetWindowThreadProcessId(hwnd, out processId);
+                WindowService.GetWindowThreadProcessId(hwnd, out processId);
             else if (processId == 0 && hwnd == 0)
                 return;
 
-            GetExecutablePathFromProcessId(processId, out string executablePath);
+            WindowService.GetExecutablePathFromProcessId(processId, out string executablePath);
 
             if (executablePath != null) {
                 if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
@@ -125,11 +64,11 @@ namespace RePlays.Services {
                 return;
 
             if (processId == 0 && hwnd != 0)
-                GetWindowThreadProcessId(hwnd, out processId);
+                WindowService.GetWindowThreadProcessId(hwnd, out processId);
             else if (processId == 0 && hwnd == 0)
                 return;
 
-            GetExecutablePathFromProcessId(processId, out string executablePath);
+            WindowService.GetExecutablePathFromProcessId(processId, out string executablePath);
             var currentSession = RecordingService.GetCurrentSession();
 
             if (currentSession.Pid != 0 && (currentSession.Pid == processId || currentSession.WindowHandle == hwnd)) {
@@ -148,6 +87,7 @@ namespace RePlays.Services {
         }
 
         public static void CheckAlreadyRunningPrograms() {
+#if WINDOWS
             List<IntPtr> windowHandles = new();
 
             EnumWindows((hWnd, lParam) => {
@@ -160,77 +100,7 @@ namespace RePlays.Services {
             foreach (IntPtr handle in windowHandles) {
                 WindowCreation(handle);
             }
-        }
-
-        static void OnActiveForegroundEvent(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
-            GetForegroundProcess(out int pid, out _);
-            if (RecordingService.IsRecording) {
-                if (pid == RecordingService.GetCurrentSession().Pid) RecordingService.GainedFocus();
-                else if (RecordingService.GameInFocus) RecordingService.LostFocus();
-                return;
-            }
-            else {
-                WindowCreation(hwnd);
-            }
-        }
-
-        static void OnWindowResizeMoveEvent(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
-            GetWindowThreadProcessId(hwnd, out uint pid);
-            if (RecordingService.IsRecording) {
-                if (pid == RecordingService.GetCurrentSession().Pid && hwnd == RecordingService.GetCurrentSession().WindowHandle) {
-                    var windowSize = BaseRecorder.GetWindowSize(hwnd);
-                    Logger.WriteLine($"WindowResize: [{hwnd}][{windowSize.GetWidth()}x{windowSize.GetHeight()}]");
-                }
-                return;
-            }
-        }
-
-        public static void GetExecutablePathFromProcessId(uint processId, out string executablePath) {
-            if (processId == 0) {
-                executablePath = "";
-                return;
-            }
-
-            Process process;
-            string processName = "Unknown";
-            try {
-                process = Process.GetProcessById((int)processId);
-                processName = process.ProcessName;
-            }
-            catch {
-                executablePath = "";
-                return;
-            }
-
-            try {
-                // if this raises an exception, then that means this process is most likely being covered by anti-cheat (EAC)
-                executablePath = Path.GetFullPath(process.MainModule.FileName);
-            }
-            catch (Exception ex) {
-                // this method of using OpenProcess is reliable for getting the fullpath in case of anti-cheat
-                IntPtr processHandle = OpenProcess(0x00000400 | 0x00000010, false, (int)processId);
-                if (processHandle != IntPtr.Zero) {
-                    StringBuilder stringBuilder = new(1024);
-                    if (!GetProcessImageFileName(processHandle, stringBuilder, out int _)) {
-                        Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: {ex.Message}");
-                        executablePath = "";
-                    }
-                    else {
-                        string s = stringBuilder.ToString();
-                        foreach (var drivePath in drivePaths) {
-                            if (s.Contains(drivePath.Key)) s = s.Replace(drivePath.Key, drivePath.Value);
-                        }
-                        executablePath = s;
-                    }
-                    CloseHandle(processHandle);
-                    return;
-                }
-                else {
-                    Logger.WriteLine($"Failed to get process: [{processId}][{processName}] full path. Error: {ex.Message}");
-                    executablePath = "";
-                    return;
-                }
-            }
+#endif
         }
 
         public static void LoadDetections() {
@@ -304,8 +174,8 @@ namespace RePlays.Services {
             // the game displays a splash screen (SplashScreenClass) before launching
             // This detection is very primative and only covers specific cases, in the future we should find another way
             // to approach this issue. (possibily fetch to see if the window size ratio is not standard?)
-            if (windowHandle == 0) windowHandle = RecordingService.ActiveRecorder.GetWindowHandleByProcessId(processId, true);
-            var className = RecordingService.ActiveRecorder.GetClassName(windowHandle);
+            if (windowHandle == 0) windowHandle = WindowService.GetWindowHandleByProcessId(processId, true);
+            var className = WindowService.GetClassName(windowHandle);
             string gameTitle = gameDetection.gameTitle;
             string fileName = Path.GetFileName(executablePath);
             try {
@@ -334,7 +204,7 @@ namespace RePlays.Services {
             }
 
             bool isGame = gameDetection.isGame;
-            var windowSize = BaseRecorder.GetWindowSize(windowHandle);
+            var windowSize = WindowService.GetWindowSize(windowHandle);
             var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isWhitelistedClass = classWhitelist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
@@ -392,7 +262,7 @@ namespace RePlays.Services {
         }
 
         public static bool HasBadWordInClassName(IntPtr windowHandle) {
-            var className = RecordingService.ActiveRecorder.GetClassName(windowHandle);
+            var className = WindowService.GetClassName(windowHandle);
             bool hasBadWordInClassName = classBlacklist.Any(c => className.ToLower().Contains(c)) || classBlacklist.Any(c => className.ToLower().Replace(" ", "").Contains(c));
             if (hasBadWordInClassName) windowHandle = IntPtr.Zero;
             return windowHandle == IntPtr.Zero;
@@ -501,85 +371,5 @@ namespace RePlays.Services {
                 Logger.WriteLine($"Exception occurred during nonGameDetections.json parsing: {ex.Message}");
             }
         }
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern bool UnhookWinEvent(IntPtr hWinEventHook);
-
-        [DllImport("user32.dll")]
-        static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, Int32 dwProcessId);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        [SuppressUnmanagedCodeSecurity]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool CloseHandle(IntPtr hObject);
-
-        [DllImport("psapi.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        static extern bool GetProcessImageFileName(IntPtr hprocess, StringBuilder lpExeName, out int size);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
     }
-
-#if WINDOWS
-    // https://stackoverflow.com/a/7033382
-    class MessageWindow : Form {
-        private readonly int msgNotify;
-        public delegate void WindowHandleEvent(object sender, object data);
-
-        public MessageWindow() {
-            var accessHandle = this.Handle;
-
-            // Hook on to the shell for window creation/delection events
-            msgNotify = RegisterWindowMessage("SHELLHOOK");
-            _ = RegisterShellHookWindow(this.Handle);
-        }
-
-        protected override void OnHandleCreated(EventArgs e) {
-            base.OnHandleCreated(e);
-            ChangeToMessageOnlyWindow();
-        }
-
-        private void ChangeToMessageOnlyWindow() {
-            IntPtr HWND_MESSAGE = new(-3);
-            SetParent(this.Handle, HWND_MESSAGE);
-        }
-
-        protected override void WndProc(ref Message m) {
-            if (DetectionService.IsStarted && m.Msg == msgNotify) {
-                // Receive shell messages
-                switch (m.WParam.ToInt32()) {
-                    case 1:  // HSHELL_WINDOWCREATED
-                    case 4:  // HSHELL_WINDOWACTIVATED
-                    case 13: // HSHELL_WINDOWREPLACED 
-                        DetectionService.WindowCreation(m.LParam);
-                        break;
-                    case 2: // HSHELL_WINDOWDESTROYED
-                        DetectionService.WindowDeletion(m.LParam);
-                        break;
-                }
-            }
-            base.WndProc(ref m);
-        }
-
-        [DllImport("user32.dll")]
-        static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
-
-        [DllImport("user32", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
-        private static extern int RegisterShellHookWindow(IntPtr hWnd);
-
-        [DllImport("user32", EntryPoint = "RegisterWindowMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
-        private static extern int RegisterWindowMessage(string lpString);
-    }
-#endif
 }

@@ -586,30 +586,6 @@ namespace RePlays.Utils {
 #endif
         }
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-        public static bool GetForegroundProcess(out int processId, out nint hwid) {
-            IntPtr handle = GetForegroundWindow();
-
-            if (handle == IntPtr.Zero) {
-                hwid = 0;
-                processId = 0;
-                return false;
-            }
-            else hwid = handle;
-
-            if (GetWindowThreadProcessId(handle, out int id) == 0) {
-                hwid = 0;
-                processId = 0;
-                return false;
-            }
-            else processId = id;
-
-            return true;
-        }
-
         public static string GetReadableFileSize(double bytes) {
             string[] sizes = { "B", "KB", "MB", "GB", "TB" };
             int order = 0;
