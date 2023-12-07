@@ -152,8 +152,9 @@ namespace RePlays.Utils {
             outputCache.Clear();
             inputCache.Clear();
             outputCache.Add(new("default", "Default Device"));
-            outputCache.Add(new("communications", "Default Communication Device"));
             inputCache.Add(new("default", "Default Device", false));
+#if WINDOWS
+            outputCache.Add(new("communications", "Default Communication Device"));
             inputCache.Add(new("communications", "Default Communication Device", false));
             ManagementObjectSearcher searcher = new("Select * From Win32_PnPEntity");
             ManagementObjectCollection deviceCollection = searcher.Get();
@@ -174,6 +175,9 @@ namespace RePlays.Utils {
 
                 }
             }
+#else
+            // TODO: Get audio devices on Linux
+#endif
             if (SettingsService.Settings.captureSettings.inputDevices.Count == 0) {
                 SettingsService.Settings.captureSettings.inputDevices.Add(inputCache[0]);
             }

@@ -1,7 +1,14 @@
 <body>
   <script>
     function ready() {
-      window.chrome.webview.postMessage({message: "BrowserReady", data: null});
+      if(window.chrome !== undefined) {
+        window.chrome.webview.postMessage({message: "BrowserReady", data: null});
+        return;
+      }
+      if(window.external.sendMessage !== undefined) {
+        window.external.sendMessage(JSON.stringify({message: "BrowserReady", data: null}));
+        return;
+      }
     }
     ready();
   </script>

@@ -29,15 +29,17 @@ namespace RePlays.Services {
         static readonly HashSet<string> nonGameDetectionsCache = [];
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
-        private static List<string> classBlacklist = ["splashscreen", "launcher", "cheat", "console"];
+        private static List<string> classBlacklist = ["plasmashell", "splashscreen", "launcher", "cheat", "console"];
         private static List<string> classWhitelist = ["steam_app_", "unitywndclass", "unrealwindow", "riotwindowclass"];
 
         public static void Start() {
+            Logger.WriteLine("DetectionService starting...");
             LoadDetections();
             WindowService.Start();
         }
 
         public static void Stop() {
+            Logger.WriteLine("DetectionService stopping...");
             WindowService.Stop();
         }
 
@@ -60,7 +62,7 @@ namespace RePlays.Services {
         }
 
         public static void WindowDeletion(IntPtr hwnd, int processId = 0, [CallerMemberName] string memberName = "") {
-            if (!RecordingService.IsRecording)
+            if (!RecordingService.IsRecording || RecordingService.IsStopping)
                 return;
 
             if (processId == 0 && hwnd != 0)
@@ -147,7 +149,7 @@ namespace RePlays.Services {
         public static bool AutoDetectGame(int processId, string executablePath, nint windowHandle = 0, bool autoRecord = true) {
 #if !WINDOWS
             // If process is launching as a wine executable
-            if (processId != 0 && Regex.IsMatch(executablePath, @".*(?:/wine64-preloader|/wine32-preloader)$")) {
+            if (processId != 0 && Regex.IsMatch(executablePath, @".*(?:/wine64-preloader|/wine-preloader)$")) {
                 string cmdLineArgs = File.ReadAllText($"/proc/{processId}/cmdline").Replace('\0', ' ');
                 // Retrieve .exe path from cmdLineArgs
                 Match match = Regex.Match(cmdLineArgs, @"[A-Za-z]:\\(.+\.exe)");
@@ -235,6 +237,7 @@ namespace RePlays.Services {
                 }
             }
             if (isGame) {
+                // TODO: check obs source windows for a match
                 if (!isValidAspectRatio) {
                     Logger.WriteLine($"Found game window " +
                         $"[{processId}]" +

@@ -142,15 +142,19 @@ namespace RePlays {
                 .SetUseOsDefaultSize(false)
                 .SetSize(1080, 600)
                 .SetResizable(true)
+#if DEBUG
+                .Load(Path.Join(GetSolutionPath(), "/ClientApp/public/preload.html"))
+#else
                 .Load(GetRePlaysURI())
+#endif
                 .RegisterWebMessageReceivedHandler(async (object sender, string message) => {
                     await WebMessage.RecieveMessage(message);
                 }
             );
 #if DEBUG
             var rootDir = GetSolutionPath();
-            if (File.Exists(Path.Combine(rootDir) + "/Resources/logo.png"))
-                window.SetIconFile(Path.Combine(rootDir) + "/Resources/logo.png");
+            if (File.Exists(Path.Join(rootDir, "/Resources/logo.png")))
+                window.SetIconFile(Path.Join(rootDir, "/Resources/logo.png"));
 #endif
             window.WaitForClose();
             ApplicationExitEvent.Set();

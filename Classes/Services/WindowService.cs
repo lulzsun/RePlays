@@ -1,3 +1,4 @@
+#pragma warning disable CA1806
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,8 @@ namespace RePlays.Services {
         private delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
         static WinEventProc winActiveDele, winResizeDele; // Keep win event delegates alive as long as class is alive (if you dont do this, gc will clean up)
         static nint winActiveHook, winResizeHook;
+
+        delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
         static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
@@ -83,6 +86,40 @@ namespace RePlays.Services {
         // https://stackoverflow.com/a/67066227/8805016
         [DllImport("user32.dll")]
         static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DisplayDevice lpDisplayDevice, uint dwFlags);
+        
+        [DllImport("user32.dll")]
+        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
+        public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
+
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        public static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] ref MONITORINFOEX info);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
+        public class MONITORINFOEX {
+            public int cbSize = Marshal.SizeOf(typeof(MONITORINFOEX));
+            public Rect rcMonitor;
+            public Rect rcWork;
+            public int dwFlags;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public char[] szDevice = new char[32];
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct DisplayDevice {
+            public int cb;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string DeviceName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceString;
+            public int StateFlags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceID;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceKey;
+        }
 #else
         private static Thread X11WindowWatcher;
         static IntPtr X11Display;
@@ -117,21 +154,42 @@ namespace RePlays.Services {
         [DllImport(Xlib, EntryPoint = "XCloseDisplay")]
         static extern int XCloseDisplay(IntPtr display);
 
-        // Xlib structures and functions for WM_CLASS
+        [DllImport(Xlib, EntryPoint = "XGetClassHint")]
+        static extern int XGetClassHint(IntPtr display, IntPtr window, ref XClassHint classHint);
+
+        [DllImport(Xlib, EntryPoint = "XInternAtom")]
+        static extern IntPtr XInternAtom(IntPtr display, string atomName, bool onlyIfExists);
+
+        static readonly IntPtr XA_CARD = (IntPtr)6; // Atom type for CARDINAL
+
+        [DllImport(Xlib, EntryPoint = "XSetErrorHandler")]
+        static extern int XSetErrorHandler(XErrorHandler handler);
+
+        [DllImport(Xlib, EntryPoint = "XGetErrorText")]
+        static extern int XGetErrorText(IntPtr display, byte code, IntPtr buffer_return, int length);
+
+        [DllImport(Xlib, EntryPoint = "XGetGeometry")]
+        static extern int XGetGeometry(IntPtr display, IntPtr drawable, out IntPtr root, out int x, out int y,
+            out uint width, out uint height, out uint border_width, out uint depth);
+
+        delegate int XErrorHandler(IntPtr display, ref XErrorEvent error_event);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct XErrorEvent {
+            public int type;
+            public IntPtr display;
+            public IntPtr resourceid;
+            public IntPtr serial;
+            public byte error_code;
+            public byte request_code;
+            public byte minor_code;
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         struct XClassHint {
             public IntPtr res_name;
             public IntPtr res_class;
         }
-
-        [DllImport(Xlib, EntryPoint = "XGetClassHint")]
-        static extern int XGetClassHint(IntPtr display, IntPtr window, ref XClassHint classHint);
-
-        // Xlib functions for _NET_WM_PID
-        [DllImport(Xlib, EntryPoint = "XInternAtom")]
-        static extern IntPtr XInternAtom(IntPtr display, string atomName, bool onlyIfExists);
-
-        static readonly IntPtr XA_CARD = (IntPtr)6; // Atom type for CARDINAL
 #endif
         private static Dictionary<string, string> drivePaths = [];
         public static bool IsStarted { get; internal set; }
@@ -151,34 +209,29 @@ namespace RePlays.Services {
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Rect {
-            public int Left, Top, Right, Bottom;
-
-            public Rect(int _left, int _top, int _right, int _bottom) : this() {
-                Left = _left;
-                Top = _top;
-                Right = _right;
-                Bottom = _bottom;
-            }
+        public struct Rect(int left, int top, int right, int bottom) {
+            public int Left = left, Top = top, Right = right, Bottom = bottom;
 
             public int GetWidth() {
-                return this.Right - this.Left;
+                return Right - Left;
             }
 
             public int GetHeight() {
-                return this.Bottom - this.Top;
+                return Bottom - Top;
             }
         }
 
-        public static Rect GetWindowSize(IntPtr handle) {
+        public static Rect GetWindowSize(IntPtr window) {
             Rect rect = new(0, 0, 0, 0);
 #if WINDOWS
-            if (!GetClientRect(handle, ref rect)) {
+            if (!GetClientRect(window, ref rect)) {
                 Logger.WriteLine("Issue using GetClientRect");
                 return rect;
             }
 #else
-            // TODO
+            if (XGetGeometry(X11Display, window, out _, out _, out _, out uint width, out uint height, out _, out _) != 0) {
+                return new Rect(0, 0, (int)width, (int)height);
+            }
 #endif
             return rect;
         }
@@ -207,72 +260,8 @@ namespace RePlays.Services {
             return false;
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DisplayDevice lpDisplayDevice, uint dwFlags);
-        [DllImport("user32.dll")]
-        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
-        public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
-
-        [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        public static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] ref MONITORINFOEX info);
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
-        public class MONITORINFOEX {
-            public int cbSize = Marshal.SizeOf(typeof(MONITORINFOEX));
-            public Rect rcMonitor;
-            public Rect rcWork;
-            public int dwFlags;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-            public char[] szDevice = new char[32];
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct DisplayDevice {
-            public int cb;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string DeviceName;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string DeviceString;
-            public int StateFlags;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string DeviceID;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string DeviceKey;
-        }
-
-        public static string GetMonitorId(string deviceName) {
-            Logger.WriteLine($"Attempting to retrieve deviceId from {deviceName}");
-            Dictionary<string, string> monitorIds = [];
-            _ = EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData) => {
-                MONITORINFOEX monitorInfo = new();
-                monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
-                try {
-                    if (GetMonitorInfo(hMonitor, ref monitorInfo)) {
-                        DisplayDevice d = new();
-                        d.cb = Marshal.SizeOf(d);
-                        string lpDevice = string.Join("", monitorInfo.szDevice).TrimEnd('\0');
-                        EnumDisplayDevices(lpDevice, 0, ref d, 0x1);
-                        monitorIds.Add(lpDevice, d.DeviceID);
-                        Logger.WriteLine($"Found deviceId: {d.DeviceID} for {lpDevice}");
-                    }
-                }
-                catch (Exception ex) {
-                    Logger.WriteLine($"Error in retrieval of monitor information: {ex.Message}");
-                    return false;
-                }
-                return true;
-            }, IntPtr.Zero);
-            if (!monitorIds.TryGetValue(deviceName, out string monitorId)) {
-                Logger.WriteLine($"Could not retrieve deviceId for {deviceName}");
-                return "";
-            }
-            Logger.WriteLine($"Retrieved deviceId: {monitorId} from {deviceName}");
-            return monitorId;
-        }
-
-        delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
-
         public static void Start() {
+            Logger.WriteLine("WindowService starting...");
 #if WINDOWS
             // Get device paths for mounted drive letters
             for (char letter = 'A'; letter <= 'Z'; letter++) {
@@ -318,6 +307,22 @@ namespace RePlays.Services {
                     Logger.WriteLine("Failed to open display.");
                     return;
                 }
+
+                XSetErrorHandler(
+                    (IntPtr display, ref XErrorEvent error_event) => {
+                        IntPtr errorMessage = IntPtr.Zero;
+                        XGetErrorText(display, error_event.error_code, IntPtr.Zero, 0);
+                        errorMessage = Marshal.AllocHGlobal(256);
+                        XGetErrorText(display, error_event.error_code, errorMessage, 256);
+
+                        string errorString = Marshal.PtrToStringAnsi(errorMessage);
+                        Logger.WriteLine($"Xlib Error: {errorString}");
+
+                        Marshal.FreeHGlobal(errorMessage);
+                        return 0;
+                    }
+                );
+
                 X11RootWindow = XDefaultRootWindow(X11Display);
                 IsStarted = true;
                 while (IsStarted) {
@@ -329,6 +334,7 @@ namespace RePlays.Services {
                             if (actualFormat == 32 && nItems > 0) {
                                 IntPtr[] windowList = new IntPtr[nItems];
                                 Marshal.Copy(prop, windowList, 0, (int)nItems);
+                                XFree(prop);
                                 foreach (IntPtr window in windowList) {
                                     string windowName = GetWindowTitle(window);
                                     string windowClass = GetClassName(window);
@@ -347,13 +353,12 @@ namespace RePlays.Services {
                                     };
                                 }
 
-                                var destroyedWindows = prevWindows.Keys.Except(x11Windows.Keys);
-                                foreach (var window in destroyedWindows) {
-                                    string windowName = prevWindows[window].title;
-                                    int windowPid = prevWindows[window].pid;
-                                    DetectionService.WindowDeletion(window, windowPid);
+                                if (RecordingService.IsRecording && !RecordingService.IsStopping) {
+                                    var session = RecordingService.GetCurrentSession();
+                                    if (!x11Windows.ContainsKey(session.WindowHandle)) {
+                                        DetectionService.WindowDeletion(session.WindowHandle, session.Pid);
+                                    }
                                 }
-                                XFree(prop);
                             }
                         }
                     }
@@ -366,6 +371,7 @@ namespace RePlays.Services {
         }
 
         public static void Stop() {
+            Logger.WriteLine("WindowService stopping...");
 #if WINDOWS
             if (messageWindow != null) {
                 messageWindow.Close();
@@ -537,6 +543,36 @@ namespace RePlays.Services {
             return false;
         }
 #else
+        public static string GetMonitorId(string deviceName) {
+            Logger.WriteLine($"Attempting to retrieve deviceId from {deviceName}");
+            Dictionary<string, string> monitorIds = [];
+            _ = EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData) => {
+                MONITORINFOEX monitorInfo = new();
+                monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
+                try {
+                    if (GetMonitorInfo(hMonitor, ref monitorInfo)) {
+                        DisplayDevice d = new();
+                        d.cb = Marshal.SizeOf(d);
+                        string lpDevice = string.Join("", monitorInfo.szDevice).TrimEnd('\0');
+                        EnumDisplayDevices(lpDevice, 0, ref d, 0x1);
+                        monitorIds.Add(lpDevice, d.DeviceID);
+                        Logger.WriteLine($"Found deviceId: {d.DeviceID} for {lpDevice}");
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Error in retrieval of monitor information: {ex.Message}");
+                    return false;
+                }
+                return true;
+            }, IntPtr.Zero);
+            if (!monitorIds.TryGetValue(deviceName, out string monitorId)) {
+                Logger.WriteLine($"Could not retrieve deviceId for {deviceName}");
+                return "";
+            }
+            Logger.WriteLine($"Retrieved deviceId: {monitorId} from {deviceName}");
+            return monitorId;
+        }
+
         static List<IntPtr> EnumerateProcessWindowHandles(int processId) {
             var handles = new List<IntPtr>();
 

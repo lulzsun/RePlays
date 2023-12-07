@@ -156,6 +156,7 @@ namespace RePlays.Utils {
 
             switch (webMessage.message) {
                 case "BrowserReady": {
+                        GetAudioDevices();
 #if WINDOWS
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
 #else

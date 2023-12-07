@@ -27,14 +27,20 @@ namespace RePlays.Recorders {
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
 
-        private Dictionary<string, string> encoder_ids = new() {
+        private readonly Dictionary<string, string> videoEncoderIds = new() {
+#if WINDOWS
             {"Software (x264)", "obs_x264"},
             {"Hardware (NVENC)", "jim_nvenc"},
             {"Hardware (QSV)", "obs_qsv11"},
             {"Hardware (AMF)", "amd_amf_h264"}
+#else
+            {"Software (x264)", "obs_x264"},
+            {"Hardware (VAAPI H.264)", "ffmpeg_vaapi"},
+            {"Hardware (VAAPI HEVC)", "hevc_ffmpeg_vaapi"},
+#endif
         };
 
-        private Dictionary<string, string> rate_controls = new() {
+        private readonly Dictionary<string, string> rate_controls = new() {
             {"VBR", "VBR"},
             {"CBR", "CBR"},
             {"CQP", "CQP"},
@@ -43,7 +49,7 @@ namespace RePlays.Recorders {
             {"CRF", "CRF"},
         };
 
-        private Dictionary<string, List<string>> encoder_link = new() {
+        private Dictionary<string, List<string>> videoEncoderLink = new() {
             { "Hardware (NVENC)", new List<string> { "VBR", "CBR", "CQP", "Lossless" } },
             { "Software (x264)", new List<string> { "VBR", "CBR", "CRF" } },
             { "Hardware (AMF)", new List<string> { "VBR", "CBR", "ABR", "CRF" } },
@@ -88,10 +94,11 @@ namespace RePlays.Recorders {
 #if !WINDOWS
             obs_set_nix_platform(obs_nix_platform_type.OBS_NIX_PLATFORM_X11_EGL);
             obs_set_nix_platform_display(XOpenDisplay(IntPtr.Zero));
-#endif
-
+#else
             // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
             // it will cause a System.ExecutionEngineException, something to do with illegal memory
+            //
+            // Warning: This also does crashes on linux at a certain point. See https://github.com/dotnet/runtime/issues/48796
             base_set_log_handler(new log_handler_t((lvl, msg, args, p) => {
                 try {
                     string formattedMsg = MarshalUtils.GetLogMessage(msg, args);
@@ -138,6 +145,7 @@ namespace RePlays.Recorders {
                     Logger.WriteLine(e.StackTrace);
                 }
             }), IntPtr.Zero);
+#endif
 
             Logger.WriteLine("libobs version: " + obs_get_version_string());
             if (!obs_startup("en-US", null, IntPtr.Zero)) {
@@ -229,22 +237,32 @@ namespace RePlays.Recorders {
             }
 
             Logger.WriteLine($"Preparing to create libobs output [{bnum_allocs()}]...");
-
+#if WINDOWS
+            string audioOutSourceId = "wasapi_output_capture";
+            string audioInSourceId = "wasapi_input_capture";
+            string audioEncoderId = "ffmpeg_aac";
+            string videoSourceId = "game_capture";
+#else
+            string audioOutSourceId = "pulse_output_capture";
+            string audioInSourceId = "pulse_input_capture";
+            string audioEncoderId = "ffmpeg_aac";
+            string videoSourceId = "xcomposite_input";
+#endif
             // SETUP NEW AUDIO SOURCES & ENCODERS
             // - Create sources for output and input devices
             // TODO: isolate game audio and discord app audio
             // TODO: have user adjustable audio tracks, especially if the user is trying to use more than 6 tracks (6 is the limit)
             //       as of now, if the audio sources exceed 6 tracks, then those tracks will be defaulted to track 6 (index = 5)
             int totalDevices = 0;
-            audioEncoders.TryAdd("combined", obs_audio_encoder_create("ffmpeg_aac", "combined", IntPtr.Zero, 0, IntPtr.Zero));
+            audioEncoders.TryAdd("combined", obs_audio_encoder_create(audioEncoderId, "combined", IntPtr.Zero, 0, IntPtr.Zero));
             obs_encoder_set_audio(audioEncoders["combined"], obs_get_audio());
             foreach (var (outputDevice, index) in SettingsService.Settings.captureSettings.outputDevices.WithIndex()) {
-                audioSources.TryAdd("(output) " + outputDevice.deviceId, obs_audio_source_create("wasapi_output_capture", "(output) " + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
+                audioSources.TryAdd("(output) " + outputDevice.deviceId, obs_audio_source_create(audioOutSourceId, "(output) " + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
                 obs_set_output_source((uint)(index + 1), audioSources["(output) " + outputDevice.deviceId]);
                 obs_source_set_audio_mixers(audioSources["(output) " + outputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + 1, 5)));
                 obs_source_set_volume(audioSources["(output) " + outputDevice.deviceId], outputDevice.deviceVolume / (float)100);
                 if (index + 1 < 6) {
-                    audioEncoders.TryAdd("(output) " + outputDevice.deviceId, obs_audio_encoder_create("ffmpeg_aac", "(output) " + outputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)index + 1, IntPtr.Zero));
+                    audioEncoders.TryAdd("(output) " + outputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(output) " + outputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)index + 1, IntPtr.Zero));
                     obs_encoder_set_audio(audioEncoders["(output) " + outputDevice.deviceId], obs_get_audio());
                 }
                 else
@@ -252,12 +270,12 @@ namespace RePlays.Recorders {
                 totalDevices++;
             }
             foreach (var (inputDevice, index) in SettingsService.Settings.captureSettings.inputDevices.WithIndex()) {
-                audioSources.TryAdd("(input) " + inputDevice.deviceId, obs_audio_source_create("wasapi_input_capture", "(input) " + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
+                audioSources.TryAdd("(input) " + inputDevice.deviceId, obs_audio_source_create(audioInSourceId, "(input) " + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
                 obs_set_output_source((uint)(index + totalDevices + 1), audioSources["(input) " + inputDevice.deviceId]);
                 obs_source_set_audio_mixers(audioSources["(input) " + inputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + totalDevices + 1, 5)));
                 obs_source_set_volume(audioSources["(input) " + inputDevice.deviceId], inputDevice.deviceVolume / (float)100);
                 if (index + totalDevices + 1 < 6) {
-                    audioEncoders.TryAdd("(input) " + inputDevice.deviceId, obs_audio_encoder_create("ffmpeg_aac", "(input) " + inputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
+                    audioEncoders.TryAdd("(input) " + inputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(input) " + inputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
                     obs_encoder_set_audio(audioEncoders["(input) " + inputDevice.deviceId], obs_get_audio());
                 }
                 else
@@ -282,8 +300,9 @@ namespace RePlays.Recorders {
                 // - Create a source for the game_capture in channel 0
                 IntPtr videoSourceSettings = obs_data_create();
                 obs_data_set_string(videoSourceSettings, "capture_mode", WindowService.IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
+                obs_data_set_string(videoSourceSettings, "capture_window", windowClassNameId);
                 obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
-                videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
+                videoSources.TryAdd("gameplay", obs_source_create(videoSourceId, "gameplay", videoSourceSettings, IntPtr.Zero));
                 obs_data_release(videoSourceSettings);
 
                 // SETUP VIDEO ENCODER
@@ -292,11 +311,13 @@ namespace RePlays.Recorders {
                 obs_set_output_source(0, videoSources["gameplay"]);
 
                 // attempt to wait for game_capture source to hook first
-                retryAttempt = 0;
-                Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
-                while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
-                    await Task.Delay(retryInterval);
-                    retryAttempt++;
+                if (videoSourceId == "game_capture") {
+                    retryAttempt = 0;
+                    Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
+                    while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
+                        await Task.Delay(retryInterval);
+                        retryAttempt++;
+                    }
                 }
             }
             else {
@@ -305,7 +326,7 @@ namespace RePlays.Recorders {
             }
             signalGCHookAttempt = 0;
 
-            if (signalGCHookSuccess == false) {
+            if (videoSourceId == "game_capture" && signalGCHookSuccess == false) {
                 if (session.ForceDisplayCapture == false) {
                     Logger.WriteLine($"Unable to get graphics hook for [{windowClassNameId}] after {retryAttempt} attempts");
                 }
@@ -443,7 +464,7 @@ namespace RePlays.Recorders {
                 Logger.WriteLine("Video Encoder muxer flags: " + mux_frag);
             }
 
-            IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
+            IntPtr encoderPtr = obs_video_encoder_create(videoEncoderIds[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
             obs_data_release(videoEncoderSettings);
             return encoderPtr;
         }
@@ -515,7 +536,7 @@ namespace RePlays.Recorders {
 
         public void GetAvailableRateControls() {
             Logger.WriteLine("Encoder: " + SettingsService.Settings.captureSettings.encoder);
-            if (encoder_link.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls)) {
+            if (videoEncoderLink.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls)) {
                 Logger.WriteLine("Rate Control options: " + string.Join(",", availableRateControls));
                 SettingsService.Settings.captureSettings.rateControlCache = availableRateControls;
                 if (!availableRateControls.Contains(SettingsService.Settings.captureSettings.rateControl))

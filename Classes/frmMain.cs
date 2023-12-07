@@ -49,7 +49,6 @@ namespace RePlays {
             else {
                 RecordingService.Start(typeof(LibObsRecorder));
             }
-            GetAudioDevices();
 
             Thread socketThread = new(StartSocketServer);
             socketThread.Start();

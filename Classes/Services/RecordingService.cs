@@ -14,6 +14,7 @@ namespace RePlays.Services {
         public static DateTime startTime;
         public static double lastVideoDuration = 0;
         private static Session currentSession = new(0, 0, "Game Unknown");
+        public static bool IsStopping { get; internal set; }
         public static bool IsRecording { get; internal set; }
         private static bool IsPreRecording { get; set; }
         private static bool IsRestarting { get; set; }
@@ -104,6 +105,7 @@ namespace RePlays.Services {
                 Logger.WriteLine($"Cannot stop recording, no recording in progress");
                 return;
             }
+            IsStopping = true;
 
             bool result = await ActiveRecorder.StopRecording();
 
@@ -115,11 +117,13 @@ namespace RePlays.Services {
                     currentSession.Pid = 0;
                     WebMessage.DestroyToast("Recording");
                     IsRecording = false;
+                    IsStopping = false;
                     StorageService.ManageStorage();
                 }
                 //DetectionService.LoadDetections();
             }
         }
+
         public static async void RestartRecording() {
             if (!IsRecording || IsRestarting) return;
             IsRestarting = true;
