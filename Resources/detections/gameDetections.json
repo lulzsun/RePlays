@@ -18443,13 +18443,13 @@
 		"title": "Osu!",
 		"game_detection": [
 			{
-				"launchexe": "/osu!\\.exe",
+				"gameexe": "/osu!\\.exe",
 				"regkey": "HKEY_CLASSES_ROOT/osu!/shell/open/command/",
 				"trucregkeyat": "osu!\\.exe",
 				"longname": "Osu!"
 			},
 			{
-				"launchexe": "/osu!\\.exe",
+				"gameexe": "/osu!\\.exe",
 				"regkey": "HKEY_LOCAL_MACHINE/SOFTWARE/osu!/path",
 				"longname": "Osu!"
 			}
