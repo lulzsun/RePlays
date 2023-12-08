@@ -361,15 +361,21 @@ namespace RePlays.Services {
             }
             if (isGame) {
                 if (!isValidAspectRatio) {
+                    // ignore bad window size if game is user whitelisted
+                    bool isUserWhitelisted = false;
+                    foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
+                        if (game.gameExe == executablePath) isUserWhitelisted = true;
+                        break;
+                    }
                     Logger.WriteLine($"Found game window " +
                         $"[{processId}]" +
                         $"[{windowHandle}]" +
                         $"[{className}]" +
                         $"[{executablePath}], " +
                         $"but invalid resolution [{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}], " +
-                        (!isWhitelistedClass ? $"ignoring start capture." : "not ignoring due to whitelisted classname.")
+                        (!isWhitelistedClass && !isUserWhitelisted ? $"ignoring start capture." : "not ignoring due to whitelist.")
                     );
-                    if (!isWhitelistedClass) return false;
+                    if (!isWhitelistedClass && !isUserWhitelisted) return false;
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: " +
