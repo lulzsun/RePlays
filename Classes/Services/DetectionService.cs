@@ -240,11 +240,9 @@ namespace RePlays.Services {
                 // TODO: check obs source windows for a match
                 if (!isValidAspectRatio) {
                     // ignore bad window size if game is user whitelisted
-                    bool isUserWhitelisted = false;
-                    foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
-                        if (game.gameExe == executablePath) isUserWhitelisted = true;
-                        break;
-                    }
+                    bool isUserWhitelisted = SettingsService.Settings.detectionSettings.whitelist.Any(
+                        game => string.Equals(game.gameExe.ToLower(), executablePath.ToLower())
+                    );
                     Logger.WriteLine($"Found game window " +
                         $"[{processId}]" +
                         $"[{windowHandle}]" +
