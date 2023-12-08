@@ -179,6 +179,7 @@ namespace RePlays.Services {
             var className = WindowService.GetClassName(windowHandle);
             string gameTitle = gameDetection.gameTitle;
             string fileName = Path.GetFileName(executablePath);
+            var detailedWindowStr = $"[{processId}][{windowHandle}][{className}][{executablePath}]";
             try {
                 if (!Path.Exists(executablePath)) return false;
                 FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
@@ -189,7 +190,7 @@ namespace RePlays.Services {
 
                 bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
                 if (isBlocked) {
-                    Logger.WriteLine($"Blocked application: [{processId}][{windowHandle}][{className}][{executablePath}]");
+                    Logger.WriteLine($"Blocked application: {detailedWindowStr}");
                     return false;
                 }
             }
@@ -200,7 +201,7 @@ namespace RePlays.Services {
             if (!autoRecord) {
                 // This is a manual/forced record event so lets just yolo it and assume user knows best
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath);
-                Logger.WriteLine($"Forced record start: [{processId}][{windowHandle}][{className}][{executablePath}], prepared to record");
+                Logger.WriteLine($"Forced record start: {detailedWindowStr}, prepared to record");
                 return true;
             }
 
@@ -209,6 +210,7 @@ namespace RePlays.Services {
             var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isWhitelistedClass = classWhitelist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
+            detailedWindowStr += $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]";
 
             // if there is no matched game, lets try to make assumptions from the process given the following information:
             // 1. window size & aspect ratio
@@ -219,21 +221,11 @@ namespace RePlays.Services {
                     return false;
                 }
                 if (isWhitelistedClass && isValidAspectRatio) {
-                    Logger.WriteLine($"Assumed recordable game: [{processId}]" +
-                        $"[{windowHandle}]" +
-                        $"[{className}]" +
-                        $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]" +
-                        $"[{executablePath}]"
-                    );
+                    Logger.WriteLine($"Assumed recordable game: {detailedWindowStr}");
                     isGame = true;
                 }
                 else {
-                    Logger.WriteLine($"Unknown application: [{processId}]" +
-                        $"[{windowHandle}]" +
-                        $"[{className}]" +
-                        $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]" +
-                        $"[{executablePath}]"
-                    );
+                    Logger.WriteLine($"Unknown application: {detailedWindowStr}");
                 }
             }
             if (isGame) {
@@ -243,25 +235,24 @@ namespace RePlays.Services {
                     bool isUserWhitelisted = SettingsService.Settings.detectionSettings.whitelist.Any(
                         game => string.Equals(game.gameExe.ToLower(), executablePath.ToLower())
                     );
-                    Logger.WriteLine($"Found game window " +
-                        $"[{processId}]" +
-                        $"[{windowHandle}]" +
-                        $"[{className}]" +
-                        $"[{executablePath}], " +
-                        $"but invalid resolution [{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}], " +
+#if !WINDOWS
+                    // linux (at least proton-based) games don't have a different classname for their splashscreen.
+                    // we need do check other things to see if it is a splashscreen before we record.
+                    // a common pattern is that these splashscreens have a different window title than the game.
+                    // i.e, untitled splashscreen
+                    if (WindowService.GetWindowTitle(windowHandle) == "") {
+                        Logger.WriteLine($"Found splashscreen window {detailedWindowStr}, ignoring start capture.");
+                        return false;
+                    }
+#endif
+                    Logger.WriteLine($"Found game window {detailedWindowStr}, but invalid resolution" +
                         (!isWhitelistedClass && !isUserWhitelisted ? $"ignoring start capture." : "not ignoring due to whitelist.")
                     );
                     if (!isWhitelistedClass && !isUserWhitelisted) return false;
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
-                Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: " +
-                    $"[{processId}]" +
-                    $"[{windowHandle}]" +
-                    $"[{className}]" +
-                    $"[{executablePath}]"
-                );
-                bool forceDisplayCapture = gameDetection.forceDisplayCapture;
-                RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, forceDisplayCapture);
+                Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
+                RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, gameDetection.forceDisplayCapture);
                 if (allowed) RecordingService.StartRecording();
             }
             return isGame;

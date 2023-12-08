@@ -94,6 +94,7 @@ namespace RePlays.Recorders {
 #if !WINDOWS
             obs_set_nix_platform(obs_nix_platform_type.OBS_NIX_PLATFORM_X11_EGL);
             obs_set_nix_platform_display(XOpenDisplay(IntPtr.Zero));
+            base_set_log_handler(null, IntPtr.Zero);
 #else
             // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
             // it will cause a System.ExecutionEngineException, something to do with illegal memory
@@ -102,10 +103,6 @@ namespace RePlays.Recorders {
             base_set_log_handler(new log_handler_t((lvl, msg, args, p) => {
                 try {
                     string formattedMsg = MarshalUtils.GetLogMessage(msg, args);
-
-                    if (((LogErrorLevel)lvl).ToString() == "error" && formattedMsg.Contains("X Error: BadWindow"))
-                        return;
-
                     Logger.WriteLine(((LogErrorLevel)lvl).ToString() + ": " + formattedMsg);
 
                     // a very crude way to see if game_capture source has successfully hooked/capture application....
@@ -215,8 +212,11 @@ namespace RePlays.Recorders {
             videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
 
             // Get the window class name
+#if WINDOWS
             var windowClassNameId = WindowService.GetWindowTitle(windowHandle) + ":" + WindowService.GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
-
+#else
+            var windowClassNameId = windowHandle + "\r\n" + WindowService.GetWindowTitle(windowHandle) + "\r\n" + WindowService.GetClassName(windowHandle);
+#endif
             // get game's window size and change output to match
             windowSize = WindowService.GetWindowSize(windowHandle);
             // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension

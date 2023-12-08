@@ -416,7 +416,7 @@ namespace RePlays.Services {
             else
                 windowName = buffer.ToString();
 #endif
-            return windowName == "" ? "Unknown" : windowName;
+            return windowName;
         }
 
         public static string GetClassName(IntPtr window) {
@@ -427,9 +427,9 @@ namespace RePlays.Services {
                 string res_class = Marshal.PtrToStringAnsi(classHint.res_class);
                 XFree(classHint.res_name);
                 XFree(classHint.res_class);
-                return $"{res_name}:{res_class}";
+                return $"{res_name}"; //xcompositor-input only uses res_name: https://github.com/obsproject/obs-studio/blob/e27b013d4754e0e81119ab237ffedce8fcebcbbf/plugins/linux-capture/xcomposite-input.c#L207
             }
-            return "Unknown";
+            return "";
 #else
             StringBuilder className = new(256);
             _ = _GetClassName(window, className, className.Capacity);
