@@ -4,7 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.WebSockets;
+using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
@@ -140,7 +143,14 @@ namespace RePlays.Utils {
                 return true;
             }
 #else
-            Program.window?.SendWebMessage(message);
+            //Program.window?.SendWebMessage(message);
+            List<WebSocket> activeSockets = Classes.Utils.StaticServer.GetActiveSockets();
+            foreach (var socket in activeSockets) {
+                var responseMessage = Encoding.UTF8.GetBytes(message);
+                Task.Run(() => {
+                    socket.SendAsync(new ArraySegment<byte>(responseMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+                }).Wait();
+            }
             return true;
 #endif
         }
@@ -159,8 +169,6 @@ namespace RePlays.Utils {
                         GetAudioDevices();
 #if WINDOWS
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
-#else
-                        Program.window?.Load(GetRePlaysURI());
 #endif
                         if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
                             ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders(); //Another hacky fix for encoders not being loaded on first start.
@@ -175,11 +183,6 @@ namespace RePlays.Utils {
                             ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
                         }
                         SendMessage(GetUserSettings());
-
-#if DEBUG || !WINDOWS
-                        // Serve video files/thumbnails to allow the react app to use them
-                        Classes.Utils.StaticServer.Start();
-#endif
 
                         Logger.WriteLine($"Initializing {toastList.Count} Toasts");
                         foreach (var toast in toastList) {
@@ -393,7 +396,7 @@ namespace RePlays.Utils {
             return webMessage;
         }
 
-        public static void DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
+        public static async void DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
             WebMessage webMessage = new();
             webMessage.message = "DisplayModal";
             webMessage.data = "{" +

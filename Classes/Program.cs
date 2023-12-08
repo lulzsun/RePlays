@@ -9,10 +9,9 @@ using System.Net;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
-
+using RePlays.Classes.Utils;
 
 #if !WINDOWS
-using PhotinoNET;
 using static RePlays.Utils.Functions;
 using RePlays.Services;
 using RePlays.Recorders;
@@ -27,9 +26,6 @@ namespace RePlays {
         static extern bool AttachConsole(int dwProcessId);
         const int ATTACH_PARENT_PROCESS = -1;
         static readonly ManualResetEventSlim ApplicationExitEvent = new(false);
-#if !WINDOWS
-        public static PhotinoWindow window;
-#endif
 
         [STAThread]
         [Obsolete]
@@ -119,6 +115,10 @@ namespace RePlays {
         }
 #else
             Directory.SetCurrentDirectory(AppContext.BaseDirectory); //Necessary for libobs in debug(?)
+            SettingsService.LoadSettings();
+            SettingsService.SaveSettings();
+            // Serve video files/thumbnails to allow the frontend to use them
+            StaticServer.Start();
             Thread uiThread = new(OpenInterface);
             try {
                 uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
@@ -127,37 +127,12 @@ namespace RePlays {
                 Logger.WriteLine("PlatformNotSupportedException: " + ex.Message);
             }
             uiThread.Start();
-            SettingsService.LoadSettings();
-            SettingsService.SaveSettings();
             RecordingService.Start(typeof(LibObsRecorder));
             ApplicationExitEvent.Wait();
         }
 
         private static void OpenInterface() {
-            window = new PhotinoWindow()
-                .SetTitle("RePlays")
-                .SetBrowserControlInitParameters(System.Text.Json.JsonSerializer.Serialize(new {
-                    set_hardware_acceleration_policy = 2,
-                }))
-                .SetUseOsDefaultSize(false)
-                .SetSize(1080, 600)
-                .SetResizable(true)
-#if DEBUG
-                .Load(Path.Join(GetSolutionPath(), "/ClientApp/public/preload.html"))
-#else
-                .Load(GetRePlaysURI())
-#endif
-                .RegisterWebMessageReceivedHandler(async (object sender, string message) => {
-                    await WebMessage.RecieveMessage(message);
-                }
-            );
-#if DEBUG
-            var rootDir = GetSolutionPath();
-            if (File.Exists(Path.Join(rootDir, "/Resources/logo.png")))
-                window.SetIconFile(Path.Join(rootDir, "/Resources/logo.png"));
-#endif
-            window.WaitForClose();
-            ApplicationExitEvent.Set();
+            LinuxInterface.Create();
         }
 #endif
     }
