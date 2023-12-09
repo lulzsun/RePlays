@@ -1,3 +1,4 @@
+using RePlays.Classes.Utils;
 using RePlays.Recorders;
 using RePlays.Services;
 using System;
@@ -130,6 +131,13 @@ namespace RePlays.Utils {
         };
 
         public static bool SendMessage(string message) {
+            List<WebSocket> activeSockets = Classes.Utils.StaticServer.GetActiveSockets();
+            foreach (var socket in activeSockets) {
+                var responseMessage = Encoding.UTF8.GetBytes(message);
+                Task.Run(() => {
+                    socket.SendAsync(new ArraySegment<byte>(responseMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+                }).Wait();
+            }
 #if WINDOWS
             if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return false;
             if (frmMain.webView2.InvokeRequired) {
@@ -142,16 +150,8 @@ namespace RePlays.Utils {
                 frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
                 return true;
             }
-#else
-            List<WebSocket> activeSockets = Classes.Utils.StaticServer.GetActiveSockets();
-            foreach (var socket in activeSockets) {
-                var responseMessage = Encoding.UTF8.GetBytes(message);
-                Task.Run(() => {
-                    socket.SendAsync(new ArraySegment<byte>(responseMessage), WebSocketMessageType.Text, true, CancellationToken.None);
-                }).Wait();
-            }
-            return true;
 #endif
+            return true;
         }
 
         public static async Task<WebMessage> RecieveMessage(string message) {
@@ -167,6 +167,8 @@ namespace RePlays.Utils {
                 case "BrowserReady": {
                         GetAudioDevices();
 #if WINDOWS
+                        // Serve video files/thumbnails to allow the frontend to use them
+                        StaticServer.Start();
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
 #endif
                         if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {

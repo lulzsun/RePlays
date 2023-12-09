@@ -129,16 +129,19 @@ function App() {
   
   useEffect(() => {
     if(document.querySelector('initialized') === null) {
+      var timeout = 1000;
       if (localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{}');
       if (localStorage.getItem("videoMetadataBookmarks") === null) localStorage.setItem("videoMetadataBookmarks", '{}');
-
+      if (window.chrome?.webview?.postMessage !== undefined) {
+        timeout = 0
+      }
       setTimeout(function() {
         postMessage('Initialize');
         postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
         
         addEventListener('message', handleWebViewMessages);
         document.body.appendChild(document.createElement('initialized'));
-      }, 1000);
+      }, timeout);
     }
     document.addEventListener('mousedown', handleMouseDown);
     return () => {
