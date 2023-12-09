@@ -143,7 +143,6 @@ namespace RePlays.Utils {
                 return true;
             }
 #else
-            //Program.window?.SendWebMessage(message);
             List<WebSocket> activeSockets = Classes.Utils.StaticServer.GetActiveSockets();
             foreach (var socket in activeSockets) {
                 var responseMessage = Encoding.UTF8.GetBytes(message);
