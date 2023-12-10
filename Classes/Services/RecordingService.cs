@@ -82,12 +82,8 @@ namespace RePlays.Services {
                 GameInFocus = true;
 
                 if (SettingsService.Settings.captureSettings.useRecordingStartSound) {
-#if WINDOWS
-                    System.Media.SoundPlayer startRecordingSound = new(Functions.GetResourcesFolder() + "start_recording.wav");
-                    startRecordingSound.Play();
-#endif
+                    Functions.PlaySound(Functions.GetResourcesFolder() + "start_recording.wav");
                 }
-
             }
             if (!result) {
                 // recorder failed to start properly so lets restart the currentSession Pid

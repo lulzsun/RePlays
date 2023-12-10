@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace RePlays.Classes.Utils {
-    public static class StaticServer {
+    public static class WebServer {
         static IWebHost server;
         static bool isRunning;
         static List<WebSocket> activeSockets = [];
@@ -37,7 +37,6 @@ namespace RePlays.Classes.Utils {
                         if (context.Request.Path == "/ws" && context.WebSockets.IsWebSocketRequest) {
                             var webSocket = await context.WebSockets.AcceptWebSocketAsync();
                             activeSockets.Add(webSocket);
-                            // TODO: handle websocket disconnects
                             await HandleWebSocket(context, webSocket);
                         }
                         else {
@@ -60,7 +59,7 @@ namespace RePlays.Classes.Utils {
             return [.. activeSockets];
         }
 
-        private static async Task HandleWebSocket(HttpContext context, WebSocket webSocket) {
+        private static async Task HandleWebSocket(HttpContext _, WebSocket webSocket) {
             var buffer = new byte[1024 * 4];
 
             while (webSocket.State == WebSocketState.Open) {
@@ -69,10 +68,10 @@ namespace RePlays.Classes.Utils {
                 if (result.MessageType == WebSocketMessageType.Text) {
                     var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     await WebMessage.RecieveMessage(receivedMessage);
-                    Logger.WriteLine(receivedMessage);
                 }
                 else if (result.MessageType == WebSocketMessageType.Close) {
                     await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+                    activeSockets.Remove(webSocket);
                 }
             }
         }

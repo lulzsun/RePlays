@@ -118,7 +118,7 @@ namespace RePlays {
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
             // Serve video files/thumbnails to allow the frontend to use them
-            StaticServer.Start();
+            WebServer.Start();
             Thread uiThread = new(OpenInterface);
             try {
                 uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA

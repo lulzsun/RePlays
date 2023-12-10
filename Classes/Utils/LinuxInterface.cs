@@ -67,8 +67,7 @@ namespace RePlays.Classes.Utils {
             IntPtr quitMenuItem = GTK.gtk_menu_item_new_with_label("Quit");
             GTK.g_signal_connect_data(quitMenuItem, "activate",
                 new GTK.ActivateCallback((widget, userData) => {
-                    string label = Marshal.PtrToStringAnsi(userData);
-                    Logger.WriteLine($"Item clicked: {label}");
+                    Environment.Exit(1);
                 }),
                 Marshal.StringToHGlobalAnsi("Quit"),
                 IntPtr.Zero,
@@ -137,9 +136,12 @@ namespace RePlays.Classes.Utils {
             // Create a new WebKitGTK WebView
             IntPtr webView = WebKitGtk.webkit_web_view_new();
 
-            // Enable developer extras
+            // Enable extra settings
             IntPtr settings = WebKitGtk.webkit_settings_new();
             WebKitGtk.webkit_settings_set_enable_developer_extras(settings, true);
+            WebKitGtk.webkit_settings_set_disable_web_security(settings, true);
+            WebKitGtk.webkit_settings_set_allow_file_access_from_file_urls(settings, true);
+            WebKitGtk.webkit_settings_set_allow_universal_access_from_file_urls(settings, true);
             WebKitGtk.webkit_web_view_set_settings(webView, settings);
 
             // Load a URL into the WebView
@@ -308,6 +310,15 @@ namespace RePlays.Classes.Utils {
 
         [DllImport(WebKitGtkLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr webkit_settings_new();
+
+        [DllImport(WebKitGtkLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void webkit_settings_set_disable_web_security(IntPtr settings, bool enable);
+
+        [DllImport(WebKitGtkLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void webkit_settings_set_allow_file_access_from_file_urls(IntPtr settings, bool enable);
+
+        [DllImport(WebKitGtkLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void webkit_settings_set_allow_universal_access_from_file_urls(IntPtr settings, bool enable);
 
         [DllImport(WebKitGtkLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern void webkit_settings_set_enable_developer_extras(IntPtr settings, bool enable);

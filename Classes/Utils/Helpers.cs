@@ -14,6 +14,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Process = System.Diagnostics.Process;
@@ -30,6 +31,13 @@ namespace RePlays.Utils {
             return directory.FullName;
         }
 #endif
+        public static void PlaySound(string fileName) {
+#if WINDOWS
+            System.Media.SoundPlayer bookmarkSound = new(fileName);
+            bookmarkSound.Play();
+#endif
+        }
+
         public static string GenerateShortID() {
             var ticks = new DateTime(2021, 1, 1).Ticks;
             var ans = DateTime.Now.Ticks - ticks;
@@ -41,10 +49,10 @@ namespace RePlays.Utils {
         }
 
         public static string GetRePlaysURI() {
-#if DEBUG
-            //return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
+#if DEBUG 
+            //return "file://" + GetSolutionPath() + "/ClientApp/build/index.html";
             return "http://localhost:3000/#/";
-#elif RELEASE
+#else
             return "file://" + GetStartupPath() + "/ClientApp/build/index.html";
 #endif
         }
@@ -190,24 +198,26 @@ namespace RePlays.Utils {
         public static string GetUserSettings() {
             SettingsService.LoadSettings();
 
-            WebMessage webMessage = new();
-            webMessage.message = "UserSettings";
-            webMessage.data = JsonSerializer.Serialize(SettingsService.Settings);
+            WebMessage webMessage = new() {
+                message = "UserSettings",
+                data = JsonSerializer.Serialize(SettingsService.Settings)
+            };
             return JsonSerializer.Serialize(webMessage);
         }
 
         public static string GetAllVideos(string Game = "All Games", string SortBy = "Latest") {
             VideoList videoList = GetAllVideos(Game, SortBy, true);
             if (videoList == null) return "{}";
-            WebMessage webMessage = new();
-            webMessage.message = "RetrieveVideos";
-            webMessage.data = JsonSerializer.Serialize(videoList);
+            WebMessage webMessage = new() {
+                message = "RetrieveVideos",
+                data = JsonSerializer.Serialize(videoList)
+            };
             return JsonSerializer.Serialize(webMessage);
         }
 
         public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
             var videoExtensions = new[] { ".mp4", ".mkv", ".mov", ".flv" };
-            List<string> allfiles = new();
+            List<string> allfiles = [];
             switch (SortBy) {
                 case "Latest":
                     allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
@@ -237,12 +247,13 @@ namespace RePlays.Utils {
                     return null;
             }
 
-            VideoList videoList = new();
-            videoList.game = Game;
-            videoList.games = new();
-            videoList.sortBy = SortBy;
-            videoList.sessions = new();
-            videoList.clips = new();
+            VideoList videoList = new() {
+                game = Game,
+                games = [],
+                sortBy = SortBy,
+                sessions = [],
+                clips = []
+            };
 
             Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
 
@@ -250,20 +261,18 @@ namespace RePlays.Utils {
                 var fileWithoutExt = Path.GetFileNameWithoutExtension(file);
                 if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !File.Exists(file)) continue;
 
-                Video video = new();
-                video.size = new FileInfo(file).Length;
-                video.metadata = GetOrCreateMetadata(file);
-                video.date = new FileInfo(file).CreationTime;
-                video.fileName = Path.GetFileName(file);
-                video.game = Path.GetFileName(Path.GetDirectoryName(file));
+                Video video = new() {
+                    size = new FileInfo(file).Length,
+                    metadata = GetOrCreateMetadata(file),
+                    date = new FileInfo(file).CreationTime,
+                    fileName = Path.GetFileName(file),
+                    game = Path.GetFileName(Path.GetDirectoryName(file)),
 #if DEBUG && WINDOWS
-                video.folder = "http://localhost:3001/"; //if not using static server: https://videos.replays.app/
-#elif RELEASE && WINDOWS
-                video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+                    folder = "http://localhost:3001/", //if not using static server: https://videos.replays.app/
 #else
-                video.folder = "http://localhost:3001/";
+                    folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/"),
 #endif
-
+                };
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 
                 if (!Game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !Game.Equals("All Games")) continue;
@@ -461,7 +470,7 @@ namespace RePlays.Utils {
         }
 
         public static string CreateClip(string videoPath, ClipSegment[] clipSegments, int index = 0) {
-            string inputFile = Path.Join(GetPlaysFolder(), videoPath);
+            string inputFile = Path.Join(GetPlaysFolder(), videoPath).Replace("\\", "/");
             string outputFile = Path.Combine(Path.GetDirectoryName(inputFile), DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-clp.mp4");
 
             var startInfo = new ProcessStartInfo {
@@ -474,7 +483,7 @@ namespace RePlays.Utils {
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) {
                 if (index == 0) File.Delete(Path.Join(GetTempFolder(), "list.txt"));
-                outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4");
+                outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4").Replace("\\", "/");
                 File.AppendAllLines(Path.Join(GetTempFolder(), "list.txt"), new[] { "file 'temp" + index + ".mp4'" });
             }
             if (clipSegments.Length > 1 && index == clipSegments.Length) {

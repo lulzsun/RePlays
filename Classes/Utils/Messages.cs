@@ -122,6 +122,7 @@ namespace RePlays.Utils {
     public class WebMessage {
         public string message { get; set; }
         public string data { get; set; }
+        public string userAgent { get; set; }
 
         public static Dictionary<string, WebMessage> modalList = new();
         public static Dictionary<string, WebMessage> toastList = new();
@@ -131,7 +132,7 @@ namespace RePlays.Utils {
         };
 
         public static bool SendMessage(string message) {
-            List<WebSocket> activeSockets = Classes.Utils.StaticServer.GetActiveSockets();
+            List<WebSocket> activeSockets = WebServer.GetActiveSockets();
             foreach (var socket in activeSockets) {
                 var responseMessage = Encoding.UTF8.GetBytes(message);
                 Task.Run(() => {
@@ -168,7 +169,7 @@ namespace RePlays.Utils {
                         GetAudioDevices();
 #if WINDOWS
                         // Serve video files/thumbnails to allow the frontend to use them
-                        StaticServer.Start();
+                        WebServer.Start();
                         frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
 #endif
                         if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
@@ -253,12 +254,11 @@ namespace RePlays.Utils {
                     }
                     break;
                 case "OpenLink": {
-                        Process browserProcess = new Process();
+                        Process browserProcess = new();
                         browserProcess.StartInfo.UseShellExecute = true;
                         browserProcess.StartInfo.FileName = webMessage.data;
                         browserProcess.Start();
                     }
-
                     break;
                 case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
