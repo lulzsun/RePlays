@@ -35,7 +35,7 @@ namespace RePlays.Services {
             long bytesAlreadyDeleted = 0;
             Logger.WriteLine($"Sessions exceeds spaceLimit {spaceLimitGb}gbs > {folderSizeGb}gbs");
 
-            List<Video> sessions = GetAllVideos("All Games", "Oldest", true).sessions;
+            List<Video> sessions = GetAllVideos("All Games", "Oldest", false, true).sessions;
             foreach (Video session in sessions) {
                 if (folderSizeGb - (bytesAlreadyDeleted / 1024f / 1024f / 1024f) < spaceLimitGb) return;
 
@@ -51,7 +51,7 @@ namespace RePlays.Services {
         public static void DeleteSessionsOverMaxAge(int maxAgeInDays) {
             if (maxAgeInDays <= 0) return;
 
-            List<Video> sessions = GetAllVideos("All Games", "Oldest", true).sessions;
+            List<Video> sessions = GetAllVideos("All Games", "Oldest", false, true).sessions;
             foreach (Video session in sessions) {
                 if (maxAgeInDays < (DateTime.Now - session.date).TotalDays) {
                     string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir, session.game, "\\", session.fileName);

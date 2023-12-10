@@ -138,8 +138,9 @@ namespace RePlays.Classes.Utils {
 
             // Enable extra settings
             IntPtr settings = WebKitGtk.webkit_settings_new();
-            WebKitGtk.webkit_settings_set_enable_developer_extras(settings, true);
+            WebKitGtk.webkit_settings_set_user_agent(settings, "RePlays/WebView");
             WebKitGtk.webkit_settings_set_disable_web_security(settings, true);
+            WebKitGtk.webkit_settings_set_enable_developer_extras(settings, true);
             WebKitGtk.webkit_settings_set_allow_file_access_from_file_urls(settings, true);
             WebKitGtk.webkit_settings_set_allow_universal_access_from_file_urls(settings, true);
             WebKitGtk.webkit_web_view_set_settings(webView, settings);
@@ -323,6 +324,8 @@ namespace RePlays.Classes.Utils {
         [DllImport(WebKitGtkLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern void webkit_settings_set_enable_developer_extras(IntPtr settings, bool enable);
 
+        [DllImport(WebKitGtkLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void webkit_settings_set_user_agent(IntPtr settings, string userAgent);
     }
 #endif
 }

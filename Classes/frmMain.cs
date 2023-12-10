@@ -128,6 +128,7 @@ namespace RePlays {
 
         private async void CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e) {
             await webView2.CoreWebView2.CallDevToolsProtocolMethodAsync("Security.setIgnoreCertificateErrors", "{\"ignore\": true}");
+            webView2.CoreWebView2.Settings.UserAgent = "RePlays/WebView";
             webView2.CoreWebView2.Settings.IsStatusBarEnabled = false;
             webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
             webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;

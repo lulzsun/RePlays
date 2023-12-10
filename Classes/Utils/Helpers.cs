@@ -205,8 +205,8 @@ namespace RePlays.Utils {
             return JsonSerializer.Serialize(webMessage);
         }
 
-        public static string GetAllVideos(string Game = "All Games", string SortBy = "Latest") {
-            VideoList videoList = GetAllVideos(Game, SortBy, true);
+        public static string GetAllVideos(string game, string sortBy, bool isRePlaysWebView = false) {
+            VideoList videoList = GetAllVideos(game, sortBy, true, isRePlaysWebView);
             if (videoList == null) return "{}";
             WebMessage webMessage = new() {
                 message = "RetrieveVideos",
@@ -215,10 +215,10 @@ namespace RePlays.Utils {
             return JsonSerializer.Serialize(webMessage);
         }
 
-        public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
+        public static VideoList GetAllVideos(string game, string sortBy, bool isVideoList, bool isRePlaysWebView = false) {
             var videoExtensions = new[] { ".mp4", ".mkv", ".mov", ".flv" };
             List<string> allfiles = [];
-            switch (SortBy) {
+            switch (sortBy) {
                 case "Latest":
                     allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
                         .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
@@ -248,9 +248,9 @@ namespace RePlays.Utils {
             }
 
             VideoList videoList = new() {
-                game = Game,
+                game = game,
                 games = [],
-                sortBy = SortBy,
+                sortBy = sortBy,
                 sessions = [],
                 clips = []
             };
@@ -267,15 +267,20 @@ namespace RePlays.Utils {
                     date = new FileInfo(file).CreationTime,
                     fileName = Path.GetFileName(file),
                     game = Path.GetFileName(Path.GetDirectoryName(file)),
-#if DEBUG && WINDOWS
-                    folder = "http://localhost:3001/", //if not using static server: https://videos.replays.app/
-#else
-                    folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/"),
-#endif
                 };
+
+#if DEBUG && WINDOWS
+                video.folder = "http://localhost:3001/"; // if not using web server: https://videos.replays.app/
+#else
+                if (isRePlaysWebView)
+                    video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+                else
+                    video.folder = "http://localhost:3001/";
+#endif
+
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 
-                if (!Game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !Game.Equals("All Games")) continue;
+                if (!game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !game.Equals("All Games")) continue;
 
                 var thumb = GetOrCreateThumbnail(file, video.metadata.duration);
                 if (!File.Exists(thumb)) continue;

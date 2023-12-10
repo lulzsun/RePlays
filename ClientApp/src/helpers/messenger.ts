@@ -32,16 +32,17 @@ else if(window.external?.receiveMessage !== undefined) {
 }
 
 export function postMessage(message: string, data?: any) {
+  let userAgent = window.navigator?.userAgent ?? null;
   if(window.chrome?.webview?.postMessage !== undefined) {
-    window.chrome.webview.postMessage({message, data: JSON.stringify(data)});
+    window.chrome.webview.postMessage({message, data: JSON.stringify(data), userAgent});
   }
   if(window.external == undefined) {
     return;
   }
   if(window.external.sendMessage !== undefined) {
-    window.external.sendMessage(JSON.stringify({message, data: JSON.stringify(data)}));
+    window.external.sendMessage(JSON.stringify({message, data: JSON.stringify(data), userAgent}));
   }
-  console.log({message, data});
+  console.log({message, data, userAgent});
 }
 
 export function addEventListener(message: string, handler: EventListenerOrEventListenerObject) {

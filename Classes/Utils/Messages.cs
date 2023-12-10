@@ -159,6 +159,8 @@ namespace RePlays.Utils {
             if (message == null) return null;
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
+            bool isReplaysWebView = false;
+            if (webMessage.userAgent != null && webMessage.userAgent.Equals("RePlays/WebView")) isReplaysWebView = true;
             if (webMessage.message == "UpdateSettings")
                 Logger.WriteLine($"{webMessage.message} ::: {"{Object too large to log}"}");
             else
@@ -211,7 +213,9 @@ namespace RePlays.Utils {
                         RetrieveVideos data = JsonSerializer.Deserialize<RetrieveVideos>(webMessage.data);
                         videoSortSettings.game = data.game;
                         videoSortSettings.sortBy = data.sortBy;
-                        var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
+                        var t = await Task.Run(() => GetAllVideos(
+                            videoSortSettings.game, videoSortSettings.sortBy, isReplaysWebView
+                        ));
                         SendMessage(t);
                     }
                     break;
