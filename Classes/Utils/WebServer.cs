@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -22,12 +23,22 @@ namespace RePlays.Classes.Utils {
             if (isRunning) {
                 return;
             }
+#if RELEASE
+            string webRootDir = Path.Join(Functions.GetStartupPath(), "/ClientApp/build/");
+#else
+            string webRootDir = Path.Join(Functions.GetSolutionPath(), "/ClientApp/build/");
+#endif
+            if (!Path.Exists(webRootDir)) webRootDir = Functions.GetPlaysFolder();
 
-            server = WebHost.CreateDefaultBuilder(new[] { "--urls=http://localhost:3001/" })
+            server = WebHost.CreateDefaultBuilder(["--urls=http://localhost:3001/"])
                 .Configure(app => {
+                    // Serve videos
                     app.UseStaticFiles(new StaticFileOptions {
-                        ServeUnknownFileTypes = true
+                        ServeUnknownFileTypes = true,
+                        FileProvider = new PhysicalFileProvider(Functions.GetPlaysFolder()),
                     });
+
+                    app.UseFileServer();
 
                     // Enable WebSocket support
                     app.UseWebSockets();
@@ -39,15 +50,13 @@ namespace RePlays.Classes.Utils {
                             activeSockets.Add(webSocket);
                             await HandleWebSocket(context, webSocket);
                         }
-                        else {
-                            await next();
-                        }
+                        else await next();
                     });
                 })
-                .UseWebRoot(Functions.GetPlaysFolder()).Build();
+                .UseWebRoot(webRootDir).Build();
             server.RunAsync();
             isRunning = true;
-            Logger.WriteLine("Static file server started with WebRoot dir: " + Functions.GetPlaysFolder());
+            Logger.WriteLine("Local web server started with WebRoot dir: " + webRootDir);
         }
 
         public static void Stop() {
