@@ -140,15 +140,15 @@ namespace RePlays.Utils {
                 }).Wait();
             }
 #if WINDOWS
-            if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return false;
-            if (frmMain.webView2.InvokeRequired) {
+            if (WindowsInterface.webView2 == null || WindowsInterface.webView2.IsDisposed == true) return false;
+            if (WindowsInterface.webView2.InvokeRequired) {
                 // Call this same method but make sure it is on UI thread
-                return frmMain.webView2.Invoke(new Func<bool>(() => {
+                return WindowsInterface.webView2.Invoke(new Func<bool>(() => {
                     return SendMessage(message);
                 }));
             }
             else {
-                frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                WindowsInterface.webView2.CoreWebView2.PostWebMessageAsJson(message);
                 return true;
             }
 #endif
@@ -172,7 +172,7 @@ namespace RePlays.Utils {
 #if WINDOWS
                         // Serve video files/thumbnails to allow the frontend to use them
                         WebServer.Start();
-                        frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
+                        WindowsInterface.webView2.CoreWebView2.Navigate(GetRePlaysURI());
 #endif
                         if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
                             ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders(); //Another hacky fix for encoders not being loaded on first start.
@@ -349,11 +349,11 @@ namespace RePlays.Utils {
                     break;
 #if WINDOWS
                 case "ShowRecentLinks": {
-                        frmMain.Instance.PopulateRecentLinks();
+                        WindowsInterface.Instance.PopulateRecentLinks();
                     }
                     break;
                 case "HideRecentLinks": {
-                        frmMain.Instance.HideRecentLinks();
+                        WindowsInterface.Instance.HideRecentLinks();
                     }
                     break;
                 case "AddProgram": {
@@ -455,7 +455,7 @@ namespace RePlays.Utils {
                     "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
                     "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
 #if WINDOWS
-            if (frmMain.webView2 != null) {
+            if (WindowsInterface.webView2 != null) {
                 WebMessage webMessage = new();
                 webMessage.message = "SetBookmarks";
                 webMessage.data = json;

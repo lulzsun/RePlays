@@ -238,4 +238,4 @@ _Pvt_Extensions
 
 # FAKE - F# Make
 .fake/
-Classes/frmMain.resx
+Classes/WindowsInterface.resx

@@ -9,10 +9,9 @@ using System.Net;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
-using RePlays.Classes.Utils;
 
 #if !WINDOWS
-using static RePlays.Utils.Functions;
+using RePlays.Classes.Utils;
 using RePlays.Services;
 using RePlays.Recorders;
 #else
@@ -111,7 +110,7 @@ namespace RePlays {
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmMain());
+            Application.Run(new WindowsInterface());
         }
 #else
             Directory.SetCurrentDirectory(AppContext.BaseDirectory); //Necessary for libobs in debug(?)

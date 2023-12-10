@@ -69,7 +69,7 @@ namespace RePlays.Utils {
                 SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
                 SettingsService.SaveSettings();
 #if WINDOWS
-                if (frmMain.webView2 == null) {
+                if (WindowsInterface.webView2 == null) {
                     Task.Run(() => SendDisplayModalWithDelay("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info", 10000));
                 }
                 else {

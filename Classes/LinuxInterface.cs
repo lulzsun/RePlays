@@ -5,7 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using static RePlays.Utils.Functions;
 
-namespace RePlays.Classes.Utils {
+namespace RePlays {
 #if !WINDOWS
     public static class LinuxInterface {
 #if DEBUG

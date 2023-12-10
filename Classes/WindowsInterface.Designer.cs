@@ -2,7 +2,7 @@
 using RePlays.Utils;
 
 namespace RePlays {
-    partial class frmMain {
+    partial class WindowsInterface {
         /// <summary>
         ///  Required designer variable.
         /// </summary>
@@ -108,7 +108,7 @@ namespace RePlays {
             label1.Text = "Loading RePlays";
             label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // frmMain
+            // WindowsInterface
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -120,15 +120,15 @@ namespace RePlays {
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             Icon = System.Drawing.Icon.ExtractAssociatedIcon(Functions.GetResourcesFolder() + "tray_idle.ico");
             Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            Name = "frmMain";
+            Name = "WindowsInterface";
             StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             Text = "RePlays";
-            FormClosing += frmMain_FormClosing;
-            Load += frmMain_Load;
-            MouseDown += frmMain_MouseDown;
-            MouseMove += frmMain_MouseMove;
-            MouseUp += frmMain_MouseUp;
-            Resize += frmMain_Resize;
+            FormClosing += WindowsInterface_FormClosing;
+            Load += WindowsInterface_Load;
+            MouseDown += WindowsInterface_MouseDown;
+            MouseMove += WindowsInterface_MouseMove;
+            MouseUp += WindowsInterface_MouseUp;
+            Resize += WindowsInterface_Resize;
             contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
