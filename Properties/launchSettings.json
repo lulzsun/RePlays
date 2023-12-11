@@ -2,7 +2,7 @@
   "profiles": {
     "RePlays": {
       "commandName": "Project",
-      "commandLineArgs": "-debug",
+      "commandLineArgs": "--debug",
       "nativeDebugging": true
     }
   }

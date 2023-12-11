@@ -18,7 +18,7 @@ namespace RePlays.Utils {
             }
             else {
                 lock (thisLock) {
-                    string logFile = Path.Join(Functions.GetCfgFolder(), @"\logs.txt");
+                    string logFile = Path.Join(Functions.GetCfgFolder(), "/logs.txt");
                     File.AppendAllText(logFile, logLine + Environment.NewLine);
                 }
             }
@@ -26,7 +26,7 @@ namespace RePlays.Utils {
 
         public static void Purge() {
             try {
-                string logFile = Path.Join(Functions.GetCfgFolder(), @"\logs.txt");
+                string logFile = Path.Join(Functions.GetCfgFolder(), "/logs.txt");
                 var logFileContents = File.ReadAllLines(logFile);
 
                 if (logFileContents.Length > 2000) {

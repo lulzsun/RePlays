@@ -22,6 +22,16 @@ using Timer = System.Timers.Timer;
 
 namespace RePlays.Utils {
     public static class Functions {
+        static string[] programArgs;
+
+        public static void SetProgramArgs(string[] args) {
+            programArgs = args;
+        }
+
+        public static string[] GetProgramArgs() {
+            return programArgs;
+        }
+
 #if DEBUG
         public static string GetSolutionPath() {
             DirectoryInfo? directory = new(Directory.GetCurrentDirectory());
@@ -50,7 +60,9 @@ namespace RePlays.Utils {
 
         public static string GetRePlaysURI() {
 #if DEBUG 
-            //return "file://" + GetSolutionPath() + "/ClientApp/build/index.html";
+            if (GetProgramArgs().Any("--use-build-ui".Contains)) {
+                return "file://" + GetSolutionPath() + "/ClientApp/build/index.html";
+            }
             return "http://localhost:3000/#/";
 #else
             return "file://" + GetStartupPath() + "/ClientApp/build/index.html";

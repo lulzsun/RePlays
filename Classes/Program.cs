@@ -29,10 +29,10 @@ namespace RePlays {
         [STAThread]
         [Obsolete]
         static void Main(string[] args) {
+            Functions.SetProgramArgs(args);
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
-            string debugArg = "-debug";
-            if (args.Any(debugArg.Contains)) {
+            if (args.Any("--debug".Contains)) {
                 Logger.IsConsole = true;
 #if WINDOWS
                 AttachConsole(ATTACH_PARENT_PROCESS);
