@@ -130,6 +130,7 @@ namespace RePlays.Services {
             public string title;
             public string classname;
             public int pid;
+            public Rect size;
         }
         const string Xlib = "libX11";
 
@@ -218,6 +219,10 @@ namespace RePlays.Services {
 
             public int GetHeight() {
                 return Bottom - Top;
+            }
+
+            public string GetSizeStr() {
+                return GetWidth() + "x" + GetHeight();
             }
         }
 
@@ -338,10 +343,15 @@ namespace RePlays.Services {
                                 foreach (IntPtr window in windowList) {
                                     string windowName = GetWindowTitle(window);
                                     string windowClass = GetClassName(window);
+                                    var windowSize = GetWindowSize(window);
                                     int windowPid = GetWindowPid(window);
 
                                     if (windowPid <= 0) continue;
-                                    if (!prevWindows.ContainsKey(window) && !x11Windows.ContainsKey(window)) {
+
+                                    bool hasPrev = prevWindows.TryGetValue(window, out X11Window prev);
+                                    bool hasCurr = x11Windows.TryGetValue(window, out X11Window curr);
+
+                                    if (!hasPrev && !hasCurr) {
                                         DetectionService.WindowCreation(window, windowPid);
                                     }
 
@@ -349,8 +359,16 @@ namespace RePlays.Services {
                                         id = window,
                                         title = windowName,
                                         classname = windowClass,
-                                        pid = windowPid
+                                        pid = windowPid,
+                                        size = windowSize
                                     };
+
+                                    hasCurr = x11Windows.TryGetValue(window, out X11Window newCurr);
+                                    curr = newCurr;
+
+                                    if (hasPrev && hasCurr && prev.size.GetSizeStr() != curr.size.GetSizeStr()) {
+                                        DetectionService.WindowCreation(window, windowPid);
+                                    }
                                 }
 
                                 if (RecordingService.IsRecording && !RecordingService.IsStopping) {
