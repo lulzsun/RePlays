@@ -3,6 +3,7 @@ using RePlays.Utils;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using static RePlays.Utils.Functions;
 
 namespace RePlays {
@@ -11,6 +12,7 @@ namespace RePlays {
 #if DEBUG
         static readonly string icon = Path.Join(GetSolutionPath(), "/Resources/logo.svg");
 #endif
+        static IntPtr window;
         public static void Create() {
             int argc = 0;
             IntPtr argv = IntPtr.Zero;
@@ -129,7 +131,13 @@ namespace RePlays {
         }
 
         static void InitializeWebView() {
-            IntPtr window = GTK.gtk_window_new(GTK.GtkWindowType.GTK_WINDOW_TOPLEVEL);
+            if (window != IntPtr.Zero) {
+                GTK.gtk_window_present(window);
+                GTK.gtk_window_set_keep_above(window, true);
+                GTK.gtk_window_set_keep_above(window, false);
+                return;
+            }
+            window = GTK.gtk_window_new(GTK.GtkWindowType.GTK_WINDOW_TOPLEVEL);
             GTK.gtk_window_set_default_size(window, 1080, 600);
             GTK.gtk_window_set_icon_from_file(window, icon);
 
@@ -153,6 +161,15 @@ namespace RePlays {
 
             // Show all widgets in the window
             GTK.gtk_widget_show_all(window);
+
+            GTK.g_signal_connect_data(window, "destroy",
+                new GTK.ActivateCallback((widget, userData) => {
+                    window = IntPtr.Zero;
+                }),
+                Marshal.StringToHGlobalAnsi("Close"),
+                IntPtr.Zero,
+                GTK.GConnectFlags.G_CONNECT_AFTER
+            );
 
             // Bring window to the front
             GTK.gtk_window_present(window);
@@ -194,6 +211,12 @@ namespace RePlays {
 
         [DllImport(GtkLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern void gtk_window_present(IntPtr window);
+
+        [DllImport(GtkLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void gtk_window_set_keep_above(IntPtr window, bool setting);
+
+        [DllImport(GtkLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void gtk_window_present_with_time(IntPtr window, int timestamp);
 
         [DllImport(GtkLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern void gtk_window_set_default_size(IntPtr window, int width, int height);

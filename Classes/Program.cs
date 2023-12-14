@@ -118,7 +118,8 @@ namespace RePlays {
             SettingsService.SaveSettings();
             // Serve video files/thumbnails to allow the frontend to use them
             WebServer.Start();
-            Thread uiThread = new(OpenInterface);
+            Thread uiThread = new(LinuxInterface.Create);
+
             try {
                 uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
             }
@@ -128,10 +129,6 @@ namespace RePlays {
             uiThread.Start();
             RecordingService.Start(typeof(LibObsRecorder));
             ApplicationExitEvent.Wait();
-        }
-
-        private static void OpenInterface() {
-            LinuxInterface.Create();
         }
 #endif
     }
