@@ -31,6 +31,22 @@ namespace RePlays.Integrations {
                     JsonDocument doc = JsonDocument.Parse(result);
                     JsonElement root = doc.RootElement;
 
+                    if (!root.TryGetProperty("events", out JsonElement _)) {
+                        return;
+                    }
+                    else {
+                        if (!root.TryGetProperty("Events", out JsonElement events)) {
+                            return;
+                        }
+                        else {
+                            if (!events.EnumerateArray().Any(
+                                element => element.TryGetProperty("eventName", out JsonElement propertyValue) &&
+                                propertyValue.GetString() == "GameStart")) {
+                                return;
+                            }
+                        }
+                    }
+
                     string username = root.GetProperty("activePlayer").GetProperty("summonerName").GetString();
 
                     // Parsing all players
@@ -68,7 +84,9 @@ namespace RePlays.Integrations {
 
                 }
                 catch (Exception ex) {
-                    Logger.WriteLine(ex.ToString());
+                    if (ex.GetType() != typeof(HttpRequestException)) {
+                        Logger.WriteLine(ex.ToString());
+                    }
                     if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
                         timer.Stop();
                         await Shutdown();

@@ -15184,6 +15184,10 @@
 				"regkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Valve/Steam/InstallPath",
 				"longname": "Counter-Strike 2 -Steam",
 				"edition": "(Steam)"
+			},
+			{
+				"gameexe": "/steamapps/common/Counter-Strike Global Offensive/game/bin/linuxsteamrt64/cs2",
+				"edition": "linux (steam)"
 			}
 		]
 	},
