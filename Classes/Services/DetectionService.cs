@@ -152,7 +152,7 @@ namespace RePlays.Services {
             if (processId != 0 && Regex.IsMatch(executablePath, @".*(?:/wine64-preloader|/wine-preloader)$")) {
                 string cmdLineArgs = File.ReadAllText($"/proc/{processId}/cmdline").Replace('\0', ' ');
                 // Retrieve .exe path from cmdLineArgs
-                Match match = Regex.Match(cmdLineArgs, @"[A-Za-z]:\\(.+\.exe)");
+                Match match = Regex.Match(cmdLineArgs, @"[A-Za-z]:[\\\/](.+\.exe)");
                 if (match.Success)
                     executablePath = ("\\" + match.Groups[1].Value).Replace("\\", "/");
                 else
@@ -181,17 +181,18 @@ namespace RePlays.Services {
             string fileName = Path.GetFileName(executablePath);
             var detailedWindowStr = $"[{processId}][{windowHandle}][{className}][{executablePath}]";
             try {
-                if (!Path.Exists(executablePath)) return false;
-                FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
-                bool hasBadWordInDescription = fileInformation.FileDescription != null ? classBlacklist.Where(c => fileInformation.FileDescription.ToLower().Contains(c)).Any() : false;
-                bool hasBadWordInClassName = classBlacklist.Where(c => className.ToLower().Contains(c)).Any() || classBlacklist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
-                bool hasBadWordInGameTitle = classBlacklist.Where(c => gameTitle.ToLower().Contains(c)).Any() || classBlacklist.Where(c => gameTitle.ToLower().Replace(" ", "").Contains(c)).Any();
-                bool hasBadWordInFileName = classBlacklist.Where(c => fileName.ToLower().Contains(c)).Any() || classBlacklist.Where(c => fileName.ToLower().Replace(" ", "").Contains(c)).Any();
+                if (Path.Exists(executablePath)) {
+                    FileVersionInfo fileInformation = FileVersionInfo.GetVersionInfo(executablePath);
+                    bool hasBadWordInDescription = fileInformation.FileDescription != null ? classBlacklist.Where(c => fileInformation.FileDescription.ToLower().Contains(c)).Any() : false;
+                    bool hasBadWordInClassName = classBlacklist.Where(c => className.ToLower().Contains(c)).Any() || classBlacklist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
+                    bool hasBadWordInGameTitle = classBlacklist.Where(c => gameTitle.ToLower().Contains(c)).Any() || classBlacklist.Where(c => gameTitle.ToLower().Replace(" ", "").Contains(c)).Any();
+                    bool hasBadWordInFileName = classBlacklist.Where(c => fileName.ToLower().Contains(c)).Any() || classBlacklist.Where(c => fileName.ToLower().Replace(" ", "").Contains(c)).Any();
 
-                bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
-                if (isBlocked) {
-                    Logger.WriteLine($"Blocked application: {detailedWindowStr}");
-                    return false;
+                    bool isBlocked = hasBadWordInDescription || hasBadWordInClassName || hasBadWordInGameTitle || hasBadWordInFileName;
+                    if (isBlocked) {
+                        Logger.WriteLine($"Blocked application: {detailedWindowStr}");
+                        return false;
+                    }
                 }
             }
             catch (Exception e) {
@@ -245,7 +246,7 @@ namespace RePlays.Services {
                         return false;
                     }
 #endif
-                    Logger.WriteLine($"Found game window {detailedWindowStr}, but invalid resolution" +
+                    Logger.WriteLine($"Found game window {detailedWindowStr}, but invalid resolution, " +
                         (!isWhitelistedClass && !isUserWhitelisted ? $"ignoring start capture." : "not ignoring due to whitelist.")
                     );
                     if (!isWhitelistedClass && !isUserWhitelisted) return false;
