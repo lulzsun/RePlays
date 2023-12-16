@@ -293,14 +293,14 @@ namespace RePlays.Services {
                                     exePattern = exePatterns[z].Split('/').Last();
                                     if (exePatterns[z].Length > 0 && Regex.IsMatch(exeFile, "^" + exePattern + "$", RegexOptions.IgnoreCase)) {
                                         Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"^{exePattern}\"$");
-                                        return (true, HasForcedDisplayCapture(gameDetectionsJson[x]), gameDetectionsJson[x].GetProperty("title").ToString());
+                                        return (true, HasForcedDisplayCapture(gameDetections[y]), gameDetectionsJson[x].GetProperty("title").ToString());
                                     }
                                 }
                             }
                             else {
                                 if (Regex.IsMatch(exeFile, exePattern, RegexOptions.IgnoreCase)) {
                                     Logger.WriteLine($"Regex Matched: input=\"{exeFile}\", pattern=\"{exePattern}\"");
-                                    return (true, HasForcedDisplayCapture(gameDetectionsJson[x]), gameDetectionsJson[x].GetProperty("title").ToString());
+                                    return (true, HasForcedDisplayCapture(gameDetections[y]), gameDetectionsJson[x].GetProperty("title").ToString());
                                 }
                             }
                         }
