@@ -170,8 +170,11 @@ namespace RePlays.Utils {
                 case "BrowserReady": {
                         GetAudioDevices();
 #if WINDOWS
+#if DEBUG
+                        // TODO: Make WebServer optional through a setting
                         // Serve video files/thumbnails to allow the frontend to use them
                         WebServer.Start();
+#endif
                         WindowsInterface.webView2.CoreWebView2.Navigate(GetRePlaysURI());
 #endif
                         if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
