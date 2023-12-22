@@ -9,8 +9,11 @@ using System.Net;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
+
 #if !WINDOWS
-using PhotinoNET;
+using RePlays.Classes.Utils;
+using RePlays.Services;
+using RePlays.Recorders;
 #else
 using Squirrel;
 using System.Windows.Forms;
@@ -22,17 +25,14 @@ namespace RePlays {
         static extern bool AttachConsole(int dwProcessId);
         const int ATTACH_PARENT_PROCESS = -1;
         static readonly ManualResetEventSlim ApplicationExitEvent = new(false);
-#if !WINDOWS
-        public static PhotinoWindow window;
-#endif
 
         [STAThread]
         [Obsolete]
         static void Main(string[] args) {
+            Functions.SetProgramArgs(args);
             // redirect console output to parent process;
             // must be before any calls to Console.WriteLine()
-            string debugArg = "-debug";
-            if (args.Any(debugArg.Contains)) {
+            if (args.Any("--debug".Contains)) {
                 Logger.IsConsole = true;
 #if WINDOWS
                 AttachConsole(ATTACH_PARENT_PROCESS);
@@ -94,10 +94,6 @@ namespace RePlays {
                 if (process == null) process = Process.Start(startInfo);
             }
 #endif
-#if DEBUG || !WINDOWS
-            // this will serve video files/thumbnails to allow the react app to use them
-            Classes.Utils.StaticServer.Start();
-#endif
 #if WINDOWS
             // squirrel configuration
             try {
@@ -114,10 +110,16 @@ namespace RePlays {
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmMain());
+            Application.Run(new WindowsInterface());
         }
 #else
-            Thread uiThread = new(OpenInterface);
+            Directory.SetCurrentDirectory(AppContext.BaseDirectory); //Necessary for libobs in debug(?)
+            SettingsService.LoadSettings();
+            SettingsService.SaveSettings();
+            // Serve video files/thumbnails to allow the frontend to use them
+            WebServer.Start();
+            Thread uiThread = new(LinuxInterface.Create);
+
             try {
                 uiThread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
             }
@@ -125,21 +127,8 @@ namespace RePlays {
                 Logger.WriteLine("PlatformNotSupportedException: " + ex.Message);
             }
             uiThread.Start();
+            RecordingService.Start(typeof(LibObsRecorder));
             ApplicationExitEvent.Wait();
-        }
-
-        private static void OpenInterface() {
-            window = new PhotinoWindow()
-                .SetTitle("RePlays")
-                .Center()
-                .SetResizable(true)
-                .RegisterWebMessageReceivedHandler(async (object sender, string message) => {
-                    await WebMessage.RecieveMessage(message);
-                }
-            );
-            window.Load($"http://localhost:3000/") // Can be used with relative path strings or "new URI()" instance to load a website.
-                  .WaitForClose();
-            ApplicationExitEvent.Set();
         }
 #endif
     }

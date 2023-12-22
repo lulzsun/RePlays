@@ -18,9 +18,9 @@
 	<OutputType>WinExe</OutputType>
 	<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
 	<SpaRoot>ClientApp\</SpaRoot>
-  <OBSBuildPath>$(SolutionDir)obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit\</OBSBuildPath>
+	<OBSBuildPath>$(MSBuildProjectDirectory)\obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit</OBSBuildPath>
 	<ApplicationIcon>Resources\logo.ico</ApplicationIcon>
-  <RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
+	<RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
 	<DebugSymbols>true</DebugSymbols>
 	<DebugType>embedded</DebugType>
 	<PublishTrimmed>false</PublishTrimmed>
@@ -30,6 +30,8 @@
   <PropertyGroup>
     <AnalysisMode>Recommended</AnalysisMode>
 	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -70,14 +72,14 @@
     <PackageReference Include="Clowd.Squirrel" Version="2.11.1" />
     <PackageReference Include="JsonPath.Net" Version="0.6.7" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.6" />
-	<PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2151.40" />
     <PackageReference Include="NuGet.CommandLine" Version="6.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Photino.NET" Version="2.5.2" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
   
@@ -99,12 +101,12 @@
 	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
   </Target>
 
-  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)bin\Debug\net8.0-windows\obs.dll') ">
-	<Error Condition="!Exists('$(OBSBuildPath)obs.dll')" Text="Could not copy 'obs.dll' from 'OBSBuildPath'. Run `build-libobs.cmd` to build." />
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And !Exists('$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\obs.dll') ">
+	<Error Condition="!Exists('$(OBSBuildPath)\obs.dll')" Text="Could not copy 'obs.dll' from '$(OBSBuildPath)'. Run `build-libobs.cmd` to build." />
 	<ItemGroup>
-	   <LIBOBSDEBUG Include="$(OBSBuildPath)**\*.*" />
+	   <LIBOBSDEBUG Include="$(OBSBuildPath)\**\*.*" />
 	</ItemGroup>
-	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(SolutionDir)bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
+	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
@@ -144,7 +146,7 @@
 
 	<!-- Include resources in the publish output -->
 	<ItemGroup>
-		<DistFiles4 Include="$(SolutionDir)Resources\**" />
+		<DistFiles4 Include="$(MSBuildProjectDirectory)\Resources\**" />
 		<ResolvedFileToPublish Include="@(DistFiles4->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
 			<RelativePath>Resources\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -154,7 +156,7 @@
 
 	<!-- Include libobs in the publish output -->
 	<ItemGroup>
-		<DistFiles5 Include="$(OBSBuildPath)**" />
+		<DistFiles5 Include="$(OBSBuildPath)\**" />
 		<ResolvedFileToPublish Include="@(DistFiles5->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
 			<RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -164,7 +166,7 @@
 
 	<!-- Include a copy of the app's license -->
 	<ItemGroup>
-		<_license Include="$(SolutionDir)LICENSE" />
+		<_license Include="$(MSBuildProjectDirectory)\LICENSE" />
 	</ItemGroup>
 	<Copy SourceFiles="@(_license)" DestinationFolder="$(PublishDir)" />
   </Target>
@@ -175,16 +177,16 @@
 		<Output TaskParameter="Result" ItemName="ID" />
 	</XmlPeek>
 
-	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)bin\Deployment\GeneratedNugets" />
-	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(SolutionDir)bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)bin\Deployment\Releases --framework net8" />
+	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets" />
+	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8" />
   </Target>
 
   <ItemGroup>
-    <EditorConfigFiles Remove="$(SolutionDir).editorconfig" />
+    <EditorConfigFiles Remove="$(MSBuildProjectDirectory)\.editorconfig" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(SolutionDir).editorconfig" />
+    <None Include="$(MSBuildProjectDirectory)\.editorconfig" />
   </ItemGroup>
 
 </Project>

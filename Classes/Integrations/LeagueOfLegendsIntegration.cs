@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
+using Timer = System.Timers.Timer;
+
 
 namespace RePlays.Integrations {
     internal class LeagueOfLegendsIntegration : Integration {
@@ -15,7 +17,7 @@ namespace RePlays.Integrations {
 
         public static PlayerStats stats;
 
-        public override async Task Start() {
+        public override Task Start() {
             Logger.WriteLine("Starting League Of Legends integration");
             stats = new PlayerStats();
 
@@ -28,6 +30,22 @@ namespace RePlays.Integrations {
                     string result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/allgamedata");
                     JsonDocument doc = JsonDocument.Parse(result);
                     JsonElement root = doc.RootElement;
+
+                    if (!root.TryGetProperty("events", out JsonElement _)) {
+                        return;
+                    }
+                    else {
+                        if (!root.TryGetProperty("Events", out JsonElement events)) {
+                            return;
+                        }
+                        else {
+                            if (!events.EnumerateArray().Any(
+                                element => element.TryGetProperty("eventName", out JsonElement propertyValue) &&
+                                propertyValue.GetString() == "GameStart")) {
+                                return;
+                            }
+                        }
+                    }
 
                     string username = root.GetProperty("activePlayer").GetProperty("summonerName").GetString();
 
@@ -66,7 +84,9 @@ namespace RePlays.Integrations {
 
                 }
                 catch (Exception ex) {
-                    Logger.WriteLine(ex.ToString());
+                    if (ex.GetType() != typeof(HttpRequestException)) {
+                        Logger.WriteLine(ex.ToString());
+                    }
                     if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
                         timer.Stop();
                         await Shutdown();
@@ -76,13 +96,16 @@ namespace RePlays.Integrations {
             };
             timer.Start();
             Logger.WriteLine("Successfully started League Of Legends integration");
+            return Task.CompletedTask;
         }
 
-        public async override Task Shutdown() {
+        public override Task Shutdown() {
             if (timer.Enabled) {
                 Logger.WriteLine("Shutting down League Of Legends integration");
                 timer.Stop();
             }
+
+            return Task.CompletedTask;
         }
     }
 }

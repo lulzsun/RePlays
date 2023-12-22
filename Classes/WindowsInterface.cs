@@ -12,18 +12,17 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using static RePlays.Utils.Functions;
 
 namespace RePlays {
-    public partial class frmMain : Form {
+    public partial class WindowsInterface : Form {
         public static Microsoft.Web.WebView2.WinForms.WebView2 webView2;
         public ContextMenuStrip recentLinksMenu;
-        public static frmMain Instance;
+        public static WindowsInterface Instance;
         private static Socket listener;
 
-        public frmMain() {
+        public WindowsInterface() {
             Instance = this;
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
@@ -49,13 +48,12 @@ namespace RePlays {
             else {
                 RecordingService.Start(typeof(LibObsRecorder));
             }
-            GetAudioDevices();
 
             Thread socketThread = new(StartSocketServer);
             socketThread.Start();
         }
 
-        private void frmMain_Load(object sender, System.EventArgs e) {
+        private void WindowsInterface_Load(object sender, System.EventArgs e) {
             recentLinksMenu = new();
             recentLinksMenu.Items.Add("Left click to copy to clipboard. Right click to open URL.").Enabled = false;
 
@@ -129,13 +127,14 @@ namespace RePlays {
 
         private async void CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e) {
             await webView2.CoreWebView2.CallDevToolsProtocolMethodAsync("Security.setIgnoreCertificateErrors", "{\"ignore\": true}");
+            webView2.CoreWebView2.Settings.UserAgent = "RePlays/WebView";
             webView2.CoreWebView2.Settings.IsStatusBarEnabled = false;
             webView2.CoreWebView2.Settings.IsWebMessageEnabled = true;
             webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;
-#if (DEBUG)
+#if DEBUG
             webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("videos.replays.app", GetPlaysFolder(), CoreWebView2HostResourceAccessKind.Allow);
             webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/public/", CoreWebView2HostResourceAccessKind.Allow);
-#elif (RELEASE)
+#elif RELEASE
             webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", Application.StartupPath + "/ClientApp/build/", CoreWebView2HostResourceAccessKind.Allow);
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
@@ -162,7 +161,7 @@ namespace RePlays {
             }
         }
 
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e) {
+        private void WindowsInterface_FormClosing(object sender, FormClosingEventArgs e) {
             if (e.CloseReason == CloseReason.UserClosing) {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
@@ -175,7 +174,7 @@ namespace RePlays {
         }
 
         FormWindowState _PreviousWindowState;
-        private void frmMain_Resize(object sender, System.EventArgs e) {
+        private void WindowsInterface_Resize(object sender, System.EventArgs e) {
             RefreshLoader();
 
             if (this.WindowState != FormWindowState.Minimized) {
@@ -247,14 +246,14 @@ namespace RePlays {
         bool moving;
         Point offset;
         Point original;
-        private void frmMain_MouseDown(object sender, MouseEventArgs e) {
+        private void WindowsInterface_MouseDown(object sender, MouseEventArgs e) {
             moving = true;
             this.Capture = true;
             offset = MousePosition;
             original = this.Location;
         }
 
-        private void frmMain_MouseMove(object sender, MouseEventArgs e) {
+        private void WindowsInterface_MouseMove(object sender, MouseEventArgs e) {
             if (!moving)
                 return;
 
@@ -264,7 +263,7 @@ namespace RePlays {
             this.Location = new Point(x, y);
         }
 
-        private void frmMain_MouseUp(object sender, MouseEventArgs e) {
+        private void WindowsInterface_MouseUp(object sender, MouseEventArgs e) {
             moving = false;
             this.Capture = false;
         }

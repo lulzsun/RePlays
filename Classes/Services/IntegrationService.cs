@@ -6,6 +6,7 @@ namespace RePlays.Services {
         private const string LEAGUE_OF_LEGENDS = "League of Legends";
         private const string PUBG = "PLAYERUNKNOWN'S BATTLEGROUNDS";
         private const string CS2 = "Counter-Strike 2";
+        private const string CSGO = "Counter-Strike Global Offensive";
         public static Integration ActiveGameIntegration;
         public static async void Start(string gameName) {
             switch (gameName) {
@@ -15,6 +16,7 @@ namespace RePlays.Services {
                 case PUBG:
                     ActiveGameIntegration = new PubgIntegration();
                     break;
+                case CSGO:
                 case CS2:
                     ActiveGameIntegration = new CS2();
                     break;

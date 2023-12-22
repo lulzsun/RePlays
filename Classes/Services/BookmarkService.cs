@@ -21,10 +21,7 @@ namespace RePlays.Services {
                 bookmarks.Add(bookmark);
 
                 if (bookmark.type.Equals(Bookmark.BookmarkType.Manual)) {
-#if WINDOWS
-                    System.Media.SoundPlayer bookmarkSound = new(Functions.GetResourcesFolder() + "bookmark.wav");
-                    bookmarkSound.Play();
-#endif
+                    Functions.PlaySound(Functions.GetResourcesFolder() + "bookmark.wav");
                 }
             }
         }

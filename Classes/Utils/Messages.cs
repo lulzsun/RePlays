@@ -1,10 +1,14 @@
+using RePlays.Classes.Utils;
 using RePlays.Recorders;
 using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.WebSockets;
+using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
@@ -118,6 +122,7 @@ namespace RePlays.Utils {
     public class WebMessage {
         public string message { get; set; }
         public string data { get; set; }
+        public string userAgent { get; set; }
 
         public static Dictionary<string, WebMessage> modalList = new();
         public static Dictionary<string, WebMessage> toastList = new();
@@ -127,28 +132,35 @@ namespace RePlays.Utils {
         };
 
         public static bool SendMessage(string message) {
+            List<WebSocket> activeSockets = WebServer.GetActiveSockets();
+            foreach (var socket in activeSockets) {
+                var responseMessage = Encoding.UTF8.GetBytes(message);
+                Task.Run(() => {
+                    socket.SendAsync(new ArraySegment<byte>(responseMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+                }).Wait();
+            }
 #if WINDOWS
-            if (frmMain.webView2 == null || frmMain.webView2.IsDisposed == true) return false;
-            if (frmMain.webView2.InvokeRequired) {
+            if (WindowsInterface.webView2 == null || WindowsInterface.webView2.IsDisposed == true) return false;
+            if (WindowsInterface.webView2.InvokeRequired) {
                 // Call this same method but make sure it is on UI thread
-                return frmMain.webView2.Invoke(new Func<bool>(() => {
+                return WindowsInterface.webView2.Invoke(new Func<bool>(() => {
                     return SendMessage(message);
                 }));
             }
             else {
-                frmMain.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                WindowsInterface.webView2.CoreWebView2.PostWebMessageAsJson(message);
                 return true;
             }
-#else
-            Program.window?.SendWebMessage(message);
-            return true;
 #endif
+            return true;
         }
 
         public static async Task<WebMessage> RecieveMessage(string message) {
             if (message == null) return null;
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
+            bool isReplaysWebView = false;
+            if (webMessage.userAgent != null && webMessage.userAgent.Equals("RePlays/WebView")) isReplaysWebView = true;
             if (webMessage.message == "UpdateSettings")
                 Logger.WriteLine($"{webMessage.message} ::: {"{Object too large to log}"}");
             else
@@ -156,10 +168,11 @@ namespace RePlays.Utils {
 
             switch (webMessage.message) {
                 case "BrowserReady": {
+                        GetAudioDevices();
 #if WINDOWS
-                        frmMain.webView2.CoreWebView2.Navigate(GetRePlaysURI());
-#else
-                        Program.window?.Load(GetRePlaysURI());
+                        // Serve video files/thumbnails to allow the frontend to use them
+                        WebServer.Start();
+                        WindowsInterface.webView2.CoreWebView2.Navigate(GetRePlaysURI());
 #endif
                         if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
                             ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders(); //Another hacky fix for encoders not being loaded on first start.
@@ -169,8 +182,14 @@ namespace RePlays.Utils {
                     }
                 case "Initialize": {
                         // INIT USER SETTINGS
-                        ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
-                        ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
+                        if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
+                            if (Settings.captureSettings.encodersCache.Count == 0) {
+                                ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders();
+                                ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls();
+                            }
+                            ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
+                            ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
+                        }
                         SendMessage(GetUserSettings());
 
                         Logger.WriteLine($"Initializing {toastList.Count} Toasts");
@@ -198,7 +217,9 @@ namespace RePlays.Utils {
                         RetrieveVideos data = JsonSerializer.Deserialize<RetrieveVideos>(webMessage.data);
                         videoSortSettings.game = data.game;
                         videoSortSettings.sortBy = data.sortBy;
-                        var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
+                        var t = await Task.Run(() => GetAllVideos(
+                            videoSortSettings.game, videoSortSettings.sortBy, isReplaysWebView
+                        ));
                         SendMessage(t);
                     }
                     break;
@@ -237,16 +258,19 @@ namespace RePlays.Utils {
                 case "ShowFolder": {
                         var path = webMessage.data.Replace("\"", "").Replace("\\\\", "\\");
                         Logger.WriteLine(path);
+#if WINDOWS
                         Process.Start("explorer.exe", path);
+#else
+                        Process.Start("xdg-open", path);
+#endif
                     }
                     break;
                 case "OpenLink": {
-                        Process browserProcess = new Process();
+                        Process browserProcess = new();
                         browserProcess.StartInfo.UseShellExecute = true;
                         browserProcess.StartInfo.FileName = webMessage.data;
                         browserProcess.Start();
                     }
-
                     break;
                 case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
@@ -256,28 +280,40 @@ namespace RePlays.Utils {
                     break;
                 case "ShowInFolder": {
                         ShowInFolder data = JsonSerializer.Deserialize<ShowInFolder>(webMessage.data);
-                        var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
+                        var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('\\', '/');
+#if WINDOWS
                         Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
+#else
+                        Process.Start("dolphin", $"--select \"{filePath}\"");
+#endif
                     }
                     break;
                 case "ShowLicense": {
+#if WINDOWS
                         Process.Start("notepad.exe", Path.Join(GetStartupPath(), @"LICENSE"));
+#else
+                        Process.Start("xdg-open", Path.Join(GetStartupPath(), @"LICENSE"));
+#endif
                     }
                     break;
                 case "ShowLogs": {
-                        if (File.Exists(Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"))))
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"))));
-                        else if (File.Exists(Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"))))
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"))));
-                        else {
-                            Logger.WriteLine("Current running application path: " + GetStartupPath());
-                        }
+                        var logsPath = Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"));
+                        if (!File.Exists(logsPath))
+                            logsPath = Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"));
+                        if (!File.Exists(logsPath))
+                            break;
+                        if (File.Exists(logsPath))
+#if WINDOWS
+                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", logsPath));
+#else
+                            Process.Start("xdg-open", logsPath);
+#endif
                     }
                     break;
                 case "Delete": {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
-                            var realFilePath = Path.Join(GetPlaysFolder(), filePath);
+                            var realFilePath = Path.Join(GetPlaysFolder(), filePath.Replace("\\", "/"));
                             var successfulDelete = false;
                             var failedLoops = 0;
                             while (!successfulDelete) {
@@ -288,7 +324,7 @@ namespace RePlays.Utils {
                                 catch (Exception e) {
                                     if (failedLoops == 5) {
                                         DisplayModal("Failed to delete video (in use by another process?) \n " + realFilePath, "Delete Failed", "warning");
-                                        Logger.WriteLine(String.Format("Failed to delete video: {0}", e.Message));
+                                        Logger.WriteLine($"Failed to delete video: {e.Message}");
                                         break;
                                     }
                                     await Task.Delay(2000);
@@ -329,11 +365,11 @@ namespace RePlays.Utils {
                     break;
 #if WINDOWS
                 case "ShowRecentLinks": {
-                        frmMain.Instance.PopulateRecentLinks();
+                        WindowsInterface.Instance.PopulateRecentLinks();
                     }
                     break;
                 case "HideRecentLinks": {
-                        frmMain.Instance.HideRecentLinks();
+                        WindowsInterface.Instance.HideRecentLinks();
                     }
                     break;
                 case "AddProgram": {
@@ -381,7 +417,7 @@ namespace RePlays.Utils {
             return webMessage;
         }
 
-        public static void DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
+        public static async void DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
             WebMessage webMessage = new();
             webMessage.message = "DisplayModal";
             webMessage.data = "{" +
@@ -434,8 +470,8 @@ namespace RePlays.Utils {
                     "\"videoname\": \"" + videoName + "\", " +
                     "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
                     "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
-
-            if (frmMain.webView2 != null) {
+#if WINDOWS
+            if (WindowsInterface.webView2 != null) {
                 WebMessage webMessage = new();
                 webMessage.message = "SetBookmarks";
                 webMessage.data = json;
@@ -445,6 +481,7 @@ namespace RePlays.Utils {
             else {
                 BackupBookmarks(videoName, json);
             }
+#endif
         }
     }
 }

@@ -3,6 +3,8 @@ using RePlays.Utils;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
+using Timer = System.Timers.Timer;
+
 
 namespace RePlays.Services {
     public static class RecordingService {
@@ -12,6 +14,7 @@ namespace RePlays.Services {
         public static DateTime startTime;
         public static double lastVideoDuration = 0;
         private static Session currentSession = new(0, 0, "Game Unknown");
+        public static bool IsStopping { get; internal set; }
         public static bool IsRecording { get; internal set; }
         private static bool IsPreRecording { get; set; }
         private static bool IsRestarting { get; set; }
@@ -33,7 +36,6 @@ namespace RePlays.Services {
         }
 
         public static async void Start(Type type) {
-
             Logger.WriteLine("RecordingService starting...");
             DetectionService.Start();
             if (type == typeof(PlaysLTCRecorder)) {
@@ -45,7 +47,7 @@ namespace RePlays.Services {
             ActiveRecorder = new LibObsRecorder();
             Logger.WriteLine("Creating a new ActiveRecorder");
             await Task.Run(() => ActiveRecorder.Start());
-            await Task.Run(() => DetectionService.CheckAlreadyRunningPrograms());
+            await Task.Run(() => DetectionService.CheckTopLevelWindows());
         }
 
         public static void SetCurrentSession(int _Pid, nint _WindowHandle, string _GameTitle, string exeFile, bool forceDisplayCapture = false) {
@@ -80,12 +82,8 @@ namespace RePlays.Services {
                 GameInFocus = true;
 
                 if (SettingsService.Settings.captureSettings.useRecordingStartSound) {
-#if WINDOWS
-                    System.Media.SoundPlayer startRecordingSound = new(Functions.GetResourcesFolder() + "start_recording.wav");
-                    startRecordingSound.Play();
-#endif
+                    Functions.PlaySound(Functions.GetResourcesFolder() + "start_recording.wav");
                 }
-
             }
             if (!result) {
                 // recorder failed to start properly so lets restart the currentSession Pid
@@ -103,6 +101,7 @@ namespace RePlays.Services {
                 Logger.WriteLine($"Cannot stop recording, no recording in progress");
                 return;
             }
+            IsStopping = true;
 
             bool result = await ActiveRecorder.StopRecording();
 
@@ -114,11 +113,13 @@ namespace RePlays.Services {
                     currentSession.Pid = 0;
                     WebMessage.DestroyToast("Recording");
                     IsRecording = false;
+                    IsStopping = false;
                     StorageService.ManageStorage();
                 }
                 //DetectionService.LoadDetections();
             }
         }
+
         public static async void RestartRecording() {
             if (!IsRecording || IsRestarting) return;
             IsRestarting = true;

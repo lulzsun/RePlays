@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using static LibObs.Obs;
 using static RePlays.Utils.Functions;
+using Rect = RePlays.Services.WindowService.Rect;
 
 namespace RePlays.Recorders {
     public class LibObsRecorder : BaseRecorder {
@@ -25,14 +27,21 @@ namespace RePlays.Recorders {
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
 
-        private Dictionary<string, string> encoder_ids = new() {
+        private readonly Dictionary<string, string> videoEncoderIds = new() {
+#if WINDOWS
             {"Software (x264)", "obs_x264"},
             {"Hardware (NVENC)", "jim_nvenc"},
             {"Hardware (QSV)", "obs_qsv11"},
             {"Hardware (AMF)", "amd_amf_h264"}
+#else
+            {"Software (x264)", "obs_x264"},
+            {"Hardware (FFMPEG VAAPI H.264)", "ffmpeg_vaapi"},
+            {"Hardware (GSTREAMER VAAPI H.264)", "obs-va-vah264enc"},
+            {"Hardware (FFMPEG VAAPI HEVC)", "hevc_ffmpeg_vaapi"},
+#endif
         };
 
-        private Dictionary<string, string> rate_controls = new() {
+        private readonly Dictionary<string, string> rate_controls = new() {
             {"VBR", "VBR"},
             {"CBR", "CBR"},
             {"CQP", "CQP"},
@@ -41,7 +50,7 @@ namespace RePlays.Recorders {
             {"CRF", "CRF"},
         };
 
-        private Dictionary<string, List<string>> encoder_link = new() {
+        private Dictionary<string, List<string>> videoEncoderLink = new() {
             { "Hardware (NVENC)", new List<string> { "VBR", "CBR", "CQP", "Lossless" } },
             { "Software (x264)", new List<string> { "VBR", "CBR", "CRF" } },
             { "Hardware (AMF)", new List<string> { "VBR", "CBR", "ABR", "CRF" } },
@@ -67,20 +76,34 @@ namespace RePlays.Recorders {
 
         static signal_callback_t outputStopCb;
 
+        [DllImport("libX11", EntryPoint = "XOpenDisplay")]
+        public static extern IntPtr XOpenDisplay(IntPtr display);
+
         public override void Start() {
             if (Connected) return;
 
             // STARTUP
+#if !WINDOWS
+            if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "libobs.so"))) {
+                throw new Exception("error: Missing libobs.so");
+            }
+#endif
             if (obs_initialized()) {
                 throw new Exception("error: obs already initialized");
             }
 
+#if !WINDOWS
+            obs_set_nix_platform(obs_nix_platform_type.OBS_NIX_PLATFORM_X11_EGL);
+            obs_set_nix_platform_display(XOpenDisplay(IntPtr.Zero));
+            base_set_log_handler(null, IntPtr.Zero);
+#else
             // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
             // it will cause a System.ExecutionEngineException, something to do with illegal memory
+            //
+            // Warning: This also does crashes on linux at a certain point. See https://github.com/dotnet/runtime/issues/48796
             base_set_log_handler(new log_handler_t((lvl, msg, args, p) => {
                 try {
                     string formattedMsg = MarshalUtils.GetLogMessage(msg, args);
-
                     Logger.WriteLine(((LogErrorLevel)lvl).ToString() + ": " + formattedMsg);
 
                     // a very crude way to see if game_capture source has successfully hooked/capture application....
@@ -89,7 +112,7 @@ namespace RePlays.Recorders {
                         if (signalGCHookSuccess && RecordingService.IsRecording) {
                             // everytime the "Starting capture" signal occurs, there could be a possibility that the game window has resized
                             // check to see if windowSize is different from currentSize, if so, restart recording with correct output resolution
-                            Rect currentSize = GetWindowSize(windowHandle);
+                            Rect currentSize = WindowService.GetWindowSize(windowHandle);
                             if ((currentSize.GetWidth() > 1 && currentSize.GetHeight() > 1) && // fullscreen tabbing check
                                 (IsValidAspectRatio(currentSize.GetWidth(), currentSize.GetHeight())) && // if it is (assumed) valid game aspect ratio for recording
                                 (currentSize.GetWidth() != windowSize.GetWidth() || currentSize.GetHeight() != windowSize.GetHeight())) {
@@ -120,6 +143,7 @@ namespace RePlays.Recorders {
                     Logger.WriteLine(e.StackTrace);
                 }
             }), IntPtr.Zero);
+#endif
 
             Logger.WriteLine("libobs version: " + obs_get_version_string());
             if (!obs_startup("en-US", null, IntPtr.Zero)) {
@@ -127,12 +151,12 @@ namespace RePlays.Recorders {
             }
             obs_add_data_path("./data/libobs/");
             obs_add_module_path("./obs-plugins/64bit/", "./data/obs-plugins/%module%/");
-            obs_load_all_modules();
-            obs_log_loaded_modules();
 
             ResetAudio();
             ResetVideo();
 
+            obs_load_all_modules();
+            obs_log_loaded_modules();
             obs_post_load_modules();
 
             // Warning: if you try to access methods/vars/etc. that are not static within the log handler,
@@ -155,9 +179,9 @@ namespace RePlays.Recorders {
             var session = RecordingService.GetCurrentSession();
 
             // If session is empty, this is a manual record attempt. Lets try to yolo record the foregroundwindow
-            if (session.Pid == 0 && GetForegroundProcess(out int processId, out nint hwid)) {
+            if (session.Pid == 0 && WindowService.GetForegroundWindow(out int processId, out nint hwid)) {
                 if (processId != 0 || hwid != 0) {
-                    DetectionService.GetExecutablePathFromProcessId((uint)processId, out string executablePath);
+                    WindowService.GetExecutablePathFromProcessId(processId, out string executablePath);
                     DetectionService.AutoDetectGame(processId, executablePath, hwid, autoRecord: false);
                     session = RecordingService.GetCurrentSession();
                 }
@@ -173,7 +197,7 @@ namespace RePlays.Recorders {
                 await Task.Delay(retryInterval);
                 retryAttempt++;
                 // alternate on retry attempts, one or the other might get us a better handle
-                windowHandle = GetWindowHandleByProcessId(session.Pid, retryAttempt % 2 == 1);
+                windowHandle = WindowService.GetWindowHandleByProcessId(session.Pid, retryAttempt % 2 == 1);
             }
             if (retryAttempt >= maxRetryAttempts) {
                 return false;
@@ -189,17 +213,20 @@ namespace RePlays.Recorders {
             videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
 
             // Get the window class name
-            var windowClassNameId = GetWindowTitle(windowHandle) + ":" + GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
-
+#if WINDOWS
+            var windowClassNameId = WindowService.GetWindowTitle(windowHandle) + ":" + WindowService.GetClassName(windowHandle) + ":" + Path.GetFileName(session.Exe);
+#else
+            var windowClassNameId = windowHandle + "\r\n" + WindowService.GetWindowTitle(windowHandle) + "\r\n" + WindowService.GetClassName(windowHandle);
+#endif
             // get game's window size and change output to match
-            windowSize = GetWindowSize(windowHandle);
+            windowSize = WindowService.GetWindowSize(windowHandle);
             // sometimes, the inital window size might be in a middle of a transition, and gives us a weird dimension
             // this is a quick a dirty check: if there aren't more than 1120 pixels, we can assume it needs a retry
             while (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt < maxRetryAttempts) {
                 Logger.WriteLine($"Waiting to retrieve correct window size (currently {windowSize.GetWidth()}x{windowSize.GetHeight()})... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
-                windowSize = GetWindowSize(windowHandle);
+                windowSize = WindowService.GetWindowSize(windowHandle);
             }
             if (windowSize.GetWidth() + windowSize.GetHeight() < 1120 && retryAttempt >= maxRetryAttempts) {
                 Logger.WriteLine($"Possible issue in getting correct window size {windowSize.GetWidth()}x{windowSize.GetHeight()}");
@@ -211,22 +238,32 @@ namespace RePlays.Recorders {
             }
 
             Logger.WriteLine($"Preparing to create libobs output [{bnum_allocs()}]...");
-
+#if WINDOWS
+            string audioOutSourceId = "wasapi_output_capture";
+            string audioInSourceId = "wasapi_input_capture";
+            string audioEncoderId = "ffmpeg_aac";
+            string videoSourceId = "game_capture";
+#else
+            string audioOutSourceId = "pulse_output_capture";
+            string audioInSourceId = "pulse_input_capture";
+            string audioEncoderId = "ffmpeg_aac";
+            string videoSourceId = "xcomposite_input";
+#endif
             // SETUP NEW AUDIO SOURCES & ENCODERS
             // - Create sources for output and input devices
             // TODO: isolate game audio and discord app audio
             // TODO: have user adjustable audio tracks, especially if the user is trying to use more than 6 tracks (6 is the limit)
             //       as of now, if the audio sources exceed 6 tracks, then those tracks will be defaulted to track 6 (index = 5)
             int totalDevices = 0;
-            audioEncoders.TryAdd("combined", obs_audio_encoder_create("ffmpeg_aac", "combined", IntPtr.Zero, 0, IntPtr.Zero));
+            audioEncoders.TryAdd("combined", obs_audio_encoder_create(audioEncoderId, "combined", IntPtr.Zero, 0, IntPtr.Zero));
             obs_encoder_set_audio(audioEncoders["combined"], obs_get_audio());
             foreach (var (outputDevice, index) in SettingsService.Settings.captureSettings.outputDevices.WithIndex()) {
-                audioSources.TryAdd("(output) " + outputDevice.deviceId, obs_audio_source_create("wasapi_output_capture", "(output) " + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
+                audioSources.TryAdd("(output) " + outputDevice.deviceId, obs_audio_source_create(audioOutSourceId, "(output) " + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
                 obs_set_output_source((uint)(index + 1), audioSources["(output) " + outputDevice.deviceId]);
                 obs_source_set_audio_mixers(audioSources["(output) " + outputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + 1, 5)));
                 obs_source_set_volume(audioSources["(output) " + outputDevice.deviceId], outputDevice.deviceVolume / (float)100);
                 if (index + 1 < 6) {
-                    audioEncoders.TryAdd("(output) " + outputDevice.deviceId, obs_audio_encoder_create("ffmpeg_aac", "(output) " + outputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)index + 1, IntPtr.Zero));
+                    audioEncoders.TryAdd("(output) " + outputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(output) " + outputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)index + 1, IntPtr.Zero));
                     obs_encoder_set_audio(audioEncoders["(output) " + outputDevice.deviceId], obs_get_audio());
                 }
                 else
@@ -234,12 +271,12 @@ namespace RePlays.Recorders {
                 totalDevices++;
             }
             foreach (var (inputDevice, index) in SettingsService.Settings.captureSettings.inputDevices.WithIndex()) {
-                audioSources.TryAdd("(input) " + inputDevice.deviceId, obs_audio_source_create("wasapi_input_capture", "(input) " + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
+                audioSources.TryAdd("(input) " + inputDevice.deviceId, obs_audio_source_create(audioInSourceId, "(input) " + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
                 obs_set_output_source((uint)(index + totalDevices + 1), audioSources["(input) " + inputDevice.deviceId]);
                 obs_source_set_audio_mixers(audioSources["(input) " + inputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + totalDevices + 1, 5)));
                 obs_source_set_volume(audioSources["(input) " + inputDevice.deviceId], inputDevice.deviceVolume / (float)100);
                 if (index + totalDevices + 1 < 6) {
-                    audioEncoders.TryAdd("(input) " + inputDevice.deviceId, obs_audio_encoder_create("ffmpeg_aac", "(input) " + inputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
+                    audioEncoders.TryAdd("(input) " + inputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(input) " + inputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
                     obs_encoder_set_audio(audioEncoders["(input) " + inputDevice.deviceId], obs_get_audio());
                 }
                 else
@@ -263,9 +300,10 @@ namespace RePlays.Recorders {
                 // SETUP NEW VIDEO SOURCE
                 // - Create a source for the game_capture in channel 0
                 IntPtr videoSourceSettings = obs_data_create();
-                obs_data_set_string(videoSourceSettings, "capture_mode", IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
+                obs_data_set_string(videoSourceSettings, "capture_mode", WindowService.IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
+                obs_data_set_string(videoSourceSettings, "capture_window", windowClassNameId);
                 obs_data_set_string(videoSourceSettings, "window", windowClassNameId);
-                videoSources.TryAdd("gameplay", obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero));
+                videoSources.TryAdd("gameplay", obs_source_create(videoSourceId, "gameplay", videoSourceSettings, IntPtr.Zero));
                 obs_data_release(videoSourceSettings);
 
                 // SETUP VIDEO ENCODER
@@ -274,11 +312,22 @@ namespace RePlays.Recorders {
                 obs_set_output_source(0, videoSources["gameplay"]);
 
                 // attempt to wait for game_capture source to hook first
-                retryAttempt = 0;
-                Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
-                while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
-                    await Task.Delay(retryInterval);
-                    retryAttempt++;
+                if (videoSourceId == "game_capture") {
+                    retryAttempt = 0;
+                    Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
+
+                    // SETUP HOOK SIGNAL HANDLERS
+                    signal_handler_connect(obs_output_get_signal_handler(videoSources["gameplay"]), "hooked", (data, cd) => {
+                        Logger.WriteLine("hooked");
+                    }, IntPtr.Zero);
+                    signal_handler_connect(obs_output_get_signal_handler(videoSources["gameplay"]), "unhooked", (data, cd) => {
+                        Logger.WriteLine("unhooked");
+                    }, IntPtr.Zero);
+
+                    while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
+                        await Task.Delay(retryInterval);
+                        retryAttempt++;
+                    }
                 }
             }
             else {
@@ -287,7 +336,7 @@ namespace RePlays.Recorders {
             }
             signalGCHookAttempt = 0;
 
-            if (signalGCHookSuccess == false) {
+            if (videoSourceId == "game_capture" && signalGCHookSuccess == false) {
                 if (session.ForceDisplayCapture == false) {
                     Logger.WriteLine($"Unable to get graphics hook for [{windowClassNameId}] after {retryAttempt} attempts");
                 }
@@ -406,6 +455,25 @@ namespace RePlays.Recorders {
                 case "Software (x264)":
                     obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
                     break;
+                case "Hardware (FFMPEG VAAPI HEVC)":
+                case "Hardware (FFMPEG VAAPI H.264)":
+                    // TODO: properly implement vaapi device selection
+                    // obs-ffmpeg-vaapi does not(?) automatically get GPU render device,
+                    // so we have to try to do it. this current implementation only gets
+                    // the first render device; does not account for other devices;
+                    // does not account for hevc compatibility; etc.
+                    // https://github.com/obsproject/obs-studio/blob/5697b085da46d6d50e129c264b9c08ecc37914fe/plugins/obs-ffmpeg/obs-ffmpeg-vaapi.c#L805
+                    if (Directory.Exists("/dev/dri/by-path")) {
+                        string[] pciDevices = Directory.GetFiles("/dev/dri/by-path/");
+                        foreach (string fileName in pciDevices) {
+                            if (fileName.EndsWith("-render", StringComparison.OrdinalIgnoreCase)) {
+                                obs_data_set_string(videoEncoderSettings, "vaapi_device", fileName);
+                                break;
+                            }
+                        }
+                    }
+                    obs_data_set_int(videoEncoderSettings, "profile", 100);
+                    break;
             }
 
             obs_data_set_string(videoEncoderSettings, "rate_control", rate_controls[rateControl]);
@@ -425,7 +493,7 @@ namespace RePlays.Recorders {
                 Logger.WriteLine("Video Encoder muxer flags: " + mux_frag);
             }
 
-            IntPtr encoderPtr = obs_video_encoder_create(encoder_ids[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
+            IntPtr encoderPtr = obs_video_encoder_create(videoEncoderIds[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
             obs_data_release(videoEncoderSettings);
             return encoderPtr;
         }
@@ -446,7 +514,7 @@ namespace RePlays.Recorders {
             var monitor_id = "";
 #if WINDOWS
             var screen = windowHandle == 0 ? System.Windows.Forms.Screen.PrimaryScreen : System.Windows.Forms.Screen.FromHandle(windowHandle);
-            monitor_id = GetMonitorId(screen.DeviceName);
+            monitor_id = WindowService.GetMonitorId(screen.DeviceName);
 #endif
             IntPtr videoSourceSettings = obs_data_create();
             // obs_data_set_int(videoSourceSettings, "method", 0); // automatic
@@ -458,6 +526,9 @@ namespace RePlays.Recorders {
             obs_set_output_source(0, videoSources["display"]);
         }
 
+        /// <summary>
+        /// TODO: Handle encoders in Start()
+        /// </summary>
         public void GetAvailableEncoders() {
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
@@ -475,6 +546,15 @@ namespace RePlays.Recorders {
                         break;
                     case "obs_qsv11":
                         availableEncoders.Add("Hardware (QSV)");
+                        break;
+                    case "ffmpeg_vaapi":
+                        availableEncoders.Add("Hardware (FFMPEG VAAPI H.264)");
+                        break;
+                    case "hevc_ffmpeg_vaapi":
+                        availableEncoders.Add("Hardware (FFMPEG VAAPI HEVC)");
+                        break;
+                    case "obs-va-vah264enc":
+                        availableEncoders.Add("Hardware (GSTREAMER VAAPI H.264)");
                         break;
                 }
             }
@@ -495,9 +575,12 @@ namespace RePlays.Recorders {
             return exists;
         }
 
+        /// <summary>
+        /// TODO: Handle rate controls in Start()
+        /// </summary>
         public void GetAvailableRateControls() {
             Logger.WriteLine("Encoder: " + SettingsService.Settings.captureSettings.encoder);
-            if (encoder_link.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls)) {
+            if (videoEncoderLink.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls)) {
                 Logger.WriteLine("Rate Control options: " + string.Join(",", availableRateControls));
                 SettingsService.Settings.captureSettings.rateControlCache = availableRateControls;
                 if (!availableRateControls.Contains(SettingsService.Settings.captureSettings.rateControl))
@@ -610,13 +693,17 @@ namespace RePlays.Recorders {
             var screenWidth = screen.Bounds.Width;
             var screenHeight = screen.Bounds.Height;
 #else
-            var screenWidth = -1;
-            var screenHeight = -1;
+            var screenWidth = 1920;
+            var screenHeight = 1080;
 #endif
 
             obs_video_info ovi = new() {
                 adapter = 0,
+#if WINDOWS
                 graphics_module = "libobs-d3d11",
+#else
+                graphics_module = "libobs-opengl",
+#endif
                 fps_num = (uint)SettingsService.Settings.captureSettings.frameRate,
                 fps_den = 1,
                 base_width = (uint)(outputWidth > 1 ? outputWidth : screenWidth),
@@ -672,6 +759,5 @@ namespace RePlays.Recorders {
             obs_output_release(output);
             output = IntPtr.Zero;
         }
-
     }
 }

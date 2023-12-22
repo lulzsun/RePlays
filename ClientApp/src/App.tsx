@@ -41,6 +41,7 @@ function App() {
 
   function handleWebViewMessages(event: Event) {
     let eventData = (event as Webview2Event).data;
+    if (eventData?.data === undefined) return;
     let message = eventData.message;
     let data = JSON.parse(eventData.data);
 
@@ -128,14 +129,19 @@ function App() {
   
   useEffect(() => {
     if(document.querySelector('initialized') === null) {
-        if (localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{}');
-        if (localStorage.getItem("videoMetadataBookmarks") === null) localStorage.setItem("videoMetadataBookmarks", '{}');
-
-      postMessage('Initialize');
-      postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
-      
-      addEventListener('message', handleWebViewMessages);
-      document.body.appendChild(document.createElement('initialized'));
+      var timeout = 1000;
+      if (localStorage.getItem("videoMetadata") === null) localStorage.setItem("videoMetadata", '{}');
+      if (localStorage.getItem("videoMetadataBookmarks") === null) localStorage.setItem("videoMetadataBookmarks", '{}');
+      if (window.chrome?.webview?.postMessage !== undefined) {
+        timeout = 0
+      }
+      setTimeout(function() {
+        postMessage('Initialize');
+        postMessage('RetrieveVideos', {game: 'All Games', sortBy: 'Latest'});
+        
+        addEventListener('message', handleWebViewMessages);
+        document.body.appendChild(document.createElement('initialized'));
+      }, timeout);
     }
     document.addEventListener('mousedown', handleMouseDown);
     return () => {

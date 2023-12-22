@@ -14,12 +14,40 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Process = System.Diagnostics.Process;
+using Timer = System.Timers.Timer;
 
 namespace RePlays.Utils {
     public static class Functions {
+        static string[] programArgs;
+
+        public static void SetProgramArgs(string[] args) {
+            programArgs = args;
+        }
+
+        public static string[] GetProgramArgs() {
+            return programArgs;
+        }
+
+#if DEBUG
+        public static string GetSolutionPath() {
+            DirectoryInfo? directory = new(Directory.GetCurrentDirectory());
+            while (directory != null && !directory.GetFiles("*.sln").Any()) {
+                directory = directory.Parent;
+            }
+            return directory.FullName;
+        }
+#endif
+        public static void PlaySound(string fileName) {
+#if WINDOWS
+            System.Media.SoundPlayer bookmarkSound = new(fileName);
+            bookmarkSound.Play();
+#endif
+        }
+
         public static string GenerateShortID() {
             var ticks = new DateTime(2021, 1, 1).Ticks;
             var ans = DateTime.Now.Ticks - ticks;
@@ -31,10 +59,12 @@ namespace RePlays.Utils {
         }
 
         public static string GetRePlaysURI() {
-#if (DEBUG)
-            //return "file://" + Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/ClientApp/build/index.html";
+#if DEBUG 
+            if (GetProgramArgs().Any("--use-build-ui".Contains)) {
+                return "file://" + GetSolutionPath() + "/ClientApp/build/index.html";
+            }
             return "http://localhost:3000/#/";
-#elif (RELEASE)
+#else
             return "file://" + GetStartupPath() + "/ClientApp/build/index.html";
 #endif
         }
@@ -50,12 +80,14 @@ namespace RePlays.Utils {
             if (!DriveInfo.GetDrives().Where(drive => drive.Name.StartsWith(videoSaveDir[..1])).Any()) {
                 SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
                 SettingsService.SaveSettings();
-                if (frmMain.webView2 == null) {
+#if WINDOWS
+                if (WindowsInterface.webView2 == null) {
                     Task.Run(() => SendDisplayModalWithDelay("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info", 10000));
                 }
                 else {
                     WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
                 }
+#endif
                 return SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
             }
 
@@ -77,7 +109,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetCfgFolder() {
-            var cfgDir = Path.Join(GetStartupPath(), @"..\cfg\");
+            var cfgDir = Path.Join(GetStartupPath(), @"../cfg/");
             if (!Directory.Exists(cfgDir))
                 Directory.CreateDirectory(cfgDir);
             return cfgDir;
@@ -96,7 +128,7 @@ namespace RePlays.Utils {
 #if DEBUG && WINDOWS
             string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #elif DEBUG && !WINDOWS
-            string ffmpegFolder = Path.Join(Environment.CurrentDirectory, @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
+            string ffmpegFolder = Path.Join(GetSolutionPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #else
             string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #endif
@@ -140,8 +172,9 @@ namespace RePlays.Utils {
             outputCache.Clear();
             inputCache.Clear();
             outputCache.Add(new("default", "Default Device"));
-            outputCache.Add(new("communications", "Default Communication Device"));
             inputCache.Add(new("default", "Default Device", false));
+#if WINDOWS
+            outputCache.Add(new("communications", "Default Communication Device"));
             inputCache.Add(new("communications", "Default Communication Device", false));
             ManagementObjectSearcher searcher = new("Select * From Win32_PnPEntity");
             ManagementObjectCollection deviceCollection = searcher.Get();
@@ -162,6 +195,9 @@ namespace RePlays.Utils {
 
                 }
             }
+#else
+            // TODO: Get audio devices on Linux
+#endif
             if (SettingsService.Settings.captureSettings.inputDevices.Count == 0) {
                 SettingsService.Settings.captureSettings.inputDevices.Add(inputCache[0]);
             }
@@ -174,25 +210,27 @@ namespace RePlays.Utils {
         public static string GetUserSettings() {
             SettingsService.LoadSettings();
 
-            WebMessage webMessage = new();
-            webMessage.message = "UserSettings";
-            webMessage.data = JsonSerializer.Serialize(SettingsService.Settings);
+            WebMessage webMessage = new() {
+                message = "UserSettings",
+                data = JsonSerializer.Serialize(SettingsService.Settings)
+            };
             return JsonSerializer.Serialize(webMessage);
         }
 
-        public static string GetAllVideos(string Game = "All Games", string SortBy = "Latest") {
-            VideoList videoList = GetAllVideos(Game, SortBy, true);
+        public static string GetAllVideos(string game, string sortBy, bool isRePlaysWebView = false) {
+            VideoList videoList = GetAllVideos(game, sortBy, true, isRePlaysWebView);
             if (videoList == null) return "{}";
-            WebMessage webMessage = new();
-            webMessage.message = "RetrieveVideos";
-            webMessage.data = JsonSerializer.Serialize(videoList);
+            WebMessage webMessage = new() {
+                message = "RetrieveVideos",
+                data = JsonSerializer.Serialize(videoList)
+            };
             return JsonSerializer.Serialize(webMessage);
         }
 
-        public static VideoList GetAllVideos(string Game = "All Games", string SortBy = "Latest", bool isVideoList = true) {
+        public static VideoList GetAllVideos(string game, string sortBy, bool isVideoList, bool isRePlaysWebView = false) {
             var videoExtensions = new[] { ".mp4", ".mkv", ".mov", ".flv" };
-            List<string> allfiles = new();
-            switch (SortBy) {
+            List<string> allfiles = [];
+            switch (sortBy) {
                 case "Latest":
                     allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
                         .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
@@ -221,12 +259,13 @@ namespace RePlays.Utils {
                     return null;
             }
 
-            VideoList videoList = new();
-            videoList.game = Game;
-            videoList.games = new();
-            videoList.sortBy = SortBy;
-            videoList.sessions = new();
-            videoList.clips = new();
+            VideoList videoList = new() {
+                game = game,
+                games = [],
+                sortBy = sortBy,
+                sessions = [],
+                clips = []
+            };
 
             Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
 
@@ -234,23 +273,26 @@ namespace RePlays.Utils {
                 var fileWithoutExt = Path.GetFileNameWithoutExtension(file);
                 if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !File.Exists(file)) continue;
 
-                Video video = new();
-                video.size = new FileInfo(file).Length;
-                video.metadata = GetOrCreateMetadata(file);
-                video.date = new FileInfo(file).CreationTime;
-                video.fileName = Path.GetFileName(file);
-                video.game = Path.GetFileName(Path.GetDirectoryName(file));
+                Video video = new() {
+                    size = new FileInfo(file).Length,
+                    metadata = GetOrCreateMetadata(file),
+                    date = new FileInfo(file).CreationTime,
+                    fileName = Path.GetFileName(file),
+                    game = Path.GetFileName(Path.GetDirectoryName(file)),
+                };
+
 #if DEBUG && WINDOWS
-                video.folder = "http://localhost:3001/"; //if not using static server: https://videos.replays.app/
-#elif RELEASE && WINDOWS
-                video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+                video.folder = "http://localhost:3001/"; // if not using web server: https://videos.replays.app/
 #else
-                video.folder = "http://localhost:3001/";
+                if (isRePlaysWebView)
+                    video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+                else
+                    video.folder = "http://localhost:3001/";
 #endif
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 
-                if (!Game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !Game.Equals("All Games")) continue;
+                if (!game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !game.Equals("All Games")) continue;
 
                 var thumb = GetOrCreateThumbnail(file, video.metadata.duration);
                 if (!File.Exists(thumb)) continue;
@@ -307,7 +349,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string[] thumbnailExtensions = new string[] { ".png", ".webp" };
             string thumbnailPath = thumbnailExtensions.Select(ext => Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ext))
                 .FirstOrDefault(File.Exists);
@@ -329,7 +371,7 @@ namespace RePlays.Utils {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg"),
                 Arguments = string.Format("-ss {0} -y -i \"{1}\" -vframes 1 -s 1024x576 \"{2}\"",
                     (duration / 2).ToString(CultureInfo.InvariantCulture), videoPath, thumbnailPath),
             };
@@ -384,7 +426,7 @@ namespace RePlays.Utils {
         }
 
         public static void UpdateMetadataWithStats(string videoPath, PlayerStats playerStats) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs\\");
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
             if (File.Exists(metadataPath)) {
                 VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
@@ -398,7 +440,7 @@ namespace RePlays.Utils {
         }
 
         public static void DeleteVideo(string filePath) {
-            var metaPath = Path.Join(Path.GetDirectoryName(filePath), @"\.thumbs\");
+            var metaPath = Path.Join(Path.GetDirectoryName(filePath), ".thumbs/");
             string[] metaFileExtensions = new string[] { ".png", ".webp", ".metadata" };
             IEnumerable<string> metaFilesToDelete = metaFileExtensions.SelectMany(ext => Directory.GetFiles(metaPath, Path.GetFileNameWithoutExtension(filePath) + ext));
 
@@ -445,7 +487,7 @@ namespace RePlays.Utils {
         }
 
         public static string CreateClip(string videoPath, ClipSegment[] clipSegments, int index = 0) {
-            string inputFile = Path.Join(GetPlaysFolder(), videoPath);
+            string inputFile = Path.Join(GetPlaysFolder(), videoPath).Replace("\\", "/");
             string outputFile = Path.Combine(Path.GetDirectoryName(inputFile), DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-clp.mp4");
 
             var startInfo = new ProcessStartInfo {
@@ -458,7 +500,7 @@ namespace RePlays.Utils {
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) {
                 if (index == 0) File.Delete(Path.Join(GetTempFolder(), "list.txt"));
-                outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4");
+                outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4").Replace("\\", "/");
                 File.AppendAllLines(Path.Join(GetTempFolder(), "list.txt"), new[] { "file 'temp" + index + ".mp4'" });
             }
             if (clipSegments.Length > 1 && index == clipSegments.Length) {
@@ -574,30 +616,6 @@ namespace RePlays.Utils {
 #endif
         }
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-        public static bool GetForegroundProcess(out int processId, out nint hwid) {
-            IntPtr handle = GetForegroundWindow();
-
-            if (handle == IntPtr.Zero) {
-                hwid = 0;
-                processId = 0;
-                return false;
-            }
-            else hwid = handle;
-
-            if (GetWindowThreadProcessId(handle, out int id) == 0) {
-                hwid = 0;
-                processId = 0;
-                return false;
-            }
-            else processId = id;
-
-            return true;
-        }
-
         public static string GetReadableFileSize(double bytes) {
             string[] sizes = { "B", "KB", "MB", "GB", "TB" };
             int order = 0;
@@ -664,7 +682,7 @@ namespace RePlays.Utils {
 
                 for (i = 1; i <= n; i++) {
                     int cost = s[i - 1] == tJ ? 0 : 1; // cost
-                                                       // minimum of cell to the left+1, to the top+1, diagonally left and up +cost                
+                    // minimum of cell to the left+1, to the top+1, diagonally left and up +cost                
                     d[i] = Math.Min(Math.Min(d[i - 1] + 1, p[i] + 1), p[i - 1] + cost);
                 }
 

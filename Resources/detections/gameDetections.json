@@ -15173,7 +15173,6 @@
 		]
 	},
 	{
-		"force_display_capture": true,
 		"region": null,
 		"title": "Counter-Strike 2",
 		"game_detection": [
@@ -15183,7 +15182,12 @@
 				"launchflags": "-applaunch 730",
 				"regkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Valve/Steam/InstallPath",
 				"longname": "Counter-Strike 2 -Steam",
-				"edition": "(Steam)"
+				"edition": "(Steam)",
+				"force_display_capture": true
+			},
+			{
+				"gameexe": "/steamapps/common/Counter-Strike Global Offensive/game/bin/linuxsteamrt64/cs2",
+				"edition": "linux (steam)"
 			}
 		]
 	},

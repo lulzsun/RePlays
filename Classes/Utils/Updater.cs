@@ -9,6 +9,8 @@ namespace RePlays.Utils {
         public static string currentVersion = "?";
         public static string latestVersion = "Offline";
         public static bool applyingUpdate { get; internal set; }
+
+        [Obsolete]
         public static async void CheckForUpdates(bool forceUpdate = false) {
             if (applyingUpdate) {
                 Logger.WriteLine($"Currently in the middle of applying an update. Cannot check for updates.");
