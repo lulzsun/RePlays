@@ -183,6 +183,10 @@ namespace RePlays.Utils {
                 case "Initialize": {
                         // INIT USER SETTINGS
                         if (RecordingService.ActiveRecorder != null && RecordingService.ActiveRecorder.GetType() == typeof(LibObsRecorder)) {
+                            if (Settings.captureSettings.encodersCache.Count == 0) {
+                                ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableEncoders();
+                                ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls();
+                            }
                             ((LibObsRecorder)RecordingService.ActiveRecorder).HasNvidiaAudioSDK();
                             ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableFileFormats();
                         }
@@ -254,7 +258,11 @@ namespace RePlays.Utils {
                 case "ShowFolder": {
                         var path = webMessage.data.Replace("\"", "").Replace("\\\\", "\\");
                         Logger.WriteLine(path);
+#if WINDOWS
                         Process.Start("explorer.exe", path);
+#else
+                        Process.Start("xdg-open", path);
+#endif
                     }
                     break;
                 case "OpenLink": {
@@ -276,22 +284,30 @@ namespace RePlays.Utils {
 #if WINDOWS
                         Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
 #else
-                        Process.Start("dolphin", string.Format("--select \"{0}\"", filePath));
+                        Process.Start("dolphin", $"--select \"{filePath}\"");
 #endif
                     }
                     break;
                 case "ShowLicense": {
+#if WINDOWS
                         Process.Start("notepad.exe", Path.Join(GetStartupPath(), @"LICENSE"));
+#else
+                        Process.Start("xdg-open", Path.Join(GetStartupPath(), @"LICENSE"));
+#endif
                     }
                     break;
                 case "ShowLogs": {
-                        if (File.Exists(Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"))))
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"))));
-                        else if (File.Exists(Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"))))
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"))));
-                        else {
-                            Logger.WriteLine("Current running application path: " + GetStartupPath());
-                        }
+                        var logsPath = Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"));
+                        if (!File.Exists(logsPath))
+                            logsPath = Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"));
+                        if (!File.Exists(logsPath))
+                            break;
+                        if (File.Exists(logsPath))
+#if WINDOWS
+                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", logsPath));
+#else
+                            Process.Start("xdg-open", logsPath);
+#endif
                     }
                     break;
                 case "Delete": {

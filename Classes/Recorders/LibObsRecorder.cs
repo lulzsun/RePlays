@@ -526,6 +526,9 @@ namespace RePlays.Recorders {
             obs_set_output_source(0, videoSources["display"]);
         }
 
+        /// <summary>
+        /// TODO: Handle encoders in Start()
+        /// </summary>
         public void GetAvailableEncoders() {
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
@@ -572,6 +575,9 @@ namespace RePlays.Recorders {
             return exists;
         }
 
+        /// <summary>
+        /// TODO: Handle rate controls in Start()
+        /// </summary>
         public void GetAvailableRateControls() {
             Logger.WriteLine("Encoder: " + SettingsService.Settings.captureSettings.encoder);
             if (videoEncoderLink.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls)) {
