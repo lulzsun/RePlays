@@ -35,8 +35,9 @@ namespace RePlays.Recorders {
             {"Hardware (AMF)", "amd_amf_h264"}
 #else
             {"Software (x264)", "obs_x264"},
-            {"Hardware (VAAPI H.264)", "ffmpeg_vaapi"},
-            {"Hardware (VAAPI HEVC)", "hevc_ffmpeg_vaapi"},
+            {"Hardware (FFMPEG VAAPI H.264)", "ffmpeg_vaapi"},
+            {"Hardware (GSTREAMER VAAPI H.264)", "obs-va-vah264enc"},
+            {"Hardware (FFMPEG VAAPI HEVC)", "hevc_ffmpeg_vaapi"},
 #endif
         };
 
@@ -314,6 +315,15 @@ namespace RePlays.Recorders {
                 if (videoSourceId == "game_capture") {
                     retryAttempt = 0;
                     Logger.WriteLine($"Waiting for successful graphics hook for [{windowClassNameId}]...");
+
+                    // SETUP HOOK SIGNAL HANDLERS
+                    signal_handler_connect(obs_output_get_signal_handler(videoSources["gameplay"]), "hooked", (data, cd) => {
+                        Logger.WriteLine("hooked");
+                    }, IntPtr.Zero);
+                    signal_handler_connect(obs_output_get_signal_handler(videoSources["gameplay"]), "unhooked", (data, cd) => {
+                        Logger.WriteLine("unhooked");
+                    }, IntPtr.Zero);
+
                     while (signalGCHookSuccess == false && retryAttempt < Math.Min(maxRetryAttempts + signalGCHookAttempt, 30)) {
                         await Task.Delay(retryInterval);
                         retryAttempt++;
@@ -445,6 +455,25 @@ namespace RePlays.Recorders {
                 case "Software (x264)":
                     obs_data_set_string(videoEncoderSettings, "preset", "veryfast");
                     break;
+                case "Hardware (FFMPEG VAAPI HEVC)":
+                case "Hardware (FFMPEG VAAPI H.264)":
+                    // TODO: properly implement vaapi device selection
+                    // obs-ffmpeg-vaapi does not(?) automatically get GPU render device,
+                    // so we have to try to do it. this current implementation only gets
+                    // the first render device; does not account for other devices;
+                    // does not account for hevc compatibility; etc.
+                    // https://github.com/obsproject/obs-studio/blob/5697b085da46d6d50e129c264b9c08ecc37914fe/plugins/obs-ffmpeg/obs-ffmpeg-vaapi.c#L805
+                    if (Directory.Exists("/dev/dri/by-path")) {
+                        string[] pciDevices = Directory.GetFiles("/dev/dri/by-path/");
+                        foreach (string fileName in pciDevices) {
+                            if (fileName.EndsWith("-render", StringComparison.OrdinalIgnoreCase)) {
+                                obs_data_set_string(videoEncoderSettings, "vaapi_device", fileName);
+                                break;
+                            }
+                        }
+                    }
+                    obs_data_set_int(videoEncoderSettings, "profile", 100);
+                    break;
             }
 
             obs_data_set_string(videoEncoderSettings, "rate_control", rate_controls[rateControl]);
@@ -514,6 +543,15 @@ namespace RePlays.Recorders {
                         break;
                     case "obs_qsv11":
                         availableEncoders.Add("Hardware (QSV)");
+                        break;
+                    case "ffmpeg_vaapi":
+                        availableEncoders.Add("Hardware (FFMPEG VAAPI H.264)");
+                        break;
+                    case "hevc_ffmpeg_vaapi":
+                        availableEncoders.Add("Hardware (FFMPEG VAAPI HEVC)");
+                        break;
+                    case "obs-va-vah264enc":
+                        availableEncoders.Add("Hardware (GSTREAMER VAAPI H.264)");
                         break;
                 }
             }
@@ -715,6 +753,5 @@ namespace RePlays.Recorders {
             obs_output_release(output);
             output = IntPtr.Zero;
         }
-
     }
 }
