@@ -508,7 +508,7 @@ namespace RePlays.Services {
                 if (processHandle != IntPtr.Zero) {
                     StringBuilder stringBuilder = new(1024);
                     if (!GetProcessImageFileName(processHandle, stringBuilder, out int _)) {
-                        Logger.WriteLine($"Failed to get process: [{processId}] full path. Error: {ex.Message}");
+                        Logger.WriteLine($"Failed to get process: [{processId}] full path. Unable to get process image filename.");
                         executablePath = "";
                     }
                     else {
@@ -522,7 +522,9 @@ namespace RePlays.Services {
                     return;
                 }
                 else {
-                    Logger.WriteLine($"Failed to get process: [{processId}][{processName}] full path. Error: {ex.Message}");
+                    // this is probably a permissions issue (requires admin priv)
+                    if (ex.GetType() != typeof(System.ComponentModel.Win32Exception))
+                        Logger.WriteLine($"Failed to get process: [{processId}][{processName}] full path. Error: {ex.GetType()}:{ex.Message}");
                     executablePath = "";
                     return;
                 }
