@@ -623,7 +623,8 @@ namespace RePlays.Recorders {
             }
             isStopping = false;
             if (retryAttempt >= maxRetryAttempts) {
-                return false;
+                Logger.WriteLine($"Failed to get obs_output_stop signal, forcing output to stop.");
+                obs_output_force_stop(output);
             }
 
             // CLEANUP
@@ -651,7 +652,7 @@ namespace RePlays.Recorders {
             IntegrationService.Shutdown();
             BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
-            return true;
+            return signalOutputStop;
         }
 
         private static void RestartRecording() {
