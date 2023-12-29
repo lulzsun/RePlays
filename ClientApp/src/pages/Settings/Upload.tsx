@@ -6,8 +6,6 @@ import DropDownMenu from "../../components/DropDownMenu";
 import DirectoryBrowser from "../../components/DirectoryBrowser";
 import { postMessage } from "../../helpers/messenger";
 
-const { t } = useTranslation();
-
 interface Props {
   updateSettings: () => void;
   settings: UploadSettings | undefined;
@@ -15,6 +13,8 @@ interface Props {
 
 export const Upload: React.FC<Props> = ({ settings, updateSettings }) => {
   const [subPage, setSubPage] = useState("RePlays");
+
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col h-full gap-2 font-medium text-base">
