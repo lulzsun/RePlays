@@ -9,6 +9,7 @@ using System.Net;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
+using static RePlays.Utils.Functions;
 
 #if !WINDOWS
 using RePlays.Classes.Utils;
@@ -94,7 +95,14 @@ namespace RePlays {
                 if (process == null) process = Process.Start(startInfo);
             }
 #endif
+            SettingsService.LoadSettings();
+            SettingsService.SaveSettings();
+            StorageService.ManageStorage();
+            PurgeTempVideos();
+            Updater.CheckForUpdates();
 #if WINDOWS
+            ScreenSize.UpdateMaximumScreenResolution();
+            KeybindService.Start();
             // squirrel configuration
             try {
                 SquirrelAwareApp.HandleEvents(
@@ -111,7 +119,6 @@ namespace RePlays {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new WindowsInterface());
-        }
 #else
             Directory.SetCurrentDirectory(AppContext.BaseDirectory); //Necessary for libobs in debug(?)
             SettingsService.LoadSettings();
@@ -129,7 +136,7 @@ namespace RePlays {
             uiThread.Start();
             RecordingService.Start(typeof(LibObsRecorder));
             ApplicationExitEvent.Wait();
-        }
 #endif
+        }
     }
 }
