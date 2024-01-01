@@ -99,11 +99,11 @@ namespace RePlays {
             SettingsService.LoadSettings();
             SettingsService.SaveSettings();
             StorageService.ManageStorage();
+            KeybindService.Start();
             PurgeTempVideos();
             Updater.CheckForUpdates();
 #if WINDOWS
             ScreenSize.UpdateMaximumScreenResolution();
-            KeybindService.Start();
             // squirrel configuration
             try {
                 SquirrelAwareApp.HandleEvents(

@@ -226,7 +226,6 @@ namespace RePlays.Utils {
                         SendMessage(t);
                     }
                     break;
-#if WINDOWS
                 case "EnterEditKeybind": {
                         var id = webMessage.data.Replace("\"", "");
                         KeybindService.EditId = id;
@@ -237,6 +236,7 @@ namespace RePlays.Utils {
                         KeybindService.EditId = null;
                     }
                     break;
+#if WINDOWS
                 case "SelectFolder": {
                         var type = webMessage.data.Replace("\"", "");
                         switch (type) {

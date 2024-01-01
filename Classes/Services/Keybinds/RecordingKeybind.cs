@@ -1,11 +1,10 @@
-﻿#if WINDOWS
-using RePlays.Services;
+﻿using RePlays.Services;
 
 namespace RePlays.Classes.Services.Keybinds {
     public class RecordingKeybind : Keybind {
         public RecordingKeybind() {
             Id = "StartStopRecording";
-            DefaultKeys = new string[] { "LControlKey", "F9" };
+            DefaultKeys = ["LeftControl", "F9"];
             SetKeybind();
         }
         public override void Action() {
@@ -14,4 +13,3 @@ namespace RePlays.Classes.Services.Keybinds {
         }
     }
 }
-#endif
