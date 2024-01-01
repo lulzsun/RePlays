@@ -80,6 +80,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="SharpHook" Version="5.2.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
   
