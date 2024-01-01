@@ -1,5 +1,4 @@
-﻿#if WINDOWS
-using RePlays.Services;
+﻿using RePlays.Services;
 using RePlays.Utils;
 
 namespace RePlays.Classes.Services.Keybinds {
@@ -38,4 +37,3 @@ namespace RePlays.Classes.Services.Keybinds {
         }
     }
 }
-#endif
