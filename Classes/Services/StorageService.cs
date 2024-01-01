@@ -33,13 +33,13 @@ namespace RePlays.Services {
         public static void DeleteSessionsOverSpaceLimit(int spaceLimitGb, double folderSizeGb) {
             if (spaceLimitGb <= 0 || folderSizeGb < spaceLimitGb) return;
             long bytesAlreadyDeleted = 0;
-            Logger.WriteLine($"Sessions exceeds spaceLimit {spaceLimitGb}gbs > {folderSizeGb}gbs");
+            Logger.WriteLine($"Sessions exceeds spaceLimit {spaceLimitGb}gbs < {folderSizeGb}gbs");
 
             List<Video> sessions = GetAllVideos("All Games", "Oldest", false, true).sessions;
             foreach (Video session in sessions) {
                 if (folderSizeGb - (bytesAlreadyDeleted / 1024f / 1024f / 1024f) < spaceLimitGb) return;
 
-                string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir, session.game, "\\", session.fileName);
+                string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir.Replace("\\", "/"), session.game, "/", session.fileName);
                 if (File.Exists(filePath)) {
                     DeleteVideo(filePath);
                     Logger.WriteLine(filePath + " deleted due to being over spaceLimit");
@@ -54,7 +54,7 @@ namespace RePlays.Services {
             List<Video> sessions = GetAllVideos("All Games", "Oldest", false, true).sessions;
             foreach (Video session in sessions) {
                 if (maxAgeInDays < (DateTime.Now - session.date).TotalDays) {
-                    string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir, session.game, "\\", session.fileName);
+                    string filePath = Path.Join(SettingsService.Settings.storageSettings.videoSaveDir.Replace("\\", "/"), session.game, "/", session.fileName);
                     if (File.Exists(filePath)) {
                         DeleteVideo(filePath);
                         Logger.WriteLine(filePath + " deleted due to being over maxAge");

@@ -24,14 +24,7 @@ namespace RePlays {
 
         public WindowsInterface() {
             Instance = this;
-            SettingsService.LoadSettings();
-            SettingsService.SaveSettings();
-            ScreenSize.UpdateMaximumScreenResolution();
-            StorageService.ManageStorage();
-            KeybindService.Start();
             InitializeComponent();
-            PurgeTempVideos();
-            Updater.CheckForUpdates();
             notifyIcon1.Icon = this.Icon;
 
             // INIT RECORDER API
