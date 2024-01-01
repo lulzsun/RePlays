@@ -80,7 +80,7 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
       </div>
       
       {videos != null ? 
-      <div ref={setCustomScrollParent} onScroll={(e) => setScrollPos((e.target as HTMLElement).scrollTop)} className="h-full overflow-y-auto"><VirtuosoGrid
+      <div ref={setCustomScrollParent} onScroll={(e) => setScrollPos((e.target as HTMLElement).scrollTop)} className="-ml-1 pl-1 h-full overflow-y-auto"><VirtuosoGrid
         //@ts-ignore
         customScrollParent={customScrollParent}
         totalCount={videos.length}
@@ -91,7 +91,7 @@ export const VideosPage: React.FC<Props> = ({videoType, gameList, game, sortBy, 
           : 
           "gap-x-8 grid grid-flow-row grid-cols-1 pr-8" // TODO, make this look better
         )}
-        itemClassName={"overflow-hidden shadow-lg h-90 md:w-auto cursor-pointer m-auto my-4"}
+        itemClassName={"shadow-lg h-90 md:w-auto cursor-pointer m-auto my-4"}
         itemContent={index => 
           <Card key={videos[index].fileName} 
             game={videos[index].game}
