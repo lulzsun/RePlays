@@ -79,6 +79,7 @@ export const Upload: React.FC<Props> = ({ settings, updateSettings }) => {
 };
 
 const RePlays: React.FC<Props> = ({ settings, updateSettings }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7">
       <div className="font-semibold">{t("settingsUploadItem02")}</div>
@@ -129,6 +130,7 @@ const RePlays: React.FC<Props> = ({ settings, updateSettings }) => {
 };
 
 const Streamable: React.FC<Props> = ({ settings, updateSettings }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7">
       <div className="font-semibold">{t("settingsUploadItem03")}</div>
@@ -187,6 +189,7 @@ const Youtube: React.FC<Props> = ({ settings, updateSettings }) => {
 };
 
 const LocalFolder: React.FC<Props> = ({ settings, updateSettings }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2 font-medium text-base pb-7">
       <div className="font-semibold">{t("settingsUploadItem05")}</div>
@@ -220,6 +223,7 @@ const LocalFolder: React.FC<Props> = ({ settings, updateSettings }) => {
 };
 
 const Custom: React.FC<Props> = ({ settings, updateSettings }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2 font-medium text-base">
       <div className="font-semibold"> {t("settingsUploadItem04")}</div>
