@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using RePlays.Utils;
 using System.Threading;
 using System.Globalization;
 using System.IO;
@@ -9,11 +8,13 @@ using System.Net;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
+using RePlays.Utils;
+using RePlays.Services;
 using static RePlays.Utils.Functions;
+
 
 #if !WINDOWS
 using RePlays.Classes.Utils;
-using RePlays.Services;
 using RePlays.Recorders;
 #else
 using Squirrel;
@@ -92,7 +93,7 @@ namespace RePlays {
                 request.GetResponse();
             }
             catch (WebException) {
-                if (process == null) process = Process.Start(startInfo);
+                process ??= Process.Start(startInfo);
             }
 #endif
             SettingsService.LoadSettings();
