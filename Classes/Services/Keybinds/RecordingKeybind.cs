@@ -4,7 +4,7 @@ namespace RePlays.Classes.Services.Keybinds {
     public class RecordingKeybind : Keybind {
         public RecordingKeybind() {
             Id = "StartStopRecording";
-            DefaultKeys = ["LControlKey", "F9"];
+            DefaultKeys = ["LeftControl", "F9"];
             SetKeybind();
         }
         public override void Action() {
