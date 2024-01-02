@@ -76,7 +76,9 @@ namespace RePlays.Classes.Utils {
 
                 if (result.MessageType == WebSocketMessageType.Text) {
                     var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
+#if !WINDOWS
                     await WebMessage.RecieveMessage(receivedMessage);
+#endif
                 }
                 else if (result.MessageType == WebSocketMessageType.Close) {
                     await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
