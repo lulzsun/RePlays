@@ -1,13 +1,12 @@
-
-import i18n from "i18next";
-import XHR from "i18next-http-backend";
+import i18n from 'i18next';
+import XHR from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import { initReactI18next } from "react-i18next";
-import * as locales from "./locales";
+import { initReactI18next } from 'react-i18next';
+import * as locales from './locales';
 
 const options = {
   order: ['querystring', 'navigator'],
-  lookupQuerystring: 'lng'
+  lookupQuerystring: 'lng',
 };
 
 type Translation = { [key: string]: string };
@@ -34,7 +33,7 @@ i18n
       escapeValue: false,
     },
     detection: options,
-    resources: resources
+    resources: resources,
   });
 
 export default i18n;

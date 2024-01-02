@@ -4,9 +4,8 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -16,10 +15,12 @@ body {
   - links (anchors)
 
 * Prevent text selection */
-*, *::after, *::before {
- -webkit-user-select: none;
- -webkit-user-drag: none;
- -webkit-app-region: no-drag;
+*,
+*::after,
+*::before {
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-app-region: no-drag;
 }
 
 /* ===== Scrollbar CSS ===== */
@@ -57,12 +58,11 @@ select {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 .dropdown:focus-within .dropdown-menu {
-  opacity:1;
+  opacity: 1;
   transform: translate(0) scale(1);
   visibility: visible;
 }
@@ -86,7 +86,7 @@ code {
     rgba(233, 233, 233, 0.8) 100%
   );
   animation: shimmer 2.5s ease-out infinite;
-  content: "";
+  content: '';
 }
 
 .progress-ring__circle {
