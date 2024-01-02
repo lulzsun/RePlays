@@ -1,6 +1,14 @@
 # Remove the line below if you want to inherit .editorconfig settings from higher directories
 root = true
 
+# Typescript, javascript, json files
+[*.{ts,tsx,js,jsx,json}]
+
+# Indentation and spacing
+indent_size = 2
+indent_style = space
+tab_width = 2
+
 # C# files
 [*.cs]
 
