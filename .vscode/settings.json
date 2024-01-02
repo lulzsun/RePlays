@@ -1,0 +1,7 @@
+{
+  "dotnet.defaultSolution": "RePlays.sln",
+  "cmake.configureOnOpen": false,
+  "editor.codeActionsOnSave": { "source.fixAll.eslint": true },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}
