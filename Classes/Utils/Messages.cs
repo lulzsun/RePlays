@@ -262,7 +262,7 @@ namespace RePlays.Utils {
                         var path = webMessage.data.Replace("\"", "").Replace("\\\\", "\\");
                         Logger.WriteLine(path);
 #if WINDOWS
-                        Process.Start("explorer.exe", path);
+                        Process.Start("explorer.exe", path.Replace('/', '\\'));
 #else
                         Process.Start("xdg-open", path);
 #endif
@@ -285,7 +285,7 @@ namespace RePlays.Utils {
                         ShowInFolder data = JsonSerializer.Deserialize<ShowInFolder>(webMessage.data);
                         var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('\\', '/');
 #if WINDOWS
-                        Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
+                        Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath.Replace('/', '\\')));
 #else
                         Process.Start("dolphin", $"--select \"{filePath}\"");
 #endif
@@ -307,7 +307,7 @@ namespace RePlays.Utils {
                             break;
                         if (File.Exists(logsPath))
 #if WINDOWS
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", logsPath));
+                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", logsPath.Replace('/', '\\')));
 #else
                             Process.Start("xdg-open", logsPath);
 #endif
