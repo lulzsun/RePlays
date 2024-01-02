@@ -643,7 +643,11 @@ namespace RePlays.Recorders {
             }
 
             try {
+#if RELEASE && WINDOWS
+                var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
+#else
                 var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+#endif
                 WebMessage.SendMessage(t);
             }
             catch (Exception e) {

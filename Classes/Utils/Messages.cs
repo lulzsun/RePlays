@@ -164,7 +164,7 @@ namespace RePlays.Utils {
             if (webMessage.message == "UpdateSettings")
                 Logger.WriteLine($"{webMessage.message} ::: {"{Object too large to log}"}");
             else
-                Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}");
+                Logger.WriteLine($"{webMessage.message} ::: {webMessage.data}{webMessage.userAgent ?? $" : {webMessage.userAgent}"}");
 
             switch (webMessage.message) {
                 case "BrowserReady": {
@@ -335,7 +335,7 @@ namespace RePlays.Utils {
                                 }
                             }
                         }
-                        var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
+                        var t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy, isReplaysWebView));
                         SendMessage(t);
                     }
                     break;
@@ -347,7 +347,7 @@ namespace RePlays.Utils {
                         }
                         else {
                             DisplayModal("Successfully created clip", "Success", "success");
-                            t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy));
+                            t = await Task.Run(() => GetAllVideos(videoSortSettings.game, videoSortSettings.sortBy, isReplaysWebView));
                             SendMessage(t);
                         }
                     }
