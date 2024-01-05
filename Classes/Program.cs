@@ -120,6 +120,7 @@ namespace RePlays {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new WindowsInterface());
+            (Process.GetCurrentProcess()).Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
 #else
             Directory.SetCurrentDirectory(AppContext.BaseDirectory); //Necessary for libobs in debug(?)
             SettingsService.LoadSettings();
