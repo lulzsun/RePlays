@@ -167,6 +167,15 @@ namespace RePlays.Recorders {
 
             Connected = true;
             Logger.WriteLine("Successfully started LibObs!");
+
+            // post libobs initialization
+            GetAvailableEncoders();
+            GetAvailableRateControls();
+            HasNvidiaAudioSDK();
+            GetAvailableFileFormats();
+
+            // update user settings
+            WebMessage.SendMessage(GetUserSettings());
         }
 
         const int retryInterval = 2000; // 2 second
@@ -526,9 +535,6 @@ namespace RePlays.Recorders {
             obs_set_output_source(0, videoSources["display"]);
         }
 
-        /// <summary>
-        /// TODO: Handle encoders in Start()
-        /// </summary>
         public void GetAvailableEncoders() {
             UIntPtr idx = UIntPtr.Zero;
             string id = "";
@@ -560,6 +566,7 @@ namespace RePlays.Recorders {
             }
             //As x264 is a software encoder, it must be supported on all platforms
             availableEncoders.Add("Software (x264)");
+            Logger.WriteLine("Encoder options: " + string.Join(", ", availableEncoders));
             SettingsService.Settings.captureSettings.encodersCache = availableEncoders;
             if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder))
                 SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
@@ -575,13 +582,10 @@ namespace RePlays.Recorders {
             return exists;
         }
 
-        /// <summary>
-        /// TODO: Handle rate controls in Start()
-        /// </summary>
         public void GetAvailableRateControls() {
-            Logger.WriteLine("Encoder: " + SettingsService.Settings.captureSettings.encoder);
+            Logger.WriteLine("Selected encoder: " + SettingsService.Settings.captureSettings.encoder);
             if (videoEncoderLink.TryGetValue(SettingsService.Settings.captureSettings.encoder, out List<string> availableRateControls)) {
-                Logger.WriteLine("Rate Control options: " + string.Join(",", availableRateControls));
+                Logger.WriteLine("Rate Control options: " + string.Join(", ", availableRateControls));
                 SettingsService.Settings.captureSettings.rateControlCache = availableRateControls;
                 if (!availableRateControls.Contains(SettingsService.Settings.captureSettings.rateControl))
                     SettingsService.Settings.captureSettings.rateControl = availableRateControls[0];

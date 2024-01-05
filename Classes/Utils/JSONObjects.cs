@@ -104,6 +104,9 @@ namespace RePlays.Utils {
         public bool useRecordingStartSound { get { return _useRecordingStartSound; } set { _useRecordingStartSound = value; } }
 
         private List<string> _encodersCache = new();
+        /// <summary>
+        /// TODO: Remove cache in user settings, this is not good practice
+        /// </summary>
         public List<string> encodersCache { get { return _encodersCache; } set { _encodersCache = value; } }
 
         private string _encoder = string.Empty;
@@ -112,6 +115,9 @@ namespace RePlays.Utils {
         private string _rateControl = string.Empty;
 
         private List<string> _rateControlCache = new();
+        /// <summary>
+        /// TODO: Remove cache in user settings, this is not good practice
+        /// </summary>
         public List<string> rateControlCache { get { return _rateControlCache; } set { _rateControlCache = value; } }
 
         public string rateControl { get { return _rateControl; } set { _rateControl = value; } }
@@ -129,11 +135,17 @@ namespace RePlays.Utils {
         public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
 
         private List<AudioDevice> _inputDevicesCache = new();
+        /// <summary>
+        /// TODO: Remove cache in user settings, this is not good practice
+        /// </summary>
         public List<AudioDevice> inputDevicesCache { get { return _inputDevicesCache; } set { _inputDevicesCache = value; } }
 
         private List<AudioDevice> _inputDevices = new();
         public List<AudioDevice> inputDevices { get { return _inputDevices; } set { _inputDevices = value; } }
 
+        /// <summary>
+        /// TODO: Remove cache in user settings, this is not good practice
+        /// </summary>
         private List<AudioDevice> _outputDevicesCache = new();
         public List<AudioDevice> outputDevicesCache { get { return _outputDevicesCache; } set { _outputDevicesCache = value; } }
 
@@ -144,7 +156,11 @@ namespace RePlays.Utils {
         public bool hasNvidiaAudioSDK { get { return _hasNvidiaAudioSDK; } set { _hasNvidiaAudioSDK = value; } }
 
         private List<FileFormat> _fileFormatCache = new() { new FileFormat("mp4", "MPEG-4 (.mp4)") }; // Initially set to MP4, Updated inside LibOBSRecorder when loaded.
+        /// <summary>
+        /// TODO: Remove cache in user settings, this is not good practice
+        /// </summary>
         public List<FileFormat> fileFormatsCache { get { return _fileFormatCache; } set { _fileFormatCache = value; } }
+
         private FileFormat _fileFormat = new FileFormat("mp4", "MPEG-4 (.mp4)");
         public FileFormat fileFormat { get { return _fileFormat; } set { _fileFormat = value; } }
     }
