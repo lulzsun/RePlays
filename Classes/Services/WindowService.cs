@@ -537,7 +537,7 @@ namespace RePlays.Services {
             EnumWindows((hWnd, lParam) => {
                 GCHandle handle = GCHandle.FromIntPtr(lParam);
                 List<IntPtr> handles = (List<IntPtr>)handle.Target;
-                if (!string.IsNullOrEmpty(WindowService.GetWindowTitle(hWnd))) {
+                if (!string.IsNullOrEmpty(GetWindowTitle(hWnd))) {
                     handles.Add(hWnd);
                     return true;
                 }
