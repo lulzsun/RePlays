@@ -114688,6 +114688,16 @@
 	},
 	{
 		"region": null,
+		"title": "Dark and Darker",
+		"game_detection": [
+			{
+				"gameexe": "/IRONMACE/Dark and Darker/DungeonCrawler/Binaries/Win64/DungeonCrawler\\.exe",
+				"longname": "Dark and Darker",
+			}
+		]
+	},
+	{
+		"region": null,
 		"title": "Borderlands Pre-Sequel",
 		"game_detection": [
 			{
