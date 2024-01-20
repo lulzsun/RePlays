@@ -182,7 +182,7 @@ export const Card: React.FC<Props> = ({
               <span className='absolute z-40 bottom-1 left-1 text-xs font-normal flex items-center'>
                 <img
                   className='border border-black -mr-4 z-40 rounded-full'
-                  src={`https://ddragon.leagueoflegends.com/cdn/13.13.1/img/champion/${champion}.png`}
+                  src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champion}.png`}
                   style={{ width: '20px' }}
                   alt={champion}
                 />

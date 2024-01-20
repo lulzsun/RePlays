@@ -31,16 +31,16 @@ namespace RePlays.Integrations {
                     JsonDocument doc = JsonDocument.Parse(result);
                     JsonElement root = doc.RootElement;
 
-                    if (!root.TryGetProperty("events", out JsonElement _)) {
+                    if (!root.TryGetProperty("events", out JsonElement eventList)) {
                         return;
                     }
                     else {
-                        if (!root.TryGetProperty("Events", out JsonElement events)) {
+                        if (!eventList.TryGetProperty("Events", out JsonElement events)) {
                             return;
                         }
                         else {
                             if (!events.EnumerateArray().Any(
-                                element => element.TryGetProperty("eventName", out JsonElement propertyValue) &&
+                                element => element.TryGetProperty("EventName", out JsonElement propertyValue) &&
                                 propertyValue.GetString() == "GameStart")) {
                                 return;
                             }
@@ -76,7 +76,7 @@ namespace RePlays.Integrations {
                     stats.Kills = currentKills;
                     stats.Deaths = currentDeaths;
                     stats.Assists = currentAssists;
-                    stats.Champion = currentPlayer.GetProperty("rawChampionName").GetString().Replace("game_character_displayname_", "");
+                    stats.Champion = currentPlayer.GetProperty("rawChampionName").GetString().Replace("game_character_displayname_", "").Replace("FiddleSticks", "Fiddlesticks");
                     stats.Win = root.GetProperty("events").GetProperty("Events")
                         .EnumerateArray()
                         .Where(eventElement => eventElement.GetProperty("EventName").GetString() == "GameEnd")
