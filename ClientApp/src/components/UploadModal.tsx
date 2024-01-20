@@ -8,6 +8,7 @@ interface Props {
   video: string;
   game: string;
   thumb?: string;
+  makePublic: boolean;
 }
 
 export const UploadModal: React.FC<Props> = ({ video, game, thumb }) => {
@@ -16,6 +17,7 @@ export const UploadModal: React.FC<Props> = ({ video, game, thumb }) => {
   const modalCtx = useContext(ModalContext);
 
   const [destination, setDestination] = useState('RePlays');
+  const [makePublic, setMakePublic] = useState(true);
   const [title, setTitle] = useState(video);
 
   useEffect(() => {
@@ -25,9 +27,10 @@ export const UploadModal: React.FC<Props> = ({ video, game, thumb }) => {
         title,
         file: `${game}\\${video}`,
         game,
+        makePublic,
       });
     });
-  }, [destination, title, game, video]);
+  }, [destination, title, game, video, makePublic]);
 
   return (
     <div className='flex flex-row gap-6'>
@@ -71,6 +74,17 @@ export const UploadModal: React.FC<Props> = ({ video, game, thumb }) => {
               <option value='LocalFolder'>{t('componentUploadModalItem05')}</option>
               <option value='Custom'>{t('componentUploadModalItem06')}</option>
             </select>
+            {destination === "RePlays" && (
+              <label className='inline-flex items-center pt-2'>
+                <input
+                  type='checkbox'
+                  className='form-checkbox h-4 w-4 text-gray-600'
+                  defaultChecked={makePublic}
+                  onChange={(e) => setMakePublic(e.target.checked)}
+                />
+                <span className='ml-2 text-gray-700 dark:text-gray-400'>{t("componentUploadModalItem07")}</span>
+              </label>
+            )}
           </div>
         </div>
       </div>

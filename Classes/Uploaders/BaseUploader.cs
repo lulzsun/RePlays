@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RePlays.Uploaders {
     public abstract class BaseUploader {
-        public abstract Task<string> Upload(string id, string title, string file, string game);
+        public abstract Task<string> Upload(string id, string title, string file, string game, bool makePublic = true);
 
         internal class ProgressableStreamContent : HttpContent {
             /// <summary>

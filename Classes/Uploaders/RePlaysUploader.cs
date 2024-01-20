@@ -24,7 +24,7 @@ namespace RePlays.Uploaders {
             public string content { get; set; }
         }
 
-        public override async Task<string> Upload(string id, string title, string file, string game) {
+        public override async Task<string> Upload(string id, string title, string file, string game, bool makePublic) {
             try {
                 using (var httpClient = new HttpClient()) {
                     httpClient.Timeout = Timeout.InfiniteTimeSpan; // sometimes, uploading can take long
@@ -50,6 +50,7 @@ namespace RePlays.Uploaders {
                     using (var formDataContent = new MultipartFormDataContent()) {
                         var titleContent = new StringContent(title);
                         var gameContent = new StringContent(game);
+                        var makePublicContent = new StringContent(makePublic.ToString());
                         var fileContent = new ProgressableStreamContent(new StreamContent(File.OpenRead(file)), 4096,
                             (sent, total) => {
                                 WebMessage.DisplayToast(id, title, "Upload", "none", (long)((float)sent / total * 100), 100);
@@ -58,6 +59,8 @@ namespace RePlays.Uploaders {
                         formDataContent.Add(fileContent, "uploaded", "video.mp4");
                         formDataContent.Add(titleContent, "title");
                         formDataContent.Add(gameContent, "game");
+                        formDataContent.Add(makePublicContent, "public");
+                        Logger.WriteLine(formDataContent.ToString());
                         var response = await httpClient.PostAsync("https://upload.replays.app/Upload", formDataContent);
                         var content = response.Content.ReadAsStringAsync().Result;
                         Logger.WriteLine(response.StatusCode.ToString() + " " + content);

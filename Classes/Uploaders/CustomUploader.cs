@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace RePlays.Uploaders {
     public class CustomUploader : BaseUploader {
-        public override async Task<string> Upload(string id, string title, string file, string game) {
+        public override async Task<string> Upload(string id, string title, string file, string game, bool makePublic = true) {
             using (var httpClient = new HttpClient()) {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan; // sometimes, uploading can take long
                 var customSettings = SettingsService.Settings.uploadSettings.customUploaderSettings;
