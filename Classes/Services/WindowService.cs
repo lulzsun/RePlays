@@ -342,6 +342,9 @@ namespace RePlays.Services {
                                 XFree(prop);
                                 foreach (IntPtr window in windowList) {
                                     string windowName = GetWindowTitle(window);
+
+                                    if (string.IsNullOrEmpty(windowName)) continue;
+
                                     string windowClass = GetClassName(window);
                                     var windowSize = GetWindowSize(window);
                                     int windowPid = GetWindowPid(window);
