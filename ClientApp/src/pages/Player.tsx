@@ -65,6 +65,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
     function handleOnMouseDown(e: MouseEvent) {
       let element = e.target as HTMLDivElement;
+      element = findBookmarkAncestorOrSelf(element);
 
       // seeker handling
       if (e.button === 0) {
@@ -174,6 +175,24 @@ export const Player: React.FC<Props> = ({ videos }) => {
       }
     }
 
+    // Enables clicking on the bookmark icon.
+    function findBookmarkAncestorOrSelf(element: HTMLDivElement): HTMLDivElement {
+      if (element.hasAttribute('data-index')) {
+        return element;
+      }
+
+      let parentElement: HTMLElement | null = element.parentElement;
+      while (parentElement) {
+        if (parentElement.hasAttribute('data-index')) {
+          return parentElement as HTMLDivElement;
+        }
+        parentElement = parentElement.parentElement;
+      }
+
+      // If no parent with data-index was found, return the original element
+      return element;
+    }
+
     function handleOnMouseUp(e: MouseEvent) {
       seekDragging = false;
       clipResizeDir = '';
@@ -246,7 +265,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
     modalCtx?.setData({
       title: 'Upload',
-      context: <UploadModal video={video} game={game} thumb={thumb} />,
+      context: <UploadModal video={video} game={game} thumb={thumb} makePublic={true} />,
       cancel: true,
     });
     modalCtx?.setOpen(true);
@@ -424,27 +443,6 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
   return (
     <div className='h-full flex flex-col'>
-      {(!process.env.NODE_ENV || process.env.NODE_ENV === 'development') &&
-        folder?.includes('videos.replays.app') && (
-          <div className='flex flex-col gap-2 font-medium text-base pb-2'>
-            <span className='font-normal text-sm'>
-              DEV ONLY NOTE: Player has issues that only occur when debugging, it works perfectly
-              fine in production
-            </span>
-            <span className='font-normal text-sm'>
-              see this issue for more details:
-              <a
-                className='cursor-pointer underline pl-2'
-                onClick={(e) => {
-                  postMessage('ShowFolder', 'https://github.com/lulzsun/RePlays/issues/11');
-                }}
-              >
-                https://github.com/lulzsun/RePlays/issues/11
-              </a>
-            </span>
-          </div>
-        )}
-
       <div
         className='relative flex w-full h-full bg-black justify-center cursor-pointer'
         onClick={() => {
