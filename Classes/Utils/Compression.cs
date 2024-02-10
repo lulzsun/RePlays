@@ -80,7 +80,12 @@ namespace RePlays.Utils {
                 return;
             }
 
+#if RELEASE && WINDOWS
+            var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
+#else
             var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+#endif
+
             Logger.WriteLine(t);
             WebMessage.SendMessage(t);
 
