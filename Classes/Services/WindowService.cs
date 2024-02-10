@@ -95,7 +95,7 @@ namespace RePlays.Services {
         public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
 
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        public static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] ref MONITORINFOEX info);
+        public static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] MONITORINFOEX info);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
         public class MONITORINFOEX {
@@ -246,7 +246,7 @@ namespace RePlays.Services {
 #if WINDOWS
             MONITORINFOEX monitorInfo = new();
             monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
-            GetMonitorInfo(MonitorFromWindow(windowHandle, 1), ref monitorInfo);
+            GetMonitorInfo(MonitorFromWindow(windowHandle, 1), monitorInfo);
 
             if (windowHandle != GetDesktopWindow() && windowHandle != GetShellWindow()) {
                 Rect windowRect = new();
@@ -576,7 +576,7 @@ namespace RePlays.Services {
                 MONITORINFOEX monitorInfo = new();
                 monitorInfo.cbSize = Marshal.SizeOf(monitorInfo);
                 try {
-                    if (GetMonitorInfo(hMonitor, ref monitorInfo)) {
+                    if (GetMonitorInfo(hMonitor, monitorInfo)) {
                         DisplayDevice d = new();
                         d.cb = Marshal.SizeOf(d);
                         string lpDevice = string.Join("", monitorInfo.szDevice).TrimEnd('\0');
