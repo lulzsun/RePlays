@@ -663,6 +663,11 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
       <div className="flex flex-col gap-4">
         {settings?.outputDevices &&
           settings.outputDevices.map((item, i) => {
+
+            const isRemovable = !(
+              settings.outputDevices.length === 1 && item.deviceId === "default"
+            );
+
             return (
               <AudioDevice
                 key={item.deviceId}
@@ -675,6 +680,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 hasNvidiaAudioSDK={
                   settings === undefined ? false : settings!.hasNvidiaAudioSDK
                 }
+                isRemovable={isRemovable}
                 onChange={(e) => {
                   let value = parseInt((e.target as HTMLInputElement).value);
                   settings!.outputDevices[i].deviceVolume = value;
@@ -702,6 +708,11 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
         {settings?.inputDevices &&
           settings.inputDevices.map((item, i) => {
             item.isInput = true;
+
+            const isRemovable = !(
+              settings.inputDevices.length === 1 && item.deviceId === "default"
+            );
+
             return (
               <AudioDevice
                 key={item.deviceId}
@@ -714,6 +725,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 hasNvidiaAudioSDK={
                   settings === undefined ? false : settings!.hasNvidiaAudioSDK
                 }
+                isRemovable={isRemovable}
                 onChange={(e) => {
                   let value = parseInt((e.target as HTMLInputElement).value);
                   settings!.inputDevices[i].deviceVolume = value;

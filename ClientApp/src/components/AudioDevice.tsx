@@ -8,6 +8,7 @@ interface Props {
   onMouseUpCapture: React.MouseEventHandler<HTMLInputElement>;
   onRemove: React.MouseEventHandler<HTMLDivElement>;
   defaultValue: number;
+  isRemovable: boolean;
   item: AudioDevice;
   hasNvidiaAudioSDK: boolean;
 }
@@ -18,6 +19,7 @@ export const AudioDevice: React.FC<Props> = ({
   onMouseUpCapture,
   onRemove,
   defaultValue,
+  isRemovable,
   item,
   hasNvidiaAudioSDK,
 }) => {
@@ -30,12 +32,14 @@ export const AudioDevice: React.FC<Props> = ({
       <div className='flex flex-row gap-2'>
         <span className='whitespace-nowrap'>{item.deviceLabel}</span>
         <div className='w-full' />
-        <div
-          className={'group-hover:opacity-100 opacity-0 cursor-pointer hover:text-red-500'}
-          onClick={onRemove}
-        >
-          {t('componentsAudioDeviceItem01')}
-        </div>
+        {isRemovable && (
+          <div
+            className={'group-hover:opacity-100 opacity-0 cursor-pointer hover:text-red-500'}
+            onClick={onRemove}
+          >
+            {t('componentsAudioDeviceItem01')}
+          </div>
+        )}
       </div>
       <div className='flex flex-row gap-2'>
         <svg
