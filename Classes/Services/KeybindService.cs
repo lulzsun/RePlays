@@ -32,7 +32,7 @@ namespace RePlays.Services {
             pressedKeys.Add(keyCode);
             if (EditId == null) {
                 foreach (Keybind h in keybinds) {
-                    if (string.Join(",", pressedKeys.OrderBy(s => s.ToString())) == string.Join(",", h.Keys.OrderBy(s => s.ToString())) &&
+                    if (pressedKeys.IsSupersetOf(h.Keys) &&
                         !pressedKeys.SetEquals(cachePressedKeys) && !SettingsService.Settings.keybindSettings[h.Id].disabled) {
                         h.Action();
                         Logger.WriteLine($"Key: [{string.Join(",", h.Keys)}], Action: [{h.Id}]");
