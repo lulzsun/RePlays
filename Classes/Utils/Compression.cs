@@ -66,13 +66,13 @@ namespace RePlays.Utils {
             if (compressedFileSize > originalFileSize || compressedFileSize == 0) {
                 if (compressedFileSize == 0) WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
                 if (compressedFileSize > originalFileSize) WebMessage.DisplayModal("The compressed file turned out to be larger than the original file. We will keep the original file.", "Compression size", "warning");
-                System.IO.File.Delete(filePathCompressed);
+                File.Delete(filePathCompressed);
                 return;
             }
 
             try {
-                System.IO.File.Delete(filePathOriginal);
-                System.IO.File.Move(filePathCompressed, filePathOriginal);
+                File.Delete(filePathOriginal);
+                File.Move(filePathCompressed, filePathOriginal);
             }
             catch (Exception ex) {
                 Logger.WriteLine($"Error: {ex.Message}");
@@ -80,7 +80,12 @@ namespace RePlays.Utils {
                 return;
             }
 
+#if RELEASE && WINDOWS
+            var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
+#else
             var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+#endif
+
             Logger.WriteLine(t);
             WebMessage.SendMessage(t);
 
