@@ -8,7 +8,7 @@ interface Props {
 
 export const Bookmark = forwardRef<HTMLDivElement, Props>(
   ({ id, time = 0, type = BookmarkType.Manual }, ref) => {
-    let className = 'grid grid-flow-col absolute rounded-lg h-full bg-yellow-400';
+    let className = 'grid grid-flow-col absolute rounded-lg h-full bg-yellow-400 bookmark';
     return (
       <div
         ref={ref}

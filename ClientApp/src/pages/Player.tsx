@@ -177,20 +177,8 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
     // Enables clicking on the bookmark icon.
     function findBookmarkAncestorOrSelf(element: HTMLDivElement): HTMLDivElement {
-      if (element.hasAttribute('data-index')) {
-        return element;
-      }
-
-      let parentElement: HTMLElement | null = element.parentElement;
-      while (parentElement) {
-        if (parentElement.hasAttribute('data-index')) {
-          return parentElement as HTMLDivElement;
-        }
-        parentElement = parentElement.parentElement;
-      }
-
-      // If no parent with data-index was found, return the original element
-      return element;
+      const bookmarkElement = element.closest('.bookmark');
+      return bookmarkElement as HTMLDivElement || element;
     }
 
     function handleOnMouseUp(e: MouseEvent) {
