@@ -38,6 +38,9 @@ namespace RePlays.Utils {
             while (directory != null && !directory.GetFiles("*.sln").Any()) {
                 directory = directory.Parent;
             }
+            if (directory == null) {
+                return Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName;
+            }
             return directory.FullName;
         }
 #endif
