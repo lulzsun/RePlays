@@ -23,8 +23,9 @@
 	<RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
 	<DebugSymbols>true</DebugSymbols>
 	<DebugType>embedded</DebugType>
-	<PublishTrimmed>false</PublishTrimmed>
-	<TrimMode>Link</TrimMode>
+	<PublishTrimmed>true</PublishTrimmed>
+	<TrimMode>full</TrimMode>
+	<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 	
   <PropertyGroup>

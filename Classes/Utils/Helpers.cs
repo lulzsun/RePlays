@@ -38,10 +38,15 @@ namespace RePlays.Utils {
             while (directory != null && !directory.GetFiles("*.sln").Any()) {
                 directory = directory.Parent;
             }
-            if (directory == null) {
+            if (directory != null) {
+                return directory.FullName;
+            }
+            try {
                 return Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName;
             }
-            return directory.FullName;
+            catch (NullReferenceException) {
+                return Directory.GetCurrentDirectory();
+            }
         }
 #endif
         public static void PlaySound(string fileName) {
