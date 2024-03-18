@@ -1,6 +1,5 @@
 #pragma warning disable CA1806
 using RePlays.Utils;
-using RePlays.Services;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -19,8 +18,7 @@ namespace RePlays {
             IntPtr argv = IntPtr.Zero;
             GTK.gtk_init(ref argc, ref argv);
 
-            if (!SettingsService.Settings.generalSettings.startMinimized)
-                InitializeWebView();
+            InitializeWebView();
 
             // Create a new GTK menu
             IntPtr menu = GTK.gtk_menu_new();
