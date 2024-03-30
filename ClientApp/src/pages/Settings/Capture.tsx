@@ -44,7 +44,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
       }
 
       ddmItems.push({
-        group: "Input",
+        group: t('settingsCaptureItem26'), // Input
         name: device.deviceLabel,
         onClick: () => {
           if (settings.inputDevices.find((d) => d.deviceId === device.deviceId))
@@ -79,7 +79,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
       }
 
       ddmItems.push({
-        group: "Output",
+        group: t('settingsCaptureItem25'), // Output
         id: device.deviceId,
         name: device.deviceLabel,
         onClick: () => {
