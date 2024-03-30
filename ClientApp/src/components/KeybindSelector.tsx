@@ -57,13 +57,11 @@ export const KeybindSelector: React.FC<Props> = ({ settings, updateSettings, id,
             type='checkbox'
             className='h-4 w-4'
             checked={!keybind?.disabled}
-            onChange={
+            onChange={(e) => {
               //@ts-ignore lulzsun: hacky
-              (e) => {
-                settings[id].disabled = !e.target.checked;
-                updateSettings();
-              }
-            }
+              settings[id].disabled = !e.target.checked;
+              updateSettings();
+            }}
           />
         </div>
       </div>

@@ -74,7 +74,7 @@ export const UploadModal: React.FC<Props> = ({ video, game, thumb }) => {
               <option value='LocalFolder'>{t('componentUploadModalItem05')}</option>
               <option value='Custom'>{t('componentUploadModalItem06')}</option>
             </select>
-            {destination === "RePlays" && (
+            {destination === 'RePlays' && (
               <label className='inline-flex items-center pt-2'>
                 <input
                   type='checkbox'
@@ -82,7 +82,9 @@ export const UploadModal: React.FC<Props> = ({ video, game, thumb }) => {
                   defaultChecked={makePublic}
                   onChange={(e) => setMakePublic(e.target.checked)}
                 />
-                <span className='ml-2 text-gray-700 dark:text-gray-400'>{t("componentUploadModalItem07")}</span>
+                <span className='ml-2 text-gray-700 dark:text-gray-400'>
+                  {t('componentUploadModalItem07')}
+                </span>
               </label>
             )}
           </div>

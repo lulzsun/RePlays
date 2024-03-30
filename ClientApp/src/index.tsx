@@ -1,10 +1,10 @@
 // import React from 'react';
 // import ReactDOM from 'react-dom';
-import { createRoot } from "react-dom/client";
-import "./internationalization/i18n";
+import { createRoot } from 'react-dom/client';
+import './internationalization/i18n';
 
-import "./index.css";
-import App from "./App";
+import './index.css';
+import App from './App';
 
 // https://github.com/Microsoft/TypeScript/issues/14975#issuecomment-290995090
 // TODO: don't use enums, change this to a type (see ModalIcon for example)
@@ -19,19 +19,13 @@ enum BookmarkType {
 (window as { BookmarkType?: typeof BookmarkType }).BookmarkType = BookmarkType;
 
 declare global {
-  type ModalIcon = "none" | "info" | "warning" | "question" | "success";
+  type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success';
   interface Window {
     chrome: {
       webview: {
         postMessage: (message: any) => void;
-        addEventListener: (
-          message: string,
-          handler: EventListenerOrEventListenerObject
-        ) => void;
-        removeEventListener: (
-          message: string,
-          handler: EventListenerOrEventListenerObject
-        ) => void;
+        addEventListener: (message: string, handler: EventListenerOrEventListenerObject) => void;
+        removeEventListener: (message: string, handler: EventListenerOrEventListenerObject) => void;
       };
     };
   }
@@ -77,10 +71,10 @@ declare global {
     setConfirm: (confirm: () => any) => any;
   }
   interface ModalData {
-    id?: string | "none";
-    title?: string | "Title";
+    id?: string | 'none';
+    title?: string | 'Title';
     context?: string | any;
-    icon?: ModalIcon | "none";
+    icon?: ModalIcon | 'none';
     progress?: number | 0;
     progressMax?: number | 0;
     cancel?: boolean | false;
@@ -211,6 +205,6 @@ declare global {
 //   document.getElementById('root')
 // );
 
-const rootElement = document.getElementById("root")!;
+const rootElement = document.getElementById('root')!;
 const root = createRoot(rootElement);
 root.render(<App />);

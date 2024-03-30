@@ -7,15 +7,15 @@ module.exports = {
     cursor: {
       'col-resize': 'col-resize',
       'ew-resize': 'ew-resize',
-      'grab': 'grab',
-      'grabbing': 'grabbing',
-      'pointer': 'pointer'
+      grab: 'grab',
+      grabbing: 'grabbing',
+      pointer: 'pointer',
     },
   },
   variants: {
     extend: {
       cursor: ['active'],
-    }
+    },
   },
   plugins: [],
-}
+};
