@@ -56,7 +56,7 @@ export const Card: React.FC<Props> = ({
 
     modalCtx?.setData({
       title: 'Upload',
-      context: <UploadModal video={video} game={game} thumb={thumb} />,
+      context: <UploadModal video={video} game={game} thumb={thumb} makePublic={false} />,
       cancel: true,
     });
     modalCtx?.setOpen(true);
@@ -95,14 +95,7 @@ export const Card: React.FC<Props> = ({
           />
         </div>
         <div className='m-1 mr-2 dropdown' style={{ zIndex: 50 }}>
-          <button
-            tabIndex={-1}
-            type='button'
-            aria-haspopup='true'
-            aria-expanded='true'
-            aria-controls='headlessui-menu-items-117'
-            className='opacity-0 group-hover:opacity-100'
-          >
+          <button tabIndex={-1} type='button' className='opacity-0 group-hover:opacity-100'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               width='16'
@@ -117,8 +110,6 @@ export const Card: React.FC<Props> = ({
           <div className='opacity-0 invisible dropdown-menu transition-all duration-300 transform origin-top-right -translate-y-2 scale-95'>
             <div
               className='absolute right-0 w-auto mt-2 origin-top-right bg-white border border-gray-500 divide-y divide-gray-100 rounded-md shadow-lg outline-none'
-              aria-labelledby='headlessui-menu-button-1'
-              id='headlessui-menu-items-117'
               role='menu'
             >
               <div

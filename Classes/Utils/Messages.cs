@@ -410,6 +410,10 @@ namespace RePlays.Utils {
                         SendMessage(GetUserSettings());
                     }
                     break;
+                case "StopRecording": {
+                        RecordingService.StopRecording(true);
+                    }
+                    break;
                 default:
                     break;
             }

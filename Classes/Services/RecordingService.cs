@@ -16,6 +16,7 @@ namespace RePlays.Services {
         private static Session currentSession = new(0, 0, "Game Unknown");
         public static bool IsStopping { get; internal set; }
         public static bool IsRecording { get; internal set; }
+        public static bool IsPaused { get; internal set; }
         private static bool IsPreRecording { get; set; }
         private static bool IsRestarting { get; set; }
         public static bool GameInFocus { get; set; }
@@ -93,10 +94,12 @@ namespace RePlays.Services {
         }
 
         private static void OnTimedEvent(object source, ElapsedEventArgs e) {
-            WebMessage.DisplayToast("Recording", currentSession.GameTitle, "🔴 Recording", "none", GetTotalRecordingTimeInSeconds());
+            if (!IsStopping) {
+                WebMessage.DisplayToast("Recording", currentSession.GameTitle, "", "none", GetTotalRecordingTimeInSeconds());
+            }
         }
 
-        public static async void StopRecording() {
+        public static async void StopRecording(bool forced = false) {
             if (!IsRecording) {
                 Logger.WriteLine($"Cannot stop recording, no recording in progress");
                 return;
