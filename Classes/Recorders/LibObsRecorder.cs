@@ -620,13 +620,13 @@ namespace RePlays.Recorders {
             obs_output_stop(output);
             // attempt to check if output signalled stop
             int retryAttempt = 0;
-            while (signalOutputStop == false && retryAttempt < maxRetryAttempts) {
+            while (signalOutputStop == false && retryAttempt < maxRetryAttempts / 4) {
                 Logger.WriteLine($"Waiting for obs_output to stop... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
             isStopping = false;
-            if (retryAttempt >= maxRetryAttempts) {
+            if (retryAttempt >= maxRetryAttempts / 4) {
                 Logger.WriteLine($"Failed to get obs_output_stop signal, forcing output to stop.");
                 obs_output_force_stop(output);
             }
@@ -660,7 +660,7 @@ namespace RePlays.Recorders {
             IntegrationService.Shutdown();
             BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
-            return signalOutputStop;
+            return !signalOutputStop;
         }
 
         private static void RestartRecording() {
@@ -742,6 +742,7 @@ namespace RePlays.Recorders {
                 obs_source_release(videoSource);
             }
             videoSources.Clear();
+            Logger.WriteLine("Released Video Sources.");
         }
 
         public void ReleaseAudioSources() {
@@ -750,23 +751,42 @@ namespace RePlays.Recorders {
                 obs_source_release(audioSource);
             }
             audioSources.Clear();
+            Logger.WriteLine("Released Audio Sources.");
         }
 
         public void ReleaseEncoders() {
-            foreach (var videoEncoder in videoEncoders.Values) {
-                obs_encoder_release(videoEncoder);
+            foreach (var encoder in videoEncoders) {
+                var reference = obs_encoder_get_ref(encoder.Value);
+                if (reference == IntPtr.Zero) {
+                    Logger.WriteLine($"Could not release video encoder ({encoder.Key}), does not exist.");
+                    continue;
+                }
+                obs_encoder_release(reference);
             }
             videoEncoders.Clear();
-            foreach (var audioEncoder in audioEncoders.Values) {
-                obs_encoder_release(audioEncoder);
+            foreach (var encoder in audioEncoders) {
+                var reference = obs_encoder_get_ref(encoder.Value);
+                if (reference == IntPtr.Zero) {
+                    Logger.WriteLine($"Could not release audio encoder ({encoder.Key}), does not exist.");
+                    continue;
+                }
+                obs_encoder_release(reference);
             }
             audioEncoders.Clear();
+            Logger.WriteLine("Released Encoders.");
         }
 
         public void ReleaseOutput() {
-            signal_handler_disconnect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
-            obs_output_release(output);
+            var reference = obs_output_get_ref(output);
+            if (reference == IntPtr.Zero) {
+                output = IntPtr.Zero;
+                Logger.WriteLine("Could not release output, does not exist.");
+                return;
+            }
+            signal_handler_disconnect(obs_output_get_signal_handler(reference), "stop", outputStopCb, IntPtr.Zero);
+            obs_output_release(reference);
             output = IntPtr.Zero;
+            Logger.WriteLine("Released Output.");
         }
     }
 }

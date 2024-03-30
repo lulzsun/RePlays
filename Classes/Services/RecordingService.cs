@@ -106,9 +106,9 @@ namespace RePlays.Services {
             }
             IsStopping = true;
 
-            bool result = await ActiveRecorder.StopRecording();
+            bool error = await ActiveRecorder.StopRecording();
 
-            if (IsRecording && result) {
+            if (IsRecording) {
                 if (currentSession.Pid != 0) {
                     recordingTimer.Elapsed -= OnTimedEvent;
                     recordingTimer.Stop();
