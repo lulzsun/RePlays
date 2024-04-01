@@ -19,7 +19,7 @@ enum BookmarkType {
 (window as { BookmarkType?: typeof BookmarkType }).BookmarkType = BookmarkType;
 
 declare global {
-  type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success';
+  type ModalIcon = 'none' | 'info' | 'warning' | 'question' | 'success' | 'update';
   interface Window {
     chrome: {
       webview: {

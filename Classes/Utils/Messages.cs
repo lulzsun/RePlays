@@ -414,6 +414,23 @@ namespace RePlays.Utils {
                         RecordingService.StopRecording(true);
                     }
                     break;
+                case "Restart": {
+                        string applicationPath = Environment.ProcessPath;
+
+                        string cmdCommand = $"/C timeout /t 1 & start \"\" \"{applicationPath}\"";
+
+                        ProcessStartInfo processInfo = new ProcessStartInfo {
+                            FileName = "cmd.exe",
+                            Arguments = cmdCommand,
+                            UseShellExecute = true,
+                            WindowStyle = ProcessWindowStyle.Hidden
+                        };
+
+                        Process.Start(processInfo);
+
+                        Process.GetCurrentProcess().Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
+                    }
+                    break;
                 default:
                     break;
             }

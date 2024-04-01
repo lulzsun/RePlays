@@ -70,7 +70,10 @@ function App() {
         setModalData(data);
         if (data.title === 'Downloading') {
           setModalConfirm(() => () => {});
-        } else setModalConfirm(() => () => {});
+        } else if (data.title === 'Update') {
+          setModalConfirm(() => () => postMessage('Restart'));
+        }
+        else setModalConfirm(() => () => {});
         setModalOpen(true);
         break;
       case 'DisplayToast':
