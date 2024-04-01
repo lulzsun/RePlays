@@ -428,7 +428,6 @@ namespace RePlays.Utils {
 
                         Process.Start(processInfo);
                         Process.GetCurrentProcess().Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
-
 #else
                         string applicationPath = Environment.GetCommandLineArgs()[0];
                         string escapedApplicationPath = applicationPath.Replace("\"", "\\\"");
