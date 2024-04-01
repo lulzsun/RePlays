@@ -213,7 +213,14 @@ namespace RePlays.Recorders {
             retryAttempt = 0;
 
             string dir = Path.Join(GetPlaysFolder(), "/" + MakeValidFolderNameSimple(session.GameTitle) + "/");
-            Directory.CreateDirectory(dir);
+            try {
+                Directory.CreateDirectory(dir);
+            }
+            catch (Exception e) {
+                WebMessage.DisplayModal(string.Format("Unable to create folder {0}. Do you have permission to create it?", dir), "Recording Error", "warning");
+                Logger.WriteLine(e.ToString());
+                return false;
+            }
             videoNameTimeStamp = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
             FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MPEG-4 (.mp4)"));
