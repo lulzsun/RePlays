@@ -60,14 +60,13 @@ namespace RePlays.Recorders {
 
         private readonly FileFormat file_format_default = new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)");
         private List<FileFormat> file_formats = new() {
-            new FileFormat("mp4", "MPEG-4 (.mp4)"),
-            new FileFormat("mkv", "Matroska Video (.mkv)"),
             new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)"),
             new FileFormat("fragmented_mov", "Fragmented MOV (.mov)"),
-
             new FileFormat("flv", "Flash Video (.flv)"),
-            new FileFormat("mov", "QuickTime (.mov)"),
-            new FileFormat("mpegts", "MPEG-TS (.ts)")
+            new FileFormat("mkv", "Matroska Video (.mkv)"),
+            new FileFormat("mpegts", "MPEG-TS (.ts)"),
+            new FileFormat("mp4", "MP4 (.mp4)"),
+            new FileFormat("mov", "QuickTime (.mov)")
         };
 
         static bool signalOutputStop = false;
