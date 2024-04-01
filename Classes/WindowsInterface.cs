@@ -140,7 +140,7 @@ namespace RePlays {
 
         bool firstTime = true;
         private async void WebMessageReceivedAsync(object sender, CoreWebView2WebMessageReceivedEventArgs e) {
-            var webMessage = await WebMessage.RecieveMessage(e.WebMessageAsJson);
+            var webMessage = await WebMessage.ReceiveMessage(e.WebMessageAsJson);
             if (!this.Controls.Contains(webView2) && webMessage.message == "Initialize") {
                 this.Controls.Add(webView2);
                 webView2.BringToFront();
