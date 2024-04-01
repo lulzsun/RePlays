@@ -9,7 +9,7 @@ namespace RePlays.Services {
         private static readonly List<Keybind> keybinds = [];
         private static readonly HashSet<string> pressedKeys = [];
         private static readonly HashSet<string> cachePressedKeys = [];
-        static TaskPoolGlobalHook keyboardHook;
+        static SimpleGlobalHook keyboardHook;
 
         public static string EditId { get; internal set; }
 
@@ -21,7 +21,7 @@ namespace RePlays.Services {
             keybinds.Add(new RecordingKeybind());
 
             //Create hook
-            keyboardHook = new TaskPoolGlobalHook();
+            keyboardHook = new SimpleGlobalHook(GlobalHookType.Keyboard);
             keyboardHook.KeyPressed += OnKeyPressed;
             keyboardHook.KeyReleased += OnKeyReleased;
             keyboardHook.RunAsync();
