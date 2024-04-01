@@ -426,11 +426,11 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
         <div className='flex flex-col'>
           {t('settingsCaptureItem13')}
           <DropDownMenu
-            text={settings === undefined ? '60 fps' : settings.frameRate + ' fps'}
+            text={settings === undefined ? '60 FPS' : settings.frameRate + ' FPS'}
             width={'auto'}
             items={[
               {
-                name: '15 fps',
+                name: '15 FPS',
                 onClick: () => {
                   settings!.frameRate = 15;
                   customVideoQuality.current!.checked = true;
@@ -438,7 +438,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 },
               },
               {
-                name: '30 fps',
+                name: '30 FPS',
                 onClick: () => {
                   settings!.frameRate = 30;
                   customVideoQuality.current!.checked = true;
@@ -446,7 +446,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 },
               },
               {
-                name: '60 fps',
+                name: '60 FPS',
                 onClick: () => {
                   settings!.frameRate = 60;
                   customVideoQuality.current!.checked = true;
@@ -454,7 +454,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 },
               },
               {
-                name: '120 fps',
+                name: '120 FPS',
                 onClick: () => {
                   settings!.frameRate = 120;
                   customVideoQuality.current!.checked = true;
@@ -462,7 +462,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 },
               },
               {
-                name: '144 fps',
+                name: '144 FPS',
                 onClick: () => {
                   settings!.frameRate = 144;
                   customVideoQuality.current!.checked = true;
