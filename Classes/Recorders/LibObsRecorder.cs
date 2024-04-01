@@ -420,6 +420,7 @@ namespace RePlays.Recorders {
             // another null check just incase
             if (output == IntPtr.Zero) {
                 Logger.WriteLine("LibObs output returned null, something really went wrong (this isn't suppose to happen)...");
+                WebMessage.DisplayModal("An unexpected error occured. Detailed information written in logs.", "Recording Error", "warning");
                 ReleaseOutput();
                 ReleaseSources();
                 ReleaseEncoders();
@@ -430,7 +431,14 @@ namespace RePlays.Recorders {
             Logger.WriteLine($"LibObs output is starting [{bnum_allocs()}]...");
             bool outputStartSuccess = obs_output_start(output);
             if (outputStartSuccess != true) {
-                Logger.WriteLine("LibObs output recording error: '" + obs_output_get_last_error(output) + "'");
+                string error = obs_output_get_last_error(output).Trim();
+                Logger.WriteLine("LibObs output recording error: '" + error + "'");
+                if (error.Length <= 0) {
+                    WebMessage.DisplayModal("An unexpected error occured. Detailed information written in logs.", "Recording Error", "warning");
+                }
+                else {
+                    WebMessage.DisplayModal(error, "Recording Error", "warning");
+                }
                 ReleaseOutput();
                 ReleaseSources();
                 ReleaseEncoders();
