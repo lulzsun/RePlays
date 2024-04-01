@@ -432,9 +432,8 @@ namespace RePlays.Utils {
                         string applicationPath = Environment.GetCommandLineArgs()[0];
                         string escapedApplicationPath = applicationPath.Replace("\"", "\\\"");
                         string command = $"nohup \"{escapedApplicationPath}\" > /dev/null 2>&1 &";
-        
-                        ProcessStartInfo processInfo = new ProcessStartInfo
-                        {
+
+                        ProcessStartInfo processInfo = new ProcessStartInfo {
                             FileName = "/bin/bash",
                             Arguments = $"-c \"{command}\"",
                             UseShellExecute = false
