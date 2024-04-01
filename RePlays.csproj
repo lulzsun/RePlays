@@ -15,10 +15,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <OBSVersion>30.1.1</OBSVersion>
+	<OBSBuildPath>$(MSBuildProjectDirectory)\obs-studio-build\obs-studio-$(OBSVersion)\build\rundir\Release\bin\64bit</OBSBuildPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
 	<OutputType>WinExe</OutputType>
 	<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
 	<SpaRoot>ClientApp\</SpaRoot>
-	<OBSBuildPath>$(MSBuildProjectDirectory)\obs-studio-build\obs-studio-29.1.1\build\rundir\Release\bin\64bit</OBSBuildPath>
 	<ApplicationIcon>Resources\logo.ico</ApplicationIcon>
 	<RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
 	<DebugSymbols>true</DebugSymbols>
