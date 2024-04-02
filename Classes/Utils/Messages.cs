@@ -248,7 +248,7 @@ namespace RePlays.Utils {
                                         else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
                                         SaveSettings();
                                         SendMessage(GetUserSettings());
-                                        var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+                                        var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
                                         WebMessage.SendMessage(t);
                                     }
                                 }
