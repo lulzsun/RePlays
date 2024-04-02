@@ -31,8 +31,8 @@ export const DropDownMenu: React.FC<Props> = ({
       const spaceBelow = window.innerHeight - buttonRect.bottom;
       const spaceAbove = buttonRect.top;
 
-      // Check for enough space below the button for the dropdown, preferring below with a 100px buffer.
-      const isSpaceBelow = spaceBelow + 100 >= dropdownHeight;
+      // Check for enough space below the button for the dropdown, preferring below with a 50px buffer.
+      const isSpaceBelow = spaceBelow + 50 >= dropdownHeight;
 
       setStyle({
         top: isSpaceBelow ? `${buttonRect.bottom}px` : undefined,
@@ -107,12 +107,12 @@ export const DropDownMenu: React.FC<Props> = ({
           {groups[0] !== null ? (
             groups.map((group, i) => (
               <div key={i} className='py-1' style={{zIndex: zIndex}}>
-                {group && <div className='px-2 py-2 text-gray-700 dark:text-gray-200 dark:hover:bg-gray-900'>{group}</div>}
+                {group && <div className='px-2 pe-2 text-gray-700 dark:text-gray-200 dark:hover:bg-gray-900'>{group}</div>}
                 {items?.filter(item => item.group === group).map((item, index) => (
                   <a
                     
                     key={index}
-                    className='block px-4 py-2 text-sm text-gray-700 dark:text-gray-400 hover:text-white dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
+                    className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
                     onClick={(e) => {
                       e.preventDefault();
                       item?.onClick?.();
@@ -130,7 +130,7 @@ export const DropDownMenu: React.FC<Props> = ({
               {items?.map((item, index) => (
                 <a
                   key={index}
-                  className='block px-4 py-2 text-sm text-gray-700 dark:text-gray-400 hover:text-white dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
+                  className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer'
                   onClick={(e) => {
                     e.preventDefault();
                     item?.onClick?.();
