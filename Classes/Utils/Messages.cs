@@ -428,19 +428,6 @@ namespace RePlays.Utils {
 
                         Process.Start(processInfo);
                         Process.GetCurrentProcess().Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
-#else
-                        string applicationPath = Environment.GetCommandLineArgs()[0];
-                        string escapedApplicationPath = applicationPath.Replace("\"", "\\\"");
-                        string command = $"nohup \"{escapedApplicationPath}\" > /dev/null 2>&1 &";
-
-                        ProcessStartInfo processInfo = new ProcessStartInfo {
-                            FileName = "/bin/bash",
-                            Arguments = $"-c \"{command}\"",
-                            UseShellExecute = false
-                        };
-
-                        Process.Start(processInfo);
-                        Process.GetCurrentProcess().Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
 #endif
                     }
                     break;
