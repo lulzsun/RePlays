@@ -10,6 +10,7 @@
     "@types/react-router-dom": "^5.1.8",
     "7zip-bin": "^5.1.1",
     "cheerio": "^1.0.0-rc.10",
+    "framer-motion": "^11.0.24",
     "i18next": "^23.7.11",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.2",

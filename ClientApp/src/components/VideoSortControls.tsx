@@ -45,9 +45,14 @@ export const VideoSortControls: React.FC<Props> = ({
 
   return (
     <div className='pt-2 grid grid-flow-col gap-4'>
-      <DropDownMenu text={game} items={getGamesDDM()} />
+      <DropDownMenu
+        text={game}
+        items={getGamesDDM()}
+        zIndex={100}
+      />
       <DropDownMenu
         text={sortBy}
+        zIndex={100}
         items={[
           {
             name: t('componentVideoSortControlsItem02'),
