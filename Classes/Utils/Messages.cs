@@ -164,7 +164,7 @@ namespace RePlays.Utils {
             return true;
         }
 
-        public static async Task<WebMessage> RecieveMessage(string message) {
+        public static async Task<WebMessage> ReceiveMessage(string message) {
             if (message == null) return null;
             WebMessage webMessage = JsonSerializer.Deserialize<WebMessage>(message);
             if (webMessage.data == null || webMessage.data.Trim() == string.Empty) webMessage.data = "{}";
@@ -248,6 +248,8 @@ namespace RePlays.Utils {
                                         else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
                                         SaveSettings();
                                         SendMessage(GetUserSettings());
+                                        var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+                                        WebMessage.SendMessage(t);
                                     }
                                 }
                                 break;
