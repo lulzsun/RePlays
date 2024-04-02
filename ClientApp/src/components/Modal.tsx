@@ -16,6 +16,7 @@ const iconColors = {
   warning: 'red',
   question: 'blue',
   success: 'green',
+  update: 'blue'
 };
 
 export const Modal: React.FC<Props> = ({ modalData, open, setOpen, onConfirm }) => {
@@ -68,7 +69,7 @@ export const Modal: React.FC<Props> = ({ modalData, open, setOpen, onConfirm }) 
                 <div className='sm:flex sm:items-start'>
                   {icon !== 'none' && icon !== undefined && (
                     <div
-                      className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 bg-${
+                      className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:w-10 bg-${
                         iconColors[icon!]
                       }-100`}
                     >
@@ -137,6 +138,18 @@ export const Modal: React.FC<Props> = ({ modalData, open, setOpen, onConfirm }) 
                             />
                           </svg>
                         )}
+                        {icon === 'update' && (
+                          <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            className='h-6 w-6'
+                            fill='#17b2b0'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              d="M 20.382812 15.296875 L 20.382812 20.777344 L 3.613281 20.777344 L 3.613281 15.296875 L 0.390625 15.296875 L 0.390625 22.390625 C 0.390625 23.277344 1.113281 24 2.003906 24 L 21.992188 24 C 22.886719 24 23.609375 23.28125 23.609375 22.390625 L 23.609375 15.296875 Z M 11.703125 14.75 L 7.089844 9.175781 C 7.089844 9.175781 6.386719 8.511719 7.148438 8.511719 L 9.75 8.511719 L 9.75 0.394531 C 9.75 0.394531 9.644531 0 10.242188 0 L 13.902344 0 C 14.332031 0 14.320312 0.332031 14.320312 0.332031 L 14.320312 8.34375 L 16.722656 8.34375 C 17.644531 8.34375 16.949219 9.039062 16.949219 9.039062 L 12.476562 14.796875 C 12.082031 15.195312 11.703125 14.75 11.703125 14.75 Z M 11.703125 14.75 "
+                            />
+                          </svg>
+                        )}
                       </div>
                     </div>
                   )}
@@ -175,7 +188,7 @@ export const Modal: React.FC<Props> = ({ modalData, open, setOpen, onConfirm }) 
                     {t('componentModalItem01')}
                   </button>
                 )}
-                {(icon === 'question' || cancel) && (
+                {(icon === 'question' || icon === 'update' || cancel) && (
                   <button
                     type='button'
                     className='mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm'

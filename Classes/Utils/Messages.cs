@@ -248,7 +248,7 @@ namespace RePlays.Utils {
                                         else if (type == "localFolderDir") Settings.uploadSettings.localFolderSettings.dir = fbd.SelectedPath;
                                         SaveSettings();
                                         SendMessage(GetUserSettings());
-                                        var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+                                        var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
                                         WebMessage.SendMessage(t);
                                     }
                                 }
@@ -416,6 +416,23 @@ namespace RePlays.Utils {
                         RecordingService.StopRecording(true);
                     }
                     break;
+#if WINDOWS
+                case "Restart": {
+                        string applicationPath = Environment.ProcessPath;
+                        string cmdCommand = $"/C timeout /t 1 & start \"\" \"{applicationPath}\"";
+
+                        ProcessStartInfo processInfo = new ProcessStartInfo {
+                            FileName = "cmd.exe",
+                            Arguments = cmdCommand,
+                            UseShellExecute = true,
+                            WindowStyle = ProcessWindowStyle.Hidden
+                        };
+
+                        Process.Start(processInfo);
+                        Process.GetCurrentProcess().Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
+                    }
+                    break;
+#endif
                 default:
                     break;
             }

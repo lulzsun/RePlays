@@ -49,7 +49,7 @@ namespace RePlays.Utils {
                         WebMessage.DestroyToast("UpdateProgress");
                         applyingUpdate = false;
                         Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
-                        WebMessage.DisplayModal("New update applied! Update will apply on next restart.", "Automatic Updates", "info");
+                        WebMessage.DisplayModal("New update applied! Click Confirm to restart and complete the update.", "Update", "update");
                     }
                     else { // manual
                         if (forceUpdate) {
@@ -60,7 +60,7 @@ namespace RePlays.Utils {
                             WebMessage.DestroyToast("UpdateProgress");
                             applyingUpdate = false;
                             Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
-                            WebMessage.DisplayModal("New update applied! Update will apply on next restart.", "Manual Update", "info");
+                            WebMessage.DisplayModal("New update applied! Click Confirm to restart and complete the update.", "Update", "update");
                         }
                         else WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
                     }
