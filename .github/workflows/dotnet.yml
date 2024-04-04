@@ -6,7 +6,7 @@ name: Build and Draft Nightly Release
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   schedule:
-  - cron: "0 7 * * *"
+    - cron: "0 7 * * *"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -17,7 +17,7 @@ jobs:
   prep:
     runs-on: ubuntu-latest
     name: Prepare for Build
-    
+
     outputs:
       oldversion: ${{ steps.previoustag.outputs.tag }}
       version: ${{ steps.semvers.outputs.patch }}
@@ -27,27 +27,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 'check latest commit is less than a day'
+      - name: "check latest commit is less than a day"
         id: check_commit
         continue-on-error: true
         if: ${{ github.event_name == 'schedule' }}
         run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
-      
-      - name: 'if not, do not build'
+
+      - name: "if not, do not build"
         if: ${{ steps.check_commit.outputs.should_run == 'false' }}
         run: exit 1
-        
-      - name: 'Check if nightly exists'
+
+      - name: "Check if nightly exists"
         id: nightly
         uses: cardinalby/git-get-release-action@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          tag: 'nightly'
+          tag: "nightly"
           prerelease: true
           doNotFailIfNotFound: true
-        
-      - name: 'Get Previous tag'
+
+      - name: "Get Previous tag"
         id: previoustag
         run: |
           if [ "${{steps.nightly.outputs.id}}" == "" ]; then
@@ -55,21 +55,21 @@ jobs:
           else
             echo "tag=$(echo ${{steps.nightly.outputs.name}} | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')" >> $GITHUB_OUTPUT
           fi
-        
-      - name: 'Get next version'
+
+      - name: "Get next version"
         id: semvers
         uses: "WyriHaximus/github-action-next-semvers@v1"
         with:
           version: ${{ steps.previoustag.outputs.tag }}
-          
+
       - name: output
         run: echo ${{steps.previoustag.outputs.tag}} ${{steps.semvers.outputs.patch}}
-        
+
   build:
     needs: prep
     runs-on: windows-latest
     name: Build RePlays
-    
+
     permissions:
       contents: write
 
@@ -78,7 +78,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          submodules: "true"
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -90,9 +90,12 @@ jobs:
         with:
           dotnet-version: 8.0.100
 
+      - name: Install nvpatch
+        run: dotnet tool install Topten.nvpatch --version 0.1.104
+
       - name: Download previous release to create delta
         uses: robinraju/release-downloader@v1.3
-        with: 
+        with:
           token: ${{ secrets.MY_TOKEN }}
           repository: ${{ github.repository }}
           latest: true
@@ -108,7 +111,7 @@ jobs:
 
       - name: Build RePlays
         env:
-         CI: false
+          CI: false
         run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile
 
       - name: Generate Prerelease
