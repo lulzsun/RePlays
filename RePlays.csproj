@@ -30,6 +30,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <SelfContained>true</SelfContained>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
     <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
@@ -112,12 +113,12 @@
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
   </Target>
 
-  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And !Exists('$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\obs.dll') ">
+  <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And !Exists('$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\win-x64\obs.dll') ">
     <Error Condition="!Exists('$(OBSBuildPath)\obs.dll')" Text="Could not copy 'obs.dll' from '$(OBSBuildPath)'. Run `build-libobs.cmd` to build." />
     <ItemGroup>
       <LIBOBSDEBUG Include="$(OBSBuildPath)\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\win-x64\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">

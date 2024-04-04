@@ -81,7 +81,7 @@ namespace RePlays {
             var startInfo = new ProcessStartInfo {
                 FileName = "cmd.exe",
                 Arguments = "/c npm run start",
-                WorkingDirectory = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp")
+                WorkingDirectory = Path.Join(GetSolutionPath(), @"ClientApp")
             };
             Process process = null;
 

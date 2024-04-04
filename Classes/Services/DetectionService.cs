@@ -105,7 +105,7 @@ namespace RePlays.Services {
             var result = "[]";
 
 #if DEBUG
-            dlPath = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"Resources/detections/", file);
+            dlPath = Path.Join(GetSolutionPath(), @"Resources/detections/", file);
             Logger.WriteLine($"Debug: Using {file} from Resources folder instead.");
             return JsonDocument.Parse(File.ReadAllText(dlPath)).RootElement.EnumerateArray().ToArray();
 #endif

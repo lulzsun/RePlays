@@ -123,7 +123,7 @@ namespace RePlays.Utils {
 
         public static string GetResourcesFolder() {
 #if (DEBUG)
-            return Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + @"/Resources/";
+            return GetSolutionPath() + @"/Resources/";
 #elif (RELEASE)
             return GetStartupPath() + @"/Resources/";
 #endif
@@ -132,7 +132,7 @@ namespace RePlays.Utils {
         public static string GetFFmpegFolder() {
 
 #if DEBUG && WINDOWS
-            string ffmpegFolder = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
+            string ffmpegFolder = Path.Join(GetSolutionPath(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
 #elif DEBUG && !WINDOWS
             string ffmpegFolder = Path.Join(GetSolutionPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
 #else
@@ -148,7 +148,7 @@ namespace RePlays.Utils {
 
         public static string Get7zipExecutable() {
 #if DEBUG
-            string _7zipExecutable = Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
+            string _7zipExecutable = Path.Join(GetSolutionPath(), @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #else
             string _7zipExecutable = Path.Join(GetStartupPath(), @"ClientApp\node_modules\7zip-bin\win\x64\7za.exe");
 #endif
