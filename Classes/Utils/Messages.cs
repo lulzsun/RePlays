@@ -418,7 +418,7 @@ namespace RePlays.Utils {
                     break;
 #if WINDOWS
                 case "Restart": {
-                        string path = Path.Combine(Directory.GetParent(Directory.GetParent(Environment.ProcessPath).FullName).FullName, "RePlays.exe");
+                        string path = Path.Join(GetStartupPath(), @"../RePlays.exe");
                         string cmdCommand = $"/C timeout /t 1 & start \"\" \"{path}\"";
 
                         ProcessStartInfo processInfo = new ProcessStartInfo {
