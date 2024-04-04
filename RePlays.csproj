@@ -27,8 +27,14 @@
 	<RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
 	<DebugSymbols>true</DebugSymbols>
 	<DebugType>embedded</DebugType>
-	<PublishTrimmed>false</PublishTrimmed>
-	<TrimMode>Link</TrimMode>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
 	
   <PropertyGroup>
