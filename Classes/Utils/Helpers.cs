@@ -130,19 +130,17 @@ namespace RePlays.Utils {
         }
 
         public static string GetFFmpegFolder() {
-
-#if DEBUG && WINDOWS
-            string ffmpegFolder = Path.Join(GetSolutionPath(), @"ClientApp\node_modules\ffmpeg-ffprobe-static\");
-#elif DEBUG && !WINDOWS
+            string ffmpegFolder = GetStartupPath();
+#if !WINDOWS
             string ffmpegFolder = Path.Join(GetSolutionPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
-#else
-            string ffmpegFolder = Path.Join(GetStartupPath(), @"ClientApp/node_modules/ffmpeg-ffprobe-static/");
+
+            if (File.Exists(Path.Join(ffmpegFolder, "ffmpeg")) && File.Exists(Path.Join(ffmpegFolder, "ffprobe"))) {
 #endif
-            if (Directory.Exists(ffmpegFolder)) {
+            if (File.Exists(Path.Join(ffmpegFolder, "ffmpeg.exe")) && File.Exists(Path.Join(ffmpegFolder, "ffprobe.exe"))) {
                 return ffmpegFolder;
             }
             else {
-                throw new DirectoryNotFoundException(ffmpegFolder);
+                throw new FileNotFoundException($"Missing ffmpeg and/or ffprobe in '{ffmpegFolder}'");
             }
         }
 
@@ -356,12 +354,12 @@ namespace RePlays.Utils {
 
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
             string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string[] thumbnailExtensions = new string[] { ".png", ".webp" };
+            string[] thumbnailExtensions = [".jpg", ".webp", ".png"];
             string thumbnailPath = thumbnailExtensions.Select(ext => Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ext))
                 .FirstOrDefault(File.Exists);
 
             if (thumbnailPath != null) return thumbnailPath;
-            else thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".webp");
+            else thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".jpg");
             if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
             if (duration == 0) {

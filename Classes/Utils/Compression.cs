@@ -10,7 +10,7 @@ namespace RePlays.Utils {
         static Dictionary<int, double> fileTime = new Dictionary<int, double>();
         public static void CompressFile(string filePath, CompressClip data) {
             ProcessStartInfo startInfo = new ProcessStartInfo {
-                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg.exe"),
+                FileName = Path.Join(GetFFmpegFolder(), "ffmpeg"),
                 Arguments = string.Format("-i \"{0}\" -vcodec libx264 -preset \"{1}\" \"{2}\"", filePath, data.quality, filePath.Replace(".mkv", "-compressed.mkv").Replace(".mp4", "-compressed.mp4")),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
