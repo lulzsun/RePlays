@@ -116,7 +116,7 @@ export const DropDownMenu: React.FC<Props> = ({
                   .map((item, index) => (
                     <a
                       key={index}
-                      className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white focus:text-white dark:hover:text-gray-300 dark:focus:text-gray-300 hover:bg-gray-100 focus:bg-gray-100 dark:hover:bg-gray-800 dark:focus:bg-gray-800 cursor-pointer'
+                      className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white focus:text-white dark:hover:text-gray-300 dark:focus:text-gray-300 hover:bg-gray-900 focus:bg-gray-100 dark:hover:bg-gray-800 dark:focus:bg-gray-800 cursor-pointer'
                       onClick={(e) => {
                         e.preventDefault();
                         item?.onClick?.();
@@ -133,7 +133,7 @@ export const DropDownMenu: React.FC<Props> = ({
               {items?.map((item, index) => (
                 <a
                   key={index}
-                  className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white focus:text-white dark:hover:text-gray-300 dark:focus:text-gray-300 hover:bg-gray-100 focus:bg-gray-100 dark:hover:bg-gray-800 dark:focus:bg-gray-800 cursor-pointer'
+                  className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white focus:text-white dark:hover:text-gray-300 dark:focus:text-gray-300 hover:bg-gray-900 focus:bg-gray-100 dark:hover:bg-gray-800 dark:focus:bg-gray-800 cursor-pointer'
                   onClick={(e) => {
                     e.preventDefault();
                     item?.onClick?.();
