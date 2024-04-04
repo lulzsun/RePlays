@@ -11,22 +11,22 @@
 
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
     <TargetFramework>net8.0</TargetFramework>
-	<UseWindowsForms>false</UseWindowsForms>
+    <UseWindowsForms>false</UseWindowsForms>
   </PropertyGroup>
 
   <PropertyGroup>
     <OBSVersion>30.1.1</OBSVersion>
-	<OBSBuildPath>$(MSBuildProjectDirectory)\obs-studio-build\obs-studio-$(OBSVersion)\build\rundir\Release\bin\64bit</OBSBuildPath>
+    <OBSBuildPath>$(MSBuildProjectDirectory)\obs-studio-build\obs-studio-$(OBSVersion)\build\rundir\Release\bin\64bit</OBSBuildPath>
   </PropertyGroup>
 
   <PropertyGroup>
-	<OutputType>WinExe</OutputType>
-	<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
-	<SpaRoot>ClientApp\</SpaRoot>
-	<ApplicationIcon>Resources\logo.ico</ApplicationIcon>
-	<RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
-	<DebugSymbols>true</DebugSymbols>
-	<DebugType>embedded</DebugType>
+    <OutputType>WinExe</OutputType>
+    <DisableWinExeOutputInference>true</DisableWinExeOutputInference>
+    <SpaRoot>ClientApp\</SpaRoot>
+    <ApplicationIcon>Resources\logo.ico</ApplicationIcon>
+    <RepositoryUrl>https://github.com/lulzsun/RePlays</RepositoryUrl>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -36,18 +36,18 @@
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
-	
+
   <PropertyGroup>
     <AnalysisMode>Recommended</AnalysisMode>
-	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
     <SquirrelTools>$(PkgClowd_Squirrel)\tools</SquirrelTools>
-	<Version>1.0.0</Version>
+    <Version>1.0.0</Version>
     <NuspecFile>RePlays.nuspec</NuspecFile>
     <Nullable>annotations</Nullable>
     <StartupObject>RePlays.Program</StartupObject>
@@ -63,7 +63,7 @@
     <None Remove="obs-studio-build\**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Remove="Classes\Recorders\LibObs\LICENSE" />
     <None Remove="Classes\Recorders\PlaysLTC\LICENSE" />
@@ -103,93 +103,93 @@
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
-	<!-- Ensure Node.js is installed -->
-	<Exec Command="node --version" ContinueOnError="true">
-	  <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
-	</Exec>
-	<Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
-	<Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
-	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
+    <!-- Ensure Node.js is installed -->
+    <Exec Command="node --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+    <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
   </Target>
 
   <Target Name="DebugCopyLibObs" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And !Exists('$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\obs.dll') ">
-	<Error Condition="!Exists('$(OBSBuildPath)\obs.dll')" Text="Could not copy 'obs.dll' from '$(OBSBuildPath)'. Run `build-libobs.cmd` to build." />
-	<ItemGroup>
-	   <LIBOBSDEBUG Include="$(OBSBuildPath)\**\*.*" />
-	</ItemGroup>
-	<Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Error Condition="!Exists('$(OBSBuildPath)\obs.dll')" Text="Could not copy 'obs.dll' from '$(OBSBuildPath)'. Run `build-libobs.cmd` to build." />
+    <ItemGroup>
+      <LIBOBSDEBUG Include="$(OBSBuildPath)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LIBOBSDEBUG)" DestinationFolder="$(MSBuildProjectDirectory)\bin\Debug\net8.0-windows\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
-	<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
-	<Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
-	<Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+    <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
 
-	<!-- Include the newly-built files in the publish output -->
-	<ItemGroup>
-		<DistFiles1 Include="$(SpaRoot)build\**" />
-		<ResolvedFileToPublish Include="@(DistFiles1->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>%(DistFiles1.Identity)</RelativePath>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		</ResolvedFileToPublish>
-	</ItemGroup>
+    <!-- Include the newly-built files in the publish output -->
+    <ItemGroup>
+      <DistFiles1 Include="$(SpaRoot)build\**" />
+      <ResolvedFileToPublish Include="@(DistFiles1->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles1.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
 
-	<!-- Include ffmpeg binaries in the publish output -->
-	<ItemGroup>
-		<DistFiles2 Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
-		<ResolvedFileToPublish Include="@(DistFiles2->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>%(DistFiles2.Identity)</RelativePath>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		</ResolvedFileToPublish>
-	</ItemGroup>
+    <!-- Include ffmpeg binaries in the publish output -->
+    <ItemGroup>
+      <DistFiles2 Include="$(SpaRoot)node_modules\ffmpeg-ffprobe-static\**" />
+      <ResolvedFileToPublish Include="@(DistFiles2->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles2.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
 
-	<!-- Include 7zip binaries in the publish output -->
-	<ItemGroup>
-		<DistFiles3 Include="$(SpaRoot)node_modules\7zip-bin\**" />
-		<ResolvedFileToPublish Include="@(DistFiles3->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>%(DistFiles3.Identity)</RelativePath>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		</ResolvedFileToPublish>
-	</ItemGroup>
+    <!-- Include 7zip binaries in the publish output -->
+    <ItemGroup>
+      <DistFiles3 Include="$(SpaRoot)node_modules\7zip-bin\**" />
+      <ResolvedFileToPublish Include="@(DistFiles3->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles3.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
 
-	<!-- Include resources in the publish output -->
-	<ItemGroup>
-		<DistFiles4 Include="$(MSBuildProjectDirectory)\Resources\**" />
-		<ResolvedFileToPublish Include="@(DistFiles4->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>Resources\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		</ResolvedFileToPublish>
-	</ItemGroup>
+    <!-- Include resources in the publish output -->
+    <ItemGroup>
+      <DistFiles4 Include="$(MSBuildProjectDirectory)\Resources\**" />
+      <ResolvedFileToPublish Include="@(DistFiles4->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>Resources\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
 
-	<!-- Include libobs in the publish output -->
-	<ItemGroup>
-		<DistFiles5 Include="$(OBSBuildPath)\**" />
-		<ResolvedFileToPublish Include="@(DistFiles5->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-			<RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		</ResolvedFileToPublish>
-	</ItemGroup>
+    <!-- Include libobs in the publish output -->
+    <ItemGroup>
+      <DistFiles5 Include="$(OBSBuildPath)\**" />
+      <ResolvedFileToPublish Include="@(DistFiles5->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
 
-	<!-- Include a copy of the app's license -->
-	<ItemGroup>
-		<_license Include="$(MSBuildProjectDirectory)\LICENSE" />
-	</ItemGroup>
-	<Copy SourceFiles="@(_license)" DestinationFolder="$(PublishDir)" />
+    <!-- Include a copy of the app's license -->
+    <ItemGroup>
+      <_license Include="$(MSBuildProjectDirectory)\LICENSE" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_license)" DestinationFolder="$(PublishDir)" />
   </Target>
 
   <Target Name="Package" AfterTargets="Publish" Condition=" '$(Configuration)' == 'Release' ">
-	<!-- Prepare Squirrel package -->
-	<XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
-		<Output TaskParameter="Result" ItemName="ID" />
-	</XmlPeek>
+    <!-- Prepare Squirrel package -->
+    <XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
+      <Output TaskParameter="Result" ItemName="ID" />
+    </XmlPeek>
 
-	<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets" />
-	<Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8" />
+    <Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets" />
+    <Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8" />
   </Target>
 
   <ItemGroup>
