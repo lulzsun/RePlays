@@ -32,7 +32,7 @@ export const DropDownMenu: React.FC<Props> = ({
       if (spaceBelow <= 0) {
         setIsOpen(false);
       }
-      const isSpaceBelow = spaceBelow >= 200 || spaceBelow >= ((items?.length ?? 0) * 32);
+      const isSpaceBelow = spaceBelow >= 200 || spaceBelow >= (items?.length ?? 0) * 32;
 
       setStyle({
         top: isSpaceBelow ? `${buttonRect.bottom}px` : undefined,
@@ -85,7 +85,7 @@ export const DropDownMenu: React.FC<Props> = ({
           viewBox='0 0 20 20'
           fill='currentColor'
           style={{
-            transition: 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1)'
+            transition: 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
           <path
@@ -98,30 +98,38 @@ export const DropDownMenu: React.FC<Props> = ({
       {isOpen && (
         <div
           ref={dropdownRef}
-          style={{...style, zIndex: zIndex}}
-          className={'absolute bg-white dark:bg-gray-900 mt-1 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg'}>
+          style={{ ...style, zIndex: zIndex }}
+          className={
+            'absolute bg-white dark:bg-gray-900 mt-1 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg'
+          }
+        >
           {groups[0] !== null ? (
             groups.map((group, i) => (
-              <div key={i} className='py-1' style={{zIndex: zIndex}}>
-                {group && <div className='px-2 pe-2 text-gray-700 dark:text-gray-200 dark:hover:bg-gray-900'>{group}</div>}
-                {items?.filter(item => item.group === group).map((item, index) => (
-                  <a
-                    key={index}
-                    className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white focus:text-white dark:hover:text-gray-300 dark:focus:text-gray-300 hover:bg-gray-100 focus:bg-gray-100 dark:hover:bg-gray-800 dark:focus:bg-gray-800 cursor-pointer'
-                    onClick={(e) => {
-                      e.preventDefault();
-                      item?.onClick?.();
-                      setIsOpen(false);
-                    }}
-                  >
-                    {item.name}
-                  </a>
-                ))}
+              <div key={i} className='py-1' style={{ zIndex: zIndex }}>
+                {group && (
+                  <div className='px-2 pe-2 text-gray-700 dark:text-gray-200 dark:hover:bg-gray-900'>
+                    {group}
+                  </div>
+                )}
+                {items
+                  ?.filter((item) => item.group === group)
+                  .map((item, index) => (
+                    <a
+                      key={index}
+                      className='block px-4 py-1 text-sm text-gray-700 dark:text-gray-400 hover:text-white focus:text-white dark:hover:text-gray-300 dark:focus:text-gray-300 hover:bg-gray-100 focus:bg-gray-100 dark:hover:bg-gray-800 dark:focus:bg-gray-800 cursor-pointer'
+                      onClick={(e) => {
+                        e.preventDefault();
+                        item?.onClick?.();
+                        setIsOpen(false);
+                      }}
+                    >
+                      {item.name}
+                    </a>
+                  ))}
               </div>
             ))
           ) : (
-            <div
-              style={{zIndex: zIndex}}>
+            <div style={{ zIndex: zIndex }}>
               {items?.map((item, index) => (
                 <a
                   key={index}
