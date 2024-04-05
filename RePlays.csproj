@@ -31,11 +31,13 @@
 
   <PropertyGroup>
     <SelfContained>true</SelfContained>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
+    <!--
     <TrimMode>full</TrimMode>
     <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+     -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
