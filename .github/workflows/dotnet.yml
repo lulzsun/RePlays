@@ -90,9 +90,6 @@ jobs:
         with:
           dotnet-version: 8.0.100
 
-      - name: Install nvpatch
-        run: dotnet tool install Topten.nvpatch --version 0.1.104
-
       - name: Download previous release to create delta
         uses: robinraju/release-downloader@v1.3
         with:
