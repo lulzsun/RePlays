@@ -30,7 +30,20 @@ export const CompressModal: React.FC<Props> = ({ video, game, thumb }) => {
 
   return (
     <div className='flex flex-row gap-6'>
-      <img className='h-28 border' alt={'video_thumbnail_placeholder.png'} src={thumb} />
+      <img
+        className='h-28 border'
+        src={thumb}
+        onError={({ currentTarget }) => {
+          if (currentTarget.src.split('.').pop() === 'jpg') {
+            currentTarget.src = thumb!.replace('.jpg', '.webp');
+          } else if (currentTarget.src.split('.').pop() === 'webp') {
+            currentTarget.src = thumb!.replace('.webp', '.png');
+          } else {
+            currentTarget.onerror = null;
+            currentTarget.src = 'video_thumbnail_placeholder.png';
+          }
+        }}
+      />
       <div className='flex justify-center items-center'>
         <div className='flex flex-col'>
           {t('componentCompressModalItem01')}
