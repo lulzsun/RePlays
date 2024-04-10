@@ -634,13 +634,13 @@ namespace RePlays.Recorders {
             obs_output_stop(output);
             // attempt to check if output signalled stop
             int retryAttempt = 0;
-            while (signalOutputStop == false && retryAttempt < maxRetryAttempts / 4) {
+            while (signalOutputStop == false && retryAttempt < maxRetryAttempts / 2) {
                 Logger.WriteLine($"Waiting for obs_output to stop... retry attempt #{retryAttempt}");
                 await Task.Delay(retryInterval);
                 retryAttempt++;
             }
             isStopping = false;
-            if (retryAttempt >= maxRetryAttempts / 4) {
+            if (retryAttempt >= maxRetryAttempts / 2) {
                 Logger.WriteLine($"Failed to get obs_output_stop signal, forcing output to stop.");
                 obs_output_force_stop(output);
             }
@@ -769,6 +769,7 @@ namespace RePlays.Recorders {
         }
 
         public void ReleaseEncoders() {
+            Logger.WriteLine("Releasing Video Encoders.");
             foreach (var encoder in videoEncoders) {
                 var reference = obs_encoder_get_ref(encoder.Value);
                 if (reference == IntPtr.Zero) {
@@ -776,8 +777,10 @@ namespace RePlays.Recorders {
                     continue;
                 }
                 obs_encoder_release(reference);
+                obs_encoder_release(encoder.Value);
             }
             videoEncoders.Clear();
+            Logger.WriteLine("Releasing Audio Encoders.");
             foreach (var encoder in audioEncoders) {
                 var reference = obs_encoder_get_ref(encoder.Value);
                 if (reference == IntPtr.Zero) {
@@ -785,12 +788,14 @@ namespace RePlays.Recorders {
                     continue;
                 }
                 obs_encoder_release(reference);
+                obs_encoder_release(encoder.Value);
             }
             audioEncoders.Clear();
             Logger.WriteLine("Released Encoders.");
         }
 
         public void ReleaseOutput() {
+            Logger.WriteLine("Releasing Output.");
             var reference = obs_output_get_ref(output);
             if (reference == IntPtr.Zero) {
                 output = IntPtr.Zero;
@@ -799,6 +804,7 @@ namespace RePlays.Recorders {
             }
             signal_handler_disconnect(obs_output_get_signal_handler(reference), "stop", outputStopCb, IntPtr.Zero);
             obs_output_release(reference);
+            obs_output_release(output);
             output = IntPtr.Zero;
             Logger.WriteLine("Released Output.");
         }
