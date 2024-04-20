@@ -268,7 +268,7 @@ namespace RePlays.Services {
 
         public static (bool isGame, bool forceDisplayCapture, string gameTitle) IsMatchedGame(string exeFile) {
             foreach (var game in SettingsService.Settings.detectionSettings.whitelist) {
-                if (game.gameExe == exeFile) return (true, false, game.gameName);
+                if (string.Equals(game.gameExe.ToLower(), exeFile.ToLower())) return (true, false, game.gameName);
             }
             if (SettingsService.Settings.captureSettings.recordingMode == "whitelist") return (false, false, "Whitelist Mode");
 
