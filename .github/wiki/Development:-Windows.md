@@ -1,5 +1,7 @@
 Want to help contribute to RePlays? Great! This page will help you get started on how to setup your dev environment and debug the RePlays app.
 
+Feel free to reach out on Discord if you have issues or questions about the setup or general development.
+
 Prerequisites:
 
 - Visual Studio 17 2022
@@ -14,17 +16,17 @@ Optional:
 - Cmake, git, & 7zip (if you are planning to build libobs yourself)
   - Make sure 7z is in your system environment PATH
 
-Visual Studio will be the main IDE for this guide.
+Visual Studio will be the main IDE for this guide, however feel free to follow along using Visual Studio Code, Jetbrains Rider, etc.
 
 # 1. Clone the repository
 
-Using git cli or using your preferred method of cloning.
+Using git cli or using your preferred method of cloning. Make sure to include submodules.
 
 - `git clone --recursive https://github.com/lulzsun/RePlays.git`
 
 # 2. Open the Visual Studio project
 
-- Open `RePlays.sln` from the root folder
+Open `RePlays.sln` using Visual Studio
 
 # 3. (Optional) Run npm ci
 
@@ -37,7 +39,7 @@ This step can be skipped and is optional because when you start debugging, it wi
 
 libobs is necessary for debugging and is not included with the project, the required files must be placed here:
 
-`~\bin\Debug\net8.0-windows`
+`~/bin/Debug/net8.0-windows/win-x64/`
 
 At the time of writing this guide, you have a few options for where to get libobs:
 
@@ -57,7 +59,7 @@ Make sure Cmake, git and 7zip are in your system environmental variables (so the
 Provided that you have all this, the build script is a one-click solution.
 
 1. Run `build-libobs.cmd` in cmd/powershell from root folder
-2. Build should be successful if the file `~\obs-studio-build\obs-studio-release\bin\64bit\obs.dll` exists
+2. Build should be successful if the file `~/obs-studio-build/obs-studio-release/bin/64bit/obs.dll` exists
 
 The script takes care of everything (cloning, building, downloading and copying certain third party obs plugins if necessary) for you and is what production builds run, so this will be matching results from production.
 
@@ -70,22 +72,22 @@ NOTE: Copying other versions of libobs that do not match the current release may
 The required files and folders are as follows:
 
 ```
-- packed_build
-    - bin
-        - 64bit
+- /packed_build
+    - /bin
+        - /64bit
             - obs.dll & ~dependencies/.dlls, etc. files~
-    - cmake
-    - data
-    - include
-    - obs-plugins
+    - /cmake
+    - /data
+    - /include
+    - /obs-plugins
 ```
 
 and must be copied to the debug folder like so:
 
 ```
-- bin\Debug\net8.0-windows
-    - data
-    - obs-plugins
+- /bin/Debug/net8.0-windows/win-x64
+    - /data
+    - /obs-plugins
     - obs.dll & ~dependencies/.dlls, etc. files~
 ```
 
@@ -99,9 +101,9 @@ To manually build a release on your machine, run the following command at the ro
 
 `dotnet publish /p:Configuration=Release /p:Version=X.X.X /p:PublishProfile=FolderProfile`
 
-You must specific a version in the numeral format of X.X.X (e.g. 1.69.420).
+You must specific a version in the numeral format of X.X.X (e.g. 1.69.420). Version numbering does not really matter for local release builds.
 
-The build will make use of Squirrel and create deltas or full packages, including a Setup file. You can find these files in `bin\Deployment\Releases`.
+The build will make use of Squirrel and create deltas or full packages, including a Setup file. You can find these files in `/bin/Deployment/Releases/`.
 
 You can learn more about the Squirrel deployment process [here](https://github.com/Squirrel/Squirrel.Windows/blob/develop/docs/getting-started/0-overview.md#overview).
 
@@ -109,6 +111,6 @@ You can learn more about the Squirrel deployment process [here](https://github.c
 
 Visual Studio Code may be preferred when working with the React.js portion of the app. The React.js is the interface or front-end of the application.
 
-Open `~\ClientApp` in Visual Studio Code and begin working on the interface like any normal React.js workflow!
+Open `~/ClientApp` in Visual Studio Code and begin working on the interface like any normal React.js workflow!
 
-It should be possible to use Visual Studio Code to modify C# files and debugging, but at the time of writing this guide, I have no experience in doing such.
+You can also use VSCode to debug and make changes to C# related files, however the VSCode debug tools may not be as powerful and convenient compared to Visual Studio.
