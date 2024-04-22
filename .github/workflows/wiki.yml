@@ -19,16 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Rename README.md to Home.md
-        run: mv .github/wiki/README.md .github/wiki/Home.md
-
-      - name: Delete file
-        run: rm -f .github/wiki/README.md
-
-      - uses: impresscms-dev/strip-markdown-extensions-from-links-action@v1.0.0
-        with:
-          path: .github/wiki/
-
-      - uses: Andrew-Chen-Wang/github-wiki-action@v4
+      - uses: Andrew-Chen-Wang/github-wiki-action@actually-working-preprocess
         with:
           path: .github/wiki/
