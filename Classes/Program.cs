@@ -92,7 +92,7 @@ namespace RePlays {
             try {
                 request.GetResponse();
             }
-            catch (WebException e) {
+            catch (WebException) {
                 process ??= Process.Start(startInfo);
             }
 #endif
