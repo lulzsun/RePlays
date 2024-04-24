@@ -2,6 +2,7 @@
 
   <PropertyGroup Label="Globals">
     <WebView2UseWinRT>False</WebView2UseWinRT>
+    <Configurations>Debug;Release;ReleaseWithSymbols</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
@@ -51,12 +52,21 @@
   <PropertyGroup>
     <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
     <SquirrelTools>$(PkgClowd_Squirrel)\tools</SquirrelTools>
-    <Version>1.0.0</Version>
+    <Version>1.3.1</Version>
     <NuspecFile>RePlays.nuspec</NuspecFile>
     <Nullable>annotations</Nullable>
     <StartupObject>RePlays.Program</StartupObject>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithSymbols|AnyCPU'">
+    <Optimize>True</Optimize>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   
   <ItemGroup>
