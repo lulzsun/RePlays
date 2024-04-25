@@ -17,7 +17,6 @@ using RePlays.Classes.Utils;
 using RePlays.Recorders;
 #else
 using System.Windows.Forms;
-using Velopack.Windows;
 #endif
 
 namespace RePlays {
@@ -108,11 +107,11 @@ namespace RePlays {
             // Velopack configuration
             try {
                 VelopackApp.Build()
+                /* Add this line if updating should create a shortcut as well
 #if WINDOWS
-                    .WithAfterInstallFastCallback((v) => new Shortcuts().CreateShortcutForThisExe())
                     .WithAfterUpdateFastCallback(v => new Shortcuts().CreateShortcutForThisExe())
-                    .WithBeforeUninstallFastCallback(v => new Shortcuts().RemoveShortcutForThisExe())
 #endif
+                */
                     .Run();
             }
             catch (Exception exception) {

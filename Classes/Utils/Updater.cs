@@ -23,7 +23,7 @@ namespace RePlays.Utils {
             try {
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)40, (long)100);
 
-                if(manager == null)
+                if (manager == null)
                     manager = new UpdateManager(new GithubSource("https://github.com/lulzsun/RePlays", null, isNightly));
 
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)70, (long)100);
