@@ -1,7 +1,8 @@
 ﻿using RePlays.Services;
-using Squirrel;
 using System;
 using System.Threading.Tasks;
+using Velopack;
+using Velopack.Sources;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Utils {
@@ -16,57 +17,61 @@ namespace RePlays.Utils {
                 Logger.WriteLine($"Currently in the middle of applying an update. Cannot check for updates.");
                 return;
             }
+
+            bool isNightly = SettingsService.Settings.generalSettings.updateChannel != "Stable";
             try {
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)40, (long)100);
 
-                using var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays",
-                    prerelease: SettingsService.Settings.generalSettings.updateChannel != "Stable");
+                var manager = new UpdateManager(new GithubSource("https://github.com/lulzsun/RePlays", null, isNigthly));
 
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)70, (long)100);
 
-                if (manager.CurrentlyInstalledVersion() != null) {
-                    currentVersion = manager.CurrentlyInstalledVersion().ToString();
+                if (manager.CurrentVersion != null) {
+                    currentVersion = manager.CurrentVersion.ToString();
                 }
-                var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "Stable"); // if nightly, we ignore deltas
+
+                var updateInfo = await manager.CheckForUpdatesAsync();
                 if (forceUpdate) {
                     WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)100, (long)100);
                     await Task.Delay(500);
                     WebMessage.DestroyToast("CheckUpdateProgress");
                 }
-                latestVersion = updateInfo.FutureReleaseEntry.Version.ToString();
+        
+                // If UpdateInfo is null, we are on the latest version
+                latestVersion = updateInfo != null ? updateInfo.TargetFullRelease.Version.ToString() : currentVersion;
                 SettingsService.SaveSettings();
                 WebMessage.SendMessage(GetUserSettings());
                 if (SettingsService.Settings.generalSettings.update == "none") return;
 
-                if (updateInfo.ReleasesToApply.Count > 0) {
+                if (updateInfo != null) {
                     Action<int> progressCallback = (progressValue) => {
                         WebMessage.DisplayToast("UpdateProgress", "Installing update", "Updating", "none", (long)progressValue, (long)100);
                     };
                     if (SettingsService.Settings.generalSettings.update == "automatic") {
-                        Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
+                        Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.TargetFullRelease.Version} from {manager.CurrentVersion}");
                         applyingUpdate = true;
-                        await manager.UpdateApp(progressCallback);
+                        await manager.DownloadUpdatesAsync(updateInfo, progressCallback, isNightly);
                         WebMessage.DestroyToast("UpdateProgress");
                         applyingUpdate = false;
-                        Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
+                        Logger.WriteLine($"Update to version {updateInfo.TargetFullRelease.Version} successful!");
                         WebMessage.DisplayModal("New update applied! Click Confirm to restart and complete the update.", "Update", "update");
                     }
                     else { // manual
                         if (forceUpdate) {
-                            Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
+                            Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.TargetFullRelease.Version} from {manager.CurrentVersion}");
                             WebMessage.DestroyToast("ManualUpdate");
                             applyingUpdate = true;
-                            await manager.UpdateApp(progressCallback);
+                            await manager.DownloadUpdatesAsync(updateInfo, progressCallback);
                             WebMessage.DestroyToast("UpdateProgress");
                             applyingUpdate = false;
-                            Logger.WriteLine($"Update to version {updateInfo.FutureReleaseEntry.Version} successful!");
+                            Logger.WriteLine($"Update to version {updateInfo.TargetFullRelease.Version} successful!");
                             WebMessage.DisplayModal("New update applied! Click Confirm to restart and complete the update.", "Update", "update");
                         }
                         else WebMessage.DisplayToast("ManualUpdate", "New version available!", "Update", "info");
                     }
                 }
                 else {
-                    Logger.WriteLine($"Found no updates higher than current version {updateInfo.CurrentlyInstalledVersion.Version}");
+                    Logger.WriteLine($"Found no updates higher than current version {manager.CurrentVersion}");
                 }
             }
             catch (System.Exception exception) {
