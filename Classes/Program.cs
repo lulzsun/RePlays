@@ -76,7 +76,7 @@ namespace RePlays {
                 return;
             }
 
-#if DEBUG && WINDOWS   
+#if DEBUG && WINDOWS && !NO_SERVER
             // this will run our react app if its not already running
             var startInfo = new ProcessStartInfo {
                 FileName = "cmd.exe",

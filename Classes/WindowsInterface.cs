@@ -52,6 +52,7 @@ namespace RePlays {
 
             if (SettingsService.Settings.generalSettings.startMinimized) {
                 this.Size = new Size(1080, 600);
+                this._PreviousSize = this.Size;
                 CenterToScreen();
                 this.WindowState = FormWindowState.Minimized;
                 this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
@@ -146,6 +147,7 @@ namespace RePlays {
                 webView2.BringToFront();
                 if (firstTime) {
                     this.Size = new Size(1080, 600);
+                    this._PreviousSize = this.Size;
                     this.FormBorderStyle = FormBorderStyle.Sizable;
                     CenterToScreen();
                     firstTime = false;
@@ -167,6 +169,8 @@ namespace RePlays {
         }
 
         FormWindowState _PreviousWindowState;
+        Size _PreviousSize;
+
         private void WindowsInterface_Resize(object sender, System.EventArgs e) {
             RefreshLoader();
 
@@ -174,6 +178,7 @@ namespace RePlays {
                 if (!firstTime) InitializeWebView2();
                 this.ShowInTaskbar = true;
                 _PreviousWindowState = WindowState;
+                _PreviousSize = Size;
             }
         }
 
@@ -222,6 +227,8 @@ namespace RePlays {
                 this.Opacity = 100;
                 this.FormBorderStyle = FormBorderStyle.Sizable;
                 this.WindowState = _PreviousWindowState;
+                this.Size = _PreviousSize;
+                this.BringToFront();
             }
         }
 
