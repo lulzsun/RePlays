@@ -12,7 +12,7 @@ RePlays is software made from scratch, inspired by Plays.tv. It was created as a
 
 ## How can I contribute?
 
-The best way is by fixing issues and making improvements to Replays. You can find out [how to set up the dev environment here](./Development:-Windows.md) to get started.
+The best way is by fixing issues and making improvements to Replays. You can find out [how to set up the dev environment here](./Development-Windows.md) to get started.
 
 ## How can I edit this wiki?
 

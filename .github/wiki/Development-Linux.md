@@ -1,4 +1,4 @@
-The following instructions are currently work-in-progress, feel free to make a pull request with changes to this page located [here](https://github.com/lulzsun/RePlays/blob/main/.github/wiki/Development:-Linux.md).
+The following instructions are currently work-in-progress, feel free to make a pull request with changes to this page located [here](https://github.com/lulzsun/RePlays/blob/main/.github/wiki/Development-Linux.md).
 
 # Install
 
