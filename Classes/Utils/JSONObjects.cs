@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+#if WINDOWS
+using Velopack.Windows;
+#endif
 
 namespace RePlays.Utils {
     public class VideoList {
@@ -51,17 +54,16 @@ namespace RePlays.Utils {
                 _launchStartup = value;
 #if WINDOWS
                 try {
-                    using (var manager = new Squirrel.UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
-                        if (_launchStartup == true)
-                            manager.CreateShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup, false);
-                        else
-                            manager.RemoveShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup);
-                    }
+                    var shortcuts = new Shortcuts();
+                    if (_launchStartup == true)
+                        shortcuts.CreateShortcut("RePlays.exe", ShortcutLocation.Startup, false, null);
+                    else
+                        shortcuts.DeleteShortcuts("RePlays.exe", ShortcutLocation.Startup);
                 }
                 catch (Exception exception) {
                     Logger.WriteLine("Error: Issue editing program startup setting: " + exception.ToString());
                 }
-#endif
+#endif  
             }
         }
         private bool _startMinimized = false;

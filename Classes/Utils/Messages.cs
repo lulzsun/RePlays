@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Velopack;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
 using static RePlays.Utils.Functions;
@@ -418,6 +419,10 @@ namespace RePlays.Utils {
                     break;
 #if WINDOWS
                 case "Restart": {
+                        if (Updater.manager?.IsUpdatePendingRestart ?? false) {
+                            Updater.manager.ApplyUpdatesAndRestart((VelopackAsset)null);
+                        }
+
                         string path = Path.Join(GetStartupPath(), @"../RePlays.exe");
                         string cmdCommand = $"/C timeout /t 1 & start \"\" \"{path}\"";
 

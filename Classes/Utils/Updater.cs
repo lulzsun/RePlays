@@ -9,6 +9,7 @@ namespace RePlays.Utils {
     internal class Updater {
         public static string currentVersion = "?";
         public static string latestVersion = "Offline";
+        public static UpdateManager? manager;
         public static bool applyingUpdate { get; internal set; }
 
         [Obsolete]
@@ -22,7 +23,8 @@ namespace RePlays.Utils {
             try {
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)40, (long)100);
 
-                var manager = new UpdateManager(new GithubSource("https://github.com/lulzsun/RePlays", null, isNigthly));
+                if(manager == null)
+                    manager = new UpdateManager(new GithubSource("https://github.com/lulzsun/RePlays", null, isNightly));
 
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)70, (long)100);
 
@@ -32,11 +34,12 @@ namespace RePlays.Utils {
 
                 var updateInfo = await manager.CheckForUpdatesAsync();
                 if (forceUpdate) {
-                    WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)100, (long)100);
+                    WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)100,
+                        (long)100);
                     await Task.Delay(500);
                     WebMessage.DestroyToast("CheckUpdateProgress");
                 }
-        
+
                 // If UpdateInfo is null, we are on the latest version
                 latestVersion = updateInfo != null ? updateInfo.TargetFullRelease.Version.ToString() : currentVersion;
                 SettingsService.SaveSettings();
