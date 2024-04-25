@@ -167,9 +167,9 @@
 
   <Target Name="Package" AfterTargets="Publish" Condition=" '$(Configuration)' == 'Release' ">
     <!-- Download releases to create package deltas using velopack -->
-    <Exec Command="dotnet tool run vpk download github --repoUrl https://github.com/lulzsun/RePlays" />
+    <Exec Command="dotnet vpk download github --repoUrl https://github.com/lulzsun/RePlays" />
     <!-- Pack using velopack -->
-    <Exec Command="dotnet tool run vpk pack --channel stable --packDir=$(PublishDir) --outputDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8 --packVersion $(Version) --packId RePlays" />
+    <Exec Command="dotnet vpk pack --channel stable --packDir=$(PublishDir) --outputDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8 --packVersion $(Version) --packId RePlays" />
   </Target>
 
   <ItemGroup>
