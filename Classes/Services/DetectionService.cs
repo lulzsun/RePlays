@@ -29,7 +29,7 @@ namespace RePlays.Services {
         static readonly HashSet<string> nonGameDetectionsCache = [];
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
-        private static List<string> classBlacklist = ["plasmashell", "splashscreen", "launcher", "cheat", "console"];
+        private static List<string> classBlacklist = ["plasmashell", "splashscreen", "splashwindow", "launcher", "cheat", "console"];
         private static List<string> classWhitelist = ["steam_app_", "unitywndclass", "unrealwindow", "riotwindowclass"];
 
         public static void Start() {
