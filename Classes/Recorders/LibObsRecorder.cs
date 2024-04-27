@@ -405,14 +405,16 @@ namespace RePlays.Recorders {
             }
             else {
                 output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
+
+
+                // SETUP OUTPUT SETTINGS
+                IntPtr outputSettings = obs_data_create();
+                obs_data_set_string(outputSettings, "path", videoSavePath);
+                obs_output_update(output, outputSettings);
+                obs_data_release(outputSettings);
             }
             signal_handler_connect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
 
-            // SETUP OUTPUT SETTINGS
-            IntPtr outputSettings = obs_data_create();
-            obs_data_set_string(outputSettings, "path", videoSavePath);
-            obs_output_update(output, outputSettings);
-            obs_data_release(outputSettings);
             obs_output_set_video_encoder(output, videoEncoders[encoder]);
             nuint idx = 0;
             foreach (var audioEncoder in audioEncoders) {
@@ -536,18 +538,7 @@ namespace RePlays.Recorders {
         }
 
         public override bool? TrySaveReplayBuffer() {
-            if (output != IntPtr.Zero) {
-                var refOutput = obs_output_get_ref(output);
-                if (refOutput == IntPtr.Zero) {
-                    Logger.WriteLine("Failed to get output reference");
-                    return false;
-                }
-
-                var id = obs_output_get_id(refOutput);
-                if (id != "replay_buffer") {
-                    return null;
-                }
-
+            if (output != IntPtr.Zero && IsOutputReplayBuffer()) {
                 calldata_t cd = new();
                 var ph = obs_output_get_proc_handler(output);
                 var res = proc_handler_call(ph, "save", cd);
@@ -714,7 +705,8 @@ namespace RePlays.Recorders {
                 Logger.WriteLine(e.Message);
             }
             IntegrationService.Shutdown();
-            BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
+            if(!IsOutputReplayBuffer())
+                BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
             return !signalOutputStop;
         }
@@ -849,6 +841,21 @@ namespace RePlays.Recorders {
             obs_output_release(output);
             output = IntPtr.Zero;
             Logger.WriteLine("Released Output.");
+        }
+
+        public bool IsOutputReplayBuffer() {
+            var refOutput = obs_output_get_ref(output);
+            if (refOutput == IntPtr.Zero) {
+                Logger.WriteLine("Failed to get output reference");
+                return false;
+            }
+
+            var id = obs_output_get_id(refOutput);
+            if (id != "replay_buffer") {
+                return false;
+            }
+
+            return true;
         }
     }
 }
