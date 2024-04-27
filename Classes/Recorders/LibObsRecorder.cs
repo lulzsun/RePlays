@@ -22,6 +22,7 @@ namespace RePlays.Recorders {
         static string videoNameTimeStamp = "";
         static IntPtr windowHandle = IntPtr.Zero;
         static IntPtr output = IntPtr.Zero;
+
         static Rect windowSize;
 
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
@@ -391,7 +392,20 @@ namespace RePlays.Recorders {
             retryAttempt = 0;
 
             // SETUP NEW OUTPUT
-            output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
+            if (SettingsService.Settings.captureSettings.useReplayBuffer) {
+                IntPtr bufferOutputSettings = obs_data_create();
+                obs_data_set_string(bufferOutputSettings, "directory", dir);
+                obs_data_set_string(bufferOutputSettings, "format", "%CCYY-%MM-%DD %hh-%mm-%ss-ses");
+                obs_data_set_string(bufferOutputSettings, "extension", fileFormat);
+                obs_data_set_int(bufferOutputSettings, "max_time_sec", SettingsService.Settings.captureSettings.replayBufferDuration);
+                obs_data_set_int(bufferOutputSettings, "max_size_mb", SettingsService.Settings.captureSettings.replayBufferSize);
+                output = obs_output_create("replay_buffer", "replay_buffer_output", bufferOutputSettings, IntPtr.Zero);
+
+                obs_data_release(bufferOutputSettings);
+            }
+            else {
+                output = obs_output_create("ffmpeg_muxer", "simple_ffmpeg_output", IntPtr.Zero, IntPtr.Zero);
+            }
             signal_handler_connect(obs_output_get_signal_handler(output), "stop", outputStopCb, IntPtr.Zero);
 
             // SETUP OUTPUT SETTINGS
@@ -519,6 +533,34 @@ namespace RePlays.Recorders {
             IntPtr encoderPtr = obs_video_encoder_create(videoEncoderIds[encoder], "Replays Recorder", videoEncoderSettings, IntPtr.Zero);
             obs_data_release(videoEncoderSettings);
             return encoderPtr;
+        }
+
+        public override bool? TrySaveReplayBuffer() {
+            if (output != IntPtr.Zero) {
+                var refOutput = obs_output_get_ref(output);
+                if (refOutput == IntPtr.Zero) {
+                    Logger.WriteLine("Failed to get output reference");
+                    return false;
+                }
+
+                var id = obs_output_get_id(refOutput);
+                if (id != "replay_buffer") {
+                    return null;
+                }
+
+                calldata_t cd = new();
+                var ph = obs_output_get_proc_handler(output);
+                var res = proc_handler_call(ph, "save", cd);
+                if (res) {
+                    Logger.WriteLine("Replay buffer saved successfully");
+                    return true;
+                }
+
+                Logger.WriteLine("Failed to save replay buffer");
+                return false;
+            }
+
+            return null;
         }
 
         public override void LostFocus() {
