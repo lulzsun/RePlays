@@ -22,7 +22,9 @@ namespace RePlays.Services {
 
                 if (bookmark.type.Equals(Bookmark.BookmarkType.Manual)) {
                     Functions.PlaySound(Functions.GetResourcesFolder() + "bookmark.wav");
+                    RecordingService.ActiveRecorder.TrySaveReplayBufferAndBookmarks();
                 }
+
             }
         }
 

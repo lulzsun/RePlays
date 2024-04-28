@@ -173,6 +173,10 @@ function App() {
     };
   }, [recentLinksMenuOpen]);
 
+  // This prevents the page from turning completely white in debug environment when page is refreshed
+  if(!userSettings)
+      return <h1>Loading</h1>
+
   return (
     <Router>
       <ModalContext.Provider

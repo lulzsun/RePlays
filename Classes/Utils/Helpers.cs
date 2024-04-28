@@ -370,8 +370,9 @@ namespace RePlays.Utils {
                 }
             }
 
+            var details = "";
             var startInfo = new ProcessStartInfo {
-                CreateNoWindow = true,
+                CreateNoWindow = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -384,15 +385,22 @@ namespace RePlays.Utils {
                 StartInfo = startInfo
             };
             process.Start();
-            var details = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
+            process.OutputDataReceived += (_, e) => {
+                Logger.WriteLine("O: " + e.Data);
+                details += e.Data;
+            };
+            process.ErrorDataReceived += (_, e) => {
+                Logger.WriteLine("O: " + e.Data);
+                details += e.Data;
+            };
 
+            process.WaitForExit();
             if (!File.Exists(thumbnailPath)) {
                 Logger.WriteLine(startInfo.Arguments);
                 Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: {details}");
             }
             else Logger.WriteLine($"Created new thumbnail: {thumbnailPath}");
 
-            process.WaitForExit();
             process.Close();
 
             return thumbnailPath;

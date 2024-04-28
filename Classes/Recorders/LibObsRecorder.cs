@@ -537,18 +537,48 @@ namespace RePlays.Recorders {
             return encoderPtr;
         }
 
-        public override bool? TrySaveReplayBuffer() {
-            if (output != IntPtr.Zero && IsOutputReplayBuffer()) {
+        public override bool? TrySaveReplayBufferAndBookmarks() {
+            if (IsUsingReplayBuffer()) {
                 calldata_t cd = new();
                 var ph = obs_output_get_proc_handler(output);
                 var res = proc_handler_call(ph, "save", cd);
-                if (res) {
-                    Logger.WriteLine("Replay buffer saved successfully");
-                    return true;
+                if (!res) {
+                    Logger.WriteLine("Failed to save replay buffer");
+                    return false;
                 }
 
-                Logger.WriteLine("Failed to save replay buffer");
-                return false;
+                Logger.WriteLine("Replay buffer saved successfully");
+                calldata_t pathcd = new();
+                var success = proc_handler_call(ph, "get_last_replay", pathcd);
+                if (!success) {
+                    Logger.WriteLine("Could not get replay save location");
+                    return false;
+                }
+
+                var path = "";
+                if (!calldata_get_string(pathcd, "path", out path)) {
+                    Logger.WriteLine("Could not get path of callback data (replay buffer)");
+                    return false;
+                }
+
+                var fileName = Path.GetFileNameWithoutExtension(path);
+
+
+                Logger.WriteLine($"ReplayBuffer saved to {path}");
+                RecordingService.lastVideoDuration = GetVideoDuration(path);
+                BookmarkService.ApplyBookmarkToSavedVideo("/" + fileName + ".mp4");
+
+                StorageService.ManageStorage();
+
+
+#if RELEASE && WINDOWS
+                var t = Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
+#else
+                var t = Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+#endif
+
+                t.ContinueWith(h => WebMessage.SendMessage(h.Result));
+                return true;
             }
 
             return null;
@@ -678,15 +708,21 @@ namespace RePlays.Recorders {
                 obs_output_force_stop(output);
             }
 
+            bool isReplayBuffer = IsUsingReplayBuffer();
+
             // CLEANUP
             ReleaseOutput();
             ReleaseSources();
             ReleaseEncoders();
 
-            Logger.WriteLine($"Session recording saved to {videoSavePath}");
             Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             DisplayCapture = false;
-            RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
+
+            if (!isReplayBuffer) {
+                Logger.WriteLine($"Session recording saved to {videoSavePath}");
+                RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
+
+            }
 
             if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration) {
                 GetOrCreateMetadata(videoSavePath);
@@ -705,7 +741,7 @@ namespace RePlays.Recorders {
                 Logger.WriteLine(e.Message);
             }
             IntegrationService.Shutdown();
-            if(!IsOutputReplayBuffer())
+            if (!isReplayBuffer)
                 BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
             return !signalOutputStop;
@@ -843,7 +879,7 @@ namespace RePlays.Recorders {
             Logger.WriteLine("Released Output.");
         }
 
-        public bool IsOutputReplayBuffer() {
+        public bool IsUsingReplayBuffer() {
             var refOutput = obs_output_get_ref(output);
             if (refOutput == IntPtr.Zero) {
                 Logger.WriteLine("Failed to get output reference");
@@ -851,11 +887,7 @@ namespace RePlays.Recorders {
             }
 
             var id = obs_output_get_id(refOutput);
-            if (id != "replay_buffer") {
-                return false;
-            }
-
-            return true;
+            return id == "replay_buffer";
         }
     }
 }

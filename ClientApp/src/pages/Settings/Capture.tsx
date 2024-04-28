@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { useEffect, useRef, useState } from 'react';
+import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import DropDownMenu from '../../components/DropDownMenu';
 import AudioDevice from '../../components/AudioDevice';
 
@@ -224,6 +224,43 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
     current_format === 'fragmented_mp4' ||
     current_format === 'fragmented_mov';
 
+
+  const validate = (e: ChangeEvent<HTMLInputElement>) => {
+    let value: number | string = parseInt(e.target.value);
+    if (isNaN(value) || value <= 0) {
+      value = -1;
+      e.target.value = '';
+    }
+  }
+
+  const validateAndUpdateSettings = (e: ChangeEvent<HTMLInputElement>, field: keyof CaptureSettings) => {
+    let value: number | string = parseInt(e.target.value);
+    if (isNaN(value) || value <= 10) {
+      value = 10;
+      e.target.value = '10';
+    }
+
+    if (settings) {
+      (settings[field] as number) = value;
+      updateSettings();
+    }
+  };
+
+  const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+    validate(e);
+  };
+
+  const handleInputBlur = (e: ChangeEvent<HTMLInputElement>, field: keyof CaptureSettings) => {
+    validateAndUpdateSettings(e, field);
+  };
+
+  const handleInputKeyPress = (e: KeyboardEvent<HTMLInputElement>, field: keyof CaptureSettings) => {
+    if (e.key === 'Enter') {
+      validateAndUpdateSettings(e as unknown as ChangeEvent<HTMLInputElement>, field);
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className='flex flex-col gap-2 font-medium text-base pb-7'>
       <h1 className='font-semibold text-2xl'>{t('settingsCaptureItem01')}</h1>
@@ -281,6 +318,67 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             {t('settingsCaptureItem05')}
           </span>
         </label>
+      </div>
+
+      <h1 className='font-semibold text-2xl'>{t('settingsCaptureItem30')}</h1>
+      <div className='flex flex-col gap-2'>
+        <span className='text-gray-700 dark:text-gray-400'>
+          {t('settingsCaptureItem31')}
+        </span>
+        <label className='inline-flex items-center'>
+          <input
+            type='checkbox'
+            name='enableReplayBuffer'
+            className='form-checkbox h-4 w-4 text-gray-600'
+            defaultChecked={settings === undefined ? false : settings.useReplayBuffer}
+            onChange={e => {
+              settings!.useReplayBuffer = (e?.target as HTMLInputElement).checked
+              updateSettings()
+            }}
+          />
+          <span className='px-2 text-gray-700 dark:text-gray-400'>
+            {t('settingsCaptureItem32')}
+          </span>
+        </label>
+
+        {
+          settings?.useReplayBuffer && <div className='flex flex-row items-center gap-4'>
+            <div className='flex flex-col'>
+              {t('settingsCaptureItem33')}
+              <div className='flex flex-row items-center'>
+                <input
+                  className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                  type="number"
+                  min="10"
+                  defaultValue={settings?.replayBufferDuration}
+                  onBlur={(e) => handleInputBlur(e, 'replayBufferDuration')}
+                  onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferDuration')}
+                  onChange={(e) => handleOnChange(e)}
+                />
+                <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                  seconds
+                </span>
+              </div>
+            </div>
+            <div className='flex flex-col'>
+              {t('settingsCaptureItem34')}
+              <div className='flex flex-row items-center'>
+                <input
+                  className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                  type="number"
+                  min="10"
+                  defaultValue={settings?.replayBufferSize}
+                  onBlur={(e) => handleInputBlur(e, 'replayBufferSize')}
+                  onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferSize')}
+                  onChange={(e) => handleOnChange(e)}
+                />
+                <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                  MB
+                </span>
+              </div>
+            </div>
+          </div>
+        }
       </div>
 
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem06')}</h1>
@@ -411,14 +509,14 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
               },
               ...(settings && settings.maxScreenResolution && settings.maxScreenResolution >= 1440
                 ? [
-                    {
-                      name: '1440p',
-                      onClick: () => {
-                        settings.resolution = 1440;
-                        updateSettings();
-                      },
+                  {
+                    name: '1440p',
+                    onClick: () => {
+                      settings.resolution = 1440;
+                      updateSettings();
                     },
-                  ]
+                  },
+                ]
                 : []),
             ]}
           />

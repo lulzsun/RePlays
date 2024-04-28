@@ -7,6 +7,6 @@ namespace RePlays.Recorders {
         public abstract Task<bool> StopRecording();
         public abstract void LostFocus();
         public abstract void GainedFocus();
-        public abstract bool? TrySaveReplayBuffer();
+        public abstract bool? TrySaveReplayBufferAndBookmarks();
     }
 }
