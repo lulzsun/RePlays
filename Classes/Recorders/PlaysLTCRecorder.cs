@@ -125,7 +125,7 @@ namespace RePlays.Recorders {
         }
 
         public override bool? TrySaveReplayBufferAndBookmarks() {
-            
+            return null;
         }
     }
 }
