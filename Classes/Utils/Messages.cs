@@ -276,7 +276,7 @@ namespace RePlays.Utils {
                     break;
                 case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
-                        string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
+                        string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('\\', '/');
                         CompressFile(filePath, data);
                     }
                     break;
