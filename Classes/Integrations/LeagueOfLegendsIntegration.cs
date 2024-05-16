@@ -53,7 +53,7 @@ namespace RePlays.Integrations {
                     JsonElement allPlayers = root.GetProperty("allPlayers");
                     JsonElement currentPlayer = allPlayers
                         .EnumerateArray()
-                        .FirstOrDefault(playerElement => playerElement.GetProperty("summonerName").GetString() == username.Split('#')[0]);
+                        .FirstOrDefault(playerElement => playerElement.GetProperty("summonerName").GetString() == username);
 
                     int currentKills = currentPlayer.GetProperty("scores").GetProperty("kills").GetInt32();
                     if (currentKills != stats.Kills) {
