@@ -429,20 +429,6 @@ namespace RePlays.Utils {
             }
         }
 
-        public static void UpdateMetadataWithStats(string videoPath, PlayerStats playerStats) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
-            if (File.Exists(metadataPath)) {
-                VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
-                metadata.kills = playerStats.Kills;
-                metadata.assists = playerStats.Assists;
-                metadata.deaths = playerStats.Deaths;
-                metadata.champion = playerStats.Champion;
-                metadata.win = playerStats.Win;
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
-            }
-        }
-
         public static void DeleteVideo(string filePath) {
             var metaPath = Path.Join(Path.GetDirectoryName(filePath), ".thumbs/");
             string[] metaFileExtensions = new string[] { ".png", ".webp", ".metadata" };

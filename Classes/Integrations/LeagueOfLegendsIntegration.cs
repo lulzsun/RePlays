@@ -1,6 +1,7 @@
 ﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -12,7 +13,7 @@ namespace RePlays.Integrations {
     internal class LeagueOfLegendsIntegration : Integration {
         static Timer timer;
 
-        public static PlayerStats stats;
+        public PlayerStats stats;
 
         public override Task Start() {
             Logger.WriteLine("Starting League Of Legends integration");
@@ -104,6 +105,20 @@ namespace RePlays.Integrations {
             timer.Dispose();
             Logger.WriteLine("Shutting down League Of Legends integration");
             return Task.CompletedTask;
+        }
+
+        public void UpdateMetadataWithStats(string videoPath) {
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+            if (File.Exists(metadataPath)) {
+                VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                metadata.kills = stats.Kills;
+                metadata.assists = stats.Assists;
+                metadata.deaths = stats.Deaths;
+                metadata.champion = stats.Champion;
+                metadata.win = stats.Win;
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
+            }
         }
     }
 

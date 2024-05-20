@@ -653,9 +653,9 @@ namespace RePlays.Recorders {
             DisplayCapture = false;
             RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
 
-            if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration) {
+            if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration lol) {
                 GetOrCreateMetadata(videoSavePath);
-                UpdateMetadataWithStats(videoSavePath, LeagueOfLegendsIntegration.stats);
+                lol.UpdateMetadataWithStats(videoSavePath);
             }
 
             try {

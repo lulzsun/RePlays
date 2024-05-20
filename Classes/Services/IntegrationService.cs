@@ -6,21 +6,22 @@ namespace RePlays.Services {
         private const string PUBG = "PLAYERUNKNOWN'S BATTLEGROUNDS";
         private const string CS2 = "Counter-Strike 2";
         private const string CSGO = "Counter-Strike Global Offensive";
-        static Integration ActiveGameIntegration;
+        private static Integration activeGameIntegration;
+        public static Integration ActiveGameIntegration { get { return activeGameIntegration; } }
         public static async void Start(string gameName) {
             switch (gameName) {
                 case LEAGUE_OF_LEGENDS:
-                    ActiveGameIntegration = new LeagueOfLegendsIntegration();
+                    activeGameIntegration = new LeagueOfLegendsIntegration();
                     break;
                 case PUBG:
-                    ActiveGameIntegration = new PubgIntegration();
+                    activeGameIntegration = new PubgIntegration();
                     break;
                 case CSGO:
                 case CS2:
-                    ActiveGameIntegration = new CS2();
+                    activeGameIntegration = new CS2();
                     break;
                 default:
-                    ActiveGameIntegration = null;
+                    activeGameIntegration = null;
                     break;
             }
 
