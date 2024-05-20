@@ -32,7 +32,7 @@ namespace RePlays.Utils {
 
 #if DEBUG
         public static string GetSolutionPath() {
-            DirectoryInfo? directory = new(Directory.GetCurrentDirectory());
+            DirectoryInfo? directory = new(AppContext.BaseDirectory);
             while (directory != null && !directory.GetFiles("*.sln").Any()) {
                 directory = directory.Parent;
             }
