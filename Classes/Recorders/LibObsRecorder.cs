@@ -650,8 +650,6 @@ namespace RePlays.Recorders {
             ReleaseSources();
             ReleaseEncoders();
 
-            Logger.WriteLine($"Session recording saved to {videoSavePath}");
-            Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             DisplayCapture = false;
             RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
 
@@ -674,6 +672,8 @@ namespace RePlays.Recorders {
             IntegrationService.Shutdown();
             BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
+            Logger.WriteLine($"Session recording saved to {videoSavePath}");
+            Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             return !signalOutputStop;
         }
 
