@@ -47,13 +47,13 @@ namespace RePlays.Integrations {
                         }
                     }
 
-                    string username = root.GetProperty("activePlayer").GetProperty("summonerName").GetString();
+                    string username = root.GetProperty("activePlayer").GetProperty("riotId").GetString();
 
                     // Parsing all players
                     JsonElement allPlayers = root.GetProperty("allPlayers");
                     JsonElement currentPlayer = allPlayers
                         .EnumerateArray()
-                        .FirstOrDefault(playerElement => playerElement.GetProperty("summonerName").GetString() == username);
+                        .FirstOrDefault(playerElement => playerElement.GetProperty("riotId").GetString() == username);
 
                     int currentKills = currentPlayer.GetProperty("scores").GetProperty("kills").GetInt32();
                     if (currentKills != stats.Kills) {
