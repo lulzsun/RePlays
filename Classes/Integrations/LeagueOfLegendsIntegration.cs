@@ -1,25 +1,26 @@
 ﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Timers;
 using Timer = System.Timers.Timer;
 
 
 namespace RePlays.Integrations {
     internal class LeagueOfLegendsIntegration : Integration {
-        Timer timer = new() {
-            Interval = 250,
-        };
+        static Timer timer;
 
-        public static PlayerStats stats;
+        public PlayerStats stats;
 
         public override Task Start() {
             Logger.WriteLine("Starting League Of Legends integration");
             stats = new PlayerStats();
+            timer = new() {
+                Interval = 250,
+            };
 
             timer.Elapsed += async (sender, e) => {
                 using var handler = new HttpClientHandler {
@@ -88,10 +89,8 @@ namespace RePlays.Integrations {
                         Logger.WriteLine(ex.ToString());
                     }
                     if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
-                        timer.Stop();
                         await Shutdown();
                     }
-
                 }
             };
             timer.Start();
@@ -101,19 +100,33 @@ namespace RePlays.Integrations {
 
         public override Task Shutdown() {
             if (timer.Enabled) {
-                Logger.WriteLine("Shutting down League Of Legends integration");
                 timer.Stop();
             }
-
+            timer.Dispose();
+            Logger.WriteLine("Shutting down League Of Legends integration");
             return Task.CompletedTask;
         }
-    }
-}
 
-public class PlayerStats {
-    public int Kills { get; set; }
-    public int Assists { get; set; }
-    public int Deaths { get; set; }
-    public string Champion { get; set; }
-    public bool Win { get; set; }
+        public void UpdateMetadataWithStats(string videoPath) {
+            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+            if (File.Exists(metadataPath)) {
+                VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                metadata.kills = stats.Kills;
+                metadata.assists = stats.Assists;
+                metadata.deaths = stats.Deaths;
+                metadata.champion = stats.Champion;
+                metadata.win = stats.Win;
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
+            }
+        }
+    }
+
+    public class PlayerStats {
+        public int Kills { get; set; }
+        public int Assists { get; set; }
+        public int Deaths { get; set; }
+        public string Champion { get; set; }
+        public bool Win { get; set; }
+    }
 }
