@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatBytes } from '../helpers/utils';
 import { postMessage } from '../helpers/messenger';
 import UploadModal from './UploadModal';
 import { ModalContext } from '../Contexts';
-import { CompressModal } from './CompressModal';
+import {CompressModal} from './CompressModal';
+import {getLatestVersion} from '../integrations/league';
 
 interface Props {
   game?: string;
@@ -44,6 +45,15 @@ export const Card: React.FC<Props> = ({
   onChange,
 }) => {
   const { t } = useTranslation();
+  const [latestVersion, setLatestVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      const version = await getLatestVersion();
+      setLatestVersion(version);
+    };
+    fetchVersion();
+  }, []);
 
   const modalCtx = useContext(ModalContext);
   const resultText = win === undefined ? undefined : win ? 'Win' : 'Loss';
@@ -169,11 +179,12 @@ export const Card: React.FC<Props> = ({
           {game === 'League of Legends' &&
             videoType === 'Sessions' &&
             champion &&
-            champion !== 'TFTChampion' && (
+            champion !== 'TFTChampion' && 
+            latestVersion && (
               <span className='absolute z-40 bottom-1 left-1 text-xs font-normal flex items-center'>
                 <img
                   className='border border-black -mr-4 z-40 rounded-full'
-                  src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champion}.png`}
+                  src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${champion}.png`}
                   style={{ width: '20px' }}
                   alt={champion}
                 />
