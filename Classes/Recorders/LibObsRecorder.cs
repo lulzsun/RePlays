@@ -650,14 +650,12 @@ namespace RePlays.Recorders {
             ReleaseSources();
             ReleaseEncoders();
 
-            Logger.WriteLine($"Session recording saved to {videoSavePath}");
-            Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             DisplayCapture = false;
             RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
 
-            if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration) {
+            if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration lol) {
                 GetOrCreateMetadata(videoSavePath);
-                UpdateMetadataWithStats(videoSavePath, LeagueOfLegendsIntegration.stats);
+                lol.UpdateMetadataWithStats(videoSavePath);
             }
 
             try {
@@ -674,6 +672,8 @@ namespace RePlays.Recorders {
             IntegrationService.Shutdown();
             BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
+            Logger.WriteLine($"Session recording saved to {videoSavePath}");
+            Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             return !signalOutputStop;
         }
 

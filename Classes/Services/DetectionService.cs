@@ -170,6 +170,8 @@ namespace RePlays.Services {
             }
             var gameDetection = IsMatchedGame(executablePath);
 
+            if (!gameDetection.isGame && SettingsService.Settings.captureSettings.recordingMode == "whitelist") { return false; }
+
             // If the windowHandle we captured is problematic, just return nothing
             // Problematic handles are created if the application for example,
             // the game displays a splash screen (SplashScreenClass) before launching
