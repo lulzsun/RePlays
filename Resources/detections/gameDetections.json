@@ -114698,6 +114698,16 @@
 	},
 	{
 		"region": null,
+		"title": "XDefiant",
+		"game_detection": [
+			{
+				"gameexe": "/Ubisoft Game Launcher/games/XDefiant/XDefiant\\.exe",
+				"longname": "XDefiant"
+			}
+		]
+	},
+	{
+		"region": null,
 		"title": "Borderlands Pre-Sequel",
 		"game_detection": [
 			{
