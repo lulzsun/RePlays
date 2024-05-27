@@ -25,7 +25,7 @@ Note: Depending on your Windows version, you may need to manually download and i
 
 ## Development
 
-Get started with contributing to the project with this quick [getting started guide](./Development-GettingStarted.md)!
+Get started with contributing to the project with this quick [getting started guide](https://github.com/lulzsun/RePlays/wiki/Development-Windows)!
 
 ## Technology Stack
 
