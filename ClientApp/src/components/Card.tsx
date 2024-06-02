@@ -162,7 +162,7 @@ export const Card: React.FC<Props> = ({
       </div>
       <Link
         className='rounded-lg'
-        to={`/player/${game}/${video}/${videoType}`}
+        to={`/player/${encodeURIComponent(game)}/${video}/${videoType}`}
         onClick={() => {
           console.log(folder);
         }}
@@ -199,7 +199,7 @@ export const Card: React.FC<Props> = ({
               </span>
             )}
           <div className='absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50' />
-          <img className='absolute z-20 w-full' alt='' src={`${folder}/${game}/.thumbs/${thumb}`} />
+          <img className='absolute z-20 w-full' alt='' src={`${folder}/${encodeURIComponent(game)}/.thumbs/${thumb}`} />
           <img className='relative z-10 w-full' alt='' src={'video_thumbnail_placeholder.png'} />
         </div>
         <div className='bg-white dark:bg-gray-900 text-gray-800 dark:text-white w-full rounded-b-lg p-4 text-xs font-medium'>
