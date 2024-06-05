@@ -123,5 +123,9 @@ namespace RePlays.Recorders {
 
         public override void GainedFocus() {
         }
+
+        public override bool? TrySaveReplayBufferAndBookmarks() {
+            return null;
+        }
     }
 }

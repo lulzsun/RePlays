@@ -146,6 +146,9 @@ declare global {
     hasNvidiaAudioSDK: boolean;
     fileFormatsCache: FileFormat[];
     fileFormat: FileFormat;
+    useReplayBuffer: boolean;
+    replayBufferDuration: number;
+    replayBufferSize: number;
   }
   interface UploadSettings {
     recentLinks: string[];

@@ -163,6 +163,17 @@ namespace RePlays.Utils {
 
         private FileFormat _fileFormat = new FileFormat("mp4", "MPEG-4 (.mp4)");
         public FileFormat fileFormat { get { return _fileFormat; } set { _fileFormat = value; } }
+
+        private bool _useReplayBuffer = false;
+        public bool useReplayBuffer { get { return _useReplayBuffer; } set { _useReplayBuffer = value; } }
+        // In seconds
+
+        private uint _replayBufferDuration = 30;
+        public uint replayBufferDuration { get { return _replayBufferDuration; } set { _replayBufferDuration = value; } }
+
+        // In MB
+        private uint _replayBufferSize = 500;
+        public uint replayBufferSize { get { return _replayBufferSize; } set { _replayBufferSize = value; } }
     }
 
     public class FileFormat {
