@@ -239,3 +239,7 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 Classes/WindowsInterface.resx
+
+
+# Dotnet tool configuration is needed for vpk
+!./.config/dotnet-tools.json

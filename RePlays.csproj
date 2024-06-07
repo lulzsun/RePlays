@@ -2,7 +2,6 @@
 
   <PropertyGroup Label="Globals">
     <WebView2UseWinRT>False</WebView2UseWinRT>
-    <Configurations>Debug;Release;ReleaseWithSymbols</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
@@ -51,22 +50,12 @@
 
   <PropertyGroup>
     <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
-    <SquirrelTools>$(PkgClowd_Squirrel)\tools</SquirrelTools>
     <Version>1.0.0</Version>
     <NuspecFile>RePlays.nuspec</NuspecFile>
     <Nullable>annotations</Nullable>
     <StartupObject>RePlays.Program</StartupObject>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithSymbols|AnyCPU'">
-    <Optimize>True</Optimize>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   
   <ItemGroup>
@@ -93,7 +82,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Clowd.Squirrel" Version="2.11.1" />
     <PackageReference Include="JsonPath.Net" Version="1.0.0" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.9" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
@@ -106,6 +94,7 @@
     </PackageReference>
     <PackageReference Include="SharpHook" Version="5.3.1" />
     <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="Velopack" Version="0.0.462-gf8acc97" />
   </ItemGroup>
   
   <ItemGroup>
@@ -177,13 +166,15 @@
   </Target>
 
   <Target Name="Package" AfterTargets="Publish" Condition=" '$(Configuration)' == 'Release' ">
-    <!-- Prepare Squirrel package -->
-    <XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
-      <Output TaskParameter="Result" ItemName="ID" />
+    <!-- Get authors from nuspec -->
+    <XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/authors/text()">
+      <Output TaskParameter="Result" ItemName="Authors" />
     </XmlPeek>
-
-    <Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets" />
-    <Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8" />
+    
+    <!-- Download releases to create package deltas using velopack -->
+    <Exec Command="dotnet vpk download github --repoUrl https://github.com/lulzsun/RePlays" />
+    <!-- Pack using velopack -->
+    <Exec Command="dotnet vpk pack --packAuthors @(Authors) --splashImage $(MSBuildProjectDirectory)\Resources\loading.gif --icon $(MSBuildProjectDirectory)\Resources\logo.ico --channel stable --packDir=$(PublishDir) --outputDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8 --packVersion $(Version) --packId RePlays" />
   </Target>
 
   <ItemGroup>
