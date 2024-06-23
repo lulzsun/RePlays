@@ -119,7 +119,6 @@ namespace RePlays.Services {
             if (IsRecording || user || error) {
                 recordingTimer.Elapsed -= OnTimedEvent;
                 recordingTimer.Stop();
-                recordingTimer.Dispose();
                 Logger.WriteLine($"Stop Recording: {currentSession.Pid}, {currentSession.GameTitle}");
                 currentSession.Pid = 0;
                 WebMessage.DestroyToast("Recording");
