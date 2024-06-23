@@ -8,7 +8,7 @@ namespace RePlays.Classes.Services.Keybinds {
             SetKeybind();
         }
         public override void Action() {
-            if (RecordingService.IsRecording) RecordingService.StopRecording();
+            if (RecordingService.IsRecording) RecordingService.StopRecording(true);
             else RecordingService.StartRecording();
         }
     }

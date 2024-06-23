@@ -99,7 +99,7 @@ namespace RePlays.Services {
             }
         }
 
-        public static async void StopRecording(bool forced = false) {
+        public static async void StopRecording(bool user = false) {
             if (!IsRecording) {
                 Logger.WriteLine($"Cannot stop recording, no recording in progress");
                 return;
@@ -108,18 +108,24 @@ namespace RePlays.Services {
 
             bool error = await ActiveRecorder.StopRecording();
 
-            if (IsRecording) {
-                if (currentSession.Pid != 0) {
-                    recordingTimer.Elapsed -= OnTimedEvent;
-                    recordingTimer.Stop();
-                    Logger.WriteLine(string.Format("Stop Recording: {0}, {1}", currentSession.Pid, currentSession.GameTitle));
-                    currentSession.Pid = 0;
-                    WebMessage.DestroyToast("Recording");
-                    IsRecording = false;
-                    IsStopping = false;
-                    StorageService.ManageStorage();
-                }
-                //DetectionService.LoadDetections();
+            if (error) {
+                Logger.WriteLine("Warning: ActiveRecorder did not successfully stopped recording!");
+            }
+
+            if (user) {
+                Logger.WriteLine("User-initiated stop recording.");
+            }
+
+            if (IsRecording || user || error) {
+                recordingTimer.Elapsed -= OnTimedEvent;
+                recordingTimer.Stop();
+                recordingTimer.Dispose();
+                Logger.WriteLine($"Stop Recording: {currentSession.Pid}, {currentSession.GameTitle}");
+                currentSession.Pid = 0;
+                WebMessage.DestroyToast("Recording");
+                IsRecording = false;
+                IsStopping = false;
+                StorageService.ManageStorage();
             }
         }
 
