@@ -110,6 +110,9 @@ jobs:
           CI: false
         run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile
 
+      - name: Append version to setup file
+        run: ren ./bin/Deployment/Releases/RePlaysSetup.exe ./bin/Deployment/Releases/RePlaysSetup-${{needs.prep.outputs.version}}.exe
+
       - name: Update nightly tag
         uses: richardsimko/update-tag@v1
         with:
@@ -117,18 +120,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate Prerelease
+      - name: Delete old prerelease deltas
+        run: |
+          gh release delete-asset "nightly" "RePlays-${{needs.prep.outputs.oldversion}}-full.nupkg" &&
+          gh release delete-asset "nightly" "RePlays-${{needs.prep.outputs.oldversion}}-delta.nupkg"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create prerelease
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: "nightly"
           prerelease: true
           generate_release_notes: true
-          artifactErrorsFailBuild: true
           name: ${{ format('Nightly RePlays v{0}', needs.prep.outputs.version )}}
           body: "Nightly release, built with the latest and potentially breaking changes, test at your own risk."
           files: |
             ./bin/Deployment/Releases/RELEASES
-            ./bin/Deployment/Releases/RePlaysSetup.exe
+            ./bin/Deployment/Releases/RePlaysSetup-${{needs.prep.outputs.version}}.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
