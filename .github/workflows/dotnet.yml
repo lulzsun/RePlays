@@ -73,7 +73,6 @@ jobs:
     permissions:
       contents: write
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
@@ -111,18 +110,24 @@ jobs:
           CI: false
         run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile
 
+      - name: Update nightly tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generate Prerelease
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: "nightly"
+          tag_name: "nightly"
           prerelease: true
-          allowUpdates: true
-          removeArtifacts: true
-          generateReleaseNotes: true
+          generate_release_notes: true
           artifactErrorsFailBuild: true
           name: ${{ format('Nightly RePlays v{0}', needs.prep.outputs.version )}}
-          artifacts: |
+          body: "Nightly release, built with the latest and potentially breaking changes, test at your own risk."
+          files: |
             ./bin/Deployment/Releases/RELEASES
             ./bin/Deployment/Releases/RePlaysSetup.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
