@@ -111,7 +111,7 @@ jobs:
         run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile
 
       - name: Append version to setup file
-        run: ren ./bin/Deployment/Releases/RePlaysSetup.exe ./bin/Deployment/Releases/RePlaysSetup-${{needs.prep.outputs.version}}.exe
+        run: ren ./bin/Deployment/Releases/RePlaysSetup.exe RePlaysSetup-${{needs.prep.outputs.version}}.exe
 
       - name: Update nightly tag
         uses: richardsimko/update-tag@v1
