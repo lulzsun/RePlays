@@ -26,6 +26,7 @@ namespace RePlays.Utils {
 
                 if (manager.CurrentlyInstalledVersion() != null) {
                     currentVersion = manager.CurrentlyInstalledVersion().ToString();
+                    Logger.Version = $"[v{currentVersion}]";
                 }
                 var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "Stable"); // if nightly, we ignore deltas
                 if (forceUpdate) {
