@@ -539,6 +539,7 @@ namespace RePlays.Recorders {
 
         public override bool? TrySaveReplayBufferAndBookmarks() {
             if (IsUsingReplayBuffer()) {
+                Logger.WriteLine("Trying to save replay buffer");
                 calldata_t cd = new();
                 var ph = obs_output_get_proc_handler(output);
                 var res = proc_handler_call(ph, "save", cd);
@@ -547,7 +548,6 @@ namespace RePlays.Recorders {
                     return false;
                 }
 
-                Logger.WriteLine("Replay buffer saved successfully");
                 calldata_t pathcd = new();
                 var success = proc_handler_call(ph, "get_last_replay", pathcd);
                 if (!success) {
@@ -555,16 +555,14 @@ namespace RePlays.Recorders {
                     return false;
                 }
 
-                var path = "";
-                if (!calldata_get_string(pathcd, "path", out path)) {
-                    Logger.WriteLine("Could not get path of callback data (replay buffer)");
+                if (!calldata_get_string(pathcd, "path", out string path)) {
+                    Logger.WriteLine($"Could not get path of callback data (replay buffer): {path}");
                     return false;
                 }
 
                 var fileName = Path.GetFileNameWithoutExtension(path);
 
-
-                Logger.WriteLine($"ReplayBuffer saved to {path}");
+                Logger.WriteLine($"Successfully saved replay buffer to {path}");
                 RecordingService.lastVideoDuration = GetVideoDuration(path);
                 BookmarkService.ApplyBookmarkToSavedVideo("/" + fileName + ".mp4");
 
