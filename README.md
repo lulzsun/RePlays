@@ -1,6 +1,6 @@
 # RePlays [![Downloads][download-badge]][download-link] [![Discord][discord-badge]][discord-link]
 
-[download-badge]: https://img.shields.io/github/downloads-pre/lulzsun/RePlays/latest/RePlaysSetup.exe
+[download-badge]: https://img.shields.io/github/downloads/lulzsun/RePlays/latest/RePlaysSetup.exe
 [download-link]: https://github.com/lulzsun/RePlays/releases/latest
 [discord-badge]: https://img.shields.io/discord/654698116917886986?label=Discord&logo=discord
 [discord-link]: https://discordapp.com/invite/Qj2BmZX
