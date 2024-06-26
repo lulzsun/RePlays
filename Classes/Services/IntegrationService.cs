@@ -1,4 +1,5 @@
 ﻿using RePlays.Integrations;
+using RePlays.Utils;
 
 namespace RePlays.Services {
     public static class IntegrationService {
@@ -26,12 +27,14 @@ namespace RePlays.Services {
             }
 
             if (ActiveGameIntegration == null) return;
+            Logger.WriteLine("Starting game integration");
             await ActiveGameIntegration.Start();
         }
 
         public static async void Shutdown() {
             if (ActiveGameIntegration == null)
                 return;
+            Logger.WriteLine("Shutting down game integration");
             await ActiveGameIntegration.Shutdown();
         }
     }

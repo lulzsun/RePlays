@@ -718,7 +718,6 @@ namespace RePlays.Recorders {
             if (!isReplayBuffer) {
                 Logger.WriteLine($"Session recording saved to {videoSavePath}");
                 RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
-
             }
 
             if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration lol) {
@@ -741,7 +740,6 @@ namespace RePlays.Recorders {
             if (!isReplayBuffer)
                 BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
 
-            Logger.WriteLine($"Session recording saved to {videoSavePath}");
             Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             return !signalOutputStop;
         }

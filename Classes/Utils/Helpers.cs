@@ -424,6 +424,7 @@ namespace RePlays.Utils {
                 }
                 metadata.duration = duration;
 
+                Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");
                 File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
                 return metadata;
             }
