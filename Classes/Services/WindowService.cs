@@ -51,10 +51,6 @@ namespace RePlays.Services {
         [DllImport("psapi.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         static extern bool GetProcessImageFileName(IntPtr hprocess, StringBuilder lpExeName, out int size);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
-
         [DllImport("user32.dll", EntryPoint = "GetClassName", SetLastError = true, CharSet = CharSet.Auto)]
         static extern int _GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
@@ -269,11 +265,9 @@ namespace RePlays.Services {
             Logger.WriteLine("WindowService starting...");
 #if WINDOWS
             // Get device paths for mounted drive letters
-            for (char letter = 'A'; letter <= 'Z'; letter++) {
-                string driveLetter = letter + ":";
-                StringBuilder s = new StringBuilder();
-                if (QueryDosDevice(driveLetter, s, 1000)) {
-                    drivePaths.Add(s.ToString(), driveLetter);
+            foreach (DriveInfo drive in DriveInfo.GetDrives()) {
+                if (drive.IsReady) {
+                    drivePaths.Add(drive.RootDirectory.FullName, drive.Name);
                 }
             }
 

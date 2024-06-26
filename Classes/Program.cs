@@ -51,12 +51,18 @@ namespace RePlays {
             // log all exceptions
             AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) => {
                 var st = new StackTrace((Exception)eventArgs.ExceptionObject, true);
-                Logger.WriteLine(
-                    eventArgs.ExceptionObject.ToString(),
-                    st.GetFrames().Last().GetFileName() ?? "External Library",
-                    st.GetFrames().Last().GetMethod().Name,
-                    st.GetFrames().Last().GetFileLineNumber()
-                );
+                var frames = st.GetFrames();
+                if (frames.Length != 0) {
+                    Logger.WriteLine(
+                        eventArgs.ExceptionObject.ToString(),
+                        st.GetFrames().Last().GetFileName() ?? "External Library",
+                        st.GetFrames().Last().GetMethod().Name,
+                        st.GetFrames().Last().GetFileLineNumber()
+                    );
+                }
+                else {
+                    Logger.WriteLine(eventArgs.ExceptionObject.ToString());
+                }
             };
 
             // prevent multiple instances
