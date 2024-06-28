@@ -40,6 +40,7 @@ namespace RePlays.Services {
                 return;
             Logger.WriteLine("Shutting down game integration");
             await ActiveGameIntegration.Shutdown();
+            activeGameIntegration = null;
         }
     }
 }
