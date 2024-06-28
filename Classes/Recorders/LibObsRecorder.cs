@@ -725,17 +725,19 @@ namespace RePlays.Recorders {
                 lol.UpdateMetadataWithStats(videoSavePath);
             }
 
-            try {
 #if RELEASE && WINDOWS
-                var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
+            var t = Task.Run(() => {
+                var v = GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true);
+                WebMessage.SendMessage(v);
+                return Task.CompletedTask;
+            });
 #else
-                var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+            var t = Task.Run(() => {
+                var v = GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy);
+                WebMessage.SendMessage(v);
+                return Task.CompletedTask;
+            });
 #endif
-                WebMessage.SendMessage(t);
-            }
-            catch (Exception e) {
-                Logger.WriteLine(e.Message);
-            }
             IntegrationService.Shutdown();
             if (!isReplayBuffer)
                 BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
