@@ -10,6 +10,10 @@ namespace RePlays.Services {
         private static Integration activeGameIntegration;
         public static Integration ActiveGameIntegration { get { return activeGameIntegration; } }
         public static async void Start(string gameName) {
+            if (activeGameIntegration != null) {
+                Logger.WriteLine("Active game integration already exists! Shutting down before starting");
+                await ActiveGameIntegration.Shutdown();
+            }
             switch (gameName) {
                 case LEAGUE_OF_LEGENDS:
                     activeGameIntegration = new LeagueOfLegendsIntegration();
