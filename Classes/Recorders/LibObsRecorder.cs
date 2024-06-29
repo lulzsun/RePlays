@@ -84,9 +84,11 @@ namespace RePlays.Recorders {
 
             // STARTUP
 #if !WINDOWS
-            if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "libobs.so"))) {
+            string libobsPath = Path.Combine(Directory.GetCurrentDirectory(), "libobs.so");
+            if (!File.Exists(libobsPath)) {
                 throw new Exception("error: Missing libobs.so");
             }
+            NativeLibrary.Load(libobsPath);
 #endif
             if (obs_initialized()) {
                 throw new Exception("error: obs already initialized");
