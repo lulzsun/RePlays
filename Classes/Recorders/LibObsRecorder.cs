@@ -650,8 +650,10 @@ namespace RePlays.Recorders {
             Logger.WriteLine("Encoder options: " + string.Join(", ", availableEncoders));
             SettingsService.Settings.captureSettings.encodersCache = availableEncoders;
             if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder)) {
+                if (!string.IsNullOrWhiteSpace(SettingsService.Settings.captureSettings.encoder))
+                    WebMessage.DisplayModal($"The previously selected encoder is no longer available. The encoder has been reset to the default option: {availableEncoders[0]}.", "Encoder warning", "warning");
+
                 SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
-                WebMessage.DisplayModal($"The previously selected encoder is no longer available. The encoder has been reset to the default option: {availableEncoders[0]}.", "Encoder warning", "warning");
             }
             SettingsService.SaveSettings();
         }
