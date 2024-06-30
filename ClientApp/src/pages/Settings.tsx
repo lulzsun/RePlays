@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { Link, Route, HashRouter as Router, Switch, useParams } from 'react-router-dom';
+import { Link, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import About from './Settings/About';
 import Storage from './Settings/Storage';
 import Capture from './Settings/Capture';
@@ -11,10 +11,6 @@ import Detection from './Settings/Detection';
 import KeyBind from './Settings/Keybind';
 import { postMessage } from '../helpers/messenger';
 
-type SettingsParams = {
-  page: string;
-};
-
 interface Props {
   userSettings: UserSettings | undefined;
   setUserSettings: React.Dispatch<React.SetStateAction<UserSettings | undefined>>;
@@ -22,106 +18,92 @@ interface Props {
 
 export const Settings: React.FC<Props> = ({ userSettings, setUserSettings }) => {
   const { t } = useTranslation();
-
-  let { page } = useParams<SettingsParams>();
+  const location = useLocation();
   function updateSettings() {
     postMessage('UpdateSettings', userSettings);
     let newSettings = Object.assign({}, userSettings);
     setUserSettings(newSettings);
   }
+
+  const formatPageName = (pathname: string) => {
+    return pathname.replace("/settings/", "");
+  };
+
   return (
-    <Router>
-      <div className='flex flex-col h-full border-0 border-b'>
-        <div style={{ height: '50px' }}>
-          {t('settingsTitle')}
-          <p className='inline-block px-1'>/</p>{' '}
-          <div className='inline-block text-base align-bottom'>{page}</div>
-        </div>
-        <div style={{ height: 'calc(100% - 50px)' }} className='flex flex-row'>
-          <div className='w-40 h-full pr-6 border-0 border-r'>
-            <Link
-              to='/settings/General'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem01')}
-            </Link>
-            <Link
-              to='/settings/Capture'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem02')}
-            </Link>
-            <Link
-              to='/settings/Detection'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem03')}
-            </Link>
-            <Link
-              to='/settings/Keybinds'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem04')}
-            </Link>
-            <Link
-              to='/settings/Upload'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem05')}
-            </Link>
-            <Link
-              to='/settings/Storage'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem06')}
-            </Link>
-            <Link
-              to='/settings/Help'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem07')}
-            </Link>
-            <Link
-              to='/settings/About'
-              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
-            >
-              {t('settingsItem08')}
-            </Link>
-          </div>
-          <div className='flex-auto overflow-auto h-full w-full p-7 pt-0 pb-0'>
-            <Switch>
-              <Route exact path='/settings/general'>
-                <General updateSettings={updateSettings} settings={userSettings?.generalSettings} />
-              </Route>
-              <Route exact path='/settings/capture'>
-                <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} />
-              </Route>
-              <Route exact path='/settings/detection'>
-                <Detection
-                  updateSettings={updateSettings}
-                  settings={userSettings?.detectionSettings}
-                />
-              </Route>
-              <Route exact path='/settings/keybinds'>
-                <KeyBind updateSettings={updateSettings} settings={userSettings?.keybindSettings} />
-              </Route>
-              <Route exact path='/settings/upload'>
-                <Upload updateSettings={updateSettings} settings={userSettings?.uploadSettings} />
-              </Route>
-              <Route exact path='/settings/storage'>
-                <Storage updateSettings={updateSettings} settings={userSettings?.storageSettings} />
-              </Route>
-              <Route exact path='/settings/help'>
-                <Help />
-              </Route>
-              <Route exact path='/settings/about'>
-                <About />
-              </Route>
-            </Switch>
-          </div>
+    <div className='flex flex-col h-full border-0 border-b'>
+      <div style={{ height: '50px' }}>
+        {t('settingsTitle')}
+        <p className='inline-block px-1'>/</p>{' '}
+        <div className='inline-block text-base align-bottom'>
+          {formatPageName(location.pathname) }
         </div>
       </div>
-    </Router>
+      <div style={{ height: 'calc(100% - 50px)' }} className='flex flex-row'>
+        <div className='w-40 h-full pr-6 border-0 border-r'>
+          <Link
+            to='General'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem01')}
+          </Link>
+          <Link
+            to='Capture'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem02')}
+          </Link>
+          <Link
+            to='Detection'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem03')}
+          </Link>
+          <Link
+            to='Keybinds'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem04')}
+          </Link>
+          <Link
+            to='Upload'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem05')}
+          </Link>
+          <Link
+            to='Storage'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem06')}
+          </Link>
+          <Link
+            to='Help'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem07')}
+          </Link>
+          <Link
+            to='About'
+            className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+          >
+            {t('settingsItem08')}
+          </Link>
+        </div>
+        <div className='flex-auto overflow-auto h-full w-full p-7 pt-0 pb-0'>
+          <Routes>
+            <Route path='*' element={<Navigate to='General' />} />
+            <Route path='General' element={<General updateSettings={updateSettings} settings={userSettings?.generalSettings} />} />
+            <Route path='Capture' element={<Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} />} />
+            <Route path='Detection' element={<Detection updateSettings={updateSettings} settings={userSettings?.detectionSettings} />} />
+            <Route path='Keybinds' element={<KeyBind updateSettings={updateSettings} settings={userSettings?.keybindSettings} />} />
+            <Route path='Upload' element={<Upload updateSettings={updateSettings} settings={userSettings?.uploadSettings} />} />
+            <Route path='Storage' element={<Storage updateSettings={updateSettings} settings={userSettings?.storageSettings} />} />
+            <Route path='Help' element={<Help />} />
+            <Route path='About' element={<About />} />
+          </Routes>
+        </div>
+      </div>
+    </div>
   );
 };
 
