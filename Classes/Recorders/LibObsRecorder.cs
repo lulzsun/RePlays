@@ -622,7 +622,7 @@ namespace RePlays.Recorders {
                 if (id == string.Empty)
                     continue;
                 switch (id) {
-                    case "jim_av1_nsvenc":
+                    case "jim_av1_nvenc":
                         availableEncoders.Add("Hardware (NVENC AV1)");
                         break;
                     case "jim_nvenc":
