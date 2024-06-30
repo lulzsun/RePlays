@@ -477,7 +477,7 @@ namespace RePlays.Utils {
             }
         }
 
-        public static string CreateClip(string videoPath, ClipSegment[] clipSegments, int index = 0) {
+        public static string CreateClip(string game, string videoPath, ClipSegment[] clipSegments, int index = 0, int progress = 0, string uuid = null) {
             string inputFile = Path.Join(GetPlaysFolder(), videoPath).Replace("\\", "/");
             string outputFile = Path.Combine(Path.GetDirectoryName(inputFile), DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-clp.mp4");
 
@@ -496,14 +496,15 @@ namespace RePlays.Utils {
             }
             if (clipSegments.Length > 1 && index == clipSegments.Length) {
                 startInfo.Arguments =
-                    "-f concat -safe 0 -i \"" + Path.Join(GetTempFolder(), "list.txt").Replace("\\", "/") + "\" -codec copy \"" + outputFile + "\"";
+                    "-v warning -hide_banner -stats -f concat -safe 0 -i \"" + Path.Join(GetTempFolder(), "list.txt").Replace("\\", "/") + "\" " + (SettingsService.Settings.captureSettings.useAccurateClipLength ? "" : " -codec copy ") + "\"" + outputFile + "\"";
                 Logger.WriteLine(startInfo.Arguments);
             }
             else {
                 startInfo.Arguments =
+                    "-v warning -hide_banner -stats " +
                     "-ss " + clipSegments[index].start.ToString(CultureInfo.InvariantCulture) + " " +
                     "-i \"" + inputFile + "\" " +
-                    "-t " + clipSegments[index].duration.ToString(CultureInfo.InvariantCulture) + " -codec copy " +
+                    "-t " + clipSegments[index].duration.ToString(CultureInfo.InvariantCulture) + (SettingsService.Settings.captureSettings.useAccurateClipLength ? " " : " -codec copy ") +
                     "-avoid_negative_ts make_zero -fflags +genpts " +
                     "-y \"" + outputFile + "\"";
                 Logger.WriteLine(startInfo.Arguments);
@@ -513,10 +514,16 @@ namespace RePlays.Utils {
                 StartInfo = startInfo
             };
 
+            uuid ??= Guid.NewGuid().ToString();
+
+            long totalRenderTime = (long)(clipSegments.Sum(segment => segment.duration) * (clipSegments.Length > 1 ? 2 : 1));
             process.OutputDataReceived += new DataReceivedEventHandler((s, e) => {
                 Logger.WriteLine("O: " + e.Data);
             });
             process.ErrorDataReceived += new DataReceivedEventHandler((s, e) => {
+                if (e.Data != null && e.Data.Contains("frame=") && e.Data.Contains("speed=") && !e.Data.Contains("Lsize=")) {
+                    WebMessage.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(TimeSpan.Parse(e.Data.Trim().Substring(48, 11)).TotalSeconds) + progress, totalRenderTime);
+                }
                 Logger.WriteLine("E: " + e.Data);
             });
 
@@ -528,9 +535,15 @@ namespace RePlays.Utils {
 
             if (!File.Exists(outputFile)) return null;
 
-            if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(videoPath, clipSegments, index + 1);
-            else if (clipSegments.Length > 1 && index == clipSegments.Length) Logger.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
-            else Logger.WriteLine(string.Format("Created new clip: {0}", outputFile));
+            if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(game, videoPath, clipSegments, index + 1, (int)(progress + clipSegments[index].duration), uuid);
+            else if (clipSegments.Length > 1 && index == clipSegments.Length) {
+                WebMessage.DestroyToast(uuid);
+                Logger.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
+            }
+            else {
+                WebMessage.DestroyToast(uuid);
+                Logger.WriteLine(string.Format("Created new clip: {0}", outputFile));
+            }
 
             return outputFile;
         }

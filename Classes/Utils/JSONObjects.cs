@@ -174,6 +174,8 @@ namespace RePlays.Utils {
         // In MB
         private uint _replayBufferSize = 500;
         public uint replayBufferSize { get { return _replayBufferSize; } set { _replayBufferSize = value; } }
+        private bool _useAccurateClipLength = false;
+        public bool useAccurateClipLength { get { return _useAccurateClipLength; } set { _useAccurateClipLength = value; } }
     }
 
     public class FileFormat {

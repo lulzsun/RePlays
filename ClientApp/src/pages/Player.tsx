@@ -302,6 +302,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
       });
     });
     postMessage('CreateClips', {
+      game: game,
       videoPath: `/${game}/${video}`,
       clipSegments: convertedClips,
     });

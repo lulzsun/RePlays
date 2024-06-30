@@ -63,6 +63,7 @@ namespace RePlays.Utils {
     }
 
     public class CreateClips {
+        public string game { get; set; }
         private string _videoPath;
         public string videoPath {
             get {
@@ -340,7 +341,7 @@ namespace RePlays.Utils {
                     break;
                 case "CreateClips": {
                         CreateClips data = JsonSerializer.Deserialize<CreateClips>(webMessage.data);
-                        var t = await Task.Run(() => CreateClip(data.videoPath, data.clipSegments));
+                        var t = await Task.Run(() => CreateClip(data.game, data.videoPath, data.clipSegments));
                         if (t == null) {
                             DisplayModal("Failed to create clip", "Error", "warning");
                         }

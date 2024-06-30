@@ -149,6 +149,7 @@ declare global {
     useReplayBuffer: boolean;
     replayBufferDuration: number;
     replayBufferSize: number;
+    useAccurateClipLength: boolean;
   }
   interface UploadSettings {
     recentLinks: string[];
