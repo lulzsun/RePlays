@@ -31,6 +31,7 @@ namespace RePlays.Recorders {
         private readonly Dictionary<string, string> videoEncoderIds = new() {
 #if WINDOWS
             {"Software (x264)", "obs_x264"},
+            {"Hardware (NVENC AV1)", "jim_av1_nvenc"},
             {"Hardware (NVENC)", "jim_nvenc"},
             {"Hardware (QSV)", "obs_qsv11"},
             {"Hardware (AMF)", "amd_amf_h264"}
@@ -621,6 +622,9 @@ namespace RePlays.Recorders {
                 if (id == string.Empty)
                     continue;
                 switch (id) {
+                    case "jim_av1_nvenc":
+                        availableEncoders.Add("Hardware (NVENC AV1)");
+                        break;
                     case "jim_nvenc":
                         availableEncoders.Add("Hardware (NVENC)");
                         break;
@@ -645,8 +649,12 @@ namespace RePlays.Recorders {
             availableEncoders.Add("Software (x264)");
             Logger.WriteLine("Encoder options: " + string.Join(", ", availableEncoders));
             SettingsService.Settings.captureSettings.encodersCache = availableEncoders;
-            if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder))
+            if (!availableEncoders.Contains(SettingsService.Settings.captureSettings.encoder)) {
+                if (!string.IsNullOrWhiteSpace(SettingsService.Settings.captureSettings.encoder))
+                    WebMessage.DisplayModal($"The previously selected encoder is no longer available. The encoder has been reset to the default option: {availableEncoders[0]}.", "Encoder warning", "warning");
+
                 SettingsService.Settings.captureSettings.encoder = availableEncoders[0];
+            }
             SettingsService.SaveSettings();
         }
 

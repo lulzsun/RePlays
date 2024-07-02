@@ -149,7 +149,7 @@ namespace RePlays.Utils {
                 }).Wait();
             }
 #if WINDOWS
-            if (WindowsInterface.webView2 == null || WindowsInterface.webView2.IsDisposed == true) return false;
+            if (WindowsInterface.webView2 == null || WindowsInterface.webView2.IsDisposed == true || WindowsInterface.webView2.Source.AbsolutePath.Contains("preload")) return false;
             if (WindowsInterface.webView2.InvokeRequired) {
                 // Call this same method but make sure it is on UI thread
                 return WindowsInterface.webView2.Invoke(new Func<bool>(() => {
