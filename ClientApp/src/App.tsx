@@ -1,10 +1,12 @@
+/// <reference types="vite-plugin-svgr/client" />
+
 import { useTranslation } from 'react-i18next';
 
-import { ReactComponent as Logo } from './logo.svg';
+import Logo from './logo.svg?react';
 import Player from './pages/Player';
 import VideosPage from './pages/VideosPage';
 import { useEffect, useState } from 'react';
-import { HashRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { postMessage, addEventListener, removeEventListener } from './helpers/messenger';
 import ContextMenu from './components/ContextMenu';
 import { useRef } from 'react';
@@ -397,9 +399,8 @@ function App() {
                 </div>
 
                 <div className='flex-auto overflow-hidden h-full p-7 text-gray-900 dark:text-white'>
-                  <Switch>
-                    <Route exact path='/'>
-                      {' '}
+                  <Routes>
+                    <Route path='/' element={
                       <VideosPage
                         key={'Sessions'}
                         videoType={'Sessions'}
@@ -411,9 +412,8 @@ function App() {
                         scrollPos={sessionScroll}
                         setScrollPos={setSessionScroll}
                       />
-                    </Route>
-                    <Route exact path='/clips'>
-                      {' '}
+                    }/>
+                    <Route path='/clips' element={
                       <VideosPage
                         key={'Clips'}
                         videoType={'Clips'}
@@ -425,16 +425,15 @@ function App() {
                         scrollPos={clipScroll}
                         setScrollPos={setClipScroll}
                       />
-                    </Route>
+                    }/>
                     {/* <Route exact path="/uploads">  <VideosPage key={"Uploads"} videoType={"Uploads"} gameList={gameList} game={game} sortBy={sortBy} videos={clips} size={clipTotal}/></Route> */}
-                    <Route exact path='/settings/:page'>
-                      {' '}
+                    <Route path='/settings/*' element={
                       <Settings userSettings={userSettings} setUserSettings={setUserSettings} />
-                    </Route>
-                    <Route exact path='/player/:game/:video/:videoType'>
+                    }/>
+                    <Route path='/player/:game/:video/:videoType' element={
                       <Player videos={sessions != null ? sessions.concat(clips) : []} />
-                    </Route>
-                  </Switch>
+                    }/>
+                  </Routes>
                 </div>
               </div>
             </div>
