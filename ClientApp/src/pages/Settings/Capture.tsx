@@ -1,8 +1,9 @@
-import { useTranslation } from 'react-i18next';
+﻿import { useTranslation } from 'react-i18next';
 
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import DropDownMenu from '../../components/DropDownMenu';
 import AudioDevice from '../../components/AudioDevice';
+import HelpSymbol from '../../components/HelpSymbol';
 
 interface Props {
   updateSettings: () => void;
@@ -834,6 +835,23 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
           <span className='ml-2 text-gray-700 dark:text-gray-400'>
             {t('settingsCaptureItem29')}
           </span>
+        </label>
+        <label className='inline-flex items-center'>
+          <input
+            type='checkbox'
+            className='form-checkbox h-4 w-4 text-gray-600'
+            defaultChecked={settings === undefined ? false : settings.useAccurateClipLength}
+            onChange={(e) => {
+              settings!.useAccurateClipLength = e.target.checked;
+              updateSettings();
+            }}
+          />
+          <div className="flex items-center">
+            <span className='ml-2 text-gray-700 dark:text-gray-400'>
+              {t('settingsCaptureItem35')}
+            </span>
+            <HelpSymbol text={t('settingsCaptureItem36')}/>
+          </div>
         </label>
       </div>
     </div>

@@ -66,6 +66,8 @@
     "settingsCaptureItem32": "Enable",
     "settingsCaptureItem33": "Duration",
     "settingsCaptureItem34": "Max Size",
+    "settingsCaptureItem35": "Use Accurate Clip Length",
+    "settingsCaptureItem36": "This will ensure precise clip length but will significantly extend the time required to create the clip.",
     "settingsDetectionItem01": "Game Detection",
     "settingsDetectionItem02": "Add .exe files to these lists to manage what is and isn't recorded.",
     "settingsDetectionItem03": "Custom Recorded Games",
