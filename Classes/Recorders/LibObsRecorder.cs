@@ -227,7 +227,7 @@ namespace RePlays.Recorders {
             }
             videoNameTimeStamp = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
-            FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MPEG-4 (.mp4)", true));
+            FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MP4 (.mp4)", true));
             Logger.WriteLine($"Output file format: " + currentFileFormat.ToString());
             videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
 
