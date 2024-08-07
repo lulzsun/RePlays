@@ -126,6 +126,7 @@ declare global {
   interface FileFormat {
     title: string;
     format: string;
+    isReplayBufferCompatible: boolean;
   }
   interface CaptureSettings {
     recordingMode: string;

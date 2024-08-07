@@ -152,6 +152,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
           settings.fileFormat = {
             title: 'MPEG-4 (.mp4)',
             format: 'fragmented_mp4',
+            isReplayBufferCompatible: false
           };
           updateSettings();
         },
@@ -180,6 +181,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             settings.fileFormat = fmt;
             updateSettings();
           },
+          isReplayBufferCompatible: fmt.isReplayBufferCompatible
         });
       });
     }
@@ -220,10 +222,11 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
   }
 
   var current_format: any = settings?.fileFormat?.format;
-  var is_interupttable: boolean =
+  var is_interupttable: boolean = (
     current_format === 'mkv' ||
     current_format === 'fragmented_mp4' ||
-    current_format === 'fragmented_mov';
+    current_format === 'fragmented_mov') ||
+    settings?.useReplayBuffer == true;
 
 
   const validate = (e: ChangeEvent<HTMLInputElement>) => {
@@ -687,7 +690,9 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
           <DropDownMenu
             text={settings?.fileFormat === undefined ? 'MPEG-4 (.mp4)' : settings!.fileFormat.title}
             width={'auto'}
-            items={availableFileFormats}
+            items={settings?.useReplayBuffer
+              ? availableFileFormats?.filter(format => format.isReplayBufferCompatible)
+              : availableFileFormats}
           />
         </div>
       </div>
