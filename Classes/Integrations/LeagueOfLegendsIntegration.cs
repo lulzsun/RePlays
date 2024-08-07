@@ -103,8 +103,12 @@ namespace RePlays.Integrations {
                     stats.Win = root.GetProperty("events").GetProperty("Events")
                         .EnumerateArray()
                         .Where(eventElement => eventElement.GetProperty("EventName").GetString() == "GameEnd")
-                        .Any(eventElement => eventElement.GetProperty("Result").GetString() == "Win");
-
+                        .Select(eventElement => eventElement.GetProperty("Result").GetString() switch {
+                            "Win" => true,
+                            "Lose" => false,
+                            _ => (bool?)null
+                        })
+                        .FirstOrDefault();
                 }
                 catch (Exception ex) {
                     if (ex.GetType() != typeof(HttpRequestException)) {
@@ -152,6 +156,6 @@ namespace RePlays.Integrations {
         public int Assists { get; set; }
         public int Deaths { get; set; }
         public string Champion { get; set; }
-        public bool Win { get; set; }
+        public bool? Win { get; set; }
     }
 }
