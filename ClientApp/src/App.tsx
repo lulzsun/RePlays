@@ -175,7 +175,7 @@ function App() {
 
   // This prevents the page from turning completely white in debug environment when page is refreshed
   if(!userSettings)
-      return <h1>Loading</h1>
+    return <div style={{backgroundColor: '#1f2937', height: '100vh', width: '100vw'}}></div>;
 
   return (
     <Router>
