@@ -155,13 +155,13 @@ namespace RePlays.Utils {
         private bool _hasNvidiaAudioSDK;
         public bool hasNvidiaAudioSDK { get { return _hasNvidiaAudioSDK; } set { _hasNvidiaAudioSDK = value; } }
 
-        private List<FileFormat> _fileFormatCache = new() { new FileFormat("mp4", "MPEG-4 (.mp4)") }; // Initially set to MP4, Updated inside LibOBSRecorder when loaded.
+        private List<FileFormat> _fileFormatCache = new() { new FileFormat("mp4", "MPEG-4 (.mp4)", true) }; // Initially set to MP4, Updated inside LibOBSRecorder when loaded.
         /// <summary>
         /// TODO: Remove cache in user settings, this is not good practice
         /// </summary>
         public List<FileFormat> fileFormatsCache { get { return _fileFormatCache; } set { _fileFormatCache = value; } }
 
-        private FileFormat _fileFormat = new FileFormat("mp4", "MPEG-4 (.mp4)");
+        private FileFormat _fileFormat = new FileFormat("mp4", "MPEG-4 (.mp4)", true);
         public FileFormat fileFormat { get { return _fileFormat; } set { _fileFormat = value; } }
 
         private bool _useReplayBuffer = false;
@@ -181,10 +181,12 @@ namespace RePlays.Utils {
     public class FileFormat {
         public string title { get; }
         public string format { get; }
+        public bool isReplayBufferCompatible { get; }
 
-        public FileFormat(string format, string title) {
+        public FileFormat(string format, string title, bool isReplayBufferCompatible) {
             this.format = format;
             this.title = title;
+            this.isReplayBufferCompatible = isReplayBufferCompatible;
         }
 
         public override string ToString() {

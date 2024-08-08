@@ -60,15 +60,15 @@ namespace RePlays.Recorders {
         };
 
 
-        private readonly FileFormat file_format_default = new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)");
+        private readonly FileFormat file_format_default = new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)", false);
         private List<FileFormat> file_formats = new() {
-            new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)"),
-            new FileFormat("fragmented_mov", "Fragmented MOV (.mov)"),
-            new FileFormat("flv", "Flash Video (.flv)"),
-            new FileFormat("mkv", "Matroska Video (.mkv)"),
-            new FileFormat("mpegts", "MPEG-TS (.ts)"),
-            new FileFormat("mp4", "MP4 (.mp4)"),
-            new FileFormat("mov", "QuickTime (.mov)")
+            new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)", false),
+            new FileFormat("fragmented_mov", "Fragmented MOV (.mov)", false),
+            new FileFormat("flv", "Flash Video (.flv)", false),
+            new FileFormat("mkv", "Matroska Video (.mkv)", true),
+            new FileFormat("mpegts", "MPEG-TS (.ts)", false),
+            new FileFormat("mp4", "MP4 (.mp4)", true),
+            new FileFormat("mov", "QuickTime (.mov)", true)
         };
 
         static bool signalOutputStop = false;
@@ -227,7 +227,7 @@ namespace RePlays.Recorders {
             }
             videoNameTimeStamp = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
-            FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MPEG-4 (.mp4)"));
+            FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MP4 (.mp4)", true));
             Logger.WriteLine($"Output file format: " + currentFileFormat.ToString());
             videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
 

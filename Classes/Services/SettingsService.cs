@@ -58,6 +58,9 @@ namespace RePlays.Services {
                 data.uploadSettings.rePlaysSettings.password != Settings.uploadSettings.rePlaysSettings.password
                 ? EncryptString(data.uploadSettings.rePlaysSettings.password)
                 : Settings.uploadSettings.rePlaysSettings.password;
+            if (data.captureSettings.useReplayBuffer == true && data.captureSettings.fileFormat.isReplayBufferCompatible == false) {
+                data.captureSettings.fileFormat = new FileFormat("mp4", "MP4 (.mp4)", true);
+            }
             SaveSettings(data);
         }
 
