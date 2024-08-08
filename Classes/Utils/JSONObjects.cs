@@ -29,7 +29,7 @@ namespace RePlays.Utils {
         public int assists { get; set; }
         public int deaths { get; set; }
         public string champion { get; set; }
-        public bool win { get; set; }
+        public bool? win { get; set; }
     }
 
     public class VideoSortSettings {

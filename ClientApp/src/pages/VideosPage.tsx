@@ -1,9 +1,10 @@
 import Card from '../components/Card';
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { VirtuosoGrid } from 'react-virtuoso';
-import { postMessage } from '../helpers/messenger';
+import React, {Dispatch, SetStateAction, useEffect, useState} from 'react';
+import {VirtuosoGrid} from 'react-virtuoso';
+import {postMessage} from '../helpers/messenger';
 import VideoSortControls from '../components/VideoSortControls';
 import VideoDeleteControls from '../components/VideoDeleteControls';
+import {fetchAndUpdateLatestLeagueVersionIfNeeded} from '../integrations/league';
 
 interface Props {
   videoType: string;
@@ -60,6 +61,13 @@ export const VideosPage: React.FC<Props> = ({
     }, 69); // (?) VirtuosoGrid takes too long to populate and so we need to wait a little before we set scrollPos
     return () => clearTimeout(timer);
   }, [customScrollParent]);
+
+  useEffect(() => {
+    const hasLeagueOfLegends = videos?.some((video) => video.game === 'League of Legends');
+    if (hasLeagueOfLegends) {
+      fetchAndUpdateLatestLeagueVersionIfNeeded();
+    }
+  }, [videos]);
 
   function onVideoSelected(e: React.ChangeEvent<HTMLInputElement>, index: number) {
     console.log((e.target as HTMLInputElement).checked);
