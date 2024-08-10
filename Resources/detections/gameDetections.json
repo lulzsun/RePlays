@@ -137,6 +137,13 @@
 		"title": "Tom Clancy's Rainbow Six Siege",
 		"game_detection": [
 			{
+				"gameexe": "/r6siege/RainbowSix\\.exe",
+				"detectdirkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/Uplay Install 635/InstallLocation",
+				"launchexe": "/Uplay\\.exe",
+				"regkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/Uplay/InstallLocation",
+				"longname": "Tom Clancy's Rainbow Six: Siege - uplay"
+			},
+			{
 				"gameexe": "/Tom Clancy's Rainbow Six Siege/RainbowSix\\.exe",
 				"detectdirkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/Uplay Install 635/InstallLocation",
 				"launchexe": "/Uplay\\.exe",
