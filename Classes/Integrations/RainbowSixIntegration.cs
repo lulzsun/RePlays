@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 
 namespace RePlays.Integrations {
     internal class RainbowSixIntegration : Integration {
-        private static readonly int MatchLength = 195;
         private static readonly string TempFolder = Functions.GetTempFolder();
         private static readonly string SteamGameId = "359550";
         private static readonly string UbisoftGameId = "635";
@@ -28,28 +27,47 @@ namespace RePlays.Integrations {
         private static readonly string R6DissectExecutable = Path.Combine(R6DissectExtractionPath, "r6-dissect.exe");
         private static readonly string MD5FilePath = Path.Combine(Functions.GetTempFolder(), "r6-dissect", "md5.txt");
 
-        public class Player {
-            public string ProfileID { get; set; }
-            public string Username { get; set; }
+        internal class Player {
+            internal string ProfileID { get; set; }
+            internal string Username { get; set; }
         }
 
-        public class EventType {
-            public string Name { get; set; }
+        internal class EventType {
+            internal string Name { get; set; }
         }
 
-        public class MatchFeedback {
-            public string Username { get; set; }
-            public string Target { get; set; }
-            public int TimeInSeconds { get; set; }
-            public EventType Type { get; set; }
+        internal class MatchFeedback {
+            internal string Username { get; set; }
+            internal string Target { get; set; }
+            internal int TimeInSeconds { get; set; }
+            internal EventType Type { get; set; }
         }
 
-        public class Round {
-            public DateTime Timestamp { get; set; }
-            public string RecordingProfileID { get; set; }
-            public List<Player> Players { get; set; }
-            public List<MatchFeedback> MatchFeedback { get; set; }
+        internal class Round {
+            internal DateTime Timestamp { get; set; }
+            internal string RecordingProfileID { get; set; }
+            internal List<Player> Players { get; set; }
+            internal List<MatchFeedback> MatchFeedback { get; set; }
+            internal MatchType MatchType { get; set; }
         }
+
+        internal class MatchType {
+            internal string Name { get; set; }
+            internal int Id { get; set; }
+            internal MatchTypeEnum MatchTypeEnum {
+                get {
+                    return (MatchTypeEnum)Id;
+                }
+            }
+        }
+        internal enum MatchTypeEnum {
+            QuickMatch = 1,
+            Ranked = 2,
+            CustomGameLocal = 3,
+            CustomGameOnline = 4,
+            Standard = 8
+        }
+
 
         public class MatchData {
             public List<Round> Rounds { get; set; }
@@ -62,16 +80,16 @@ namespace RePlays.Integrations {
                 // There is an issue with r6-dissect that prevents us from accurately calculating the kill time after the defuser is planted.
                 // This is a known limitation and acceptable (for now!) since the defuser often isn't planted.
                 // I'll address it once https://github.com/redraskal/r6-dissect/issues/102 is resolved.
-
                 foreach (var round in Rounds) {
+                    int matchLength = round.MatchType.MatchTypeEnum == MatchTypeEnum.QuickMatch ? 195 : 225;
                     var playerKills = round.MatchFeedback
                         .Where(mf => mf.Type.Name == "Kill" && round.Players.Any(p => p.ProfileID == recordingProfileID && p.Username == mf.Username))
-                        .Select(mf => round.Timestamp.AddSeconds(MatchLength - mf.TimeInSeconds))
+                        .Select(mf => round.Timestamp.AddSeconds(matchLength - mf.TimeInSeconds))
                         .ToList();
 
                     var playerDeaths = round.MatchFeedback
                         .Where(mf => mf.Type.Name == "Kill" && round.Players.Any(p => p.ProfileID == recordingProfileID && p.Username == mf.Target))
-                        .Select(mf => round.Timestamp.AddSeconds(MatchLength - mf.TimeInSeconds))
+                        .Select(mf => round.Timestamp.AddSeconds(matchLength - mf.TimeInSeconds))
                         .ToList();
 
                     killTimestamps.AddRange(playerKills);
