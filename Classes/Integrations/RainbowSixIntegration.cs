@@ -18,7 +18,7 @@ namespace RePlays.Integrations {
         private static readonly string TempFolder = Functions.GetTempFolder();
         private static readonly string SteamGameId = "359550";
         private static readonly string UbisoftGameId = "635";
-        private static readonly string R6DissectVersion = "v0.21.1";
+        private static readonly string R6DissectVersion = "v0.21.2";
         private static readonly string R6DissectFileName = $"r6-dissect-{R6DissectVersion}-windows-amd64";
         private static readonly string R6DissectZipUrl = $"https://github.com/redraskal/r6-dissect/releases/download/{R6DissectVersion}/{R6DissectFileName}.zip";
         private static readonly string R6DissectMd5Url = $"https://github.com/redraskal/r6-dissect/releases/download/{R6DissectVersion}/{R6DissectFileName}.zip.md5";
@@ -28,31 +28,54 @@ namespace RePlays.Integrations {
         private static readonly string MD5FilePath = Path.Combine(Functions.GetTempFolder(), "r6-dissect", "md5.txt");
 
         internal class Player {
+            [JsonProperty("profileID")]
             internal string ProfileID { get; set; }
+
+            [JsonProperty("username")]
             internal string Username { get; set; }
         }
 
         internal class EventType {
+            [JsonProperty("name")]
             internal string Name { get; set; }
         }
 
         internal class MatchFeedback {
+            [JsonProperty("username")]
             internal string Username { get; set; }
+
+            [JsonProperty("target")]
             internal string Target { get; set; }
+
+            [JsonProperty("timeInSeconds")]
             internal int TimeInSeconds { get; set; }
+
+            [JsonProperty("type")]
             internal EventType Type { get; set; }
         }
 
         internal class Round {
+            [JsonProperty("timestamp")]
             internal DateTime Timestamp { get; set; }
+
+            [JsonProperty("recordingProfileID")]
             internal string RecordingProfileID { get; set; }
+
+            [JsonProperty("players")]
             internal List<Player> Players { get; set; }
+
+            [JsonProperty("matchFeedback")]
             internal List<MatchFeedback> MatchFeedback { get; set; }
+
+            [JsonProperty("matchType")]
             internal MatchType MatchType { get; set; }
         }
 
         internal class MatchType {
+            [JsonProperty("name")]
             internal string Name { get; set; }
+
+            [JsonProperty("id")]
             internal int Id { get; set; }
             internal MatchTypeEnum MatchTypeEnum {
                 get {
@@ -104,6 +127,7 @@ namespace RePlays.Integrations {
             if (await CheckIfDownloadNeeded()) {
                 await DownloadAndExtractR6Dissect();
             }
+            DeleteOldMatchFiles();
         }
 
         public override Task Shutdown() {
@@ -112,21 +136,23 @@ namespace RePlays.Integrations {
                     Logger.WriteLine("r6-dissect.exe not found.");
                     return Task.CompletedTask;
                 }
-                string exe = RecordingService.GetCurrentSession().Exe;
+
                 string matchReplayDirectory = GetMatchReplayDirectory();
-                string tempFolder = Functions.GetTempFolder();
                 int matchIndex = 0;
+                var directories = Directory.GetDirectories(matchReplayDirectory);
+                var matchesInCurrentRecordingSession = directories
+                    .Where(dir => Directory.GetLastWriteTime(dir) >= RecordingService.startTime)
+                    .ToList();
+                Logger.WriteLine($"Found {directories.Length} matches in total. {matchesInCurrentRecordingSession.Count} matches are from the current recording session.");
 
-                var directories = Directory.GetDirectories(matchReplayDirectory)
-                    .Where(dir => Directory.GetLastWriteTime(dir) >= RecordingService.startTime);
-
-                var tasks = new List<Task>();
-
-                foreach (var directory in directories) {
-                    string outputFilePath = Path.Combine(tempFolder, "match_" + matchIndex + ".json");
+                foreach (var directory in matchesInCurrentRecordingSession) {
+                    string outputFilePath = Path.Combine(TempFolder, "match_" + matchIndex + ".json");
                     string convertRecToJsonCommand = $"{R6DissectExecutable.Replace('\\', '/')} \"{directory.Replace('\\', '/')}\" -o \"{outputFilePath.Replace('\\', '/')}\"";
+                    string directoryName = Path.GetFileName(directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 
+                    Logger.WriteLine($"Processing {directoryName}.");
                     RunCommand(convertRecToJsonCommand);
+                    Logger.WriteLine($"Done converting {directoryName} to JSON-file.");
                     matchIndex++;
                 }
 
@@ -248,31 +274,45 @@ namespace RePlays.Integrations {
             }
         }
 
+        private static void DeleteOldMatchFiles() {
+            var jsonFiles = Directory.GetFiles(TempFolder, "match_*.json");
+            foreach (var jsonFile in jsonFiles) {
+                File.Delete(jsonFile);
+            }
+        }
+
         private static void ProcessMatchData() {
-            string tempFolder = Functions.GetTempFolder();
-            var jsonFiles = Directory.GetFiles(tempFolder, "match_*.json");
+            var jsonFiles = Directory.GetFiles(TempFolder, "match_*.json");
+            if (jsonFiles.Length == 0) {
+                Logger.WriteLine($"No Rainbow Six match files found for processing.");
+                return;
+            }
+
             var allMatchData = new List<MatchData>();
             string recordingProfileID = null;
-
+            Logger.WriteLine($"Processing {jsonFiles.Length} match files");
             foreach (var jsonFile in jsonFiles) {
+                var fileName = Path.GetFileName(jsonFile);
                 try {
+                    Logger.WriteLine($"Processing match file: {fileName}");
                     string jsonData = File.ReadAllText(jsonFile.Replace('\\', '/'));
                     MatchData matchData = JsonConvert.DeserializeObject<MatchData>(jsonData);
                     allMatchData.Add(matchData);
 
+                    Logger.WriteLine($"{matchData.Rounds.Count} rounds in current match");
                     if (recordingProfileID == null && matchData.Rounds.Count != 0) {
                         recordingProfileID = matchData.Rounds.First().RecordingProfileID;
                     }
                 }
                 catch (Exception ex) {
-                    Logger.WriteLine($"Error processing JSON file {jsonFile}: {ex.Message}");
+                    Logger.WriteLine($"Error processing JSON file {fileName}: {ex.Message}");
                 }
                 finally {
                     try {
                         File.Delete(jsonFile);
                     }
                     catch (Exception ex) {
-                        Logger.WriteLine($"Error deleting JSON file {jsonFile}: {ex.Message}");
+                        Logger.WriteLine($"Error deleting JSON file {fileName}: {ex.Message}");
                     }
                 }
             }
@@ -300,16 +340,31 @@ namespace RePlays.Integrations {
                 BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Death }, timestamp);
                 Logger.WriteLine($"Death timestamp (epoch): {((DateTimeOffset)timestamp).ToUnixTimeSeconds()}");
             }
+
+            Logger.WriteLine("Finished processing match data.");
         }
 
         private static void RunCommand(string command) {
             var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command) {
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
             using (var process = Process.Start(processInfo)) {
+                using (var reader = process.StandardOutput) {
+                    string result = reader.ReadToEnd();
+                    Logger.WriteLine(result);
+                }
+
+                using (var errorReader = process.StandardError) {
+                    string errorResult = errorReader.ReadToEnd();
+                    if (!string.IsNullOrEmpty(errorResult)) {
+                        Logger.WriteLine("Error: " + errorResult);
+                    }
+                }
+
                 process.WaitForExit();
             }
         }
