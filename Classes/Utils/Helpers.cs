@@ -233,30 +233,34 @@ namespace RePlays.Utils {
 
         public static VideoList GetAllVideos(string game, string sortBy, bool isVideoList, bool isRePlaysWebView = false) {
             var videoExtensions = new[] { ".mp4", ".mkv", ".mov", ".flv" };
-            List<string> allfiles = [];
+            List<FileInfo> allfiles = [];
             switch (sortBy) {
                 case "Latest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderByDescending(d => new FileInfo(d).CreationTime)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderByDescending(file => file.CreationTime)
                         .ToList();
                     break;
                 case "Oldest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderBy(d => new FileInfo(d).CreationTime)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderBy(file => file.CreationTime)
                         .ToList();
                     break;
                 case "Smallest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderBy(d => new FileInfo(d).Length)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderBy(file => file.Length)
                         .ToList();
                     break;
                 case "Largest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderByDescending(d => new FileInfo(d).Length)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderByDescending(file => file.Length)
                         .ToList();
                     break;
                 default:
@@ -273,16 +277,16 @@ namespace RePlays.Utils {
 
             Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
 
-            foreach (string file in allfiles) {
-                var fileWithoutExt = Path.GetFileNameWithoutExtension(file);
-                if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !File.Exists(file)) continue;
+            foreach (FileInfo file in allfiles) {
+                var fileWithoutExt = Path.GetFileNameWithoutExtension(file.FullName);
+                if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !file.Exists) continue;
 
                 Video video = new() {
-                    size = new FileInfo(file).Length,
-                    metadata = GetOrCreateMetadata(file),
-                    date = new FileInfo(file).CreationTime,
-                    fileName = Path.GetFileName(file),
-                    game = Path.GetFileName(Path.GetDirectoryName(file)),
+                    size = file.Length,
+                    metadata = GetOrCreateMetadata(file.FullName),
+                    date = file.CreationTime,
+                    fileName = Path.GetFileName(file.FullName),
+                    game = Path.GetFileName(Path.GetDirectoryName(file.FullName)),
                 };
 
 #if DEBUG && WINDOWS
@@ -296,9 +300,9 @@ namespace RePlays.Utils {
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 
-                if (!game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !game.Equals("All Games")) continue;
+                if (!game.Equals(Path.GetFileName(Path.GetDirectoryName(file.FullName))) && !game.Equals("All Games")) continue;
 
-                var thumb = GetOrCreateThumbnail(file, video.metadata.duration);
+                var thumb = GetOrCreateThumbnail(file.FullName, video.metadata.duration);
                 if (!File.Exists(thumb)) continue;
                 video.thumbnail = Path.GetFileName(thumb);
 
