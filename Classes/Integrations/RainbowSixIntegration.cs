@@ -18,10 +18,10 @@ namespace RePlays.Integrations {
         private static readonly string TempFolder = Functions.GetTempFolder();
         private static readonly string SteamGameId = "359550";
         private static readonly string UbisoftGameId = "635";
-        private static readonly string R6DissectVersion = "v0.21.2";
-        private static readonly string R6DissectFileName = $"r6-dissect-{R6DissectVersion}-windows-amd64";
-        private static readonly string R6DissectZipUrl = $"https://github.com/redraskal/r6-dissect/releases/download/{R6DissectVersion}/{R6DissectFileName}.zip";
-        private static readonly string R6DissectMd5Url = $"https://github.com/redraskal/r6-dissect/releases/download/{R6DissectVersion}/{R6DissectFileName}.zip.md5";
+        private static string R6DissectVersion;
+        private static string R6DissectFileName;
+        private static string R6DissectZipUrl;
+        private static string R6DissectMd5Url;
         private static readonly string R6DissectZipPath = Path.Combine(Functions.GetTempFolder(), "r6-dissect.zip");
         private static readonly string R6DissectExtractionPath = Path.Combine(Functions.GetTempFolder(), "r6-dissect");
         private static readonly string R6DissectExecutable = Path.Combine(R6DissectExtractionPath, "r6-dissect.exe");
@@ -91,6 +91,11 @@ namespace RePlays.Integrations {
             Standard = 8
         }
 
+        internal class ReleaseInfo {
+            [JsonProperty("tag_name")]
+            internal string TagName { get; set; }
+        }
+
 
         public class MatchData {
             public List<Round> Rounds { get; set; }
@@ -124,10 +129,23 @@ namespace RePlays.Integrations {
         }
 
         public override async Task Start() {
-            if (await CheckIfDownloadNeeded()) {
-                await DownloadAndExtractR6Dissect();
+            try {
+                bool isDownloadNeeded = await CheckIfDownloadNeeded();
+                if (isDownloadNeeded) {
+                    await DownloadAndExtractR6Dissect();
+                }
             }
-            DeleteOldMatchFiles();
+            catch (Exception ex) {
+                Logger.WriteLine($"Error during Rainbow Six Siege integration: {ex.Message}");
+                IntegrationService.Shutdown();
+            }
+
+            try {
+                DeleteOldMatchFiles();
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Error deleting old match files: {ex.Message}");
+            }
         }
 
         public override Task Shutdown() {
@@ -218,6 +236,17 @@ namespace RePlays.Integrations {
 
         private static async Task<bool> CheckIfDownloadNeeded() {
             using (HttpClient client = new HttpClient()) {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("RePlays");
+                Logger.WriteLine("Getting r6-dissect latest release");
+                var releaseResponse = await client.GetStringAsync("https://api.github.com/repos/redraskal/r6-dissect/releases");
+                var releaseInfoList = JsonConvert.DeserializeObject<List<ReleaseInfo>>(releaseResponse);
+                R6DissectVersion = releaseInfoList?.FirstOrDefault()?.TagName;
+                Logger.WriteLine($"r6-dissect latest release is {R6DissectVersion}");
+
+                R6DissectFileName = $"r6-dissect-{R6DissectVersion}-windows-amd64";
+                R6DissectZipUrl = $"https://github.com/redraskal/r6-dissect/releases/download/{R6DissectVersion}/{R6DissectFileName}.zip";
+                R6DissectMd5Url = $"https://github.com/redraskal/r6-dissect/releases/download/{R6DissectVersion}/{R6DissectFileName}.zip.md5";
+
                 // Download the MD5 hash
                 string expectedMd5Hash = await client.GetStringAsync(R6DissectMd5Url);
                 expectedMd5Hash = expectedMd5Hash.Trim();
