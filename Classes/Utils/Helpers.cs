@@ -293,7 +293,7 @@ namespace RePlays.Utils {
                 video.folder = "http://localhost:3001/"; // if not using web server: https://videos.replays.app/
 #else
                 if (isRePlaysWebView)
-                    video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+                    video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file.FullName), "..")).Replace("\\", "/");
                 else
                     video.folder = "http://localhost:3001/";
 #endif
