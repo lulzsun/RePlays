@@ -1021,21 +1021,6 @@
 		]
 	},
 	{
-		"title": "Java",
-		"detections": [
-			{
-				"detect_exe": "java.exe",
-				"nongame_type": "blacklist",
-				"title": "Java.exe"
-			},
-			{
-				"detect_exe": "javaw.exe",
-				"nongame_type": "blacklist",
-				"title": "Javaw.exe"
-			}
-		]
-	},
-	{
 		"title": "Wansview",
 		"detections": [
 			{
@@ -15586,16 +15571,6 @@
 		]
 	},
 	{
-		"title": "javaw",
-		"detections": [
-			{
-				"detect_exe": "javaw.exe",
-				"nongame_type": "blacklist",
-				"title": "javaw.exe"
-			}
-		]
-	},
-	{
 		"title": "Movie Studio Platinum",
 		"detections": [
 			{
@@ -15825,16 +15800,6 @@
 				"detect_exe": ".1\\ietabhelper.exe",
 				"nongame_type": "blacklist",
 				"title": "IE Tab Helper"
-			}
-		]
-	},
-	{
-		"title": "Javaw",
-		"detections": [
-			{
-				"detect_exe": "javaw.exe",
-				"nongame_type": "blacklist",
-				"title": "javaw.exe"
 			}
 		]
 	},
