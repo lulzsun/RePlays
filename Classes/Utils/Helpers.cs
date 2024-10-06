@@ -502,13 +502,11 @@ namespace RePlays.Utils {
             string codecArgs = "";
             if (SettingsService.Settings.clipSettings.reEncode) {
                 codecArgs = $"-c:v {SettingsService.Settings.clipSettings.renderCodec}";
-                if (SettingsService.Settings.clipSettings.renderQuality > 0) {
-                    if (SettingsService.Settings.clipSettings.renderHardware == "GPU") {
-                        codecArgs += $" -cq:v {SettingsService.Settings.clipSettings.renderQuality}";
-                    }
-                    else {
-                        codecArgs += $" -crf {SettingsService.Settings.clipSettings.renderQuality}";
-                    }
+                if (SettingsService.Settings.clipSettings.renderHardware == "GPU") {
+                    codecArgs += $" -cq:v {SettingsService.Settings.clipSettings.renderQuality}";
+                }
+                else {
+                    codecArgs += $" -crf {SettingsService.Settings.clipSettings.renderQuality}";
                 }
 
                 if (SettingsService.Settings.clipSettings.renderCustomFps.HasValue) {
