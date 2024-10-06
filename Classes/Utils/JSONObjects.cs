@@ -79,8 +79,8 @@ namespace RePlays.Utils {
     }
 
     public class Device {
-        private string? _gpuType;
-        public string gpuType { get { return _gpuType; } set { _gpuType = value; } }
+        private string? _gpuManufacturer;
+        public string gpuManufacturer { get { return _gpuManufacturer; } set { _gpuManufacturer = value; } }
     }
 
     public class AudioDevice {

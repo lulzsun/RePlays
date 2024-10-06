@@ -120,7 +120,7 @@ declare global {
   }
 
   interface Device {
-    gpuType?: 'NVIDIA' | 'AMD' | 'Intel';
+    gpuManufacturer?: 'NVIDIA' | 'AMD' | 'Intel';
   }
 
   interface AudioDevice {

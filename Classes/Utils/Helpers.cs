@@ -561,7 +561,26 @@ namespace RePlays.Utils {
             process.WaitForExit();
             process.Close();
 
-            if (!File.Exists(outputFile)) return null;
+            var verifyClip = new ProcessStartInfo {
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
+                Arguments = $"-v error -i \"{outputFile}\""
+            };
+
+            using var verifyClipProcess = Process.Start(verifyClip);
+            string output = verifyClipProcess.StandardOutput.ReadToEnd();
+            Logger.WriteLine("Output: " + output);
+            verifyClipProcess.WaitForExit();
+
+            if (!File.Exists(outputFile) || string.IsNullOrWhiteSpace(output)) {
+                WebMessage.DestroyToast(uuid);
+                Logger.WriteLine(string.Format("FFMPEG error. Failed to create clip: {0}", outputFile));
+                File.Delete(outputFile);
+                return null;
+            }
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(game, videoPath, clipSegments, index + 1, (int)(progress + clipSegments[index].duration), uuid);
             else if (clipSegments.Length > 1 && index == clipSegments.Length) {
@@ -729,8 +748,7 @@ namespace RePlays.Utils {
             return p[n];
         }
 
-        // GPU Detection
-        public static string? DetectGpuType() {
+        public static string? GetGpuManufacturer() {
 #if !WINDOWS
                 try {
                     ProcessStartInfo psi = new ProcessStartInfo {

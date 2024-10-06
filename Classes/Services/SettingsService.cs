@@ -80,9 +80,9 @@ namespace RePlays.Services {
             }
         }
 
-        public static void UpdateGpuType() {
+        public static void UpdateGpuManufacturer() {
             if (_Settings.generalSettings != null) {
-                _Settings.generalSettings.device.gpuType = DetectGpuType();
+                _Settings.generalSettings.device.gpuManufacturer = GetGpuManufacturer();
                 SaveSettings();
             }
         }

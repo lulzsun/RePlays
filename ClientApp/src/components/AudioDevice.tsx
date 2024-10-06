@@ -77,7 +77,7 @@ export const AudioDevice: React.FC<Props> = ({
         {item.deviceVolume + '%'}
       </div>
 
-      {item.isInput && device?.gpuType === "NVIDIA" && (
+      {item.isInput && device?.gpuManufacturer === "NVIDIA" && (
         <div className='flex flex-row gap-2'>
           <label className='inline-flex items-center'>
             <input

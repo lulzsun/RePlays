@@ -15,7 +15,7 @@ export const Clip: React.FC<Props> = ({settings, updateSettings, device}) => {
   const setRenderHardware = (hardware: 'CPU' | 'GPU') => {
     if (settings) {
       settings.renderHardware = hardware;
-      settings.renderCodec = getCodecOptions(hardware, device?.gpuType)[0].value;
+      settings.renderCodec = getCodecOptions(hardware, device?.gpuManufacturer)[0].value;
       updateSettings();
     }
   };
@@ -68,14 +68,14 @@ export const Clip: React.FC<Props> = ({settings, updateSettings, device}) => {
     ],
   };
 
-  const getCodecOptions = (hardware: 'CPU' | 'GPU', gpuType?: 'NVIDIA' | 'AMD' | 'Intel') => {
+  const getCodecOptions = (hardware: 'CPU' | 'GPU', gpuManufacturer?: 'NVIDIA' | 'AMD' | 'Intel') => {
     if (hardware === "GPU") {
-      return gpuType ? allCodecOptions[gpuType] || allCodecOptions.CPU : allCodecOptions.CPU;
+      return gpuManufacturer ? allCodecOptions[gpuManufacturer] || allCodecOptions.CPU : allCodecOptions.CPU;
     }
     return allCodecOptions.CPU;
   };
 
-  const codecOptions = settings ? getCodecOptions(settings.renderHardware, device?.gpuType) : [];
+  const codecOptions = settings ? getCodecOptions(settings.renderHardware, device?.gpuManufacturer) : [];
 
   const fpsOptions = [
     {value: 15, label: '15 FPS'},
