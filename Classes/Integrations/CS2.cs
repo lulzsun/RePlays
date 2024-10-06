@@ -46,7 +46,7 @@ namespace RePlays.Integrations {
                 State newState = DeserializeState(body);
 
                 // If there is a new kill and the match is live
-                if (IsMatchStarted(newState, oldState)) {
+                if (hasMatchStarted(newState, oldState)) {
                     if (newState.Player.MatchStats.Kills > oldState?.Player?.MatchStats?.Kills) {
                         BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
                     }
@@ -95,7 +95,7 @@ namespace RePlays.Integrations {
             }
         }
 
-        private bool IsMatchStarted(State newState, State oldState) {
+        private bool hasMatchStarted(State newState, State oldState) {
             return newState?.Player?.MatchStats != null &&
                    newState.Player.SteamId == newState.Provider.SteamId &&
                    newState.Map.Phase == "live";
