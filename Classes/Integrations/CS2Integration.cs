@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace RePlays.Integrations {
-    internal class CS2 : Integration {
+    internal class CS2Integration : Integration {
 
         private State oldState;
         private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);

@@ -34,7 +34,10 @@ namespace RePlays.Recorders {
             {"Hardware (NVENC AV1)", "jim_av1_nvenc"},
             {"Hardware (NVENC)", "jim_nvenc"},
             {"Hardware (QSV)", "obs_qsv11"},
-            {"Hardware (AMF)", "amd_amf_h264"}
+            {"Hardware (AMF)", "amd_amf_h264"},
+            {"Hardware (AMD AVC)", "h264_texture_amf"},
+            {"Hardware (AMD HEVC)", "h265_texture_amf"},
+            {"Hardware (AMD AV1)", "av1_texture_amf"}
 #else
             {"Software (x264)", "obs_x264"},
             {"Hardware (FFMPEG VAAPI H.264)", "ffmpeg_vaapi"},
@@ -45,6 +48,10 @@ namespace RePlays.Recorders {
 
         private readonly Dictionary<string, string> rate_controls = new() {
             {"VBR", "VBR"},
+            {"VBR_LAT", "VBR_LAT"},
+            {"QVBR", "QVBR"},
+            {"HQVBR", "HQVBR"},
+            {"HQCBR", "HQCBR"},
             {"CBR", "CBR"},
             {"CQP", "CQP"},
             {"Lossless", "Lossless"},
@@ -53,10 +60,13 @@ namespace RePlays.Recorders {
         };
 
         private Dictionary<string, List<string>> videoEncoderLink = new() {
-            { "Hardware (NVENC)", new List<string> { "VBR", "CBR", "CQP", "Lossless" } },
             { "Software (x264)", new List<string> { "VBR", "CBR", "CRF" } },
+            { "Hardware (NVENC)", new List<string> { "VBR", "CBR", "CQP", "Lossless" } },
+            { "Hardware (QSV)", new List<string> { "VBR", "CBR" } },
             { "Hardware (AMF)", new List<string> { "VBR", "CBR", "ABR", "CRF" } },
-            { "Hardware (QSV)", new List<string> { "VBR", "CBR" } }
+            { "Hardware (AMD AVC)", new List<string> { "VBR", "VBR_LAT", "QVBR", "HQVBR", "HQCBR", "CBR", "CQP" } },
+            { "Hardware (AMD HEVC)", new List<string> { "VBR", "VBR_LAT", "QVBR", "HQVBR", "HQCBR", "CBR", "CQP" } },
+            { "Hardware (AMD AV1)", new List<string> { "VBR", "VBR_LAT", "QVBR", "HQVBR", "HQCBR", "CBR", "CQP" } },
         };
 
 
@@ -630,6 +640,15 @@ namespace RePlays.Recorders {
                         break;
                     case "amd_amf_h264":
                         availableEncoders.Add("Hardware (AMF)");
+                        break;
+                    case "h264_texture_amf":
+                        availableEncoders.Add("Hardware (AMD AVC)");
+                        break;
+                    case "h265_texture_amf":
+                        availableEncoders.Add("Hardware (AMD HEVC)");
+                        break;
+                    case "av1_texture_amf":
+                        availableEncoders.Add("Hardware (AMD AV1)");
                         break;
                     case "obs_qsv11":
                         availableEncoders.Add("Hardware (QSV)");
