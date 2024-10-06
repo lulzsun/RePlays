@@ -66,10 +66,13 @@ namespace RePlays.Uploaders {
                         Logger.WriteLine(response.StatusCode.ToString() + " " + content);
                         var result = JsonSerializer.Deserialize<RePlaysResult>(content);
                         if (result.shortcode != null) {
-                            Process browserProcess = new Process();
-                            browserProcess.StartInfo.UseShellExecute = true;
-                            browserProcess.StartInfo.FileName = "https://replays.app/Video/" + result.shortcode;
-                            browserProcess.Start();
+                            if (SettingsService.Settings.uploadSettings.openAfterUpload) {
+                                Process browserProcess = new Process();
+                                browserProcess.StartInfo.UseShellExecute = true;
+                                browserProcess.StartInfo.FileName = "https://replays.app/Video/" + result.shortcode;
+                                browserProcess.Start();
+                            }
+
                             return "https://replays.app/Video/" + result.shortcode;
                         }
 
