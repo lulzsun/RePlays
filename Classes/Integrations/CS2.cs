@@ -46,8 +46,16 @@ namespace RePlays.Integrations {
                 State newState = DeserializeState(body);
 
                 // If there is a new kill and the match is live
-                if (IsValidState(newState, oldState)) {
-                    BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
+                if (IsMatchStarted(newState, oldState)) {
+                    if (newState.Player.MatchStats.Kills > oldState?.Player?.MatchStats?.Kills) {
+                        BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
+                    }
+                    if (newState.Player.MatchStats.Assists > oldState?.Player?.MatchStats?.Assists) {
+                        BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Assist });
+                    }
+                    if (newState.Player.MatchStats.Deaths > oldState?.Player?.MatchStats?.Deaths) {
+                        BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Death });
+                    }
                     oldState = newState;
                 }
 
@@ -87,10 +95,9 @@ namespace RePlays.Integrations {
             }
         }
 
-        private bool IsValidState(State newState, State oldState) {
+        private bool IsMatchStarted(State newState, State oldState) {
             return newState?.Player?.MatchStats != null &&
                    newState.Player.SteamId == newState.Provider.SteamId &&
-                   newState.Player.MatchStats.Kills > oldState?.Player?.MatchStats?.Kills &&
                    newState.Map.Phase == "live";
         }
 
@@ -101,6 +108,10 @@ namespace RePlays.Integrations {
         private class MatchStats {
             [JsonProperty("kills")]
             public int Kills { get; set; }
+            [JsonProperty("assists")]
+            public int Assists { get; set; }
+            [JsonProperty("deaths")]
+            public int Deaths { get; set; }
         }
 
         private class Player {
