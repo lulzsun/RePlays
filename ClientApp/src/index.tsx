@@ -102,6 +102,7 @@ declare global {
   interface UserSettings {
     generalSettings: GeneralSettings;
     captureSettings: CaptureSettings;
+    clipSettings: ClipSettings;
     detectionSettings: DetectionSettings;
     uploadSettings: UploadSettings;
     storageSettings: StorageSettings;
@@ -115,7 +116,13 @@ declare global {
     updateChannel: string;
     currentVersion: string;
     latestVersion: string;
+    device: Device;
   }
+
+  interface Device {
+    gpuType?: 'NVIDIA' | 'AMD' | 'Intel';
+  }
+
   interface AudioDevice {
     deviceId: string;
     deviceLabel: string;
@@ -150,7 +157,14 @@ declare global {
     useReplayBuffer: boolean;
     replayBufferDuration: number;
     replayBufferSize: number;
-    useAccurateClipLength: boolean;
+  }
+
+  interface ClipSettings {
+    reEncode: boolean;
+    renderHardware: 'CPU' | 'GPU';
+    renderQuality: number;
+    renderCodec: string;
+    renderCustomFps: number | undefined
   }
   interface UploadSettings {
     recentLinks: string[];

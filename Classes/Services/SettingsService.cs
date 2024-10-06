@@ -1,7 +1,9 @@
 ﻿using RePlays.Recorders;
 using RePlays.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Management;
 using System.Text.Json;
 using static RePlays.Utils.Functions;
 
@@ -17,6 +19,8 @@ namespace RePlays.Services {
 
             private CaptureSettings _captureSettings = new();
             public CaptureSettings captureSettings { get { return _captureSettings; } set { _captureSettings = value; } }
+            private ClipSettings _clipSettings = new();
+            public ClipSettings clipSettings { get { return _clipSettings; } set { _clipSettings = value; } }
 
             private StorageSettings _storageSettings = new();
             public StorageSettings storageSettings { get { return _storageSettings; } set { _storageSettings = value; } }
@@ -73,6 +77,13 @@ namespace RePlays.Services {
             Logger.WriteLine("Saved userSettings.json");
             if (oldSettings.captureSettings.encoder != Settings.captureSettings.encoder) {
                 ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls();
+            }
+        }
+
+        public static void UpdateGpuType() {
+            if (_Settings.generalSettings != null) {
+                _Settings.generalSettings.device.gpuType = DetectGpuType();
+                SaveSettings();
             }
         }
     }
