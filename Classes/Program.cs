@@ -103,6 +103,7 @@ namespace RePlays {
             }
 #endif
             SettingsService.LoadSettings();
+            SettingsService.UpdateGpuManufacturer();
             SettingsService.SaveSettings();
             StorageService.ManageStorage();
             KeybindService.Start();

@@ -74,6 +74,13 @@ namespace RePlays.Utils {
         public string updateChannel { get { return _updateChannel; } set { _updateChannel = value; } }
         public string currentVersion { get { return Updater.currentVersion; } }
         public string latestVersion { get { return Updater.latestVersion; } }
+        private Device _device = new();
+        public Device device { get { return _device; } set { _device = value; } }
+    }
+
+    public class Device {
+        private string? _gpuManufacturer;
+        public string gpuManufacturer { get { return _gpuManufacturer; } set { _gpuManufacturer = value; } }
     }
 
     public class AudioDevice {
@@ -174,8 +181,19 @@ namespace RePlays.Utils {
         // In MB
         private uint _replayBufferSize = 500;
         public uint replayBufferSize { get { return _replayBufferSize; } set { _replayBufferSize = value; } }
-        private bool _useAccurateClipLength = false;
-        public bool useAccurateClipLength { get { return _useAccurateClipLength; } set { _useAccurateClipLength = value; } }
+    }
+
+    public class ClipSettings {
+        private bool _reEncode = false;
+        public bool reEncode { get { return _reEncode; } set { _reEncode = value; } }
+        private string _renderHardware = "CPU";
+        public string renderHardware { get { return _renderHardware; } set { _renderHardware = value; } }
+        private uint _renderQuality = 23;
+        public uint renderQuality { get { return _renderQuality; } set { _renderQuality = value; } }
+        private string _renderCodec = "libx264";
+        public string renderCodec { get { return _renderCodec; } set { _renderCodec = value; } }
+        private uint? _renderCustomFps;
+        public uint? renderCustomFps { get { return _renderCustomFps; } set { _renderCustomFps = value; } }
     }
 
     public class FileFormat {

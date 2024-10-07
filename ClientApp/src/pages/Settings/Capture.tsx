@@ -8,9 +8,10 @@ import HelpSymbol from '../../components/HelpSymbol';
 interface Props {
   updateSettings: () => void;
   settings: CaptureSettings | undefined;
+  device: Device | undefined;
 }
 
-export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
+export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) => {
   const { t } = useTranslation();
 
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
@@ -737,6 +738,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 defaultValue={
                   settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume
                 }
+                device={device}
                 hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
                 isRemovable={isRemovable}
                 onChange={(e) => {
@@ -776,6 +778,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
                 key={item.deviceId}
                 item={item}
                 defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
+                device={device}
                 hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
                 isRemovable={isRemovable}
                 onChange={(e) => {
@@ -840,23 +843,6 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
           <span className='ml-2 text-gray-700 dark:text-gray-400'>
             {t('settingsCaptureItem29')}
           </span>
-        </label>
-        <label className='inline-flex items-center'>
-          <input
-            type='checkbox'
-            className='form-checkbox h-4 w-4 text-gray-600'
-            defaultChecked={settings === undefined ? false : settings.useAccurateClipLength}
-            onChange={(e) => {
-              settings!.useAccurateClipLength = e.target.checked;
-              updateSettings();
-            }}
-          />
-          <div className="flex items-center">
-            <span className='ml-2 text-gray-700 dark:text-gray-400'>
-              {t('settingsCaptureItem35')}
-            </span>
-            <HelpSymbol text={t('settingsCaptureItem36')}/>
-          </div>
         </label>
       </div>
     </div>

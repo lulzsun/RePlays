@@ -10,6 +10,7 @@ import Upload from './Settings/Upload';
 import Detection from './Settings/Detection';
 import KeyBind from './Settings/Keybind';
 import { postMessage } from '../helpers/messenger';
+import { Clip } from './Settings/Clip';
 
 type SettingsParams = {
   page: string;
@@ -50,6 +51,12 @@ export const Settings: React.FC<Props> = ({ userSettings, setUserSettings }) => 
               className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
             >
               {t('settingsItem02')}
+            </Link>
+            <Link
+              to='/settings/Clip'
+              className='flex items-center block py-2 px-4 rounded transition duration-100 hover:bg-gray-900 hover:text-white text-base font-medium'
+            >
+              {t('settingsItem09')}
             </Link>
             <Link
               to='/settings/Detection'
@@ -94,7 +101,10 @@ export const Settings: React.FC<Props> = ({ userSettings, setUserSettings }) => 
                 <General updateSettings={updateSettings} settings={userSettings?.generalSettings} />
               </Route>
               <Route exact path='/settings/capture'>
-                <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} />
+                <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} device={userSettings?.generalSettings?.device} />
+              </Route>
+              <Route exact path='/settings/clip'>
+                <Clip updateSettings={updateSettings} settings={userSettings?.clipSettings} device={userSettings?.generalSettings?.device}/>
               </Route>
               <Route exact path='/settings/detection'>
                 <Detection

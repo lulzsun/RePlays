@@ -498,19 +498,43 @@ namespace RePlays.Utils {
                 outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4").Replace("\\", "/");
                 File.AppendAllLines(Path.Join(GetTempFolder(), "list.txt"), new[] { "file 'temp" + index + ".mp4'" });
             }
+
+            string codecArgs = "";
+            if (SettingsService.Settings.clipSettings.reEncode) {
+                codecArgs = $"-c:v {SettingsService.Settings.clipSettings.renderCodec}";
+                if (SettingsService.Settings.clipSettings.renderHardware == "GPU") {
+                    codecArgs += $" -cq:v {SettingsService.Settings.clipSettings.renderQuality}";
+                }
+                else {
+                    codecArgs += $" -crf {SettingsService.Settings.clipSettings.renderQuality}";
+                }
+
+                if (SettingsService.Settings.clipSettings.renderCustomFps.HasValue) {
+                    codecArgs += $" -r {SettingsService.Settings.clipSettings.renderCustomFps.Value}";
+                }
+            }
+            else {
+                codecArgs = "-c:v copy -c:a copy";
+            }
+
             if (clipSegments.Length > 1 && index == clipSegments.Length) {
                 startInfo.Arguments =
-                    "-v warning -hide_banner -stats -f concat -safe 0 -i \"" + Path.Join(GetTempFolder(), "list.txt").Replace("\\", "/") + "\" " + (SettingsService.Settings.captureSettings.useAccurateClipLength ? "" : " -codec copy ") + "\"" + outputFile + "\"";
+                "-v warning -hide_banner -stats " +
+                "-f concat -safe 0 " +
+                $"-i \"{Path.Join(GetTempFolder(), "list.txt").Replace("\\", "/")}\" " +
+                $"{codecArgs} " +
+                $"\"{outputFile}\"";
                 Logger.WriteLine(startInfo.Arguments);
             }
             else {
                 startInfo.Arguments =
-                    "-v warning -hide_banner -stats " +
-                    "-ss " + clipSegments[index].start.ToString(CultureInfo.InvariantCulture) + " " +
-                    "-i \"" + inputFile + "\" " +
-                    "-t " + clipSegments[index].duration.ToString(CultureInfo.InvariantCulture) + (SettingsService.Settings.captureSettings.useAccurateClipLength ? " " : " -codec copy ") +
-                    "-avoid_negative_ts make_zero -fflags +genpts " +
-                    "-y \"" + outputFile + "\"";
+                "-v warning -hide_banner -stats " +
+                "-ss " + clipSegments[index].start.ToString(CultureInfo.InvariantCulture) + " " +
+                "-i \"" + inputFile + "\" " +
+                "-t " + clipSegments[index].duration.ToString(CultureInfo.InvariantCulture) + " " +
+                $"{codecArgs} " +
+                "-avoid_negative_ts make_zero -fflags +genpts -y " +
+                $"\"{outputFile}\"";
                 Logger.WriteLine(startInfo.Arguments);
             }
 
@@ -537,7 +561,26 @@ namespace RePlays.Utils {
             process.WaitForExit();
             process.Close();
 
-            if (!File.Exists(outputFile)) return null;
+            var verifyClip = new ProcessStartInfo {
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
+                Arguments = $"-v error -i \"{outputFile}\""
+            };
+
+            using var verifyClipProcess = Process.Start(verifyClip);
+            string output = verifyClipProcess.StandardOutput.ReadToEnd();
+            Logger.WriteLine("Output: " + output);
+            verifyClipProcess.WaitForExit();
+
+            if (!File.Exists(outputFile) || string.IsNullOrWhiteSpace(output)) {
+                WebMessage.DestroyToast(uuid);
+                Logger.WriteLine(string.Format("FFMPEG error. Failed to create clip: {0}", outputFile));
+                File.Delete(outputFile);
+                return null;
+            }
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(game, videoPath, clipSegments, index + 1, (int)(progress + clipSegments[index].duration), uuid);
             else if (clipSegments.Length > 1 && index == clipSegments.Length) {
@@ -703,6 +746,59 @@ namespace RePlays.Utils {
             // our last action in the above loop was to switch d and p, so p now 
             // actually has the most recent cost counts
             return p[n];
+        }
+
+        public static string? GetGpuManufacturer() {
+#if !WINDOWS
+                try {
+                    ProcessStartInfo psi = new ProcessStartInfo {
+                        FileName = "lspci",
+                        Arguments = "-nn | grep VGA",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (Process proc = new Process { StartInfo = psi }) {
+                        proc.Start();
+                        string output = proc.StandardOutput.ReadToEnd();
+                        proc.WaitForExit();
+                        if (output.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)) {
+                            return "NVIDIA";
+                        }
+                        else if (output.Contains("AMD", StringComparison.OrdinalIgnoreCase) || output.Contains("ATI", StringComparison.OrdinalIgnoreCase)) {
+                            return "AMD";
+                        }
+                        else if (output.Contains("Intel", StringComparison.OrdinalIgnoreCase)) {
+                            return "Intel";
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Error detecting GPU type on Linux: {ex.Message}");
+                }
+                return null;
+#else
+            try {
+                using (var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController")) {
+                    foreach (var obj in searcher.Get()) {
+                        string name = obj["Name"]?.ToString() ?? string.Empty;
+                        if (name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)) {
+                            return "NVIDIA";
+                        }
+                        else if (name.Contains("AMD", StringComparison.OrdinalIgnoreCase) || name.Contains("ATI", StringComparison.OrdinalIgnoreCase)) {
+                            return "AMD";
+                        }
+                        else if (name.Contains("Intel", StringComparison.OrdinalIgnoreCase)) {
+                            return "Intel";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Error detecting GPU type: {ex.Message}");
+            }
+            return null;
+#endif
         }
 
         private static int elapsedSeconds;
