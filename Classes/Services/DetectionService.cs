@@ -314,8 +314,11 @@ namespace RePlays.Services {
             }
 
             // TODO: also parse Epic games/Origin games
-            if (exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
-                return (true, false, Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0]);
+            if (exeFile.Replace("\\", "/").Contains("/steamapps/common/")) {
+                string gameName = GetNameForSteamGame(exeFile);
+                if (!string.IsNullOrEmpty(gameName))
+                    return (true, false, gameName);
+            }
             return (false, false, "Game Unknown");
         }
 
@@ -346,6 +349,39 @@ namespace RePlays.Services {
             }
 
             return false;
+        }
+
+        private static string GetNameForSteamGame(string exeFile) {
+            try {
+                string normalizedPath = exeFile.Replace("\\", "/");
+                var splitPath = Regex.Split(normalizedPath, "/steamapps/common/", RegexOptions.IgnoreCase);
+
+                string installDir = splitPath[1].Split('/')[0];
+                string steamAppsDir = Path.Combine(Path.GetDirectoryName(splitPath[0]), "Steam/steamapps");
+
+                if (!Directory.Exists(steamAppsDir))
+                    return Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0];
+
+                foreach (string acfFile in Directory.GetFiles(steamAppsDir, "*.acf")) {
+                    string content = File.ReadAllText(acfFile);
+                    string acfInstalldir = ExtractAcfValue(content, "installdir");
+                    string gameName = ExtractAcfValue(content, "name");
+
+                    // If the acfInstalldir matches installDir, then we know that it's the correct file and we can return the value in gameName
+                    if (string.Equals(acfInstalldir, installDir, StringComparison.OrdinalIgnoreCase)) {
+                        return gameName;
+                    }
+                }
+                return Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0];
+            }
+            catch {
+                return null;
+            }
+        }
+
+        private static string ExtractAcfValue(string content, string key) {
+            var match = Regex.Match(content, $"\"{key}\"\\s+\"([^\"]+)\"", RegexOptions.IgnoreCase);
+            return match.Success ? match.Groups[1].Value : string.Empty;
         }
 
         private static void LoadNonGameCache() {
