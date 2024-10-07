@@ -575,7 +575,7 @@ namespace RePlays.Utils {
             Logger.WriteLine("Output: " + output);
             verifyClipProcess.WaitForExit();
 
-            if (!File.Exists(outputFile) || string.IsNullOrWhiteSpace(output)) {
+            if (!File.Exists(outputFile) || !string.IsNullOrWhiteSpace(output)) {
                 WebMessage.DestroyToast(uuid);
                 Logger.WriteLine(string.Format("FFMPEG error. Failed to create clip: {0}", outputFile));
                 File.Delete(outputFile);
