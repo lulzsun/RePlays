@@ -114,7 +114,7 @@ export const VideoSortControls: React.FC<Props> = ({
           setVideoView('row');
         }}
       />
-      <span className='text-gray-700 dark:text-gray-400 hover:text-gray-700 active:bg-gray-50 active:text-gray-800 mt-0.5 inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-5 transition duration-150 ease-in-out rounded-md'>
+      <span className='text-gray-700 dark:text-gray-400 mt-0.5 inline-flex justify-center w-full px-4 py-2 text-sm font-medium leading-5 transition duration-150 ease-in-out rounded-md'>
         {formatBytes(size)}
       </span>
       <Button
