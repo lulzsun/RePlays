@@ -110,6 +110,20 @@ const RePlays: React.FC<Props> = ({ settings, updateSettings }) => {
           }}
         />
       </div>
+      <label className='inline-flex items-center'>
+        <input
+          type='checkbox'
+          className='form-checkbox h-4 w-4 text-gray-600'
+          defaultChecked={settings === undefined ? false : settings.openAfterUpload}
+          onChange={(e) => {
+            settings!.openAfterUpload = e.target.checked;
+            updateSettings();
+          }}
+        />
+        <span className='ml-2 inline-flex items-center text-gray-700 dark:text-gray-400'>
+          {t('settingsUploadItem20')}
+        </span>
+      </label>
       <a
         onClick={(e) => {
           postMessage('OpenLink', 'https://replays.app');
@@ -155,6 +169,20 @@ const Streamable: React.FC<Props> = ({ settings, updateSettings }) => {
           }}
         />
       </div>
+      <label className='inline-flex items-center'>
+        <input
+          type='checkbox'
+          className='form-checkbox h-4 w-4 text-gray-600'
+          defaultChecked={settings === undefined ? false : settings.openAfterUpload}
+          onChange={(e) => {
+            settings!.openAfterUpload = e.target.checked;
+            updateSettings();
+          }}
+        />
+        <span className='ml-2 inline-flex items-center text-gray-700 dark:text-gray-400'>
+          {t('settingsUploadItem20')}
+        </span>
+      </label>
       <a
         onClick={(e) => {
           postMessage('OpenLink', 'https://streamable.com/');

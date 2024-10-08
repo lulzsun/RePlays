@@ -235,6 +235,8 @@ namespace RePlays.Utils {
     public class UploadSettings {
         private List<string> _recentLinks = new();
         public List<string> recentLinks { get { return _recentLinks; } set { _recentLinks = value; } }
+        private bool _openAfterUpload = true;
+        public bool openAfterUpload { get { return _openAfterUpload; } set { _openAfterUpload = value; } }
 
         public class StreamableSettings {
             private string _email = "";

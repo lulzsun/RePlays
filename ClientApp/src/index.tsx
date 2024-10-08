@@ -168,6 +168,7 @@ declare global {
   }
   interface UploadSettings {
     recentLinks: string[];
+    openAfterUpload: boolean;
     streamableSettings: {
       email: string;
       password: string;
