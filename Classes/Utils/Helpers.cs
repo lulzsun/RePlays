@@ -272,7 +272,8 @@ namespace RePlays.Utils {
                 games = [],
                 sortBy = sortBy,
                 sessions = [],
-                clips = []
+                clips = [],
+                corrupted = []
             };
 
             Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
@@ -314,8 +315,12 @@ namespace RePlays.Utils {
                     videoList.clips.Add(video);
                     videoList.clipsSize += video.size;
                 }
+
+                if (video.metadata.duration == 0) {
+                    videoList.corrupted.Add(video);
+                }
             }
-            Logger.WriteLine($"Parsed '{videoList.sessions.Count + videoList.clips.Count}' video files. Sessions: {videoList.sessions.Count}, Clips: {videoList.clips.Count}.");
+            Logger.WriteLine($"Parsed '{videoList.sessions.Count + videoList.clips.Count}' video files. Sessions: {videoList.sessions.Count}, Clips: {videoList.clips.Count}, Corrupted: {videoList.corrupted.Count}.");
 
             videoList.games.Sort();
 
@@ -361,16 +366,19 @@ namespace RePlays.Utils {
             string[] thumbnailExtensions = [".jpg", ".webp", ".png"];
             string thumbnailPath = thumbnailExtensions.Select(ext => Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ext))
                 .FirstOrDefault(File.Exists);
+            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
 
             if (thumbnailPath != null) return thumbnailPath;
             else thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".jpg");
             if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
             if (duration == 0) {
-                duration = GetVideoDuration(videoPath);
-                if (duration == 0) {
-                    Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: duration of video is 0, corrupted video?");
-                    return thumbnailPath;
+                if (!File.Exists(metadataPath)) {
+                    duration = GetVideoDuration(videoPath);
+                    if (duration == 0) {
+                        Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: duration of video is 0, corrupted video?");
+                        return thumbnailPath;
+                    }
                 }
             }
 
@@ -422,10 +430,6 @@ namespace RePlays.Utils {
                 if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
                 var duration = GetVideoDuration(videoPath);
-                if (duration == 0) {
-                    Logger.WriteLine($"Failed to create metadata {metadataPath}, details: duration of video is 0, corrupted video?");
-                    return metadata;
-                }
                 metadata.duration = duration;
 
                 Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");

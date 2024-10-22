@@ -65,6 +65,34 @@ function App() {
 
         setClipTotal(data.clipsSize);
         setSessionTotal(data.sessionsSize);
+
+        if (data.corrupted.length !== 0) {
+          setModalData({
+            title: t('componentCorruptedVideoItem01').replace('$n', data.corrupted.length),
+            context: (
+              <>
+                <h1 className='pb-2'>{t('componentCorruptedVideoItem02')}</h1>
+                <div className='max-h-16 overflow-y-auto'>
+                  {data.corrupted.map((video: Video) => (
+                    <div
+                      className='font-semibold cursor-pointer hover:underline'
+                      key={`${video.game}/${video.fileName}`}
+                      onClick={() => {
+                        postMessage('ShowInFolder', {
+                          filePath: `${video.game}/${video.fileName}`,
+                        });
+                      }}
+                    >
+                      {video.game}/{video.fileName}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ),
+          });
+          setModalConfirm(() => () => {});
+          setModalOpen(true);
+        }
         break;
       case 'DisplayModal':
         setModalData(data);
@@ -72,8 +100,7 @@ function App() {
           setModalConfirm(() => () => {});
         } else if (data.title === 'Update') {
           setModalConfirm(() => () => postMessage('Restart'));
-        }
-        else setModalConfirm(() => () => {});
+        } else setModalConfirm(() => () => {});
         setModalOpen(true);
         break;
       case 'DisplayToast':
@@ -174,8 +201,8 @@ function App() {
   }, [recentLinksMenuOpen]);
 
   // This prevents the page from turning completely white in debug environment when page is refreshed
-  if(!userSettings)
-    return <div style={{backgroundColor: '#1f2937', height: '100vh', width: '100vw'}}></div>;
+  if (!userSettings)
+    return <div style={{ backgroundColor: '#1f2937', height: '100vh', width: '100vw' }}></div>;
 
   return (
     <Router>

@@ -11,6 +11,7 @@ namespace RePlays.Utils {
         public long sessionsSize { get; set; }
         public List<Video> clips { get; set; }
         public long clipsSize { get; set; }
+        public List<Video> corrupted { get; set; }
     }
 
     public class Video {

@@ -180,6 +180,8 @@
     "componentVideoSortControlsItem02": "Latest",
     "componentVideoSortControlsItem03": "Oldest",
     "componentVideoSortControlsItem04": "Smallest",
-    "componentVideoSortControlsItem05": "Largest"
+    "componentVideoSortControlsItem05": "Largest",
+    "componentCorruptedVideoItem01": "Found $n Corrupted Videos",
+    "componentCorruptedVideoItem02": "Manual user review is necessary to move or delete these potentially corrupted video files."
   }
 }
