@@ -573,11 +573,11 @@ namespace RePlays.Recorders {
                     return false;
                 }
 
-                var fileName = Path.GetFileNameWithoutExtension(path);
+                var fileName = Path.GetFileName(path);
 
                 Logger.WriteLine($"Successfully saved replay buffer to {path}");
                 RecordingService.lastVideoDuration = GetVideoDuration(path);
-                BookmarkService.ApplyBookmarkToSavedVideo("/" + fileName + ".mp4");
+                BookmarkService.ApplyBookmarkToSavedVideo("/" + fileName);
 
                 StorageService.ManageStorage();
 
@@ -769,7 +769,7 @@ namespace RePlays.Recorders {
 #endif
             IntegrationService.Shutdown();
             if (!isReplayBuffer)
-                BookmarkService.ApplyBookmarkToSavedVideo("/" + videoNameTimeStamp + "-ses.mp4");
+                BookmarkService.ApplyBookmarkToSavedVideo("/" + Path.GetFileName(videoSavePath));
 
             Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             return !signalOutputStop;
