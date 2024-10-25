@@ -5961,6 +5961,16 @@
 		]
 	},
 	{
+		"title": "Easy Anti Cheat",
+		"detections": [
+			{
+				"detect_exe": "start_protected_game.exe",
+				"nongame_type": "blacklist",
+				"title": "EAC"
+			}
+		]
+	},
+	{
 		"title": "Apowersoft",
 		"detections": [
 			{
