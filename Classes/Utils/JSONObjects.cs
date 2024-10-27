@@ -142,6 +142,12 @@ namespace RePlays.Utils {
         private int _bitRate = 50;
         public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
 
+        private int _maxBitRate = 50;
+        public int maxBitRate { get { return _maxBitRate; } set { _maxBitRate = value; } }
+
+        private int _cqLevel = 20;
+        public int cqLevel { get { return _cqLevel; } set { _cqLevel = value; } }
+
         private List<AudioDevice> _inputDevicesCache = new();
         /// <summary>
         /// TODO: Remove cache in user settings, this is not good practice
@@ -169,7 +175,7 @@ namespace RePlays.Utils {
         /// </summary>
         public List<FileFormat> fileFormatsCache { get { return _fileFormatCache; } set { _fileFormatCache = value; } }
 
-        private FileFormat _fileFormat = new FileFormat("mp4", "MPEG-4 (.mp4)", true);
+        private FileFormat _fileFormat = new FileFormat("mkv", "Matroska Video (.mkv)", true);
         public FileFormat fileFormat { get { return _fileFormat; } set { _fileFormat = value; } }
 
         private bool _useReplayBuffer = false;

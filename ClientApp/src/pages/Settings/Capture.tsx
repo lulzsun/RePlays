@@ -240,9 +240,29 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
 
   const validateAndUpdateSettings = (e: ChangeEvent<HTMLInputElement>, field: keyof CaptureSettings) => {
     let value: number | string = parseInt(e.target.value);
-    if (isNaN(value) || value <= 10) {
-      value = 10;
-      e.target.value = '10';
+    if (field == "replayBufferDuration" || field == "replayBufferSize") {
+      if (isNaN(value) || value <= 10) {
+        value = 10;
+        e.target.value = '10';
+      }
+    }
+
+    if (field == "bitRate" || field == "maxBitRate") {
+      if (isNaN(value) || value <= 1) {
+        value = 1;
+        e.target.value = '1';
+      }
+    }
+
+    if (field == "cqLevel") {
+      if (isNaN(value) || value <= 1) {
+        value = 1;
+        e.target.value = '1';
+      }
+      else if (value >= 51) {
+        value = 51;
+        e.target.value = '51';
+      }
     }
 
     if (settings) {
@@ -575,96 +595,6 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
             ]}
           />
         </div>
-        <div className='flex flex-col'>
-          {t('settingsCaptureItem14')}
-          <DropDownMenu
-            text={settings === undefined ? '50 MB/s' : settings.bitRate + ' MB/s'}
-            width={'auto'}
-            zIndex={52}
-            items={[
-              {
-                name: '5 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 5;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '10 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 10;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '15 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 15;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '20 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 20;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '25 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 25;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '30 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 30;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '35 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 35;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '40 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 40;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '45 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 45;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '50 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 50;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-            ]}
-          />
-        </div>
       </div>
 
       <div className='flex gap-2'>
@@ -677,14 +607,6 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
           />
         </div>
 
-        <div className='flex flex-col'>
-          {t('settingsCaptureItem16')}
-          <DropDownMenu
-            text={settings?.rateControl === undefined ? 'VBR' : settings!.rateControl}
-            width={'auto'}
-            items={availableRateControls}
-          />
-        </div>
 
         <div className='flex flex-col'>
           {t('settingsCaptureItem17')}
@@ -696,6 +618,77 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
               : availableFileFormats}
           />
         </div>
+      </div>
+
+      <div className='flex gap-2'>
+        <div className='flex flex-col'>
+          {t('settingsCaptureItem16')}
+          <DropDownMenu
+            text={settings?.rateControl === undefined ? 'VBR' : settings!.rateControl}
+            width={'auto'}
+            items={availableRateControls}
+          />
+        </div>
+        {(settings?.rateControl == "CBR" || settings?.rateControl == "VBR") &&
+        <div className='flex flex-col'>
+          {t('settingsCaptureItem14')}
+          <div className='flex flex-row items-center'>
+            <input
+              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+              type="number"
+              min="1"
+              defaultValue={settings?.bitRate}
+              onBlur={(e) => handleInputBlur(e, 'bitRate')}
+              onKeyPress={(e) => handleInputKeyPress(e, 'bitRate')}
+              onChange={(e) => handleOnChange(e)}
+            />
+            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+              MB/s
+            </span>
+          </div>
+        </div>
+        }
+        {
+          settings?.rateControl == "VBR" &&
+          <div className='flex flex-col'>
+          {t('settingsCaptureItem35')}
+          <div className='flex flex-row items-center'>
+            <input
+              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+              type="number"
+              min="1"
+              defaultValue={settings?.maxBitRate}
+              onBlur={(e) => handleInputBlur(e, 'maxBitRate')}
+              onKeyPress={(e) => handleInputKeyPress(e, 'maxBitRate')}
+              onChange={(e) => handleOnChange(e)}
+            />
+            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+              MB/s
+            </span>
+          </div>
+        </div>
+        }
+        {
+          (settings?.rateControl == "CQP" || settings?.rateControl == "CRF") &&
+          <div className='flex flex-col'>
+          {t('settingsCaptureItem36')}
+          <div className='flex flex-row items-center'>
+            <input
+              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+              type="number"
+              min="1"
+              max="51"
+              defaultValue={settings?.cqLevel}
+              onBlur={(e) => handleInputBlur(e, 'cqLevel')}
+              onKeyPress={(e) => handleInputKeyPress(e, 'cqLevel')}
+              onChange={(e) => handleOnChange(e)}
+            />
+            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+              CQP
+            </span>
+          </div>
+        </div>
+        }
       </div>
 
       {is_interupttable == false && (
