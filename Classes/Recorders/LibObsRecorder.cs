@@ -32,6 +32,7 @@ namespace RePlays.Recorders {
 #if WINDOWS
             {"Software (x264)", "obs_x264"},
             {"Hardware (NVENC AV1)", "jim_av1_nvenc"},
+            {"Hardware (NVENC HEVC)", "jim_hevc_nvenc"},
             {"Hardware (NVENC)", "jim_nvenc"},
             {"Hardware (QSV)", "obs_qsv11"},
             {"Hardware (AMF)", "amd_amf_h264"},
@@ -501,6 +502,7 @@ namespace RePlays.Recorders {
 
             //Didn't really know how to handle the presets so it's just hacked for now.
             switch (encoder) {
+                case "Hardware (NVENC HEVC)":
                 case "Hardware (NVENC)":
                     obs_data_set_string(videoEncoderSettings, "preset", "Quality");
                     break;
@@ -637,6 +639,9 @@ namespace RePlays.Recorders {
                         break;
                     case "jim_nvenc":
                         availableEncoders.Add("Hardware (NVENC)");
+                        break;
+                    case "jim_hevc_nvenc":
+                        availableEncoders.Add("Hardware (NVENC HEVC)");
                         break;
                     case "amd_amf_h264":
                         availableEncoders.Add("Hardware (AMF)");
