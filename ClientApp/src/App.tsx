@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { ReactComponent as Logo } from './logo.svg';
+import Logo from './logo.svg?react';
 import Player from './pages/Player';
 import VideosPage from './pages/VideosPage';
 import { useEffect, useState } from 'react';
