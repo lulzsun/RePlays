@@ -11,6 +11,7 @@ import { useRef } from 'react';
 import Settings from './pages/Settings';
 import Modal from './components/Modal';
 import Toast from './components/Toast';
+import i18n from './internationalization/i18n';
 import { ContextMenuContext, ModalContext } from './Contexts';
 
 function App() {
@@ -45,6 +46,12 @@ function App() {
   const [sessionTotal, setSessionTotal] = useState(0);
   const [sessionScroll, setSessionScroll] = useState(0);
   const [userSettings, setUserSettings] = useState<UserSettings>();
+
+  useEffect(() => {
+    if (userSettings?.generalSettings.language) {
+      i18n.changeLanguage(userSettings.generalSettings.language);
+    }
+  }, [userSettings?.generalSettings.language]);
 
   function handleWebViewMessages(event: Event) {
     let eventData = (event as Webview2Event).data;
