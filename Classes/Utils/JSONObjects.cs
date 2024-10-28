@@ -175,7 +175,7 @@ namespace RePlays.Utils {
         /// </summary>
         public List<FileFormat> fileFormatsCache { get { return _fileFormatCache; } set { _fileFormatCache = value; } }
 
-        private FileFormat _fileFormat = new FileFormat("mkv", "Matroska Video (.mkv)", true);
+        private FileFormat _fileFormat = new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)", true);
         public FileFormat fileFormat { get { return _fileFormat; } set { _fileFormat = value; } }
 
         private bool _useReplayBuffer = false;
