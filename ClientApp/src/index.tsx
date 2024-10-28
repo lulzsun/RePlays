@@ -143,6 +143,8 @@ declare global {
     resolution: number;
     frameRate: number;
     bitRate: number;
+    maxBitRate: number,
+    cqLevel: number,
     encodersCache: string[];
     encoder: string;
     rateControlCache: string[];

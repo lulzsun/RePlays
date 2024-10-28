@@ -532,7 +532,15 @@ namespace RePlays.Recorders {
             obs_data_set_int(videoEncoderSettings, "bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
 
             if (SettingsService.Settings.captureSettings.rateControl == "VBR") {
-                obs_data_set_int(videoEncoderSettings, "max_bitrate", (uint)SettingsService.Settings.captureSettings.bitRate * 1000);
+                obs_data_set_int(videoEncoderSettings, "max_bitrate", (uint)SettingsService.Settings.captureSettings.maxBitRate * 1000);
+            }
+
+            if (SettingsService.Settings.captureSettings.rateControl == "CQP") {
+                obs_data_set_int(videoEncoderSettings, "cqp", (uint)SettingsService.Settings.captureSettings.cqLevel);
+            }
+
+            if (SettingsService.Settings.captureSettings.rateControl == "CRF") {
+                obs_data_set_int(videoEncoderSettings, "crf", (uint)SettingsService.Settings.captureSettings.cqLevel);
             }
 
             // See https://github.com/obsproject/obs-studio/blob/9d2715fe72849bb8c1793bb964ba3d9dc2f189fe/UI/window-basic-main-outputs.cpp#L1310C1-L1310C1
