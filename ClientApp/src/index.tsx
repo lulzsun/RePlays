@@ -117,6 +117,7 @@ declare global {
     currentVersion: string;
     latestVersion: string;
     device: Device;
+    language: 'de' | 'en' | 'es' | 'fr' | 'it' | 'pt' | 'ru';
   }
 
   interface Device {

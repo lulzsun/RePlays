@@ -77,6 +77,9 @@ namespace RePlays.Utils {
         public string latestVersion { get { return Updater.latestVersion; } }
         private Device _device = new();
         public Device device { get { return _device; } set { _device = value; } }
+        private string _language = "en";
+        public string language { get { return _language; } set { _language = value; } }
+
     }
 
     public class Device {

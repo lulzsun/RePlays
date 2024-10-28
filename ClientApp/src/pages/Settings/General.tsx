@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Button from '../../components/Button';
 import DropDownMenu from '../../components/DropDownMenu';
 import { postMessage } from '../../helpers/messenger';
+import {languages, getLanguageName } from '../../internationalization/i18n';
 
 interface Props {
   updateSettings: () => void;
@@ -14,6 +15,62 @@ export const General: React.FC<Props> = ({ settings, updateSettings }) => {
 
   return (
     <div className='flex flex-col gap-2 font-medium text-base pb-7'>
+      <h1 className='font-semibold text-2xl mt-4'>{t('settingsGeneralItem19')}</h1>
+      <DropDownMenu
+        text={getLanguageName(settings!.language)}
+        width='auto'
+        items={[
+          {
+            name: 'English',
+            onClick: () => {
+              settings!.language = 'en';
+              updateSettings();
+            },
+          },
+          {
+            name: 'German',
+            onClick: () => {
+              settings!.language = 'de';
+              updateSettings();
+            },
+          },
+          {
+            name: 'Spanish',
+            onClick: () => {
+              settings!.language = 'es';
+              updateSettings();
+            },
+          },
+          {
+            name: 'French',
+            onClick: () => {
+              settings!.language = 'fr';
+              updateSettings();
+            },
+          },
+          {
+            name: 'Italian',
+            onClick: () => {
+              settings!.language = 'it';
+              updateSettings();
+            },
+          },
+          {
+            name: 'Portuguese',
+            onClick: () => {
+              settings!.language = 'pt';
+              updateSettings();
+            },
+          },
+          {
+            name: 'Russian',
+            onClick: () => {
+              settings!.language = 'ru';
+              updateSettings();
+            },
+          },
+        ]}
+      />
       <h1 className='font-semibold text-2xl'>{t('settingsGeneralItem01')}</h1>
       <label className='inline-flex items-center'>
         <input
