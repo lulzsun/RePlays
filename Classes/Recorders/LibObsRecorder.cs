@@ -271,6 +271,7 @@ namespace RePlays.Recorders {
 #if WINDOWS
             string audioOutSourceId = "wasapi_output_capture";
             string audioInSourceId = "wasapi_input_capture";
+            string audioProcessSourceId = "wasapi_process_output_capture";
             string audioEncoderId = "ffmpeg_aac";
             string videoSourceId = "game_capture";
 #else
@@ -284,41 +285,66 @@ namespace RePlays.Recorders {
             // TODO: isolate game audio and discord app audio
             // TODO: have user adjustable audio tracks, especially if the user is trying to use more than 6 tracks (6 is the limit)
             //       as of now, if the audio sources exceed 6 tracks, then those tracks will be defaulted to track 6 (index = 5)
-            int totalDevices = 0;
             audioEncoders.TryAdd("combined", obs_audio_encoder_create(audioEncoderId, "combined", IntPtr.Zero, 0, IntPtr.Zero));
             obs_encoder_set_audio(audioEncoders["combined"], obs_get_audio());
-            foreach (var (outputDevice, index) in SettingsService.Settings.captureSettings.outputDevices.WithIndex()) {
-                audioSources.TryAdd("(output) " + outputDevice.deviceId, obs_audio_source_create(audioOutSourceId, "(output) " + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
-                obs_set_output_source((uint)(index + 1), audioSources["(output) " + outputDevice.deviceId]);
-                obs_source_set_audio_mixers(audioSources["(output) " + outputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + 1, 5)));
-                obs_source_set_volume(audioSources["(output) " + outputDevice.deviceId], outputDevice.deviceVolume / (float)100);
-                if (index + 1 < 6) {
-                    audioEncoders.TryAdd("(output) " + outputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(output) " + outputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)index + 1, IntPtr.Zero));
-                    obs_encoder_set_audio(audioEncoders["(output) " + outputDevice.deviceId], obs_get_audio());
-                }
-                else
-                    Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + 1}), cannot add another track (max = 6)");
-                totalDevices++;
+            if (SettingsService.Settings.captureSettings.captureGameAudio) {
+                IntPtr settings = obs_data_create();
+                obs_data_set_string(settings, "window", $"{WindowService.GetWindowTitle(session.WindowHandle)}:{WindowService.GetClassName(session.WindowHandle)}:{session.Exe}");
+                audioSources.TryAdd("Game Audio", obs_audio_source_create(audioProcessSourceId, "Game Audio", settings:settings, mono: false));
+                obs_set_output_source(1, audioSources["Game Audio"]);
+                obs_source_set_audio_mixers(audioSources["Game Audio"], 1 | (uint)(1 << Math.Min(1, 5)));
             }
-            foreach (var (inputDevice, index) in SettingsService.Settings.captureSettings.inputDevices.WithIndex()) {
-                audioSources.TryAdd("(input) " + inputDevice.deviceId, obs_audio_source_create(audioInSourceId, "(input) " + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
-                obs_set_output_source((uint)(index + totalDevices + 1), audioSources["(input) " + inputDevice.deviceId]);
-                obs_source_set_audio_mixers(audioSources["(input) " + inputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + totalDevices + 1, 5)));
-                obs_source_set_volume(audioSources["(input) " + inputDevice.deviceId], inputDevice.deviceVolume / (float)100);
-                if (index + totalDevices + 1 < 6) {
-                    audioEncoders.TryAdd("(input) " + inputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(input) " + inputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
-                    obs_encoder_set_audio(audioEncoders["(input) " + inputDevice.deviceId], obs_get_audio());
+            else {
+                int totalDevices = 0;
+                foreach (var (outputDevice, index) in SettingsService.Settings.captureSettings.outputDevices.WithIndex()) {
+                    audioSources.TryAdd("(output) " + outputDevice.deviceId, obs_audio_source_create(audioOutSourceId, "(output) " + outputDevice.deviceLabel, deviceId: outputDevice.deviceId));
+                    obs_set_output_source((uint)(index + 1), audioSources["(output) " + outputDevice.deviceId]);
+                    obs_source_set_audio_mixers(audioSources["(output) " + outputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + 1, 5)));
+                    obs_source_set_volume(audioSources["(output) " + outputDevice.deviceId], outputDevice.deviceVolume / (float)100);
+                    if (index + 1 < 6) {
+                        audioEncoders.TryAdd("(output) " + outputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(output) " + outputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)index + 1, IntPtr.Zero));
+                        obs_encoder_set_audio(audioEncoders["(output) " + outputDevice.deviceId], obs_get_audio());
+                    }
+                    else
+                        Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + 1}), cannot add another track (max = 6)");
+                    totalDevices++;
                 }
-                else
-                    Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + totalDevices + 1}), cannot add another track (max = 6)");
+                foreach (var (inputDevice, index) in SettingsService.Settings.captureSettings.inputDevices.WithIndex()) {
+                    audioSources.TryAdd("(input) " + inputDevice.deviceId, obs_audio_source_create(audioInSourceId, "(input) " + inputDevice.deviceLabel, deviceId: inputDevice.deviceId, mono: true));
+                    obs_set_output_source((uint)(index + totalDevices + 1), audioSources["(input) " + inputDevice.deviceId]);
+                    obs_source_set_audio_mixers(audioSources["(input) " + inputDevice.deviceId], 1 | (uint)(1 << Math.Min(index + totalDevices + 1, 5)));
+                    obs_source_set_volume(audioSources["(input) " + inputDevice.deviceId], inputDevice.deviceVolume / (float)100);
+                    if (index + totalDevices + 1 < 6) {
+                        audioEncoders.TryAdd("(input) " + inputDevice.deviceId, obs_audio_encoder_create(audioEncoderId, "(input) " + inputDevice.deviceLabel, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
+                        obs_encoder_set_audio(audioEncoders["(input) " + inputDevice.deviceId], obs_get_audio());
+                    }
+                    else
+                        Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + totalDevices + 1}), cannot add another track (max = 6)");
 
-                if (inputDevice.denoiser) {
-                    nint settings = obs_data_create();
-                    obs_data_set_string(settings, "method", "denoiser");
-                    obs_data_set_string(settings, "versioned_id", "noise_suppress_filter_v2");
-                    nint noiseSuppressFilter = obs_source_create("noise_suppress_filter", "Noise Suppression", settings, IntPtr.Zero);
-                    obs_source_filter_add(audioSources["(input) " + inputDevice.deviceId], noiseSuppressFilter);
-                    obs_data_release(settings);
+                    if (inputDevice.denoiser) {
+                        nint settings = obs_data_create();
+                        obs_data_set_string(settings, "method", "denoiser");
+                        obs_data_set_string(settings, "versioned_id", "noise_suppress_filter_v2");
+                        nint noiseSuppressFilter = obs_source_create("noise_suppress_filter", "Noise Suppression", settings, IntPtr.Zero);
+                        obs_source_filter_add(audioSources["(input) " + inputDevice.deviceId], noiseSuppressFilter);
+                        obs_data_release(settings);
+                    }
+                }
+
+                // TODO: Implement frontend for selecting applications
+                foreach (var (audioApplication, index) in SettingsService.Settings.captureSettings.audioApplications.WithIndex()) {
+                    IntPtr settings = obs_data_create();
+                    obs_data_set_string(settings, "window", audioApplication.application);
+                    audioSources.TryAdd("(input) " + audioApplication, obs_audio_source_create(audioProcessSourceId, "(input) " +audioApplication, deviceId: audioApplication.application, mono: false));
+                    obs_set_output_source((uint)(index + totalDevices + 1), audioSources["(input) " + audioApplication.application]);
+                    obs_source_set_audio_mixers(audioSources["(input) " + audioApplication], 1 | (uint)(1 << Math.Min(index + totalDevices + 1, 5)));
+                    obs_source_set_volume(audioSources["(input) " + audioApplication], audioApplication.applicationVolume / (float)100);
+                    if (index + totalDevices + 1 < 6) {
+                        audioEncoders.TryAdd("(input) " + audioApplication.application, obs_audio_encoder_create(audioEncoderId, "(input) " + audioApplication.application, IntPtr.Zero, (UIntPtr)(index + totalDevices + 1), IntPtr.Zero));
+                        obs_encoder_set_audio(audioEncoders["(input) " + audioApplication.application], obs_get_audio());
+                    }
+                    else
+                        Logger.WriteLine($"[Warning] Exceeding 6 audio sources ({index + totalDevices + 1}), cannot add another track (max = 6)");
                 }
             }
 
