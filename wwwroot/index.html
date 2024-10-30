@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="static/htmx.min.js"></script>
+    <!--<script src="static/spatial_navigation.js"></script>-->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :focus {
+            outline: none;
+            position: relative;
+        }
+
+        :focus::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #51a7e8;
+            animation: focus-animation 0.2s;
+        }
+
+        @keyframes focus-animation {
+            0% {
+                transform: scale(0.5);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+    <script type="text/javascript">
+        window.addEventListener('load', function () {
+            // Initialize
+            SpatialNavigation.init();
+
+            // Define navigable elements (anchors and elements with "focusable" class).
+            SpatialNavigation.add({
+                selector: 'a, .focusable'
+            });
+
+            // Make the *currently existing* navigable elements focusable.
+            SpatialNavigation.makeFocusable();
+
+            // Focus the first navigable element.
+            SpatialNavigation.focus();
+        });
+        function initialize() {
+            if (window.chrome !== undefined) {
+                window.chrome.webview.postMessage({ message: "Initialize", data: null });
+                return;
+            }
+            if (window.external.sendMessage !== undefined) {
+                window.external.sendMessage(JSON.stringify({ message: "Initialize", data: null }));
+                return;
+            }
+        }
+        initialize();
+        const patchedSend = async function () {
+            // Make readonly properties writable
+            Object.defineProperty(this, "readyState", { writable: true })
+            Object.defineProperty(this, "status", { writable: true })
+            Object.defineProperty(this, "statusText", { writable: true })
+            Object.defineProperty(this, "response", { writable: true })
+
+            // Set response
+            console.log(this.path, this.params);
+            const responsePromise = new Promise((resolve) => {
+                const listener = (event) => {
+                    console.log(event.data.message, this.path);
+                    if (event.data.message === this.path) {
+                        console.log(event.data.message, event.data);
+                        resolve(event.data.data);
+                        // Remove listener to prevent multiple triggers
+                        window.chrome.webview.removeEventListener("message", listener);
+                        SpatialNavigation.makeFocusable();
+                    }
+                };
+                window.chrome.webview.addEventListener("message", listener);
+            });
+            window.chrome.webview.postMessage({
+                message: this.path,
+                data: JSON.stringify(this.params),
+                userAgent: window.navigator.userAgent
+            });
+            this.response = await responsePromise;
+            this.readyState = XMLHttpRequest.DONE;
+            this.status = 200;
+            this.statusText = "OK";
+
+            // We only need load event to trigger a XHR response
+            this.dispatchEvent(new ProgressEvent("load"));
+        };
+
+        // If this is inside of a WebView2 component, we need to patch HTMX requests to use
+        // CoreWebView2's messaging protocol instead of making HTTP requests
+        if (window.chrome.webview.postMessage !== undefined) {
+            document.addEventListener('htmx:beforeSend', (event) => {
+                const path = event.detail.requestConfig.path;
+                event.detail.xhr.path = path;
+                event.detail.xhr.params = event.detail.requestConfig.parameters;
+                event.detail.xhr.send = patchedSend;
+            });
+        }
+    </script>
+    <title>RePlays</title>
+</head>
+<body hx-boost="true">
+    <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
+
+    <button class="btn" onclick="document.getElementById('sessions-nav').checked = true;">Sessions</button>
+    <button class="btn" onclick="document.getElementById('clips-nav').checked = true;">Clips</button>
+    <button class="btn" onclick="document.getElementById('settings-nav').checked = true;">Settings</button>
+
+    <div role="tablist" class="tabs tabs-bordered">
+        <input id="sessions-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" checked disabled />
+        <div id="sessions-page" role="tabpanel" class="tab-content p-10">loading...</div>
+
+        <input id="clips-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" disabled />
+        <div id="clips-page" role="tabpanel" class="tab-content p-10">loading...</div>
+
+        <input id="settings-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" disabled />
+        <div id="settings-page" role="tabpanel" class="tab-content p-10">Tab content 3</div>
+    </div>
+</body>
+</html>

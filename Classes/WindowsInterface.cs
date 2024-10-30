@@ -137,9 +137,9 @@ namespace RePlays {
             webView2.CoreWebView2.PermissionRequested += CoreWebView2PermissionRequested;
 #if DEBUG
             webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("videos.replays.app", GetPlaysFolder(), CoreWebView2HostResourceAccessKind.Allow);
-            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", GetSolutionPath() + "/ClientApp/public/", CoreWebView2HostResourceAccessKind.Allow);
+            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", GetSolutionPath() + "/wwwroot/", CoreWebView2HostResourceAccessKind.Allow);
 #elif RELEASE
-            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", Application.StartupPath + "/ClientApp/build/", CoreWebView2HostResourceAccessKind.Allow);
+            webView2.CoreWebView2.SetVirtualHostNameToFolderMapping("replays.app", Application.StartupPath + "/wwwroot/", CoreWebView2HostResourceAccessKind.Allow);
             webView2.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
             webView2.CoreWebView2.Navigate("https://replays.app/preload.html");

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Globalization;
-using System.IO;
 using System.Net;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -11,9 +10,16 @@ using System.Text;
 using RePlays.Utils;
 using RePlays.Services;
 using static RePlays.Utils.Functions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components;
+using System.Threading.Tasks;
+using RePlays.Classes.RazorComponents;
 
 
 #if !WINDOWS
+using System.IO;
 using RePlays.Classes.Utils;
 using RePlays.Recorders;
 #else
@@ -82,26 +88,6 @@ namespace RePlays {
                 return;
             }
 
-#if DEBUG && WINDOWS && !NO_SERVER
-            // this will run our react app if its not already running
-            var startInfo = new ProcessStartInfo {
-                FileName = "cmd.exe",
-                Arguments = "/c npm run start",
-                WorkingDirectory = Path.Join(GetSolutionPath(), @"ClientApp")
-            };
-            Process process = null;
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://localhost:3000/index.html");
-            request.AllowAutoRedirect = false;
-            request.Method = "HEAD";
-
-            try {
-                request.GetResponse();
-            }
-            catch (WebException) {
-                process ??= Process.Start(startInfo);
-            }
-#endif
             SettingsService.LoadSettings();
             SettingsService.UpdateGpuManufacturer();
             SettingsService.SaveSettings();

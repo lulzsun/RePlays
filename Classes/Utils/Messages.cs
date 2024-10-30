@@ -1,3 +1,8 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using RePlays.Classes.RazorComponents;
 using RePlays.Classes.Utils;
 using RePlays.Recorders;
 using RePlays.Services;
@@ -141,7 +146,29 @@ namespace RePlays.Utils {
             sortBy = "Latest"
         };
 
-        public static bool SendMessage(string message) {
+        public static class HtmlRendererFactory {
+            private static ServiceProvider? _serviceProvider;
+
+            public static async Task<HtmlRenderer> CreateHtmlRendererAsync() {
+                if (_serviceProvider == null) {
+                    var services = new ServiceCollection();
+                    services.AddLogging();
+                    _serviceProvider = services.BuildServiceProvider();
+                }
+
+                var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+                return await Task.FromResult(new HtmlRenderer(_serviceProvider, loggerFactory));
+            }
+
+            public static async Task<string> RenderHtmlAsync<TComponent>(ParameterView parameters) where TComponent : IComponent {
+                await using var htmlRenderer = await CreateHtmlRendererAsync();
+                return await htmlRenderer.Dispatcher.InvokeAsync(async () =>
+                    (await htmlRenderer.RenderComponentAsync<TComponent>(parameters)).ToHtmlString()
+                );
+            }
+        }
+
+        public static bool SendMessage(string message, string html = "") {
             List<WebSocket> activeSockets = WebServer.GetActiveSockets();
             foreach (var socket in activeSockets) {
                 var responseMessage = Encoding.UTF8.GetBytes(message);
@@ -158,7 +185,14 @@ namespace RePlays.Utils {
                 }));
             }
             else {
-                WindowsInterface.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                if (html == "") {
+                    WindowsInterface.webView2.CoreWebView2.PostWebMessageAsJson(message);
+                }
+                else {
+                    var messageData = new { message, html };
+                    var jsonData = JsonSerializer.Serialize(messageData);
+                    WindowsInterface.webView2.CoreWebView2.PostWebMessageAsJson(jsonData);
+                }
                 return true;
             }
 #endif

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Components;
+using RePlays.Classes.RazorComponents;
 using RePlays.Recorders;
 using RePlays.Services;
 using System;
@@ -15,6 +17,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
+using static RePlays.Utils.WebMessage;
 using Process = System.Diagnostics.Process;
 using Timer = System.Timers.Timer;
 
@@ -66,12 +69,9 @@ namespace RePlays.Utils {
 
         public static string GetRePlaysURI() {
 #if DEBUG 
-            if (GetProgramArgs().Any("--use-build-ui".Contains)) {
-                return "file://" + GetSolutionPath() + "/ClientApp/build/index.html";
-            }
-            return "http://localhost:3000/#/";
+            return "file://" + GetSolutionPath() + "/wwwroot/index.html";
 #else
-            return "file://" + GetStartupPath() + "/ClientApp/build/index.html";
+            return "file://" + GetStartupPath() + "/wwwroot/index.html";
 #endif
         }
 
@@ -222,11 +222,14 @@ namespace RePlays.Utils {
         }
 
         public static string GetAllVideos(string game, string sortBy, bool isRePlaysWebView = false) {
-            VideoList videoList = GetAllVideos(game, sortBy, true, isRePlaysWebView);
-            if (videoList == null) return "{}";
+            var parameters = new Dictionary<string, object?> {
+                [nameof(game)] = game,
+                [nameof(sortBy)] = sortBy
+            };
+            var html = HtmlRendererFactory.RenderHtmlAsync<VideosPage>(ParameterView.FromDictionary(parameters)).Result;
             WebMessage webMessage = new() {
                 message = "RetrieveVideos",
-                data = JsonSerializer.Serialize(videoList)
+                data = html
             };
             return JsonSerializer.Serialize(webMessage);
         }
