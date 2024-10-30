@@ -290,7 +290,7 @@ namespace RePlays.Recorders {
             if (SettingsService.Settings.captureSettings.captureGameAudio) {
                 IntPtr settings = obs_data_create();
                 obs_data_set_string(settings, "window", $"{WindowService.GetWindowTitle(session.WindowHandle)}:{WindowService.GetClassName(session.WindowHandle)}:{session.Exe}");
-                audioSources.TryAdd("Game Audio", obs_audio_source_create(audioProcessSourceId, "Game Audio", settings:settings, mono: false));
+                audioSources.TryAdd("Game Audio", obs_audio_source_create(audioProcessSourceId, "Game Audio", settings: settings, mono: false));
                 obs_set_output_source(1, audioSources["Game Audio"]);
                 obs_source_set_audio_mixers(audioSources["Game Audio"], 1 | (uint)(1 << Math.Min(1, 5)));
             }
@@ -335,7 +335,7 @@ namespace RePlays.Recorders {
                 foreach (var (audioApplication, index) in SettingsService.Settings.captureSettings.audioApplications.WithIndex()) {
                     IntPtr settings = obs_data_create();
                     obs_data_set_string(settings, "window", audioApplication.application);
-                    audioSources.TryAdd("(input) " + audioApplication, obs_audio_source_create(audioProcessSourceId, "(input) " +audioApplication, deviceId: audioApplication.application, mono: false));
+                    audioSources.TryAdd("(input) " + audioApplication, obs_audio_source_create(audioProcessSourceId, "(input) " + audioApplication, deviceId: audioApplication.application, mono: false));
                     obs_set_output_source((uint)(index + totalDevices + 1), audioSources["(input) " + audioApplication.application]);
                     obs_source_set_audio_mixers(audioSources["(input) " + audioApplication], 1 | (uint)(1 << Math.Min(index + totalDevices + 1, 5)));
                     obs_source_set_volume(audioSources["(input) " + audioApplication], audioApplication.applicationVolume / (float)100);
