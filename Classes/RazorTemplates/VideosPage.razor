@@ -1,0 +1,32 @@
+@using RePlays.Utils
+@using RePlays.Classes.RazorTemplates.Components
+@using static RePlays.Utils.Functions;
+
+@code {
+	[Parameter]
+	public string game { get; set; }
+	[Parameter]
+	public string sortBy { get; set; }
+	[Parameter]
+	public bool isRePlaysWebView { get; set; }
+}
+
+@{
+	VideoList videoList = GetAllVideos(game, sortBy, true, isRePlaysWebView);
+}
+
+<div hx-swap-oob="innerHTML:#sessions-page">
+    <div class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8">
+        @foreach (var video in videoList.sessions) {
+            <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail"/>
+        }
+    </div>
+</div>
+
+<div hx-swap-oob="innerHTML:#clips-page">
+    <div class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8">
+        @foreach (var video in videoList.clips) {
+            <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail" />
+        }
+    </div>
+</div>

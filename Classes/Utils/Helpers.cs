@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using RePlays.Classes.RazorComponents;
+using RePlays.Classes.RazorTemplates;
 using RePlays.Recorders;
 using RePlays.Services;
 using System;
@@ -294,7 +294,7 @@ namespace RePlays.Utils {
                 };
 
 #if DEBUG && WINDOWS
-                video.folder = "http://localhost:3001/"; // if not using web server: https://videos.replays.app/
+                video.folder = "https://videos.replays.app/";
 #else
                 if (isRePlaysWebView)
                     video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file.FullName), "..")).Replace("\\", "/");

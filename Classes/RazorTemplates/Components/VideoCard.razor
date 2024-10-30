@@ -1,0 +1,29 @@
+@code {
+    [Parameter]
+    public string folder { get; set; }
+    [Parameter]
+    public string game { get; set; }
+    [Parameter]
+    public string thumbnail { get; set; }
+}
+
+<div class="relative w-full block h-full group rounded-lg border">
+    <div class="absolute z-50 w-full flex justify-between">
+    </div>
+    <a class="rounded-lg">
+        <div class="relative text-white w-full rounded-t-lg object-cover overflow-hidden items-center">
+            <span class="absolute z-40 bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal" style="background-color: rgba(0, 0, 0, 0.5);">
+                00:00
+            </span>
+            <div class="absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50"></div>
+            <img class="absolute z-20 w-full" loading="lazy" alt="" src="@folder/@game/.thumbs/@thumbnail" />
+            <img class="relative z-10 w-full" loading="lazy" alt="" src="static/video_thumbnail_placeholder.png" />
+        </div>
+        <div class="bg-white dark:bg-gray-900 text-gray-800 dark:text-white w-full rounded-b-lg p-4 text-xs font-medium">
+            @game
+            <p class="text-gray-700 dark:text-gray-400 font-light">
+                12/15/2021 | 01:01 AM | 4.82 GB
+            </p>
+        </div>
+    </a>
+</div>

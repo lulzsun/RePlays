@@ -10,13 +10,6 @@ using System.Text;
 using RePlays.Utils;
 using RePlays.Services;
 using static RePlays.Utils.Functions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components;
-using System.Threading.Tasks;
-using RePlays.Classes.RazorComponents;
-
 
 #if !WINDOWS
 using System.IO;
