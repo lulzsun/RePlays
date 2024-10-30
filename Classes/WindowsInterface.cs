@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -21,6 +22,15 @@ namespace RePlays {
         public ContextMenuStrip recentLinksMenu;
         public static WindowsInterface Instance;
         private static Socket listener;
+
+        [DllImport("DwmApi")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
+
+        // https://stackoverflow.com/a/64927217
+        protected override void OnHandleCreated(EventArgs e) {
+            if (DwmSetWindowAttribute(Handle, 19, new[] { 1 }, 4) != 0)
+                DwmSetWindowAttribute(Handle, 20, new[] { 1 }, 4);
+        }
 
         public WindowsInterface() {
             Instance = this;
