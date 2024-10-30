@@ -160,6 +160,7 @@ declare global {
     useReplayBuffer: boolean;
     replayBufferDuration: number;
     replayBufferSize: number;
+    captureGameAudio: boolean;
   }
 
   interface ClipSettings {
