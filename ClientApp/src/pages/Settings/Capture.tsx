@@ -715,98 +715,114 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
       )}
 
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem20')}</h1>
-
-      <div className='flex flex-col'>{t('settingsCaptureItem21')}</div>
-      <div className='flex flex-col gap-4'>
-        {settings?.outputDevices &&
-          settings.outputDevices.map((item, i) => {
-            const isRemovable = !(
-              settings.outputDevices.length === 1 && item.deviceId === 'default'
-            );
-
-            return (
-              <AudioDevice
-                key={item.deviceId}
-                item={item}
-                defaultValue={
-                  settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume
-                }
-                device={device}
-                hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
-                isRemovable={isRemovable}
-                onChange={(e) => {
-                  let value = parseInt((e.target as HTMLInputElement).value);
-                  settings!.outputDevices[i].deviceVolume = value;
-                }}
-                onCheck={(e) => {
-                  let value = (e.target as HTMLInputElement).checked;
-                  settings!.inputDevices[i].denoiser = value;
-                }}
-                onMouseUpCapture={(e) => {
-                  updateSettings();
-                }}
-                onRemove={() => {
-                  settings!.outputDevices = settings!.outputDevices.filter(
-                    (d) => d.deviceId !== item.deviceId,
-                  );
-                  updateSettings();
-                }}
-              />
-            );
-          })}
-      </div>
-
-      <div className='flex flex-col'>{t('settingsCaptureItem22')}</div>
-      <div className='flex flex-col gap-4'>
-        {settings?.inputDevices &&
-          settings.inputDevices.map((item, i) => {
-            item.isInput = true;
-
-            const isRemovable = !(
-              settings.inputDevices.length === 1 && item.deviceId === 'default'
-            );
-
-            return (
-              <AudioDevice
-                key={item.deviceId}
-                item={item}
-                defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
-                device={device}
-                hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
-                isRemovable={isRemovable}
-                onChange={(e) => {
-                  let value = parseInt((e.target as HTMLInputElement).value);
-                  settings!.inputDevices[i].deviceVolume = value;
-                }}
-                onCheck={(e) => {
-                  let value = (e.target as HTMLInputElement).checked;
-                  settings!.inputDevices[i].denoiser = value;
-                  updateSettings();
-                }}
-                onMouseUpCapture={() => {
-                  updateSettings();
-                }}
-                onRemove={() => {
-                  settings!.inputDevices = settings!.inputDevices.filter(
-                    (d) => d.deviceId !== item.deviceId,
-                  );
-                  updateSettings();
-                }}
-              />
-            );
-          })}
-      </div>
-
-      <div className='flex flex-col'>
-        {t('settingsCaptureItem23')}
-        <DropDownMenu
-          text={t('settingsCaptureItem24')}
-          width={'auto'}
-          items={audioDevices}
-          groups={[t('settingsCaptureItem25'), t('settingsCaptureItem26')]}
+      <label className='inline-flex items-center'>
+        <input
+          type='checkbox'
+          className='form-checkbox h-4 w-4 text-gray-600'
+          defaultChecked={settings === undefined ? false : settings.captureGameAudio}
+          onChange={(e) => {
+            settings!.captureGameAudio = e.target.checked;
+            updateSettings();
+          }}
         />
-      </div>
+        <span className='ml-2 text-gray-700 dark:text-gray-400'>
+          {t('settingsCaptureItem37')}
+        </span>
+      </label>
+      {settings?.captureGameAudio == false && (
+        <>
+        <div className='flex flex-col'>{t('settingsCaptureItem21')}</div>
+        <div className='flex flex-col gap-4'>
+          {settings?.outputDevices &&
+            settings.outputDevices.map((item, i) => {
+              const isRemovable = !(
+                settings.outputDevices.length === 1 && item.deviceId === 'default'
+              );
 
+              return (
+                <AudioDevice
+                  key={item.deviceId}
+                  item={item}
+                  defaultValue={
+                    settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume
+                  }
+                  device={device}
+                  hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+                  isRemovable={isRemovable}
+                  onChange={(e) => {
+                    let value = parseInt((e.target as HTMLInputElement).value);
+                    settings!.outputDevices[i].deviceVolume = value;
+                  }}
+                  onCheck={(e) => {
+                    let value = (e.target as HTMLInputElement).checked;
+                    settings!.inputDevices[i].denoiser = value;
+                  }}
+                  onMouseUpCapture={(e) => {
+                    updateSettings();
+                  }}
+                  onRemove={() => {
+                    settings!.outputDevices = settings!.outputDevices.filter(
+                      (d) => d.deviceId !== item.deviceId,
+                    );
+                    updateSettings();
+                  }}
+                />
+              );
+            })}
+        </div>
+
+        <div className='flex flex-col'>{t('settingsCaptureItem22')}</div>
+        <div className='flex flex-col gap-4'>
+          {settings?.inputDevices &&
+            settings.inputDevices.map((item, i) => {
+              item.isInput = true;
+
+              const isRemovable = !(
+                settings.inputDevices.length === 1 && item.deviceId === 'default'
+              );
+
+              return (
+                <AudioDevice
+                  key={item.deviceId}
+                  item={item}
+                  defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
+                  device={device}
+                  hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+                  isRemovable={isRemovable}
+                  onChange={(e) => {
+                    let value = parseInt((e.target as HTMLInputElement).value);
+                    settings!.inputDevices[i].deviceVolume = value;
+                  }}
+                  onCheck={(e) => {
+                    let value = (e.target as HTMLInputElement).checked;
+                    settings!.inputDevices[i].denoiser = value;
+                    updateSettings();
+                  }}
+                  onMouseUpCapture={() => {
+                    updateSettings();
+                  }}
+                  onRemove={() => {
+                    settings!.inputDevices = settings!.inputDevices.filter(
+                      (d) => d.deviceId !== item.deviceId,
+                    );
+                    updateSettings();
+                  }}
+                />
+              );
+            })}
+        </div>
+
+        <div className='flex flex-col'>
+          {t('settingsCaptureItem23')}
+          <DropDownMenu
+            text={t('settingsCaptureItem24')}
+            width={'auto'}
+            items={audioDevices}
+            groups={[t('settingsCaptureItem25'), t('settingsCaptureItem26')]}
+          />
+        </div>
+        </>
+      )}
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem27')}</h1>
       <div className='flex flex-col gap-1'>
         <label className='inline-flex items-center'>

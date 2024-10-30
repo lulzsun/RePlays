@@ -104,6 +104,18 @@ namespace RePlays.Utils {
         public bool denoiser { get { return _denoiser; } set { _denoiser = value; } }
     }
 
+    public class AudioApplication {
+        public AudioApplication() { }
+        public AudioApplication(string application) {
+            _application = application;
+        }
+
+        private string _application;
+        public string application { get { return _application; } set { _application = value; } }
+        private int _applicationVolume = 100;
+        public int applicationVolume { get { return _applicationVolume; } set { _applicationVolume = value; } }
+    }
+
     public class CaptureSettings {
         private string _recordingMode = "automatic";
         public string recordingMode { get { return _recordingMode; } set { _recordingMode = value; } }
@@ -169,6 +181,9 @@ namespace RePlays.Utils {
         private List<AudioDevice> _outputDevices = new();
         public List<AudioDevice> outputDevices { get { return _outputDevices; } set { _outputDevices = value; } }
 
+        public List<AudioApplication> _audioApplications = new();
+        public List<AudioApplication> audioApplications { get { return _audioApplications; } set { _audioApplications = value; } }
+
         private bool _hasNvidiaAudioSDK;
         public bool hasNvidiaAudioSDK { get { return _hasNvidiaAudioSDK; } set { _hasNvidiaAudioSDK = value; } }
 
@@ -191,6 +206,9 @@ namespace RePlays.Utils {
         // In MB
         private uint _replayBufferSize = 500;
         public uint replayBufferSize { get { return _replayBufferSize; } set { _replayBufferSize = value; } }
+
+        private bool _captureGameAudio = false;
+        public bool captureGameAudio { get { return _captureGameAudio; } set { _captureGameAudio = value; } }
     }
 
     public class ClipSettings {
