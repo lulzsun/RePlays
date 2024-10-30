@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :focus {
-            outline: none;
+            outline: rgba(0, 0, 0, 0);
             position: relative;
         }
 
@@ -32,6 +32,21 @@
             100% {
                 transform: scale(1);
             }
+        }
+
+        /*
+            Prevent dragging all HTML elements, specially:
+              - images
+              - links (anchors)
+
+            Prevent text selection 
+        */
+        *,
+        *::after,
+        *::before {
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+            -webkit-app-region: no-drag;
         }
     </style>
     <script type="text/javascript">
