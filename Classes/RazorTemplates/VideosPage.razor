@@ -16,15 +16,23 @@
 }
 
 <div hx-swap-oob="innerHTML:#sessions-page">
-    <div class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8">
-        @foreach (var video in videoList.sessions) {
-            <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail"/>
-        }
+    <div class="flex flex-col h-full">
+        <header class="py-5 bg-gray-700 text-white text-center">
+            Video Controls
+        </header>
+        <main class="flex-1 overflow-y-auto p-5">
+            <div class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                @foreach (var video in videoList.sessions)
+                {
+                    <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail" />
+                }
+            </div>
+        </main>
     </div>
 </div>
 
 <div hx-swap-oob="innerHTML:#clips-page">
-    <div class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pr-8">
+    <div class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         @foreach (var video in videoList.clips) {
             <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail" />
         }

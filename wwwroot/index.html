@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="static/htmx.min.js"></script>
-    <!--<script src="static/spatial_navigation.js"></script>-->
+    <script src="static/js/htmx.min.js"></script>
+    <script src="static/js/spatial_navigation.js"></script>
+    <script src="static/js/gamepad.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :focus {
             outline: rgba(0, 0, 0, 0);
             position: relative;
+            z-index: 10;
         }
 
         :focus::before {
@@ -20,8 +22,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            border: 2px solid #51a7e8;
+            outline: 3px solid #51a7e8;
             animation: focus-animation 0.2s;
+            z-index: 1000;
         }
 
         @keyframes focus-animation {
@@ -39,7 +42,7 @@
               - images
               - links (anchors)
 
-            Prevent text selection 
+            Prevent text selection
         */
         *,
         *::after,
@@ -47,6 +50,17 @@
             -webkit-user-select: none;
             -webkit-user-drag: none;
             -webkit-app-region: no-drag;
+        }
+
+        /*
+            https://github.com/saadeghi/daisyui/issues/2859
+        */
+        html {
+            scrollbar-gutter: auto !important;
+        }
+
+        html:has(body.content-overflow-y) {
+            scrollbar-gutter: stable !important;
         }
     </style>
     <script type="text/javascript">
@@ -56,14 +70,13 @@
 
             // Define navigable elements (anchors and elements with "focusable" class).
             SpatialNavigation.add({
-                selector: 'a, .focusable'
+                selector: 'button, a, .focusable'
             });
 
             // Make the *currently existing* navigable elements focusable.
             SpatialNavigation.makeFocusable();
 
-            // Focus the first navigable element.
-            SpatialNavigation.focus();
+            Gamepad.init();
         });
         function initialize() {
             if (window.chrome !== undefined) {
@@ -127,32 +140,32 @@
 </head>
 <body hx-boost="true">
     <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
-
-    <div class="drawer lg:drawer-open">
-        <input id="nav-drawer" type="checkbox" class="drawer-toggle" />
-        <div class="drawer-content flex flex-col items-center justify-center">
-            <label for="nav-drawer" class="btn btn-primary drawer-button lg:hidden">
-                Open drawer
-            </label>
-            <div role="tablist" class="tabs tabs-bordered">
-                <input id="sessions-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" checked disabled />
-                <div id="sessions-page" role="tabpanel" class="tab-content">loading...</div>
-
-                <input id="clips-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" disabled />
-                <div id="clips-page" role="tabpanel" class="tab-content">loading...</div>
-
-                <input id="settings-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" disabled />
-                <div id="settings-page" role="tabpanel" class="tab-content p-10">Tab content 3</div>
-            </div>
-        </div>
-        <div class="drawer-side z-50">
-            <label for="nav-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="flex flex-row h-screen">
+        <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-100 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
             <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
-                <!-- Sidebar content here -->
                 <li><button class="btn" onclick="document.getElementById('sessions-nav').checked = true;">Sessions</button></li>
                 <li><button class="btn" onclick="document.getElementById('clips-nav').checked = true;">Clips</button></li>
                 <li><button class="btn" onclick="document.getElementById('settings-nav').checked = true;">Settings</button></li>
             </ul>
+        </nav>
+        <div class="flex-1 overflow-y-auto">
+            <div class="flex flex-col h-screen">
+                <header class="py-5 bg-base-200 text-white text-center lg:hidden" onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full');">
+                    Header
+                </header>
+                <input id="sessions-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" checked disabled />
+                <div id="sessions-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading...</div>
+
+                <input id="clips-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" disabled />
+                <div id="clips-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading...</div>
+
+                <input id="settings-nav" type="radio" name="page-tabs" role="tab" class="tab hidden" disabled />
+                <div id="settings-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">settings</div>
+
+                <footer class="py-5 bg-base-100 text-white text-center bottom-0">
+                    Footer
+                </footer>
+            </div>
         </div>
     </div>
 </body>
