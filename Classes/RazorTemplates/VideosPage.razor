@@ -16,9 +16,26 @@
 }
 
 <div hx-swap-oob="innerHTML:#sessions-page">
+    <script>
+        SpatialNavigation.add('sessionsSortControls', {
+            id: 'sessionsSortControls',
+            selector: '#sessionsSortControls .focusable',
+            enterTo: 'last-focused'
+        });
+
+        SpatialNavigation.add('sessionsList', {
+            id: 'sessionsList',
+            selector: '#sessionsList .focusable',
+            enterTo: 'last-focused',
+            leaveFor: {
+                left: '@@sessionsSortControls',
+                right: '@@sessionsSortControls'
+            }
+        });
+    </script>
     <div class="flex flex-col h-full">
         <header class="py-5 bg-gray-700">
-            <VideoSortControls games="@videoList.games" size="@videoList.sessionsSize" game="@game" sortBy="@sortBy" />
+            <VideoSortControls type="sessions" games="@videoList.games" size="@videoList.sessionsSize" game="@game" sortBy="@sortBy" />
         </header>
         <main class="flex-1 overflow-y-auto p-5 scroll-smooth">
             <div id="sessionsList" class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -31,9 +48,33 @@
 </div>
 
 <div hx-swap-oob="innerHTML:#clips-page">
-    <div class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        @foreach (var video in videoList.clips) {
-            <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail" />
-        }
+    <script>
+        SpatialNavigation.add('clipsSortControls', {
+            id: 'clipsSortControls',
+            selector: '#clipsSortControls .focusable',
+            enterTo: 'last-focused'
+        });
+
+        SpatialNavigation.add('clipsList', {
+            id: 'clipsList',
+            selector: '#clipsList .focusable',
+            enterTo: 'last-focused',
+            leaveFor: {
+                left: '@@clipsSortControls',
+                right: '@@clipsSortControls'
+            }
+        });
+    </script>
+    <div class="flex flex-col h-full">
+        <header class="py-5 bg-gray-700">
+            <VideoSortControls type="clips" games="@videoList.games" size="@videoList.sessionsSize" game="@game" sortBy="@sortBy" />
+        </header>
+        <main class="flex-1 overflow-y-auto p-5 scroll-smooth">
+            <div id="clipsList" class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                @foreach (var video in videoList.clips) {
+                    <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail" />
+                }
+            </div>
+        </main>
     </div>
 </div>

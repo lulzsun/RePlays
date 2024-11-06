@@ -76,22 +76,6 @@
                 selector: '#sidebar .focusable'
             });
 
-            SpatialNavigation.add('sessionsSortControls', {
-                id: 'sessionsSortControls',
-                selector: '#sessionsSortControls .focusable',
-                enterTo: 'last-focused'
-            });
-
-            SpatialNavigation.add('sessionsList', {
-                id: 'sessionsList',
-                selector: '#sessionsList .focusable',
-                enterTo: 'last-focused',
-                leaveFor: {
-                    left: '@sessionsSortControls',
-                    right: '@sessionsSortControls'
-                }
-            });
-
             document.addEventListener('sn:focused', function (e) {
                 e.target.scrollIntoView({
                     behavior: 'smooth',

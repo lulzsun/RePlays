@@ -1,5 +1,7 @@
 @code {
 	[Parameter]
+	public string type { get; set; }
+	[Parameter]
 	public List<string> games { get; set; }
 	[Parameter]
 	public long size { get; set; }
@@ -9,16 +11,20 @@
 	public string sortBy { get; set; }
 }
 
-<div id="sessionsSortControls" class="flex justify-between px-4">
+@{
+	string hx_vals = "js:{game: (() => document.getElementById('" + type + "-game').value)(), sortBy: (() => document.getElementById('" + type + "-sortBy').value)()}";
+}
+
+<div id="@(type + "SortControls")" class="flex justify-between px-4">
 	<div class="flex gap-4">
-		<Dropdown id="sessions-game" hx_get="RetrieveVideos" hx_vals='js:{game: (() => document.getElementById("sessions-game").value)(), sortBy: (() => document.getElementById("sessions-sortBy").value)()}'>
+		<Dropdown id="@(type + "-game")" hx_get="RetrieveVideos" hx_vals="@hx_vals">
 			<option value="@game" selected disabled hidden>@game</option>
 			<option value="All Games">All Games</option>
 			@foreach (var game in games) {
 				<option value="@game">@game</option>
 			}
 		</Dropdown>
-		<Dropdown id="sessions-sortBy" hx_get="RetrieveVideos" hx_vals='js:{game: (() => document.getElementById("sessions-game").value)(), sortBy: (() => document.getElementById("sessions-sortBy").value)()}'>
+		<Dropdown id="@(type + "-sortBy")" hx_get="RetrieveVideos" hx_vals="@hx_vals">
 			<option value="@sortBy" selected disabled hidden>@sortBy</option>
 			<option value="Latest">Latest</option>
 			<option value="Oldest">Oldest</option>
