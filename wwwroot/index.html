@@ -9,13 +9,15 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :focus {
+        :focus,
+        .dropdown:focus-within {
             outline: rgba(0, 0, 0, 0);
             position: relative;
             z-index: 10;
         }
 
-        :focus::before {
+        :focus::before,
+        .dropdown:focus-within::before {
             content: "";
             position: absolute;
             top: 0;

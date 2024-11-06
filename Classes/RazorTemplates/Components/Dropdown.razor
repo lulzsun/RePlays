@@ -1,0 +1,17 @@
+@code {
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+}
+
+<div class="dropdown">
+	<div class="btn px-0 overflow-hidden">
+		<img src="#" class="absolute invisible" onerror="this.nextElementSibling.dispatchEvent(new Event('input'));">
+		<select class="absolute left-0 right-0 opacity-0 focusable appearance-none bg-inherit h-full px-4" oninput="
+			const dummyEl = this.nextElementSibling;
+			dummyEl.innerText = this.options[this.selectedIndex].innerText;
+		">
+			@ChildContent
+		</select>
+		<span class="px-4" aria-hidden="true"></span>
+	</div>
+</div>
