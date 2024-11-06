@@ -1,0 +1,55 @@
+@code {
+	[Parameter]
+	public List<string> games { get; set; }
+	[Parameter]
+	public long size { get; set; }
+	[Parameter]
+	public string game { get; set; }
+	[Parameter]
+	public string sortBy { get; set; }
+}
+
+<div id="sessionsSortControls" class="flex justify-between px-4">
+	<div class="flex gap-4">
+		<Dropdown id="sessions-game" hx_get="RetrieveVideos" hx_vals='js:{game: (() => document.getElementById("sessions-game").value)(), sortBy: (() => document.getElementById("sessions-sortBy").value)()}'>
+			<option value="@game" selected disabled hidden>@game</option>
+			<option value="All Games">All Games</option>
+			@foreach (var game in games) {
+				<option value="@game">@game</option>
+			}
+		</Dropdown>
+		<Dropdown id="sessions-sortBy" hx_get="RetrieveVideos" hx_vals='js:{game: (() => document.getElementById("sessions-game").value)(), sortBy: (() => document.getElementById("sessions-sortBy").value)()}'>
+			<option value="@sortBy" selected disabled hidden>@sortBy</option>
+			<option value="Latest">Latest</option>
+			<option value="Oldest">Oldest</option>
+			<option value="Largest">Largest</option>
+			<option value="Smallest">Smallest</option>
+		</Dropdown>
+	</div>
+	<!-- 
+	<div class="flex gap-4">
+		<button class="focusable btn">
+			test
+		</button>
+		<button class="focusable btn">
+			test
+		</button>
+	</div>
+	-->
+	<div class="flex gap-4 items-center">
+		<div class="badge badge-neutral badge-lg">
+			@((@size == 0) ? "0 Bytes" :
+				$"{Math.Round((double)@size / Math.Pow(1024, Math.Floor(Math.Log(@size) / Math.Log(1024))), 2)} " +
+				(new[] { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" })[
+				(int)Math.Floor(Math.Log(@size) / Math.Log(1024))
+				]
+			)
+		</div>
+		<button class="focusable btn" onclick="window.location.reload();">
+			<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+				<path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z" />
+				<path fillRule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z" />
+			</svg>
+		</button>
+	</div>
+</div>

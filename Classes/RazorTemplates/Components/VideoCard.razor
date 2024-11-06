@@ -7,16 +7,16 @@
     public string thumbnail { get; set; }
 }
 
-<button class="relative w-full block h-full group border border-slate-600">
-    <div style="z-index: 5;" class="absolute z-50 w-full flex justify-between">
+<button class="focusable relative w-full block h-full group border border-slate-600">
+    <div class="z-[5] absolute w-full flex justify-between">
     </div>
     <div class="relative text-white w-full object-cover overflow-hidden items-center">
-        <span style="z-index: 4; background-color: rgba(0, 0, 0, 0.5);" class="absolute  bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal">
+        <span style="background-color: rgba(0, 0, 0, 0.5);" class="z-[4] absolute bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal">
             00:00
         </span>
-        <div style="z-index: 3;" class="absolute w-full h-full bg-black opacity-0 group-hover:opacity-50"></div>
-        <img style="z-index: 2;" class="absolute w-full" loading="lazy" alt="" src="@folder/@game/.thumbs/@thumbnail" />
-        <img style="z-index: 1;" class="relative w-full" loading="lazy" alt="" src="static/assets/video_thumbnail_placeholder.png" />
+        <div class="z-[3] absolute w-full h-full bg-black opacity-0 group-hover:opacity-50"></div>
+        <img class="z-[2] absolute w-full" loading="lazy" alt="" src="@folder/@game/.thumbs/@thumbnail" />
+        <img class="z-[1] relative w-full" loading="lazy" alt="" src="static/assets/video_thumbnail_placeholder.png" />
     </div>
 	<div class="bg-white dark:bg-gray-900 text-gray-800 dark:text-white w-full p-4 text-left text-xs font-medium">
         @game

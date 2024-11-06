@@ -71,8 +71,33 @@
             SpatialNavigation.init();
 
             // Define navigable elements (anchors and elements with "focusable" class).
-            SpatialNavigation.add({
-                selector: 'button, a, .focusable'
+            SpatialNavigation.add('sidebar', {
+                id: 'sidebar',
+                selector: '#sidebar .focusable'
+            });
+
+            SpatialNavigation.add('sessionsSortControls', {
+                id: 'sessionsSortControls',
+                selector: '#sessionsSortControls .focusable',
+                enterTo: 'last-focused'
+            });
+
+            SpatialNavigation.add('sessionsList', {
+                id: 'sessionsList',
+                selector: '#sessionsList .focusable',
+                enterTo: 'last-focused',
+                leaveFor: {
+                    left: '@sessionsSortControls',
+                    right: '@sessionsSortControls'
+                }
+            });
+
+            document.addEventListener('sn:focused', function (e) {
+                e.target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center'
+                });
             });
 
             // Make the *currently existing* navigable elements focusable.
@@ -145,9 +170,9 @@
     <div class="flex flex-row h-screen">
         <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-100 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
             <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
-                <li><button class="btn" onclick="document.getElementById('sessions-nav').checked = true;">Sessions</button></li>
-                <li><button class="btn" onclick="document.getElementById('clips-nav').checked = true;">Clips</button></li>
-                <li><button class="btn" onclick="document.getElementById('settings-nav').checked = true;">Settings</button></li>
+                <li><button class="btn focusable" onclick="document.getElementById('sessions-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');">Sessions</button></li>
+                <li><button class="btn focusable" onclick="document.getElementById('clips-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');">Clips</button></li>
+                <li><button class="btn focusable" onclick="document.getElementById('settings-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');">Settings</button></li>
             </ul>
         </nav>
         <div class="flex-1 overflow-y-auto">
