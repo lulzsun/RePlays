@@ -40,7 +40,7 @@
         <main class="flex-1 overflow-y-auto p-5 scroll-smooth">
             <div id="sessionsList" class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 @foreach (var video in videoList.sessions) {
-                    <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail" />
+                    <VideoCard video="@video" />
                 }
             </div>
         </main>
@@ -72,7 +72,7 @@
         <main class="flex-1 overflow-y-auto p-5 scroll-smooth">
             <div id="clipsList" class="gap-x-8 gap-y-8 grid grid-flow-row sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 @foreach (var video in videoList.clips) {
-                    <VideoCard folder="@video.folder" game="@video.game" thumbnail="@video.thumbnail" />
+                    <VideoCard video="@video" />
                 }
             </div>
         </main>

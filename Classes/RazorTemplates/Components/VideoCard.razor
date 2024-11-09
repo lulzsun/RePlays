@@ -1,10 +1,8 @@
+@using RePlays.Utils
+
 @code {
     [Parameter]
-    public string folder { get; set; }
-    [Parameter]
-    public string game { get; set; }
-    [Parameter]
-    public string thumbnail { get; set; }
+    public Video video { get; set; }
 }
 
 <button class="focusable relative w-full block h-full group border border-slate-600">
@@ -12,16 +10,26 @@
     </div>
     <div class="relative text-white w-full object-cover overflow-hidden items-center">
         <span style="background-color: rgba(0, 0, 0, 0.5);" class="z-[4] absolute bottom-1 right-1 py-0.5 px-2 rounded-full text-xs font-normal">
-            00:00
+            @(@video.metadata.duration > 3600 ?
+                TimeSpan.FromSeconds(@video.metadata.duration).ToString(@"hh\:mm\:ss").TrimStart('0') :
+                TimeSpan.FromSeconds(@video.metadata.duration).ToString(@"mm\:ss")
+            )
         </span>
         <div class="z-[3] absolute w-full h-full bg-black opacity-0 group-hover:opacity-50"></div>
-        <img class="z-[2] absolute w-full" loading="lazy" alt="" src="@folder/@game/.thumbs/@thumbnail" />
+        <img class="z-[2] absolute w-full" loading="lazy" alt="" src="@video.folder/@video.game/.thumbs/@video.thumbnail" />
         <img class="z-[1] relative w-full" loading="lazy" alt="" src="static/assets/video_thumbnail_placeholder.png" />
     </div>
-	<div class="bg-white dark:bg-gray-900 text-gray-800 dark:text-white w-full p-4 text-left text-xs font-medium">
-        @game
+    <div class="bg-base-200 w-full p-4 text-left text-xs font-medium">
+        @video.game
         <p class="text-gray-700 dark:text-gray-400 font-light">
-            12/15/2021 | 01:01 AM | 4.82 GB
+            @(@video.date.ToString("d")) |
+            @(@video.date.ToString("t")) |
+            @((@video.size == 0) ? "0 Bytes" :
+                $"{Math.Round((double)@video.size / Math.Pow(1024, Math.Floor(Math.Log(@video.size) / Math.Log(1024))), 2)} " +
+                (new[] { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" })[
+                (int)Math.Floor(Math.Log(@video.size) / Math.Log(1024))
+                ]
+            )
         </p>
     </div>
 </button>
