@@ -5,7 +5,7 @@
     public Video video { get; set; }
 }
 
-<button class="focusable relative w-full block h-full group border border-slate-600">
+<button class="focusable relative w-full block h-full group border border-slate-600" onclick="playPauseVideo('@video.folder/@video.game/@video.fileName')">
     <div class="z-[5] absolute w-full flex justify-between">
     </div>
     <div class="relative text-white w-full object-cover overflow-hidden items-center">

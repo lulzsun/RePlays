@@ -1,0 +1,24 @@
+<script>
+	const playPauseVideo = function (src) {
+		const video = document.querySelector('video');
+
+		if (!video.paused || src === undefined) {
+			video.pause();
+			return;
+		}
+
+		video.src = src;
+		video.load();
+		video.play();
+		document.getElementById('player-nav').checked = true;
+	}
+</script>
+
+<div class="h-full flex flex-col">
+	<div class="relative flex w-full h-full bg-black justify-center cursor-pointer" onclick="this.firstChild.paused ? this.firstChild.play() : this.firstChild.pause()">
+		<video class="absolute h-full" src=""></video>
+    </div>
+	<div className='flex flex-initial h-20 grid grid-flow-row'>
+		test
+	</div>
+</div>
