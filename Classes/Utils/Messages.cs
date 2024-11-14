@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -310,13 +311,13 @@ namespace RePlays.Utils {
                     break;
                 case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
-                        string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('\\', '/');
+                        string filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.filePath.Replace('\\', '/')));
                         CompressFile(filePath, data);
                     }
                     break;
                 case "ShowInFolder": {
                         ShowInFolder data = JsonSerializer.Deserialize<ShowInFolder>(webMessage.data);
-                        var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('\\', '/');
+                        var filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.filePath.Replace('\\', '/')));
 #if WINDOWS
                         Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath.Replace('/', '\\')));
 #else
@@ -349,7 +350,7 @@ namespace RePlays.Utils {
                 case "Delete": {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
-                            var realFilePath = Path.Join(GetPlaysFolder(), filePath.Replace("\\", "/"));
+                            var realFilePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(filePath.Replace("\\", "/")));
                             var successfulDelete = false;
                             var failedLoops = 0;
                             while (!successfulDelete) {
@@ -374,7 +375,11 @@ namespace RePlays.Utils {
                     break;
                 case "CreateClips": {
                         CreateClips data = JsonSerializer.Deserialize<CreateClips>(webMessage.data);
-                        var t = await Task.Run(() => CreateClip(data.game, data.videoPath, data.clipSegments));
+                        var t = await Task.Run(() => CreateClip(
+                            WebUtility.UrlDecode(data.game),
+                            WebUtility.UrlDecode(data.videoPath),
+                            data.clipSegments)
+                        );
                         if (t == null) {
                             DisplayModal("Failed to create clip", "Error", "warning");
                         }
@@ -387,12 +392,11 @@ namespace RePlays.Utils {
                     break;
                 case "UploadVideo": {
                         UploadVideo data = JsonSerializer.Deserialize<UploadVideo>(webMessage.data);
-                        var filePath = Path.Join(GetPlaysFolder(), data.file);
+                        var filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.file));
                         if (File.Exists(filePath)) {
                             Logger.WriteLine($"Preparing to upload {filePath} to {data.destination}");
                             UploadService.Upload(data.destination, data.title, filePath, data.game, data.makePublic);
                         }
-                        //DisplayModal($"{data.title} {data.destination}", "Error", "warning"));
                     }
                     break;
                 case "DownloadNvidiaAudioSDK": {
