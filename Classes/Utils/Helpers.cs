@@ -11,6 +11,7 @@ using System.Linq;
 using System.Management;
 using System.Net.Http;
 using System.Numerics;
+using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -214,9 +215,12 @@ namespace RePlays.Utils {
         public static string GetUserSettings() {
             SettingsService.LoadSettings();
 
+            var parameters = new Dictionary<string, object?> {
+            };
+            var html = HtmlRendererFactory.RenderHtmlAsync<SettingsPage>(ParameterView.FromDictionary(parameters)).Result;
             WebMessage webMessage = new() {
                 message = "UserSettings",
-                data = JsonSerializer.Serialize(SettingsService.Settings)
+                data = html
             };
             return JsonSerializer.Serialize(webMessage);
         }

@@ -1,24 +1,28 @@
-<script>
-	const playPauseVideo = function (src) {
-		const video = document.querySelector('video');
-
-		if (!video.paused || src === undefined) {
-			video.pause();
-			return;
-		}
-
-		video.src = src;
-		video.load();
-		video.play();
-		document.getElementById('player-nav').checked = true;
-	}
-</script>
+<script src="static/js/video_editor.js"></script>
 
 <div class="h-full flex flex-col">
-	<div class="relative flex w-full h-full bg-black justify-center cursor-pointer" onclick="this.firstChild.paused ? this.firstChild.play() : this.firstChild.pause()">
-		<video class="absolute h-full" src=""></video>
+    <div class="relative flex w-full h-full bg-black justify-center cursor-pointer" onclick="videoElement.paused ? videoElement.play() : videoElement.pause()">
+        <video class="absolute h-full" src="" ontimeupdate="handleVideoPlaying()"></video>
     </div>
-	<div className='flex flex-initial h-20 grid grid-flow-row'>
-		test
+    <div class="flex flex-initial h-20 grid grid-flow-row">
+		<div id="timelineElement"
+             class="w-full h-full overflow-x-scroll overflow-y-hidden bg-gray-700">
+            <div style="height: 1.1rem;"
+                 class="inline-block mx-1.5 grid grid-flow-col bg-gray-700 border-gray-600 border-l-2">
+                <div class="border-gray-600 border-r-2" />
+                <div class="border-gray-600 border-r-2" />
+                <div class="border-gray-600 border-r-2" />
+                <div class="border-gray-600 border-r-2" />
+                <div class="border-gray-600 border-r-2" />
+                <div class="border-gray-600 border-r-2" />
+            </div>
+            <div id="seekWindowElement"
+                 style="height: 45px;"
+                 class="inline-block mx-1.5 relative bg-gray-600">
+                <div id="seekBarElement"
+                     style="width: 6px; left: -3px;"
+                     class='z-30 absolute bg-red-500 rounded-lg h-full cursor-ew-resize' />
+            </div>
+		</div>
 	</div>
 </div>
