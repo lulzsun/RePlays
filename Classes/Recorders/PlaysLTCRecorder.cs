@@ -83,7 +83,7 @@ namespace RePlays.Recorders {
             ltc.VideoCaptureReady += (sender, msg) => {
                 RecordingService.GetCurrentSession().Pid = msg.Pid;
                 if (SettingsService.Settings.captureSettings.recordingMode == "automatic")
-                    RecordingService.StartRecording();
+                    RecordingService.StartRecording(false);
             };
 
             ltc.ProcessTerminated += (sender, msg) => {
