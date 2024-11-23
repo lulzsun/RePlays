@@ -89,9 +89,10 @@ namespace RePlays.Utils {
 
     public class AudioDevice {
         public AudioDevice() { }
-        public AudioDevice(string deviceId, string deviceLabel, bool denoiser = false) {
+        public AudioDevice(string deviceId, string deviceLabel, bool isInput, bool denoiser = false) {
             _deviceId = deviceId;
             _deviceLabel = deviceLabel;
+            _isInput = isInput;
             _denoiser = denoiser;
         }
         private string _deviceId = "";
@@ -100,18 +101,23 @@ namespace RePlays.Utils {
         public string deviceLabel { get { return _deviceLabel; } set { _deviceLabel = value; } }
         private int _deviceVolume = 100;
         public int deviceVolume { get { return _deviceVolume; } set { _deviceVolume = value; } }
+        private bool _isInput;
+        public bool isInput { get { return _isInput; } set { _isInput = value; } }
         private bool _denoiser;
         public bool denoiser { get { return _denoiser; } set { _denoiser = value; } }
     }
 
     public class AudioApplication {
         public AudioApplication() { }
-        public AudioApplication(string application) {
-            _application = application;
+        public AudioApplication(string name, string recordWindow) {
+            _name = name;
+            _recordWindow = recordWindow;
         }
 
-        private string _application;
-        public string application { get { return _application; } set { _application = value; } }
+        private string _name;
+        public string name { get { return _name; } set { _name = value; } }
+        private string _recordWindow;
+        public string windowClassNameId { get { return _recordWindow; } set { _recordWindow = value; } }
         private int _applicationVolume = 100;
         public int applicationVolume { get { return _applicationVolume; } set { _applicationVolume = value; } }
     }
@@ -181,7 +187,7 @@ namespace RePlays.Utils {
         private List<AudioDevice> _outputDevices = new();
         public List<AudioDevice> outputDevices { get { return _outputDevices; } set { _outputDevices = value; } }
 
-        public List<AudioApplication> _audioApplications = new();
+        private List<AudioApplication> _audioApplications = new();
         public List<AudioApplication> audioApplications { get { return _audioApplications; } set { _audioApplications = value; } }
 
         private bool _hasNvidiaAudioSDK;

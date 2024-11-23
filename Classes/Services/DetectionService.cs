@@ -1,5 +1,4 @@
-﻿using RePlays.Recorders;
-using RePlays.Utils;
+﻿using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,18 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
 
-#if WINDOWS
-using System.Security;
-using System.Security.Cryptography;
-using System.Runtime.ConstrainedExecution;
-using System.Management;
-using System.Windows.Forms;
+
+#if !WINDOWS
+using RePlays.Recorders;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
 #endif
 using static RePlays.Utils.Functions;
 
@@ -52,7 +48,7 @@ namespace RePlays.Services {
             WindowService.GetExecutablePathFromProcessId(processId, out string executablePath);
 
             if (executablePath != null) {
-                if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
+                if (executablePath.ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
                     return;                                                             // we can assume it is not a game
                 }
             }
@@ -256,7 +252,7 @@ namespace RePlays.Services {
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, gameDetection.forceDisplayCapture);
-                if (allowed) RecordingService.StartRecording();
+                if (allowed) RecordingService.StartRecording(false);
             }
             return isGame;
         }
