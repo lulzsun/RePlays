@@ -101,6 +101,14 @@
             }
         }
         initialize();
+
+        // listen for WebView2 messages and attempt to swap in html
+        // html fragments should be 'hx-swap-oob' for successful swaps 
+        window.chrome.webview.addEventListener("message", (event) => {
+            console.log(event.data.message, { data: event.data.data });
+            htmx.swap(document.createElement('div'), event.data.data, { swapStyle: 'none' });
+            SpatialNavigation.makeFocusable();
+        });
         const patchedSend = async function () {
             // Make readonly properties writable
             Object.defineProperty(this, "readyState", { writable: true })
@@ -110,25 +118,12 @@
 
             // Set response
             console.log(this.path, this.params);
-            const responsePromise = new Promise((resolve) => {
-                const listener = (event) => {
-                    console.log(event.data.message, this.path);
-                    if (event.data.message === this.path) {
-                        console.log(event.data.message, event.data);
-                        resolve(event.data.data);
-                        // Remove listener to prevent multiple triggers
-                        window.chrome.webview.removeEventListener("message", listener);
-                        SpatialNavigation.makeFocusable();
-                    }
-                };
-                window.chrome.webview.addEventListener("message", listener);
-            });
             window.chrome.webview.postMessage({
                 message: this.path,
                 data: JSON.stringify(this.params),
                 userAgent: window.navigator.userAgent
             });
-            this.response = await responsePromise;
+            this.response = '</>';
             this.readyState = XMLHttpRequest.DONE;
             this.status = 200;
             this.statusText = "OK";
