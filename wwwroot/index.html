@@ -6,9 +6,13 @@
     <script src="static/js/htmx.min.js"></script>
     <script src="static/js/spatial_navigation.js"></script>
     <script src="static/js/gamepad.js"></script>
-    <!-- remote cdns only for debugging, plan on using tailwindcss cli for build -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="static/css/index.css" rel="stylesheet" type="text/css" onerror="
+        this.onerror = null;
+        this.href = 'https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css';
+        var script = document.createElement('script'); 
+        script.src = 'https://cdn.tailwindcss.com'; 
+        document.head.appendChild(script);" 
+    />
     <style>
         :focus,
         .dropdown:focus-within {
@@ -105,9 +109,16 @@
         // listen for WebView2 messages and attempt to swap in html
         // html fragments should be 'hx-swap-oob' for successful swaps 
         window.chrome.webview.addEventListener("message", (event) => {
-            console.log(event.data.message, { data: event.data.data });
-            htmx.swap(document.createElement('div'), event.data.data, { swapStyle: 'none' });
-            SpatialNavigation.makeFocusable();
+            htmx.swap(
+                document.createElement('div'),
+                event.data.data,
+                { swapStyle: 'none' },
+                {
+                    afterSwapCallback: () => {
+                        console.log(event.data.message, { data: event.data.data });
+                        SpatialNavigation.makeFocusable();
+                    }
+                });
         });
         const patchedSend = async function () {
             // Make readonly properties writable
@@ -117,7 +128,7 @@
             Object.defineProperty(this, "response", { writable: true })
 
             // Set response
-            console.log(this.path, this.params);
+            console.log(this.path, { data: JSON.stringify(this.params) });
             window.chrome.webview.postMessage({
                 message: this.path,
                 data: JSON.stringify(this.params),
