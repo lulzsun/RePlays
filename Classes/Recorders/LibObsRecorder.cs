@@ -434,7 +434,7 @@ namespace RePlays.Recorders {
             string deviceType = device.isInput ? "(input) " : "(output) ";
             string id = deviceType + device.deviceId;
             string label = deviceType + device.deviceLabel;
-            audioSources.TryAdd(id, obs_audio_source_create(audioInSourceId, label, deviceId: device.deviceId, mono: device.isInput));
+            audioSources.TryAdd(id, obs_audio_source_create(device.isInput ? audioInSourceId : audioOutSourceId, label, deviceId: device.deviceId, mono: device.isInput));
             obs_set_output_source((uint)audioSources.Count, audioSources[id]);
             obs_source_set_audio_mixers(audioSources[id], 1 | (uint)(1 << Math.Min(audioSources.Count, 5)));
             obs_source_set_volume(audioSources[id], device.deviceVolume / (float)100);
