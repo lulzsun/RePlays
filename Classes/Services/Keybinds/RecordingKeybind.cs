@@ -9,7 +9,7 @@ namespace RePlays.Classes.Services.Keybinds {
         }
         public override void Action() {
             if (RecordingService.IsRecording) RecordingService.StopRecording(true);
-            else RecordingService.StartRecording();
+            else RecordingService.StartRecording(true);
         }
     }
 }

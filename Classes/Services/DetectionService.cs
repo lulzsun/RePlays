@@ -48,7 +48,7 @@ namespace RePlays.Services {
             WindowService.GetExecutablePathFromProcessId(processId, out string executablePath);
 
             if (executablePath != null) {
-                if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
+                if (executablePath.ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
                     return;                                                             // we can assume it is not a game
                 }
             }
@@ -252,7 +252,7 @@ namespace RePlays.Services {
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, gameDetection.forceDisplayCapture);
-                if (allowed) RecordingService.StartRecording();
+                if (allowed) RecordingService.StartRecording(false);
             }
             return isGame;
         }

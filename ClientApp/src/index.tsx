@@ -128,8 +128,8 @@ declare global {
     deviceId: string;
     deviceLabel: string;
     deviceVolume: number;
+    isInput: boolean;
     denoiser?: boolean;
-    isInput?: boolean;
   }
   interface FileFormat {
     title: string;
