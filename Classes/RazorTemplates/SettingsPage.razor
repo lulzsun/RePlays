@@ -1,3 +1,31 @@
+@using RePlays.Classes.RazorTemplates.SettingsPages
+@using RePlays.Services;
+@using System.Text.Json;
+
 <div hx-swap-oob="innerHTML:#player-page">
     <PlayerPage />
+</div>
+
+<div hx-swap-oob="innerHTML:#settings-page">
+    <div class="flex w-full h-full">
+        <nav id="sett-sidebar" class="flex flex-col h-full justify-between bg-base-100 w-auto">
+            <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
+                <li><button class="btn focusable" onclick="document.getElementById('sett-general-nav').checked = true;">General</button></li>
+                <li><button class="btn focusable" onclick="document.getElementById('sett-capture-nav').checked = true;">Capture</button></li>
+                <li><button class="btn focusable" onclick="document.getElementById('sett-detection-nav').checked = true;">Detection</button></li>
+            </ul>
+        </nav>
+        <div class="flex-1 overflow-y-auto">
+            <form class="flex flex-col h-full p-5" hx-ext='json-enc-custom' hx-put="UpdateSettings" hx-swap="none" onchange="this.requestSubmit()" settings="@JsonSerializer.Serialize(SettingsService.Settings)">
+                <input id="sett-general-nav" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked disabled />
+                <div id="sett-general-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto"><GeneralPage/></div>
+
+                <input id="sett-capture-nav" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" disabled />
+                <div id="sett-capture-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading....</div>
+
+                <input id="sett-detection-nav" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" disabled />
+                <div id="sett-detection-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading.....</div>
+            </form>
+        </div>
+    </div>
 </div>

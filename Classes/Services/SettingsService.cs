@@ -76,7 +76,9 @@ namespace RePlays.Services {
             File.WriteAllText(settingsFile, JsonSerializer.Serialize(settings, options));
             Logger.WriteLine("Saved userSettings.json");
             if (oldSettings.captureSettings.encoder != Settings.captureSettings.encoder) {
-                ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls();
+                if (RecordingService.ActiveRecorder is LibObsRecorder recorder) {
+                    recorder.GetAvailableRateControls();
+                }
             }
         }
 

@@ -1,0 +1,26 @@
+@using RePlays.Services;
+@using System.Text.Json;
+@using RePlays.Classes.RazorTemplates.Components;
+
+@{
+	var settings = SettingsService.Settings.generalSettings;
+	var languages = new Dictionary<string, string>() {
+		{"en", "English"},
+		{"de", "German"},
+		{"es", "Spanish"},
+		{"fr", "French"},
+		{"it", "Italian"},
+		{"pt", "Portuguese"},
+		{"ru", "Russian"},
+	};
+}
+
+<div class="flex flex-col h-full">
+	<Dropdown name="generalSettings[language]">
+		<option value="@settings.language" selected disabled hidden>@languages[settings.language]</option>
+		@foreach (var lang in languages)
+		{
+			<option value="@lang.Key">@lang.Value</option>
+		}
+	</Dropdown>
+</div>
