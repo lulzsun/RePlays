@@ -176,11 +176,11 @@ namespace RePlays.Utils {
             var inputCache = SettingsService.Settings.captureSettings.inputDevicesCache;
             outputCache.Clear();
             inputCache.Clear();
-            outputCache.Add(new("default", "Default Device"));
-            inputCache.Add(new("default", "Default Device", false));
+            outputCache.Add(new("default", "Default Device", false));
+            inputCache.Add(new("default", "Default Device", true, false));
 #if WINDOWS
-            outputCache.Add(new("communications", "Default Communication Device"));
-            inputCache.Add(new("communications", "Default Communication Device", false));
+            outputCache.Add(new("communications", "Default Communication Device", false));
+            inputCache.Add(new("communications", "Default Communication Device", true, false));
             ManagementObjectSearcher searcher = new("Select * From Win32_PnPEntity");
             ManagementObjectCollection deviceCollection = searcher.Get();
             foreach (ManagementObject obj in deviceCollection) {
@@ -189,12 +189,13 @@ namespace RePlays.Utils {
 
                 if (obj.Properties["PNPClass"].Value.ToString() == "AudioEndpoint") {
                     string id = obj.Properties["PNPDeviceID"].Value.ToString().Split('\\').Last();
-                    AudioDevice dev = new(id, obj.Properties["Name"].Value.ToString()) {
+                    bool isOutput = id.StartsWith("{0.0.0.00000000}");
+                    AudioDevice dev = new(id, obj.Properties["Name"].Value.ToString(), !isOutput) {
                         deviceId = id.ToLower(),
                         deviceLabel = obj.Properties["Name"].Value.ToString(),
                         deviceVolume = 100
                     };
-                    if (id.StartsWith("{0.0.0.00000000}")) outputCache.Add(dev);
+                    if (isOutput) outputCache.Add(dev);
                     else inputCache.Add(dev);
                     Logger.WriteLine(dev.deviceId + " | " + dev.deviceLabel);
 
