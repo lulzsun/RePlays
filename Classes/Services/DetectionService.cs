@@ -40,6 +40,9 @@ namespace RePlays.Services {
         }
 
         public static void WindowCreation(IntPtr hwnd, int processId = 0, [CallerMemberName] string memberName = "") {
+            if (RecordingService.IsRecording)
+                return;
+
             if (processId == 0 && hwnd != 0)
                 WindowService.GetWindowThreadProcessId(hwnd, out processId);
             else if (processId == 0 && hwnd == 0)
