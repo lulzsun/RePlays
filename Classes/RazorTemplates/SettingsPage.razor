@@ -2,6 +2,10 @@
 @using RePlays.Services;
 @using System.Text.Json;
 
+@{
+    var settings = JsonSerializer.Serialize(SettingsService.Settings);
+}
+
 <div hx-swap-oob="innerHTML:#player-page">
     <PlayerPage />
 </div>
@@ -16,7 +20,7 @@
             </ul>
         </nav>
         <div class="flex-1 overflow-y-auto">
-            <form class="flex flex-col h-full p-5" hx-ext='json-enc-custom' hx-put="UpdateSettings" hx-swap="none" onchange="this.requestSubmit()" settings="@JsonSerializer.Serialize(SettingsService.Settings)">
+            <form class="flex flex-col h-full p-5" hx-ext='json-enc-custom' hx-put="UpdateSettings" hx-swap="none" onchange="this.requestSubmit()" settings="@settings">
                 <input id="sett-general-nav" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked disabled />
                 <div id="sett-general-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto"><GeneralPage/></div>
 
