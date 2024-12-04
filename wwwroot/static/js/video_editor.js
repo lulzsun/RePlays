@@ -48,6 +48,8 @@ const cleanUp = function () {
   //document.removeEventListener('mousemove', handleOnMouseMove);
   //document.removeEventListener('mouseup', handleOnMouseUp);
   //document.removeEventListener('wheel', handleWheelScroll);
+
+  videoElement.currentTime = 0;
 }
 
 const handleVideoPlaying = function () {
