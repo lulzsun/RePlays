@@ -32,7 +32,7 @@ const init = function () {
   videoElement.load();
   videoElement.play();
 
-  //document.addEventListener('keydown', handleOnKeyDown);
+  document.addEventListener('keydown', handleOnKeyDown);
   document.addEventListener('mousedown', handleOnMouseDown);
   //document.addEventListener('mousemove', handleOnMouseMove);
   //document.addEventListener('mouseup', handleOnMouseUp);
@@ -43,7 +43,7 @@ const init = function () {
 }
 
 const cleanUp = function () {
-  //document.removeEventListener('keydown', handleOnKeyDown);
+  document.removeEventListener('keydown', handleOnKeyDown);
   document.removeEventListener('mousedown', handleOnMouseDown);
   //document.removeEventListener('mousemove', handleOnMouseMove);
   //document.removeEventListener('mouseup', handleOnMouseUp);
@@ -67,6 +67,18 @@ const mouseSeek = function (e) {
     (clickLeft / seekWindowElement.clientWidth) * videoElement.duration;
   videoElement.currentTime = newCurrentTime;
   seekBarElement.style.left = `${clickLeft - 3}px`;
+}
+
+const handleOnKeyDown = function (e) {
+  if (e.key === ' ')
+    videoElement.paused ? videoElement.play() : videoElement.pause();
+  if (e.key === 'ArrowLeft') videoElement.currentTime -= 5;
+  if (e.key === 'ArrowRight') videoElement.currentTime += 5;
+  if (videoElement.paused) {
+    // frame-by-frame seeking: assumes 60fps video, later use video metadata
+    if (e.key === ',') videoElement.currentTime -= 1 / 60;
+    if (e.key === '.') videoElement.currentTime += 1 / 60;
+  }
 }
 
 const handleOnMouseDown = function (e) {
