@@ -26,6 +26,7 @@ namespace RePlays.Recorders {
         private static CaptureSettings captureSettings => SettingsService.Settings.captureSettings;
         Dictionary<string, IntPtr> audioSources = new(), videoSources = new();
         Dictionary<string, IntPtr> audioEncoders = new(), videoEncoders = new();
+        private string videoSavePath;
 
         private readonly Dictionary<string, string> videoEncoderIds = new() {
 #if WINDOWS
@@ -209,6 +210,7 @@ namespace RePlays.Recorders {
 
             signalOutputStop = false;
             var session = RecordingService.GetCurrentSession();
+            videoSavePath = session.videoSavePath;
 
             windowHandle = session.WindowHandle;
 #if WINDOWS
@@ -225,7 +227,7 @@ namespace RePlays.Recorders {
             if (captureSettings.captureGameAudio) CreateAudioApplicationSource(new AudioApplication(session.GameTitle, recordWindow));
             else SetupAudioSources();
             if (!await SetupVideoSources(recordWindow, session.Pid, session.ForceDisplayCapture)) return false;
-            SetupOutput(session.videoSavePath);
+            SetupOutput(videoSavePath);
 
             if (!await CheckIfReady()) return false;
 
@@ -744,13 +746,13 @@ namespace RePlays.Recorders {
             DisplayCapture = false;
 
             if (!isReplayBuffer) {
-                Logger.WriteLine($"Session recording saved to {session.videoSavePath}");
-                RecordingService.lastVideoDuration = GetVideoDuration(session.videoSavePath);
+                Logger.WriteLine($"Session recording saved to {videoSavePath}");
+                RecordingService.lastVideoDuration = GetVideoDuration(videoSavePath);
             }
 
             if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration lol) {
-                GetOrCreateMetadata(session.videoSavePath);
-                lol.UpdateMetadataWithStats(session.videoSavePath);
+                GetOrCreateMetadata(videoSavePath);
+                lol.UpdateMetadataWithStats(videoSavePath);
             }
 
 #if RELEASE && WINDOWS
@@ -768,7 +770,7 @@ namespace RePlays.Recorders {
 #endif
             IntegrationService.Shutdown();
             if (!isReplayBuffer)
-                BookmarkService.ApplyBookmarkToSavedVideo("/" + Path.GetFileName(session.videoSavePath));
+                BookmarkService.ApplyBookmarkToSavedVideo("/" + Path.GetFileName(videoSavePath));
 
             Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             return !signalOutputStop;
