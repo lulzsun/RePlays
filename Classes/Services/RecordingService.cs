@@ -15,7 +15,7 @@ namespace RePlays.Services {
         private static Timer recordingTimer = new Timer(100);
         public static DateTime startTime;
         public static double lastVideoDuration = 0;
-        private static Session currentSession = new(0, 0, "Game Unknown");
+        private static volatile Session currentSession = new(0, 0, "Game Unknown");
         public static bool IsStopping { get; internal set; }
         public static bool IsRecording { get; internal set; }
         public static bool IsPaused { get; internal set; }
