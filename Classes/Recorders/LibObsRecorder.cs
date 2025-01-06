@@ -210,7 +210,7 @@ namespace RePlays.Recorders {
 
             signalOutputStop = false;
             var session = RecordingService.GetCurrentSession();
-            videoSavePath = session.videoSavePath;
+            videoSavePath = session.VideoSavePath;
 
             windowHandle = session.WindowHandle;
 #if WINDOWS

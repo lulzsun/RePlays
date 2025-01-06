@@ -26,20 +26,16 @@ namespace RePlays.Services {
         const int retryInterval = 2000; // 2 second
         const int maxRetryAttempts = 20; // 30 retries
 
-        public class Session {
-            public int Pid { get; internal set; }
-            public nint WindowHandle { get; internal set; }
-            public string GameTitle { get; internal set; }
-            public string Exe { get; internal set; }
-            public bool ForceDisplayCapture { get; internal set; }
-            public string videoSavePath { get; internal set; }
-
-            public Session(int _Pid, nint _WindowHandle, string _GameTitle, string _Exe = null, bool _ForceDisplayCapture = false) {
-                Pid = _Pid;
-                WindowHandle = _WindowHandle;
-                GameTitle = _GameTitle;
-                Exe = _Exe;
-                ForceDisplayCapture = _ForceDisplayCapture;
+        public class Session(int pid, nint windowHandle, string gameTitle, string exe = null, bool forceDisplayCapture = false) {
+            public int Pid { get; internal set; } = pid;
+            public nint WindowHandle { get; internal set; } = windowHandle;
+            public string GameTitle { get; internal set; } = gameTitle;
+            public string Exe { get; internal set; } = exe;
+            public bool ForceDisplayCapture { get; internal set; } = forceDisplayCapture;
+            private string _videoSavePath = "";
+            public string VideoSavePath {
+                get => Path.GetFullPath(_videoSavePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                internal set => _videoSavePath = value;
             }
         }
 
@@ -109,7 +105,7 @@ namespace RePlays.Services {
 
             FileFormat currentFileFormat = SettingsService.Settings.captureSettings.fileFormat ?? (new FileFormat("mp4", "MP4 (.mp4)", true));
             Logger.WriteLine($"Output file format: " + currentFileFormat.ToString());
-            currentSession.videoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
+            currentSession.VideoSavePath = Path.Join(dir, videoNameTimeStamp + "-ses." + currentFileFormat.GetFileExtension());
             return true;
         }
 

@@ -282,7 +282,7 @@ namespace RePlays.Utils {
             foreach (FileInfo file in allfiles) {
                 var fileWithoutExt = Path.GetFileNameWithoutExtension(file.FullName);
                 if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !file.Exists) continue;
-                if (RecordingService.IsRecording && RecordingService.GetCurrentSession().videoSavePath.Equals(file.FullName)) continue;
+                if (RecordingService.IsRecording && RecordingService.GetCurrentSession().VideoSavePath.Equals(file.FullName)) continue;
 
                 Video video = new() {
                     size = file.Length,
