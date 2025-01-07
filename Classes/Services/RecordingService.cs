@@ -15,7 +15,7 @@ namespace RePlays.Services {
         private static Timer recordingTimer = new Timer(100);
         public static DateTime startTime;
         public static double lastVideoDuration = 0;
-        private static volatile Session currentSession = new(0, 0, "Game Unknown");
+        private static Session currentSession = new(0, 0, "Game Unknown");
         public static bool IsStopping { get; internal set; }
         public static bool IsRecording { get; internal set; }
         public static bool IsPaused { get; internal set; }
@@ -56,8 +56,12 @@ namespace RePlays.Services {
             await Task.Run(() => DetectionService.CheckTopLevelWindows());
         }
 
-        public static void SetCurrentSession(int _Pid, nint _WindowHandle, string _GameTitle, string exeFile, bool forceDisplayCapture = false) {
-            currentSession = new Session(_Pid, _WindowHandle, _GameTitle, exeFile, forceDisplayCapture);
+        public static void SetCurrentSession(int pid, nint windowHandle, string gameTitle, string exeFile, bool forceDisplayCapture = false) {
+            if ((IsRecording || IsPreRecording) && !IsRestarting) {
+                Logger.WriteLine($"Cannot set current session, active recording session in progress [{currentSession.Pid}][{currentSession.GameTitle}]");
+                return;
+            }
+            currentSession = new Session(pid, windowHandle, gameTitle, exeFile, forceDisplayCapture);
         }
 
         public static Session GetCurrentSession() {
