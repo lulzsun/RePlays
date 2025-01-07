@@ -20,12 +20,14 @@
 <body hx-boost="true">
     <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
     <div class="flex flex-row h-screen">
-        <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-100 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
-            <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
+        <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-200 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
+            <ul class="menu text-base-content w-48 p-4">
                 <li><button class="btn focusable" onclick="document.getElementById('sessions-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Sessions</button></li>
                 <li><button class="btn focusable" onclick="document.getElementById('clips-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Clips</button></li>
                 <li><button class="btn focusable" onclick="document.getElementById('settings-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Settings</button></li>
             </ul>
+            <div id="toast-container">
+            </div>
         </nav>
         <div class="flex-1 overflow-y-auto">
             <div class="flex flex-col h-screen">

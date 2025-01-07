@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RePlays.Classes.RazorTemplates.Components;
 using RePlays.Classes.Utils;
 using RePlays.Recorders;
 using RePlays.Services;
@@ -496,15 +497,19 @@ namespace RePlays.Utils {
         }
 
         public static void DisplayToast(string id, string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
-            WebMessage webMessage = new();
-            webMessage.message = "DisplayToast";
-            webMessage.data = "{" +
-                "\"id\": \"" + id + "\", " +
-                "\"context\": \"" + context + "\", " +
-                "\"title\": \"" + title + "\", " +
-                "\"progress\": " + progress + ", " +
-                "\"progressMax\": " + progressMax + ", " +
-                "\"icon\": \"" + icon + "\"}";
+            var parameters = new Dictionary<string, object?> {
+                [nameof(id)] = id,
+                [nameof(context)] = context,
+                [nameof(title)] = title,
+                [nameof(icon)] = icon,
+                [nameof(progress)] = progress,
+                [nameof(progressMax)] = progressMax
+            };
+            var html = HtmlRendererFactory.RenderHtmlAsync<Toast>(ParameterView.FromDictionary(parameters)).Result;
+            WebMessage webMessage = new() {
+                message = "DisplayToast",
+                data = html
+            };
 
             if (toastList.ContainsKey(id)) {
                 if (toastList[id].data == webMessage.data) return; // prevents message flooding if toast is identical
@@ -519,10 +524,15 @@ namespace RePlays.Utils {
             if (toastList.ContainsKey(id))
                 toastList.Remove(id);
 
-            WebMessage webMessage = new();
-            webMessage.message = "DestroyToast";
-            webMessage.data = "{" +
-                "\"id\": \"" + id + "\"}";
+            var parameters = new Dictionary<string, object?> {
+                [nameof(id)] = id,
+                ["context"] = "",
+            };
+            var html = HtmlRendererFactory.RenderHtmlAsync<Toast>(ParameterView.FromDictionary(parameters)).Result;
+            WebMessage webMessage = new() {
+                message = "DestroyToast",
+                data = html
+            };
             SendMessage(JsonSerializer.Serialize(webMessage));
         }
 

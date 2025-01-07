@@ -1,0 +1,77 @@
+@code {
+    [Parameter]
+    public string id { get; set; }
+    [Parameter]
+    public string context { get; set; }
+    [Parameter]
+    public string title { get; set; }
+    [Parameter]
+    public string icon { get; set; }
+    [Parameter]
+    public long progress { get; set; }
+    [Parameter]
+    public long progressMax { get; set; }
+}
+
+@* This deletes any existing toast div to "update" it *@
+<div id="toast-id-@id" hx-swap-oob="delete"/>
+
+@if(context != "") { @* If context is "", that means we are destroying this toast *@
+<div hx-swap-oob="beforeend:#toast-container">
+    <div id="toast-id-@id" class="flex w-full overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
+        @if (progressMax != 0) {
+        <div class="p-1.5 flex items-center justify-center bg-blue-500">
+            <svg class="progress-ring" width="30" height="30">
+                <circle class="progress-ring__circle"
+                        stroke="white"
+                        stroke-width="2"
+                        fill="transparent"
+                        r="12"
+                        cx="15"
+                        cy="15" />
+            </svg>
+        </div>}
+        <div class="p-1.5">
+            <div class="flex">
+                <span class="flex text-sm font-semibold text-blue-500 dark:text-blue-400 grow">
+                    @if (id == "Recording") {
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="16"
+                         height="16"
+                         fill="currentColor"
+                         class="text-red-500 m-0.5 mr-1"
+                         viewBox="0 0 16 16">
+                        <circle cx="8" cy="8" r="8" />
+                    </svg>}
+                    @(id == "Recording" ? "Recording" : title)
+                </span>
+                @if (id == "Recording"){
+                <div class="mr-1 dropdown" style="z-index: 50">
+                 @* <button class="p-1 hover:bg-gray-700 hover:text-white rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                viewBox="0 0 16 16">
+                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z" />
+                        </svg>
+                    </button>
+                    <div class="absolute opacity-0 invisible dropdown-menu transition-all duration-300 transform scale-95">
+                        <div class="absolute bottom-6 -right-6 w-auto bg-white border border-gray-500 divide-y divide-gray-100 rounded-md shadow-lg outline-none"
+                                role="menu">
+                            <div class="cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-right whitespace-nowrap"
+                                    onclick="@(e => postMessage("StopRecording"))">
+                                Stop
+                            </div>
+                        </div>
+                    </div> *@
+                </div>}
+            </div>
+            <p class="h-auto @(@progressMax != 0 ? "w-28" : "w-40") text-xs text-gray-600 dark:text-gray-200 truncate">
+                @(@id == "Recording" ? (progress > 3600 ? TimeSpan.FromSeconds(progress).ToString(@"hh\:mm\:ss").TrimStart('0') : TimeSpan.FromSeconds(progress).ToString(@"mm\:ss")) + " " : "")
+                @context
+            </p>
+        </div>
+    </div>
+</div>
+}
