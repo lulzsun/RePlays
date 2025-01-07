@@ -18,6 +18,7 @@
     <title>RePlays</title>
 </head>
 <body hx-boost="true">
+    <div id="modal-container"></div>
     <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
     <div class="flex flex-row h-screen">
         <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-200 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
@@ -26,8 +27,7 @@
                 <li><button class="btn focusable" onclick="document.getElementById('clips-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Clips</button></li>
                 <li><button class="btn focusable" onclick="document.getElementById('settings-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Settings</button></li>
             </ul>
-            <div id="toast-container">
-            </div>
+            <div id="toast-container"></div>
         </nav>
         <div class="flex-1 overflow-y-auto">
             <div class="flex flex-col h-screen">

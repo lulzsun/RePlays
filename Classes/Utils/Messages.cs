@@ -479,15 +479,17 @@ namespace RePlays.Utils {
             return webMessage;
         }
 
-        public static async void DisplayModal(string context, string title = "Title", string icon = "none", long progress = 0, long progressMax = 0) {
-            WebMessage webMessage = new();
-            webMessage.message = "DisplayModal";
-            webMessage.data = "{" +
-                "\"context\": \"" + context + "\", " +
-                "\"title\": \"" + title + "\", " +
-                "\"progress\": " + progress + ", " +
-                "\"progressMax\": " + progressMax + ", " +
-                "\"icon\": \"" + icon + "\"}";
+        public static async void DisplayModal(string context, string title = "Title", string icon = "none") {
+            var parameters = new Dictionary<string, object?> {
+                [nameof(context)] = context,
+                [nameof(title)] = title,
+                [nameof(icon)] = icon,
+            };
+            var html = HtmlRendererFactory.RenderHtmlAsync<Modal>(ParameterView.FromDictionary(parameters)).Result;
+            WebMessage webMessage = new() {
+                message = "DisplayModal",
+                data = html
+            };
 
             bool success = SendMessage(JsonSerializer.Serialize(webMessage));
             if (!success) {
