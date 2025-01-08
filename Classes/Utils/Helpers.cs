@@ -205,9 +205,7 @@ namespace RePlays.Utils {
         public static string GetUserSettings() {
             SettingsService.LoadSettings();
 
-            var parameters = new Dictionary<string, object?> {
-            };
-            var html = HtmlRendererFactory.RenderHtmlAsync<SettingsPage>(ParameterView.FromDictionary(parameters)).Result;
+            var html = HtmlRendererFactory.RenderHtmlAsync<SettingsPage>().Result;
             WebMessage webMessage = new() {
                 message = "UserSettings",
                 data = html

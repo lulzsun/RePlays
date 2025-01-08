@@ -162,6 +162,12 @@ namespace RePlays.Utils {
                 return await Task.FromResult(new HtmlRenderer(_serviceProvider, loggerFactory));
             }
 
+            public static async Task<string> RenderHtmlAsync<TComponent>() where TComponent : IComponent {
+                var parameters = new Dictionary<string, object?> {
+                };
+                return await RenderHtmlAsync<TComponent>(ParameterView.FromDictionary(parameters));
+            }
+
             public static async Task<string> RenderHtmlAsync<TComponent>(ParameterView parameters) where TComponent : IComponent {
                 await using var htmlRenderer = await CreateHtmlRendererAsync();
                 return await htmlRenderer.Dispatcher.InvokeAsync(async () =>
@@ -227,9 +233,7 @@ namespace RePlays.Utils {
                     }
                 case "Initialize": {
                         // INIT APP
-                        var parameters = new Dictionary<string, object?> {
-                        };
-                        var html = HtmlRendererFactory.RenderHtmlAsync<App>(ParameterView.FromDictionary(parameters)).Result;
+                        var html = HtmlRendererFactory.RenderHtmlAsync<App>().Result;
                         WebMessage app = new() {
                             message = "Initialize",
                             data = html
