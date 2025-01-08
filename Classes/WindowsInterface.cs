@@ -167,15 +167,18 @@ namespace RePlays {
         }
 
         private void WindowsInterface_FormClosing(object sender, FormClosingEventArgs e) {
-            if (e.CloseReason == CloseReason.UserClosing) {
-                e.Cancel = true;
-                this.WindowState = FormWindowState.Minimized;
-                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
-                this.Opacity = 0;
-                this.ShowInTaskbar = false;
-                label1.Visible = false;
-                DisposeWebView2();
+            if (e.CloseReason != CloseReason.UserClosing) {
+                return;
             }
+            if (SettingsService.Settings.generalSettings.closeToTray) {
+                e.Cancel = true;
+            }
+            this.WindowState = FormWindowState.Minimized;
+            this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+            this.Opacity = 0;
+            this.ShowInTaskbar = false;
+            label1.Visible = false;
+            DisposeWebView2();
         }
 
         FormWindowState _PreviousWindowState;
