@@ -96,6 +96,19 @@ export const General: React.FC<Props> = ({ settings, updateSettings }) => {
         />
         <span className='ml-2 text-gray-700 dark:text-gray-400'>{t('settingsGeneralItem03')}</span>
       </label>
+      <label className='inline-flex items-center'>
+        <input
+          type='checkbox'
+          className='form-checkbox h-4 w-4 text-gray-600'
+          defaultChecked={settings === undefined ? false : settings.closeToTray}
+          onChange={(e) => {
+            settings!.closeToTray = e.target.checked;
+            updateSettings();
+          }}
+        />
+        {/* This setting does not have translations, this is temporary */}
+        <span className='ml-2 text-gray-700 dark:text-gray-400'>Close to Tray</span>
+      </label>
 
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsGeneralItem04')}</h1>
       <DropDownMenu

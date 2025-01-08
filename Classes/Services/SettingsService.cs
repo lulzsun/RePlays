@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Management;
+using System.Text;
 using System.Text.Json;
 using static RePlays.Utils.Functions;
 
@@ -38,7 +39,15 @@ namespace RePlays.Services {
         public static void LoadSettings() {
             if (File.Exists(settingsFile)) {
                 try {
-                    _Settings = JsonSerializer.Deserialize<SettingsJson>(File.ReadAllText(settingsFile));
+                    var content = File.ReadAllText(settingsFile);
+
+                    // Trim characters after the last closing bracket
+                    // Sometimes a bunch of junk chars gets saved after serializing for unknown reason...
+                    // Maybe because my settings json is located on a winbtrs drive and is corrupting it?
+                    // Not sure, but this fixes it...
+                    if (content.LastIndexOf('}') != -1) content = content[..(content.LastIndexOf('}') + 1)];
+
+                    _Settings = JsonSerializer.Deserialize<SettingsJson>(content);
                     Logger.WriteLine("Loaded userSettings.json");
                 }
                 catch (JsonException ex) {

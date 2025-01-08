@@ -111,6 +111,7 @@ declare global {
   interface GeneralSettings {
     launchStartup: boolean;
     startMinimized: boolean;
+    closeToTray: boolean;
     theme: string;
     update: string;
     updateChannel: string;

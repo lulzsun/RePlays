@@ -65,8 +65,10 @@ namespace RePlays.Utils {
 #endif
             }
         }
-        private bool _startMinimized = false;
+        private bool _startMinimized;
         public bool startMinimized { get { return _startMinimized; } set { _startMinimized = value; } }
+        private bool _closeToTray = true;
+        public bool closeToTray { get { return _closeToTray; } set { _closeToTray = value; } }
         private string _theme = "System";
         public string theme { get { return _theme; } set { _theme = value; } }
         private string _update = "automatic"; // ??? why is there a warning
