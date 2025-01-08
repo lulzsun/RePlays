@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="static/js/index.js"></script>
+    <script src="static/js/i18next.min.js"></script>
     <script src="static/js/htmx.min.js"></script>
-    <script src="static/js/json-enc-custom.js"></script>
+    <script src="static/js/htmx_ext.js"></script>
     <script src="static/js/spatial_navigation.js"></script>
     <script src="static/js/gamepad.js"></script>
-    <script src="static/js/index.js"></script>
     <link href="static/css/extras.css" rel="stylesheet" type="text/css" />
     <link href="static/css/index.css" rel="stylesheet" type="text/css" onerror="
         this.onerror = null;
@@ -17,40 +18,5 @@
         this.href = 'https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css';" />
     <title>RePlays</title>
 </head>
-<body hx-boost="true">
-    <div id="modal-container"></div>
-    <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
-    <div class="flex flex-row h-screen">
-        <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-200 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
-            <ul class="menu text-base-content w-48 p-4">
-                <li><button class="btn focusable" onclick="document.getElementById('sessions-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Sessions</button></li>
-                <li><button class="btn focusable" onclick="document.getElementById('clips-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Clips</button></li>
-                <li><button class="btn focusable" onclick="document.getElementById('settings-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();">Settings</button></li>
-            </ul>
-            <div id="toast-container"></div>
-        </nav>
-        <div class="flex-1 overflow-y-auto">
-            <div class="flex flex-col h-screen">
-                <header class="py-5 bg-base-200 text-white text-center lg:hidden" onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full');">
-                    Header
-                </header>
-                <input id="sessions-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" checked disabled />
-                <div id="sessions-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading...</div>
-
-                <input id="clips-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
-                <div id="clips-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading...</div>
-
-                <input id="settings-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
-                <div id="settings-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">settings</div>
-
-                <input id="player-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
-                <div id="player-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">uninitialized...</div>
-
-                <footer class="py-5 bg-base-100 text-white text-center bottom-0 hidden">
-                    Footer
-                </footer>
-            </div>
-        </div>
-    </div>
-</body>
+<body hx-boost="true"></body>
 </html>

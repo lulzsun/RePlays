@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RePlays.Classes.RazorTemplates;
 using RePlays.Classes.RazorTemplates.Components;
 using RePlays.Classes.Utils;
 using RePlays.Recorders;
@@ -225,6 +226,16 @@ namespace RePlays.Utils {
                         break;
                     }
                 case "Initialize": {
+                        // INIT APP
+                        var parameters = new Dictionary<string, object?> {
+                        };
+                        var html = HtmlRendererFactory.RenderHtmlAsync<App>(ParameterView.FromDictionary(parameters)).Result;
+                        WebMessage app = new() {
+                            message = "Initialize",
+                            data = html
+                        };
+                        SendMessage(JsonSerializer.Serialize(app));
+
                         // INIT USER SETTINGS
                         SendMessage(GetUserSettings());
 

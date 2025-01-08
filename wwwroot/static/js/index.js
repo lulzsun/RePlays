@@ -1,3 +1,28 @@
+var supportedLngs = ["en"];
+var resources = {};
+
+(async () => {
+  for (var i = 0; i < supportedLngs.length; i++) {
+    const response = await fetch(`static/locales/${supportedLngs[i]}.json`);
+    const data = await response.json();
+    resources[supportedLngs[i]] = { translation: data };
+  }
+
+  i18next.init({
+    lng: "en",
+    fallbackLng: "en",
+    debug: true,
+    supportedLngs,
+    resources
+  }, function (err, t) {
+    if (err) console.error(err, t);
+  });
+
+  window.$t = i18next.t;
+  console.log($t('title.sessions'));
+  initialize();
+})();
+
 window.addEventListener('load', function () {
   // Initialize
   SpatialNavigation.init();
@@ -31,7 +56,6 @@ function initialize() {
     return;
   }
 }
-initialize();
 
 // listen for WebView2 messages and attempt to swap in html
 // html fragments should be 'hx-swap-oob' for successful swaps

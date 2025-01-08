@@ -1,3 +1,15 @@
+// This custom extension provides i18next translations using the 'hx-t' attribute
+// Example: <div hx-ext="i18n" hx-t="navbar.sessions"/>
+
+htmx.defineExtension('i18n', {
+  onEvent: function (name, evt) {
+    const element = evt.target;
+    const translationKey = element.getAttribute('hx-t');
+    const translation = window.$t(translationKey);
+    element.textContent = translation;
+  }
+}); 
+
 // https://github.com/Emtyloc/json-enc-custom/commit/e05877a0d863f61baeba161abfd5df2421199fee
 // slightly modified htmx extension to suit our usecase
 // mainly used to change the form data structure to update replays settings json

@@ -14,9 +14,9 @@
     <div class="flex w-full h-full">
         <nav id="sett-sidebar" class="flex flex-col h-full justify-between bg-base-100 w-auto">
             <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
-                <li><button class="btn focusable" onclick="document.getElementById('sett-general-nav').checked = true;">General</button></li>
-                <li><button class="btn focusable" onclick="document.getElementById('sett-capture-nav').checked = true;">Capture</button></li>
-                <li><button class="btn focusable" onclick="document.getElementById('sett-detection-nav').checked = true;">Detection</button></li>
+                <li><button class="btn focusable" onclick="document.getElementById('sett-general-nav').checked = true;" hx-t="settings.general.title" hx-ext="i18n" /></li>
+                <li><button class="btn focusable" onclick="document.getElementById('sett-capture-nav').checked = true;" hx-t="settings.capture.title" hx-ext="i18n" /></li>
+                <li><button class="btn focusable" onclick="document.getElementById('sett-detection-nav').checked = true;" hx-t="settings.detection.title" hx-ext="i18n" /></li>
             </ul>
         </nav>
         <div class="flex-1 overflow-y-auto">

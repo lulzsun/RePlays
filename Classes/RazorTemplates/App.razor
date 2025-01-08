@@ -1,0 +1,36 @@
+<div hx-swap-oob="innerHTML:body">
+    <div id="modal-container"></div>
+    <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
+    <div class="flex flex-row h-screen">
+        <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-200 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
+            <ul class="menu text-base-content w-48 p-4">
+                <li><button class="btn focusable" onclick="document.getElementById('sessions-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();" hx-ext="i18n" hx-t="navbar.sessions"/></li>
+                <li><button class="btn focusable" onclick="document.getElementById('clips-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();" hx-ext="i18n" hx-t="navbar.clips"/></li>
+                <li><button class="btn focusable" onclick="document.getElementById('settings-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();" hx-ext="i18n" hx-t="navbar.settings"/></li>
+            </ul>
+            <div id="toast-container"></div>
+        </nav>
+        <div class="flex-1 overflow-y-auto">
+            <div class="flex flex-col h-screen">
+                <header class="py-5 bg-base-200 text-white text-center lg:hidden" onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full');">
+                    RePlays
+                </header>
+                <input id="sessions-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" checked disabled />
+                <div id="sessions-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading...</div>
+
+                <input id="clips-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
+                <div id="clips-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading...</div>
+
+                <input id="settings-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
+                <div id="settings-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">settings</div>
+
+                <input id="player-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
+                <div id="player-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">uninitialized...</div>
+
+                <footer class="py-5 bg-base-100 text-white text-center bottom-0 hidden">
+                    Footer
+                </footer>
+            </div>
+        </div>
+    </div>
+</div>
