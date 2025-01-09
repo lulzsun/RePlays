@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RePlays.Integrations {
@@ -72,7 +73,7 @@ namespace RePlays.Integrations {
                     foreach (var demoPath in newDemos) {
                         Logger.WriteLine("Found new PUBG match data: " + demoPath);
                         HashSet<string> appliedBookmarks = new HashSet<string>();
-
+                        Thread.Sleep(500);
                         // Get match data
                         string json = GetJsonFromFile(Path.Combine(demoPath, @"PUBG.replayinfo"));
                         MatchData matchData = JsonSerializer.Deserialize<MatchData>(json);
