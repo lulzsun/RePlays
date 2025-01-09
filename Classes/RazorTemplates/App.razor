@@ -1,14 +1,14 @@
-<div hx-swap-oob="innerHTML:body">
-    <div id="modal-container"></div>
+﻿<div hx-swap-oob="innerHTML:body">
+    <div id="modal-container"/>
     <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
     <div class="flex flex-row h-screen">
         <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-200 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
             <ul class="menu text-base-content w-48 p-4">
                 <li><button class="btn focusable" onclick="document.getElementById('sessions-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();" hx-ext="i18n" hx-t="navbar.sessions"/></li>
                 <li><button class="btn focusable" onclick="document.getElementById('clips-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();" hx-ext="i18n" hx-t="navbar.clips"/></li>
-                <li><button class="btn focusable" onclick="document.getElementById('settings-nav').checked = true;document.getElementById('sidebar').classList.toggle('-translate-x-full');playPauseVideo();" hx-ext="i18n" hx-t="navbar.settings"/></li>
+                <li><button class="btn focusable" onclick="document.getElementById('settings-nav').checked = true;document.getElementById('settings-dialog').classList.remove('hidden');$sn.focus('settingsPage');playPauseVideo();" hx-ext="i18n" hx-t="navbar.settings" /></li>
             </ul>
-            <div id="toast-container"></div>
+            <div id="toast-container"/>
         </nav>
         <div class="flex-1 overflow-y-auto">
             <div class="flex flex-col h-screen">
@@ -21,8 +21,17 @@
                 <input id="clips-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
                 <div id="clips-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading...</div>
 
-                <input id="settings-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
-                <div id="settings-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">settings</div>
+                <input id="settings-nav" type="checkbox" class="modal-toggle" />
+                <div id="settings-dialog" class="modal hidden" role="dialog">
+                    <div class="modal-box w-11/12 max-w-5xl">
+                        <form method="dialog">
+                            <button class="focusable btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick="document.getElementById('settings-nav').checked = false;">✕</button>
+                        </form>
+                        <h3 class="text-lg font-bold" hx-ext="i18n" hx-t="navbar.settings"/>
+                        <div id="settings-page" role="tabpanel" class="flex-1 overflow-y-auto"/>
+                    </div>
+                    <label class="modal-backdrop" for="settings-nav">Close</label>
+                </div>
 
                 <input id="player-nav" type="radio" name="page-tabs" role="tab" class="tab !hidden" disabled />
                 <div id="player-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">uninitialized...</div>

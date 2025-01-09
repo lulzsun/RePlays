@@ -17,13 +17,13 @@
 
 <div hx-swap-oob="innerHTML:#sessions-page">
     <script>
-        SpatialNavigation.add('sessionsSortControls', {
+        $sn.add('sessionsSortControls', {
             id: 'sessionsSortControls',
             selector: '#sessionsSortControls .focusable',
             enterTo: 'last-focused'
         });
 
-        SpatialNavigation.add('sessionsList', {
+        $sn.add('sessionsList', {
             id: 'sessionsList',
             selector: '#sessionsList .focusable',
             enterTo: 'last-focused',
@@ -49,13 +49,13 @@
 
 <div hx-swap-oob="innerHTML:#clips-page">
     <script>
-        SpatialNavigation.add('clipsSortControls', {
+        $sn.add('clipsSortControls', {
             id: 'clipsSortControls',
             selector: '#clipsSortControls .focusable',
             enterTo: 'last-focused'
         });
 
-        SpatialNavigation.add('clipsList', {
+        $sn.add('clipsList', {
             id: 'clipsList',
             selector: '#clipsList .focusable',
             enterTo: 'last-focused',

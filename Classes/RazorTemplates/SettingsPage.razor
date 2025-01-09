@@ -4,6 +4,18 @@
 
 @{
     var settings = JsonSerializer.Serialize(SettingsService.Settings);
+    var pageComponents = new Dictionary<string, RenderFragment>
+    {
+        {"General", @<GeneralPage />},
+        {"Capture", @<CapturePage />},
+        {"Editor", @<EditorPage />},
+        {"Detection", @<DetectionPage />},
+        {"Keybinds", @<KeybindsPage />},
+        {"Upload", @<UploadPage />},
+        {"Storage", @<StoragePage />},
+        {"Help", @<HelpPage />},
+        {"About", @<AboutPage />}
+    };
 }
 
 <div hx-swap-oob="innerHTML:#player-page">
@@ -11,24 +23,43 @@
 </div>
 
 <div hx-swap-oob="innerHTML:#settings-page">
+    <script>
+        $sn.add('settingsPage', {
+            id: 'settingsPage',
+            selector: '#settings-dialog .focusable',
+            restrict: 'self-only',
+            defaultElement: '#sett-general-nav'
+        });
+
+        document.querySelector('#settings-dialog').addEventListener('transitionend', function () {
+            if (document.querySelector('#settings-nav').checked == false) {
+                document.querySelector('#settings-dialog').classList.add("hidden");
+                console.log("unfocus")
+            }
+        });
+    </script>
     <div class="flex w-full h-full">
         <nav id="sett-sidebar" class="flex flex-col h-full justify-between bg-base-100 w-auto">
             <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
-                <li><button class="btn focusable" onclick="document.getElementById('sett-general-nav').checked = true;" hx-t="settings.general.title" hx-ext="i18n" /></li>
-                <li><button class="btn focusable" onclick="document.getElementById('sett-capture-nav').checked = true;" hx-t="settings.capture.title" hx-ext="i18n" /></li>
-                <li><button class="btn focusable" onclick="document.getElementById('sett-detection-nav').checked = true;" hx-t="settings.detection.title" hx-ext="i18n" /></li>
+                @{foreach (var page in pageComponents.Keys) {
+                        <li>
+                            <button class="btn focusable"
+                                    onclick="document.getElementById('@($"sett-{page.ToLower()}-nav")').checked = true;"
+                                    hx-t="@($"settings.{page.ToLower()}.title")"
+                                    hx-ext="i18n" />
+                        </li>
+                }}
             </ul>
         </nav>
         <div class="flex-1 overflow-y-auto">
             <form class="flex flex-col h-full p-5" hx-ext='json-enc-custom' hx-put="UpdateSettings" hx-swap="none" onchange="this.requestSubmit()" settings="@settings">
-                <input id="sett-general-nav" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked disabled />
-                <div id="sett-general-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto"><GeneralPage/></div>
-
-                <input id="sett-capture-nav" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" disabled />
-                <div id="sett-capture-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading....</div>
-
-                <input id="sett-detection-nav" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" disabled />
-                <div id="sett-detection-page" role="tabpanel" class="tab-content flex-1 overflow-y-auto">loading.....</div>
+                @{foreach (var page in pageComponents.Keys) {
+                    var isActive = page == pageComponents.Keys.First();
+                        <input id="@($"sett-{page.ToLower()}-nav")" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked="@isActive" disabled />
+                        <div id="@($"sett-{page.ToLower()}-page")" role="tabpanel" class="tab-content flex-1 overflow-y-auto">
+                            @pageComponents[page]
+                        </div>
+                }}
             </form>
         </div>
     </div>

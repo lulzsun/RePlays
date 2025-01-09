@@ -24,11 +24,13 @@ var resources = {};
 })();
 
 window.addEventListener('load', function () {
+  window.$sn = SpatialNavigation;
+
   // Initialize
-  SpatialNavigation.init();
+  $sn.init();
 
   // Define navigable elements (anchors and elements with "focusable" class).
-  SpatialNavigation.add('sidebar', {
+  $sn.add('sidebar', {
     id: 'sidebar',
     selector: '#sidebar .focusable'
   });
@@ -42,7 +44,7 @@ window.addEventListener('load', function () {
   });
 
   // Make the *currently existing* navigable elements focusable.
-  SpatialNavigation.makeFocusable();
+  $sn.makeFocusable();
 
   Gamepad.init();
 });
