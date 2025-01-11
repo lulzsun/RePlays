@@ -18,9 +18,9 @@
 <div class="flex flex-col h-full">
 	<Dropdown name="generalSettings[language]">
 		<option value="@settings.language" selected disabled hidden>@languages[settings.language]</option>
-		@foreach (var lang in languages)
-		{
+		@foreach (var lang in languages) {
 			<option value="@lang.Key">@lang.Value</option>
 		}
 	</Dropdown>
+	<Toggle name="generalSettings[launchStartup]" label="settings.general.startup" value="@settings.launchStartup" />
 </div>

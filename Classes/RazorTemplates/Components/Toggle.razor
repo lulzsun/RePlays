@@ -1,0 +1,27 @@
+﻿@code {
+	[Parameter]
+	public string id { get; set; }
+	[Parameter]
+	public string name { get; set; }
+	[Parameter]
+	public bool value { get; set; }
+	/// <summary> This label supports i18n </summary>
+	[Parameter]
+	public string label { get; set; }
+	[Parameter]
+	public string hx_get { get; set; }
+	[Parameter]
+	public string hx_vals { get; set; }
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+}
+
+<label class="label cursor-pointer">
+	<span class="label-text" hx-t="@label" hx-ext="i18n"></span>
+	<input type="hidden" role="checkbox" name="@name" value="@value.ToString().ToLower()" />
+	@if(value) {
+		<input type="checkbox" class="toggle" onchange="const el = this.previousElementSibling;el.value = this.checked;" checked />
+	} else {
+		<input type="checkbox" class="toggle" onchange="const el = this.previousElementSibling;el.value = this.checked;" />
+	}
+</label>
