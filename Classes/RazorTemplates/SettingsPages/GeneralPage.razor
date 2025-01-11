@@ -16,7 +16,7 @@
 }
 
 <div class="flex flex-col h-full">
-	<Dropdown name="generalSettings[language]">
+	<Dropdown name="generalSettings[language]" label="settings.general.language">
 		<option value="@settings.language" selected disabled hidden>@languages[settings.language]</option>
 		@foreach (var lang in languages) {
 			<option value="@lang.Key">@lang.Value</option>

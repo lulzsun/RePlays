@@ -3,6 +3,9 @@
 	public string id { get; set; }
 	[Parameter]
 	public string name { get; set; }
+	/// <summary> This label supports i18n </summary>
+	[Parameter]
+	public string label { get; set; }
 	[Parameter]
 	public string hx_get { get; set; }
 	[Parameter]
@@ -11,7 +14,8 @@
 	public RenderFragment ChildContent { get; set; }
 }
 
-<div class="dropdown">
+<div class="label dropdown">
+	<span class="label-text" hx-t="@label" hx-ext="i18n"></span>
 	<div class="btn px-0 overflow-hidden">
 		<img src="#" class="absolute invisible" onerror="this.nextElementSibling.dispatchEvent(new Event('input'));">
 		<select id="@id" name="@name" hx-get="@hx_get" hx-vals="@hx_vals" class="!absolute left-0 right-0 opacity-0 focusable appearance-none bg-inherit h-full px-4" oninput="
