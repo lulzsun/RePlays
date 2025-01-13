@@ -6,6 +6,9 @@
 	/// <summary> This label supports i18n </summary>
 	[Parameter]
 	public string label { get; set; }
+	/// <summary> This hint supports i18n </summary>
+	[Parameter]
+	public string hint { get; set; }
 	[Parameter]
 	public string hx_get { get; set; }
 	[Parameter]
@@ -19,7 +22,7 @@
 }
 
 <div class="label dropdown">
-	<span class="label-text" hx-t="@label" hx-ext="i18n"></span>
+	<span class="label-text font-semibold" hx-t="@label" hx-ext="i18n"></span>
 	<div class="btn @smallBtn px-0 overflow-hidden">
 		<img src="#" class="absolute invisible" onerror="this.nextElementSibling.dispatchEvent(new Event('input'));">
 		<select id="@id" name="@name" hx-get="@hx_get" hx-vals="@hx_vals" class="!absolute left-0 right-0 opacity-0 focusable appearance-none bg-inherit h-full px-4" oninput="
@@ -31,3 +34,8 @@
 		<span class="px-4" aria-hidden="true"></span>
 	</div>
 </div>
+@if(hint != null) {
+	<label class="px-1 pb-1 -mt-4" style="z-index: -1;">
+		<span class="label-text text-xs" hx-t="@hint" hx-ext="i18n" />
+	</label>
+}
