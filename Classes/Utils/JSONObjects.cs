@@ -69,12 +69,12 @@ namespace RePlays.Utils {
         public bool startMinimized { get { return _startMinimized; } set { _startMinimized = value; } }
         private bool _closeToTray = true;
         public bool closeToTray { get { return _closeToTray; } set { _closeToTray = value; } }
-        private string _theme = "System";
-        public string theme { get { return _theme; } set { _theme = value; } }
-        private string _update = "automatic"; // ??? why is there a warning
-        public string update { get { return _update; } set { _update = value; } }
-        private string _updateChannel = "Stable";
-        public string updateChannel { get { return _updateChannel; } set { _updateChannel = value; } }
+        private string _theme = "system";
+        public string theme { get { return _theme.ToLower(); } set { _theme = value; } }
+        private string _update = "automatic";
+        public string update { get { return _update.ToLower(); } set { _update = value; } }
+        private string _updateChannel = "stable";
+        public string updateChannel { get { return _updateChannel.ToLower(); } set { _updateChannel = value; } }
         public string currentVersion { get { return Updater.currentVersion; } }
         public string latestVersion { get { return Updater.latestVersion; } }
         private Device _device = new();

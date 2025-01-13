@@ -20,7 +20,7 @@ namespace RePlays.Utils {
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)40, (long)100);
 
                 using var manager = await UpdateManager.GitHubUpdateManager("https://github.com/lulzsun/RePlays",
-                    prerelease: SettingsService.Settings.generalSettings.updateChannel != "Stable");
+                    prerelease: SettingsService.Settings.generalSettings.updateChannel != "stable");
 
                 if (forceUpdate) WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)70, (long)100);
 
@@ -28,7 +28,7 @@ namespace RePlays.Utils {
                     currentVersion = manager.CurrentlyInstalledVersion().ToString();
                     Logger.Version = $"[v{currentVersion}]";
                 }
-                var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "Stable"); // if nightly, we ignore deltas
+                var updateInfo = await manager.CheckForUpdate(SettingsService.Settings.generalSettings.updateChannel != "stable"); // if nightly, we ignore deltas
                 if (forceUpdate) {
                     WebMessage.DisplayToast("CheckUpdateProgress", "Checking for updates", "Update", "none", (long)100, (long)100);
                     await Task.Delay(500);

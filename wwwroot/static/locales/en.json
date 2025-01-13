@@ -8,8 +8,9 @@
     "general": {
       "title": "General",
       "language": "Language",
-      "startup": "Launch app on system startup",
-      "startmin": "Start minimized",
+      "launchStartup": "Launch app on system startup",
+      "startMinimized": "Start minimized",
+      "closeToTray": "Close to tray",
       "theme": "Theme",
       "theme.system": "System",
       "theme.light": "Light",
