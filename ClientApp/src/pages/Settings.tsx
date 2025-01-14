@@ -101,7 +101,7 @@ export const Settings: React.FC<Props> = ({ userSettings, setUserSettings }) => 
                 <General updateSettings={updateSettings} settings={userSettings?.generalSettings} />
               </Route>
               <Route exact path='/settings/capture'>
-                <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} device={userSettings?.generalSettings?.device} />
+                <Capture updateSettings={updateSettings} settings={userSettings?.captureSettings} keybindSettings={userSettings?.keybindSettings} device={userSettings?.generalSettings?.device} />
               </Route>
               <Route exact path='/settings/clip'>
                 <Clip updateSettings={updateSettings} settings={userSettings?.clipSettings} device={userSettings?.generalSettings?.device}/>
