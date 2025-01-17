@@ -210,7 +210,7 @@ namespace RePlays.Services {
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Rect(int left, int top, int right, int bottom) {
+        public struct Rect(int left = 0, int top = 0, int right = 0, int bottom = 0) {
             public int Left = left, Top = top, Right = right, Bottom = bottom;
 
             public int GetWidth() {
@@ -221,8 +221,18 @@ namespace RePlays.Services {
                 return Bottom - Top;
             }
 
-            public string GetSizeStr() {
-                return GetWidth() + "x" + GetHeight();
+            public override string ToString() {
+                return $"{GetWidth()}x{GetHeight()}";
+            }
+
+            public static bool operator ==(Rect left, Rect right) => left.Equals(right);
+            public static bool operator !=(Rect left, Rect right) => !left.Equals(right);
+
+            public override bool Equals(object obj) {
+                if (obj is Rect rect) {
+                    return GetWidth() == rect.GetWidth() && GetHeight() == rect.GetHeight();
+                }
+                return false;
             }
         }
 

@@ -212,7 +212,7 @@ namespace RePlays.Services {
             var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isWhitelistedClass = classWhitelist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
-            detailedWindowStr += $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]";
+            detailedWindowStr += $"[{windowSize}, {aspectRatio}]";
 
             // if there is no matched game, lets try to make assumptions from the process given the following information:
             // 1. window size & aspect ratio
