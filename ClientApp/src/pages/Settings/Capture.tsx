@@ -8,10 +8,11 @@ import HelpSymbol from '../../components/HelpSymbol';
 interface Props {
   updateSettings: () => void;
   settings: CaptureSettings | undefined;
+  keybindSettings: KeybindSettings | undefined;
   device: Device | undefined;
 }
 
-export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) => {
+export const Capture: React.FC<Props> = ({ settings, updateSettings, keybindSettings, device }) => {
   const { t } = useTranslation();
 
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
@@ -345,68 +346,75 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
         </label>
       </div>
 
-      <h1 className='font-semibold text-2xl'>{t('settingsCaptureItem30')}</h1>
-      <div className='flex flex-col gap-2'>
-        <span className='text-gray-700 dark:text-gray-400'>
-          {t('settingsCaptureItem31')}
-        </span>
-        <label className='inline-flex items-center'>
-          <input
-            type='checkbox'
-            name='enableReplayBuffer'
-            className='form-checkbox h-4 w-4 text-gray-600'
-            defaultChecked={settings === undefined ? false : settings.useReplayBuffer}
-            onChange={e => {
-              settings!.useReplayBuffer = (e?.target as HTMLInputElement).checked
-              updateSettings()
-            }}
-          />
-          <span className='px-2 text-gray-700 dark:text-gray-400'>
-            {t('settingsCaptureItem32')}
+      <div className='flex gap-4 lg:max-w-screen-md pt-1'>
+        <div
+          onClick={() => {
+            settings!.useReplayBuffer = false
+            updateSettings()
+          }}
+          className={`cursor-pointer flex flex-col gap-2 p-4 border rounded-md ${!settings?.useReplayBuffer ? 'border-blue-500 bg-gray-900' : 'border-gray-300'
+            }`}
+        >
+          <span className='font-semibold'>{t('settingsCaptureItem38')}</span>
+          <span className='text-gray-700 dark:text-gray-400'>
+            {t('settingsCaptureItem39')}
           </span>
-        </label>
-
-        {
-          settings?.useReplayBuffer && <div className='flex flex-row items-center gap-4'>
-            <div className='flex flex-col'>
-              {t('settingsCaptureItem33')}
-              <div className='flex flex-row items-center'>
-                <input
-                  className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
-                  type="number"
-                  min="10"
-                  defaultValue={settings?.replayBufferDuration}
-                  onBlur={(e) => handleInputBlur(e, 'replayBufferDuration')}
-                  onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferDuration')}
-                  onChange={(e) => handleOnChange(e)}
-                />
-                <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
-                  seconds
-                </span>
-              </div>
-            </div>
-            <div className='flex flex-col'>
-              {t('settingsCaptureItem34')}
-              <div className='flex flex-row items-center'>
-                <input
-                  className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
-                  type="number"
-                  min="10"
-                  defaultValue={settings?.replayBufferSize}
-                  onBlur={(e) => handleInputBlur(e, 'replayBufferSize')}
-                  onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferSize')}
-                  onChange={(e) => handleOnChange(e)}
-                />
-                <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
-                  MB
-                </span>
-              </div>
-            </div>
-          </div>
-        }
+        </div>
+        <div
+          onClick={() => {
+            settings!.useReplayBuffer = true
+            updateSettings()
+          }}
+          className={`cursor-pointer flex flex-col gap-2 p-4 border rounded-md ${settings?.useReplayBuffer ? 'border-blue-500 bg-gray-900' : 'border-gray-300'
+            }`}
+        >
+          <span className='font-semibold'>{t('settingsCaptureItem30')}</span>
+          <span className='text-gray-700 dark:text-gray-400'>
+            {t('settingsCaptureItem31').replace('X', settings?.replayBufferDuration?.toString() || 'X')} ({keybindSettings?.CreateBookmark.keys.join(" + ")}).
+          </span>
+        </div>
       </div>
 
-      <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem06')}</h1>
+      {settings?.useReplayBuffer && (
+        <div className='flex flex-row items-center gap-4'>
+          <div className='flex flex-col'>
+            {t('settingsCaptureItem33')}
+            <div className='flex flex-row items-center'>
+              <input
+                className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                type="number"
+                min="10"
+                defaultValue={settings?.replayBufferDuration}
+                onBlur={(e) => handleInputBlur(e, 'replayBufferDuration')}
+                onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferDuration')}
+                onChange={(e) => handleOnChange(e)}
+              />
+              <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                seconds
+              </span>
+            </div>
+          </div>
+          <div className='flex flex-col'>
+            {t('settingsCaptureItem34')}
+            <div className='flex flex-row items-center'>
+              <input
+                className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                type="number"
+                min="10"
+                defaultValue={settings?.replayBufferSize}
+                onBlur={(e) => handleInputBlur(e, 'replayBufferSize')}
+                onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferSize')}
+                onChange={(e) => handleOnChange(e)}
+              />
+              <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                MB
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <h1 className='font-semibold text-2xl mt-3'>{t('settingsCaptureItem06')}</h1>
       <div
         className='flex gap-4'
         onChange={(e) => {
@@ -630,64 +638,64 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
           />
         </div>
         {(settings?.rateControl == "CBR" || settings?.rateControl == "VBR") &&
-        <div className='flex flex-col'>
-          {t('settingsCaptureItem14')}
-          <div className='flex flex-row items-center'>
-            <input
-              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
-              type="number"
-              min="1"
-              defaultValue={settings?.bitRate}
-              onBlur={(e) => handleInputBlur(e, 'bitRate')}
-              onKeyPress={(e) => handleInputKeyPress(e, 'bitRate')}
-              onChange={(e) => handleOnChange(e)}
-            />
-            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
-              MB/s
-            </span>
+          <div className='flex flex-col'>
+            {t('settingsCaptureItem14')}
+            <div className='flex flex-row items-center'>
+              <input
+                className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                type="number"
+                min="1"
+                defaultValue={settings?.bitRate}
+                onBlur={(e) => handleInputBlur(e, 'bitRate')}
+                onKeyPress={(e) => handleInputKeyPress(e, 'bitRate')}
+                onChange={(e) => handleOnChange(e)}
+              />
+              <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                MB/s
+              </span>
+            </div>
           </div>
-        </div>
         }
         {
           settings?.rateControl == "VBR" &&
           <div className='flex flex-col'>
-          {t('settingsCaptureItem35')}
-          <div className='flex flex-row items-center'>
-            <input
-              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
-              type="number"
-              min="1"
-              defaultValue={settings?.maxBitRate}
-              onBlur={(e) => handleInputBlur(e, 'maxBitRate')}
-              onKeyPress={(e) => handleInputKeyPress(e, 'maxBitRate')}
-              onChange={(e) => handleOnChange(e)}
-            />
-            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
-              MB/s
-            </span>
+            {t('settingsCaptureItem35')}
+            <div className='flex flex-row items-center'>
+              <input
+                className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                type="number"
+                min="1"
+                defaultValue={settings?.maxBitRate}
+                onBlur={(e) => handleInputBlur(e, 'maxBitRate')}
+                onKeyPress={(e) => handleInputKeyPress(e, 'maxBitRate')}
+                onChange={(e) => handleOnChange(e)}
+              />
+              <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                MB/s
+              </span>
+            </div>
           </div>
-        </div>
         }
         {
           (settings?.rateControl == "CQP" || settings?.rateControl == "CRF") &&
           <div className='flex flex-col'>
-          {t('settingsCaptureItem36')}
-          <div className='flex flex-row items-center'>
-            <input
-              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
-              type="number"
-              min="1"
-              max="51"
-              defaultValue={settings?.cqLevel}
-              onBlur={(e) => handleInputBlur(e, 'cqLevel')}
-              onKeyPress={(e) => handleInputKeyPress(e, 'cqLevel')}
-              onChange={(e) => handleOnChange(e)}
-            />
-            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
-              CQP
-            </span>
+            {t('settingsCaptureItem36')}
+            <div className='flex flex-row items-center'>
+              <input
+                className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                type="number"
+                min="1"
+                max="51"
+                defaultValue={settings?.cqLevel}
+                onBlur={(e) => handleInputBlur(e, 'cqLevel')}
+                onKeyPress={(e) => handleInputKeyPress(e, 'cqLevel')}
+                onChange={(e) => handleOnChange(e)}
+              />
+              <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                CQP
+              </span>
+            </div>
           </div>
-        </div>
         }
       </div>
 
@@ -731,96 +739,96 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
       </label>
       {settings?.captureGameAudio == false && (
         <>
-        <div className='flex flex-col'>{t('settingsCaptureItem21')}</div>
-        <div className='flex flex-col gap-4'>
-          {settings?.outputDevices &&
-            settings.outputDevices.map((item, i) => {
-              const isRemovable = !(
-                settings.outputDevices.length === 1 && item.deviceId === 'default'
-              );
+          <div className='flex flex-col'>{t('settingsCaptureItem21')}</div>
+          <div className='flex flex-col gap-4'>
+            {settings?.outputDevices &&
+              settings.outputDevices.map((item, i) => {
+                const isRemovable = !(
+                  settings.outputDevices.length === 1 && item.deviceId === 'default'
+                );
 
-              return (
-                <AudioDevice
-                  key={item.deviceId}
-                  item={item}
-                  defaultValue={
-                    settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume
-                  }
-                  device={device}
-                  hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
-                  isRemovable={isRemovable}
-                  onChange={(e) => {
-                    let value = parseInt((e.target as HTMLInputElement).value);
-                    settings!.outputDevices[i].deviceVolume = value;
-                  }}
-                  onCheck={(e) => {
-                    let value = (e.target as HTMLInputElement).checked;
-                    settings!.inputDevices[i].denoiser = value;
-                  }}
-                  onMouseUpCapture={(e) => {
-                    updateSettings();
-                  }}
-                  onRemove={() => {
-                    settings!.outputDevices = settings!.outputDevices.filter(
-                      (d) => d.deviceId !== item.deviceId,
-                    );
-                    updateSettings();
-                  }}
-                />
-              );
-            })}
-        </div>
+                return (
+                  <AudioDevice
+                    key={item.deviceId}
+                    item={item}
+                    defaultValue={
+                      settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume
+                    }
+                    device={device}
+                    hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+                    isRemovable={isRemovable}
+                    onChange={(e) => {
+                      let value = parseInt((e.target as HTMLInputElement).value);
+                      settings!.outputDevices[i].deviceVolume = value;
+                    }}
+                    onCheck={(e) => {
+                      let value = (e.target as HTMLInputElement).checked;
+                      settings!.inputDevices[i].denoiser = value;
+                    }}
+                    onMouseUpCapture={(e) => {
+                      updateSettings();
+                    }}
+                    onRemove={() => {
+                      settings!.outputDevices = settings!.outputDevices.filter(
+                        (d) => d.deviceId !== item.deviceId,
+                      );
+                      updateSettings();
+                    }}
+                  />
+                );
+              })}
+          </div>
 
-        <div className='flex flex-col'>{t('settingsCaptureItem22')}</div>
-        <div className='flex flex-col gap-4'>
-          {settings?.inputDevices &&
-            settings.inputDevices.map((item, i) => {
-              item.isInput = true;
+          <div className='flex flex-col'>{t('settingsCaptureItem22')}</div>
+          <div className='flex flex-col gap-4'>
+            {settings?.inputDevices &&
+              settings.inputDevices.map((item, i) => {
+                item.isInput = true;
 
-              const isRemovable = !(
-                settings.inputDevices.length === 1 && item.deviceId === 'default'
-              );
+                const isRemovable = !(
+                  settings.inputDevices.length === 1 && item.deviceId === 'default'
+                );
 
-              return (
-                <AudioDevice
-                  key={item.deviceId}
-                  item={item}
-                  defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
-                  device={device}
-                  hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
-                  isRemovable={isRemovable}
-                  onChange={(e) => {
-                    let value = parseInt((e.target as HTMLInputElement).value);
-                    settings!.inputDevices[i].deviceVolume = value;
-                  }}
-                  onCheck={(e) => {
-                    let value = (e.target as HTMLInputElement).checked;
-                    settings!.inputDevices[i].denoiser = value;
-                    updateSettings();
-                  }}
-                  onMouseUpCapture={() => {
-                    updateSettings();
-                  }}
-                  onRemove={() => {
-                    settings!.inputDevices = settings!.inputDevices.filter(
-                      (d) => d.deviceId !== item.deviceId,
-                    );
-                    updateSettings();
-                  }}
-                />
-              );
-            })}
-        </div>
+                return (
+                  <AudioDevice
+                    key={item.deviceId}
+                    item={item}
+                    defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
+                    device={device}
+                    hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+                    isRemovable={isRemovable}
+                    onChange={(e) => {
+                      let value = parseInt((e.target as HTMLInputElement).value);
+                      settings!.inputDevices[i].deviceVolume = value;
+                    }}
+                    onCheck={(e) => {
+                      let value = (e.target as HTMLInputElement).checked;
+                      settings!.inputDevices[i].denoiser = value;
+                      updateSettings();
+                    }}
+                    onMouseUpCapture={() => {
+                      updateSettings();
+                    }}
+                    onRemove={() => {
+                      settings!.inputDevices = settings!.inputDevices.filter(
+                        (d) => d.deviceId !== item.deviceId,
+                      );
+                      updateSettings();
+                    }}
+                  />
+                );
+              })}
+          </div>
 
-        <div className='flex flex-col'>
-          {t('settingsCaptureItem23')}
-          <DropDownMenu
-            text={t('settingsCaptureItem24')}
-            width={'auto'}
-            items={audioDevices}
-            groups={[t('settingsCaptureItem25'), t('settingsCaptureItem26')]}
-          />
-        </div>
+          <div className='flex flex-col'>
+            {t('settingsCaptureItem23')}
+            <DropDownMenu
+              text={t('settingsCaptureItem24')}
+              width={'auto'}
+              items={audioDevices}
+              groups={[t('settingsCaptureItem25'), t('settingsCaptureItem26')]}
+            />
+          </div>
         </>
       )}
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem27')}</h1>
