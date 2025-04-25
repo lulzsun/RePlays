@@ -8,6 +8,8 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+
 
 
 #if !WINDOWS
@@ -318,6 +320,12 @@ namespace RePlays.Services {
                 if (!string.IsNullOrEmpty(gameName))
                     return (true, false, gameName);
             }
+
+            if (exeFile.Replace("\\", "/").Contains("/WindowsApps/")) {
+                string gameName = GetNameForXboxGame(exeFile);
+                if (!string.IsNullOrEmpty(gameName))
+                    return (true, false, gameName);
+            }
             return (false, false, "Game Unknown");
         }
 
@@ -381,6 +389,27 @@ namespace RePlays.Services {
         private static string ExtractAcfValue(string content, string key) {
             var match = Regex.Match(content, $"\"{key}\"\\s+\"([^\"]+)\"", RegexOptions.IgnoreCase);
             return match.Success ? match.Groups[1].Value : string.Empty;
+        }
+
+        private static string GetNameForXboxGame(string exeFile) {
+            try {
+                string normalizedPath = exeFile.Replace("\\", "/");
+                var splitPath = Regex.Split(normalizedPath, "/WindowsApps/", RegexOptions.IgnoreCase);
+                string installDir = splitPath[1].Split('/')[0];
+                string packageDir = Path.Combine(splitPath[0], "WindowsApps", installDir);
+                string configFile = Path.Combine(packageDir, "MicrosoftGame.config");
+                if (File.Exists(configFile)) {
+                    XDocument config = XDocument.Load(configFile);
+                    var displayNameAttribute = config.Root
+                        ?.Element(XName.Get("ShellVisuals", config.Root.GetDefaultNamespace().NamespaceName))
+                        ?.Attribute(XName.Get("DefaultDisplayName", config.Root.GetDefaultNamespace().NamespaceName));
+                    if (displayNameAttribute != null) return displayNameAttribute.Value;
+                }
+                return null;
+            }
+            catch {
+                return null;
+            }
         }
 
         private static void LoadNonGameCache() {
