@@ -253,6 +253,11 @@ namespace RePlays.Services {
                     if (!isWhitelistedClass && !isUserWhitelisted) return false;
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
+                //Set game title to executable. Better than Game Unknown
+                if (gameDetection.gameTitle == "Game Unknown") {
+                    gameTitle = Path.GetFileNameWithoutExtension(executablePath);
+                    Logger.WriteLine($"Game title set to executable name: {gameTitle}");
+                }
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, gameDetection.forceDisplayCapture);
                 if (allowed) RecordingService.StartRecording(false);
