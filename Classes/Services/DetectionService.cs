@@ -8,6 +8,8 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+
 
 
 #if !WINDOWS
@@ -25,7 +27,7 @@ namespace RePlays.Services {
         static readonly HashSet<string> nonGameDetectionsCache = [];
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
-        private static List<string> classBlacklist = ["plasmashell", "splashscreen", "splashwindow", "launcher", "cheat", "console"];
+        private static List<string> classBlacklist = ["plasmashell", "splashscreen", "splashwindow", "launcher", "cheat", "console", "amddvroverlaywindowclass"];
         private static List<string> classWhitelist = ["steam_app_", "unitywndclass", "unrealwindow", "riotwindowclass"];
 
         public static void Start() {
@@ -212,7 +214,7 @@ namespace RePlays.Services {
             var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isWhitelistedClass = classWhitelist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
-            detailedWindowStr += $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]";
+            detailedWindowStr += $"[{windowSize}, {aspectRatio}]";
 
             // if there is no matched game, lets try to make assumptions from the process given the following information:
             // 1. window size & aspect ratio
@@ -253,6 +255,11 @@ namespace RePlays.Services {
                     if (!isWhitelistedClass && !isUserWhitelisted) return false;
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
+                //Set game title to executable. Better than Game Unknown
+                if (gameDetection.gameTitle == "Game Unknown") {
+                    gameTitle = Path.GetFileNameWithoutExtension(executablePath);
+                    Logger.WriteLine($"Game title set to executable name: {gameTitle}");
+                }
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, gameDetection.forceDisplayCapture);
                 if (allowed) RecordingService.StartRecording(false);
@@ -315,6 +322,12 @@ namespace RePlays.Services {
             // TODO: also parse Epic games/Origin games
             if (exeFile.Replace("\\", "/").Contains("/steamapps/common/")) {
                 string gameName = GetNameForSteamGame(exeFile);
+                if (!string.IsNullOrEmpty(gameName))
+                    return (true, false, gameName);
+            }
+
+            if (exeFile.Replace("\\", "/").Contains("/WindowsApps/")) {
+                string gameName = GetNameForXboxGame(exeFile);
                 if (!string.IsNullOrEmpty(gameName))
                     return (true, false, gameName);
             }
@@ -381,6 +394,27 @@ namespace RePlays.Services {
         private static string ExtractAcfValue(string content, string key) {
             var match = Regex.Match(content, $"\"{key}\"\\s+\"([^\"]+)\"", RegexOptions.IgnoreCase);
             return match.Success ? match.Groups[1].Value : string.Empty;
+        }
+
+        private static string GetNameForXboxGame(string exeFile) {
+            try {
+                string normalizedPath = exeFile.Replace("\\", "/");
+                var splitPath = Regex.Split(normalizedPath, "/WindowsApps/", RegexOptions.IgnoreCase);
+                string installDir = splitPath[1].Split('/')[0];
+                string packageDir = Path.Combine(splitPath[0], "WindowsApps", installDir);
+                string configFile = Path.Combine(packageDir, "MicrosoftGame.config");
+                if (File.Exists(configFile)) {
+                    XDocument config = XDocument.Load(configFile);
+                    var displayNameAttribute = config.Root
+                        ?.Element(XName.Get("ShellVisuals", config.Root.GetDefaultNamespace().NamespaceName))
+                        ?.Attribute(XName.Get("DefaultDisplayName", config.Root.GetDefaultNamespace().NamespaceName));
+                    if (displayNameAttribute != null) return displayNameAttribute.Value;
+                }
+                return null;
+            }
+            catch {
+                return null;
+            }
         }
 
         private static void LoadNonGameCache() {

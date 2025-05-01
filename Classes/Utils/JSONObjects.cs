@@ -233,8 +233,8 @@ namespace RePlays.Utils {
     }
 
     public class FileFormat {
-        public string title { get; }
         public string format { get; }
+        public string title { get; }
         public bool isReplayBufferCompatible { get; }
 
         public FileFormat(string format, string title, bool isReplayBufferCompatible) {

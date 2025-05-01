@@ -286,7 +286,11 @@ namespace RePlays.Recorders {
                 IntPtr bufferOutputSettings = obs_data_create();
                 obs_data_set_string(bufferOutputSettings, "directory", Path.GetDirectoryName(outputPath));
                 obs_data_set_string(bufferOutputSettings, "format", "%CCYY-%MM-%DD %hh-%mm-%ss-ses");
-                obs_data_set_string(bufferOutputSettings, "extension", captureSettings.fileFormat.format);
+
+                // Some users still have 'fragmented_mp4' as their format even if Replay Buffer is enabled. 
+                // Verify if the selected format is compatible with the replay buffer. 
+                // If not compatible, default to 'mp4' to ensure proper functionality.
+                obs_data_set_string(bufferOutputSettings, "extension", captureSettings.fileFormat.isReplayBufferCompatible ? captureSettings.fileFormat.format : "mp4");
                 obs_data_set_int(bufferOutputSettings, "max_time_sec", captureSettings.replayBufferDuration);
                 obs_data_set_int(bufferOutputSettings, "max_size_mb", captureSettings.replayBufferSize);
                 output = obs_output_create("replay_buffer", "replay_buffer_output", bufferOutputSettings, IntPtr.Zero);
