@@ -330,6 +330,11 @@ namespace RePlays.Recorders {
                 obs_data_set_string(videoSourceSettings, "capture_mode", WindowService.IsFullscreen(windowHandle) ? "any_fullscreen" : "window");
                 obs_data_set_string(videoSourceSettings, "capture_window", recordWindow);
                 obs_data_set_string(videoSourceSettings, "window", recordWindow);
+                if (WindowService.IsHdrEnabled(windowHandle)) {
+                    Logger.WriteLine("HDR is enabled, setting HDR colorspace for game_capture source");
+                    obs_data_set_string(videoSourceSettings, "rgb10a2_space", "2100pq");
+                }
+                else obs_data_set_string(videoSourceSettings, "rgb10a2_space", "srgb");
                 videoSources.TryAdd("gameplay", obs_source_create(videoSourceId, "gameplay", videoSourceSettings, IntPtr.Zero));
                 obs_data_release(videoSourceSettings);
 
@@ -838,8 +843,9 @@ namespace RePlays.Recorders {
                 gpu_conversion = true,
                 colorspace = video_colorspace.VIDEO_CS_DEFAULT,
                 range = video_range_type.VIDEO_RANGE_DEFAULT,
-                scale_type = obs_scale_type.OBS_SCALE_BILINEAR
+                scale_type = obs_scale_type.OBS_SCALE_BILINEAR,
             };
+            if (WindowService.IsHdrEnabled(windowHandle)) obs_set_video_levels(300, 1000);
             int resetVideoCode = obs_reset_video(ref ovi);
             if (resetVideoCode != 0) {
                 throw new Exception("error on libobs reset video: " + ((VideoResetError)resetVideoCode).ToString());
