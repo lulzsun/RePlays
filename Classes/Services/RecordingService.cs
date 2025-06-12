@@ -191,17 +191,17 @@ namespace RePlays.Services {
             if (!IsRecording || IsRestarting) return;
             IsRestarting = true;
 
-            bool stopResult = await ActiveRecorder.StopRecording();
+            bool stopResultError = await ActiveRecorder.StopRecording();
             bool newSession = SetSessionDetails();
             bool startResult = false;
             if (newSession) startResult = await ActiveRecorder.StartRecording();
 
-            if (stopResult && startResult) {
+            if (!stopResultError && startResult) {
                 Logger.WriteLine("Recording restart successful");
             }
             else {
-                Logger.WriteLine($"Issue trying to restart recording. Could stop {stopResult}, could start {startResult}");
-                if (stopResult || !startResult) IsRecording = false;
+                Logger.WriteLine($"Issue trying to restart recording. Could stop {!stopResultError}, could start {startResult}");
+                if (!stopResultError && !startResult) IsRecording = false;
             }
             IsRestarting = false;
         }
