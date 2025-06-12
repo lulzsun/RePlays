@@ -200,8 +200,8 @@ namespace RePlays.Services {
                 Logger.WriteLine("Recording restart successful");
             }
             else {
-                Logger.WriteLine($"Issue trying to restart recording. Could start {stopResult}, could stop {startResult}");
-                IsRecording = false;
+                Logger.WriteLine($"Issue trying to restart recording. Could stop {stopResult}, could start {startResult}");
+                if (stopResult || !startResult) IsRecording = false;
             }
             IsRestarting = false;
         }
