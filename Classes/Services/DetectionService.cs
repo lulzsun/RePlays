@@ -181,7 +181,7 @@ namespace RePlays.Services {
             if (windowHandle <= 0) windowHandle = WindowService.GetWindowHandleByProcessId(processId, true);
             var className = WindowService.GetClassName(windowHandle);
             string gameTitle = gameDetection.gameTitle;
-            string fileName = Path.GetFileName(executablePath);
+            string fileName = Path.GetFileNameWithoutExtension(executablePath);
             var detailedWindowStr = $"[{processId}][{windowHandle}][{className}][{executablePath}]";
             try {
                 if (Path.Exists(executablePath)) {
@@ -256,8 +256,8 @@ namespace RePlays.Services {
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
                 //Set game title to executable. Better than Game Unknown
-                if (gameDetection.gameTitle == "Game Unknown") {
-                    gameTitle = Path.GetFileNameWithoutExtension(executablePath);
+                if (gameDetection.gameTitle == "Game Unknown" && !string.IsNullOrWhiteSpace(fileName)) {
+                    gameTitle = fileName;
                     Logger.WriteLine($"Game title set to executable name: {gameTitle}");
                 }
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
