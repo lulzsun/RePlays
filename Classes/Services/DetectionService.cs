@@ -30,6 +30,8 @@ namespace RePlays.Services {
         private static List<string> classBlacklist = ["plasmashell", "splashscreen", "splashwindow", "launcher", "cheat", "console", "amddvroverlaywindowclass"];
         private static List<string> classWhitelist = ["steam_app_", "unitywndclass", "unrealwindow", "riotwindowclass"];
 
+        public static bool UserWhitelisted { get; private set; }
+
         public static void Start() {
             Logger.WriteLine("DetectionService starting...");
             LoadDetections();
@@ -239,6 +241,7 @@ namespace RePlays.Services {
                     bool isUserWhitelisted = SettingsService.Settings.detectionSettings.whitelist.Any(
                         game => string.Equals(game.gameExe.ToLower(), executablePath.ToLower())
                     );
+                    UserWhitelisted = isUserWhitelisted;
 #if !WINDOWS
                     // linux (at least proton-based) games don't have a different classname for their splashscreen.
                     // we need do check other things to see if it is a splashscreen before we record.

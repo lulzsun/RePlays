@@ -188,7 +188,10 @@ namespace RePlays.Services {
         }
 
         public static async void RestartRecording() {
-            if (!IsRecording || IsRestarting) return;
+            if (!IsRecording || IsRestarting) {
+                Logger.WriteLine($"Cannot restart recording, no recording in progress or already restarting [{currentSession.Pid}][{currentSession.GameTitle}]");
+                return;
+            }
             IsRestarting = true;
 
             bool stopResultError = await ActiveRecorder.StopRecording();
@@ -201,7 +204,7 @@ namespace RePlays.Services {
             }
             else {
                 Logger.WriteLine($"Issue trying to restart recording. Could stop {!stopResultError}, could start {startResult}");
-                if (!stopResultError && !startResult) IsRecording = false;
+                StopRecording(); //Better to fully stop than end in a limbo state
             }
             IsRestarting = false;
         }
