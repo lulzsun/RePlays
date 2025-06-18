@@ -30,6 +30,8 @@ namespace RePlays.Services {
         private static List<string> classBlacklist = ["plasmashell", "splashscreen", "splashwindow", "launcher", "cheat", "console", "amddvroverlaywindowclass"];
         private static List<string> classWhitelist = ["steam_app_", "unitywndclass", "unrealwindow", "riotwindowclass"];
 
+        public static bool UserWhitelisted { get; private set; }
+
         public static void Start() {
             Logger.WriteLine("DetectionService starting...");
             LoadDetections();
@@ -181,7 +183,7 @@ namespace RePlays.Services {
             if (windowHandle <= 0) windowHandle = WindowService.GetWindowHandleByProcessId(processId, true);
             var className = WindowService.GetClassName(windowHandle);
             string gameTitle = gameDetection.gameTitle;
-            string fileName = Path.GetFileName(executablePath);
+            string fileName = Path.GetFileNameWithoutExtension(executablePath);
             var detailedWindowStr = $"[{processId}][{windowHandle}][{className}][{executablePath}]";
             try {
                 if (Path.Exists(executablePath)) {
@@ -239,6 +241,7 @@ namespace RePlays.Services {
                     bool isUserWhitelisted = SettingsService.Settings.detectionSettings.whitelist.Any(
                         game => string.Equals(game.gameExe.ToLower(), executablePath.ToLower())
                     );
+                    UserWhitelisted = isUserWhitelisted;
 #if !WINDOWS
                     // linux (at least proton-based) games don't have a different classname for their splashscreen.
                     // we need do check other things to see if it is a splashscreen before we record.
@@ -256,8 +259,8 @@ namespace RePlays.Services {
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
                 //Set game title to executable. Better than Game Unknown
-                if (gameDetection.gameTitle == "Game Unknown") {
-                    gameTitle = Path.GetFileNameWithoutExtension(executablePath);
+                if (gameDetection.gameTitle == "Game Unknown" && !string.IsNullOrWhiteSpace(fileName)) {
+                    gameTitle = fileName;
                     Logger.WriteLine($"Game title set to executable name: {gameTitle}");
                 }
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");

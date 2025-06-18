@@ -436,7 +436,7 @@ namespace RePlays.Utils {
 
         public static void DeleteVideo(string filePath) {
             var metaPath = Path.Join(Path.GetDirectoryName(filePath), ".thumbs/");
-            string[] metaFileExtensions = new string[] { ".png", ".webp", ".metadata" };
+            string[] metaFileExtensions = new string[] { ".png", ".jpg", ".webp", ".metadata" };
             IEnumerable<string> metaFilesToDelete = metaFileExtensions.SelectMany(ext => Directory.GetFiles(metaPath, Path.GetFileNameWithoutExtension(filePath) + ext));
 
             Logger.WriteLine($"Deleting file: {filePath}");
