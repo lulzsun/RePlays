@@ -853,6 +853,20 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) =
             {t('settingsCaptureItem29')}
           </span>
         </label>
+        <label className='inline-flex items-center'>
+          <input
+            type='checkbox'
+            className='form-checkbox h-4 w-4 text-gray-600'
+            defaultChecked={settings === undefined ? false : settings.captureHdr}
+            onChange={(e) => {
+              settings!.captureHdr = e.target.checked;
+              updateSettings();
+            }}
+          />
+          <span className='ml-2 text-gray-700 dark:text-gray-400'>
+            {t('settingsCaptureItem38')}
+          </span>
+        </label>
       </div>
     </div>
   );

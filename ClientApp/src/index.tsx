@@ -162,6 +162,7 @@ declare global {
     replayBufferDuration: number;
     replayBufferSize: number;
     captureGameAudio: boolean;
+    captureHdr: boolean;
   }
 
   interface ClipSettings {

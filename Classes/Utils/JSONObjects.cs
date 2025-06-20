@@ -217,6 +217,9 @@ namespace RePlays.Utils {
 
         private bool _captureGameAudio = false;
         public bool captureGameAudio { get { return _captureGameAudio; } set { _captureGameAudio = value; } }
+
+        private bool _captureHdr = false;
+        public bool captureHdr { get { return _captureHdr; } set { _captureHdr = value; } }
     }
 
     public class ClipSettings {

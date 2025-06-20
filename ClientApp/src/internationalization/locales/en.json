@@ -71,6 +71,7 @@
     "settingsCaptureItem35": "Max Bitrate",
     "settingsCaptureItem36": "CQ Level",
     "settingsCaptureItem37": "Exclusively capture game audio",
+    "settingsCaptureItem38":  "Tonemap HDR content to SDR",
     "settingsClipItem01": "Re-Encode",
     "settingsClipItem02": "Encoder",
     "settingsClipItem03": "CPU: Better quality, slower encoding\nGPU: Faster encoding, lower quality",
