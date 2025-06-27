@@ -176,8 +176,13 @@ namespace RePlays.Recorders {
             if (!obs_startup("en-US", null, IntPtr.Zero)) {
                 throw new Exception("error on libobs startup");
             }
+#if DEBUG
+            obs_add_data_path(Path.Join(AppContext.BaseDirectory, "/data/libobs/").Replace('\\', '/'));
+            obs_add_module_path(Path.Join(AppContext.BaseDirectory, "/obs-plugins/64bit/").Replace('\\', '/'), Path.Join(AppContext.BaseDirectory, "/data/obs-plugins/%module%/").Replace('\\', '/'));
+#else
             obs_add_data_path("./data/libobs/");
             obs_add_module_path("./obs-plugins/64bit/", "./data/obs-plugins/%module%/");
+#endif
 
             ResetAudio();
             ResetVideo();
