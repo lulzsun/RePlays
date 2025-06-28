@@ -14,8 +14,8 @@
 		{"ru", "Russian"},
 	};
 	var selectedThemeText =
-		settings.update == "light" ? "settings.general.theme.light" :
-		(settings.update == "dark" ? "settings.general.theme.dark" : "settings.general.theme.system");
+		settings.theme == "light" ? "settings.general.theme.light" :
+		(settings.theme == "dark" ? "settings.general.theme.dark" : "settings.general.theme.system");
 	var selectedUpdateText = 
 		settings.update == "automatic" ? "settings.general.update.auto" : 
 		(settings.update == "manual" ? "settings.general.update.manual" : "settings.general.update.disable");

@@ -2,13 +2,20 @@
 	[Parameter]
 	public string id { get; set; }
 	[Parameter]
+	public string onchange { get; set; }
+	/// <summary>
+	///  If using this component for settings, this must be set as json object that references the corresponding setting.
+	///  <br/><br/>
+	///  Example: captureSettings[resolution]
+	/// </summary>
+	[Parameter]
 	public string name { get; set; }
 	[Parameter]
 	public bool value { get; set; }
-	/// <summary> This label supports i18n </summary>
+	/// <summary> This label supports i18n. </summary>
 	[Parameter]
 	public string label { get; set; }
-	/// <summary> This hint supports i18n </summary>
+	/// <summary> This hint supports i18n. </summary>
 	[Parameter]
 	public string hint { get; set; }
 	[Parameter]
@@ -21,11 +28,11 @@
 
 <label class="label cursor-pointer">
 	<span class="label-text font-semibold" hx-t="@label" hx-ext="i18n" />
-	<input type="hidden" role="checkbox" name="@name" value="@value.ToString().ToLower()" />
+	<input type="hidden" role="checkbox" name="@name" value="@value.ToString().ToLower()" hx-put="UpdateSetting" hx-trigger="change" hx-swap="none" />
 	@if(value) {
-		<input type="checkbox" class="toggle" onchange="const el = this.previousElementSibling;el.value = this.checked;" checked />
+		<input type="checkbox" class="toggle" onchange="const el = this.previousElementSibling;el.value = this.checked;htmx.trigger(el,'change');" checked />
 	} else {
-		<input type="checkbox" class="toggle" onchange="const el = this.previousElementSibling;el.value = this.checked;" />
+		<input type="checkbox" class="toggle" onchange="const el = this.previousElementSibling;el.value = this.checked;htmx.trigger(el,'change');" />
 	}
 </label>
 @if (hint != null)

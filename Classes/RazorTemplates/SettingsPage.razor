@@ -34,7 +34,7 @@
         document.querySelector('#settings-dialog').addEventListener('transitionend', function () {
             if (document.querySelector('#settings-nav').checked == false) {
                 document.querySelector('#settings-dialog').classList.add("hidden");
-                document.querySelector('#settings-form').requestSubmit();
+                // document.querySelector('#settings-form').requestSubmit();
             }
         });
 
@@ -58,7 +58,7 @@
             </ul>
         </nav>
         <div class="flex-1 overflow-y-auto">
-            <form id="settings-form" class="flex flex-col h-full px-5" hx-ext='json-enc-custom' hx-put="UpdateSettings" hx-swap="none" settings="@settings">
+            <div id="settings-form" class="flex flex-col h-full px-5" hx-ext='json-enc-custom'>
                 @{foreach (var page in pageComponents.Keys) {
                     var isActive = page == pageComponents.Keys.First();
                     <input id="@($"sett-{page.ToLower()}-nav")" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked="@isActive" disabled />
@@ -66,7 +66,7 @@
                         @pageComponents[page]
                     </div>
                 }}
-            </form>
+            </div>
         </div>
     </div>
 </div>

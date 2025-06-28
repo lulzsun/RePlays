@@ -1,11 +1,9 @@
 ﻿using RePlays.Recorders;
 using RePlays.Utils;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Management;
-using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
@@ -13,6 +11,10 @@ namespace RePlays.Services {
         private static SettingsJson _Settings = new();
         public static SettingsJson Settings { get { return _Settings; } }
         private static string settingsFile = Path.Join(GetCfgFolder(), "userSettings.json");
+
+        public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions {
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
+        };
 
         public class SettingsJson {
             private GeneralSettings _generalSettings = new();
@@ -61,8 +63,42 @@ namespace RePlays.Services {
             }
         }
 
+        private static string MergeJsonStrings(string jsonA, string jsonB) {
+            var nodeA = JsonNode.Parse(jsonA);
+            var nodeB = JsonNode.Parse(jsonB);
+
+            MergeJsonNodes(nodeA.AsObject(), nodeB.AsObject());
+
+            return nodeA.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        }
+
+        private static void MergeJsonNodes(JsonObject target, JsonObject source) {
+            foreach (var property in source) {
+                if (target.TryGetPropertyValue(property.Key, out var targetValue)) {
+                    if (property.Value is JsonObject sourceObject && targetValue is JsonObject targetObject) {
+                        // Both are objects, recurse
+                        MergeJsonNodes(targetObject, sourceObject);
+                    }
+                    else {
+                        // Overwrite target property with source property
+                        target[property.Key] = property.Value.DeepClone();
+                    }
+                }
+                else {
+                    // Property doesn't exist in target, add it
+                    target.Add(property.Key, property.Value.DeepClone());
+                }
+            }
+        }
+
+        public static void SaveSetting(WebMessage webMessage) {
+            var unsanitizeJsonString = JsonSerializer.Deserialize<string>(webMessage.data);
+            string mergedJson = MergeJsonStrings(JsonSerializer.Serialize(Settings), unsanitizeJsonString);
+            SaveSettings(new WebMessage() { data = mergedJson });
+        }
+
         public static void SaveSettings(WebMessage webMessage) {
-            SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data);
+            SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data, jsonOptions);
             data.uploadSettings.streamableSettings.password =
                 data.uploadSettings.streamableSettings.password != Settings.uploadSettings.streamableSettings.password
                 ? EncryptString(data.uploadSettings.streamableSettings.password)

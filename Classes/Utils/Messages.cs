@@ -259,6 +259,10 @@ namespace RePlays.Utils {
                         Updater.CheckForUpdates(webMessage.data.Contains("true"));
                     }
                     break;
+                case "UpdateSetting": {
+                        SaveSetting(webMessage);
+                    }
+                    break;
                 case "UpdateSettings": {
                         SaveSettings(webMessage);
                         SendMessage(GetUserSettings());
