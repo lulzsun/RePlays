@@ -1,5 +1,6 @@
 ﻿using RePlays.Recorders;
 using RePlays.Utils;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -8,6 +9,7 @@ using static RePlays.Utils.Functions;
 
 namespace RePlays.Services {
     public static class SettingsService {
+        private static Object thisLock = new Object();
         private static SettingsJson _Settings = new();
         public static SettingsJson Settings { get { return _Settings; } }
         private static string settingsFile = Path.Join(GetCfgFolder(), "userSettings.json");
@@ -118,7 +120,9 @@ namespace RePlays.Services {
             if (settings == null) settings = Settings;
             _Settings = settings;
             var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(settingsFile, JsonSerializer.Serialize(settings, options));
+            lock (thisLock) {
+                File.WriteAllText(settingsFile, JsonSerializer.Serialize(settings, options));
+            }
             Logger.WriteLine("Saved userSettings.json");
             if (oldSettings.captureSettings.encoder != Settings.captureSettings.encoder) {
                 if (RecordingService.ActiveRecorder is LibObsRecorder recorder) {
