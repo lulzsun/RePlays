@@ -15,22 +15,15 @@ htmx.defineExtension('i18n', {
 // mainly used to change the form data structure to update replays settings json
 
 htmx.defineExtension('json-enc-custom', {
-  onEvent: function (name, e) {
+  onEvent: function (name, evt) {
     if (name === "htmx:configRequest") {
-      e.detail.headers['Content-Type'] = "application/json";
-      e.detail.parameters = encodingAlgorithm(e.detail.parameters);
-
-      let settings = e.target.getAttribute("settings");
-
-      // if this attribute exists, we are going to update(merge) RePlays settings json
-      if (settings !== null) {
-        let a = JSON.parse(settings);
-        let b = JSON.parse(e.detail.parameters);
-        let result = mergeDeep(a, b);
-
-        e.detail.parameters = result;
-      }
+      evt.detail.headers['Content-Type'] = "application/json";
     }
+  },
+  encodeParameters: function (xhr, parameters, elt) {
+    xhr.overrideMimeType('text/json');
+    let encoded_parameters = encodingAlgorithm(parameters);
+    return encoded_parameters;
   }
 });
 

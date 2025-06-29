@@ -1,7 +1,7 @@
 var supportedLngs = ["en"];
 var resources = {};
 
-(async () => {
+window.addEventListener('load', async function () {
   for (var i = 0; i < supportedLngs.length; i++) {
     const response = await fetch(`static/locales/${supportedLngs[i]}.json`);
     const data = await response.json();
@@ -15,39 +15,41 @@ var resources = {};
     supportedLngs,
     resources
   }, function (err, t) {
-    if (err) console.error(err, t);
-  });
+    if (err) return console.error(err, t);
 
-  window.$t = i18next.t;
-  console.log($t('title.sessions'));
-  initialize();
-})();
+    
 
-window.addEventListener('load', function () {
-  window.$sn = SpatialNavigation;
+    window.$t = t;
+    window.$sn = SpatialNavigation;
 
-  // Initialize
-  $sn.init();
+    // Initialize
+    $sn.init();
 
-  // Define navigable elements (anchors and elements with "focusable" class).
-  $sn.add('sidebar', {
-    id: 'sidebar',
-    selector: '#sidebar .focusable'
-  });
-
-  document.addEventListener('sn:focused', function (e) {
-    e.target.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-      inline: 'center'
+    // Define navigable elements (anchors and elements with "focusable" class).
+    $sn.add('sidebar', {
+      id: 'sidebar',
+      selector: '#sidebar .focusable'
     });
+
+    document.addEventListener('sn:focused', function (e) {
+      e.target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+      });
+    });
+
+    // Make the *currently existing* navigable elements focusable.
+    $sn.makeFocusable();
+
+    Gamepad.init();
+
+    console.log($t('title.sessions'));
+    initialize();
   });
-
-  // Make the *currently existing* navigable elements focusable.
-  $sn.makeFocusable();
-
-  Gamepad.init();
 });
+
+
 function initialize() {
   const newDiv = document.createElement('div');
 
