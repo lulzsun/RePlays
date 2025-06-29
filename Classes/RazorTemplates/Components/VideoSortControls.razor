@@ -17,14 +17,14 @@
 
 <div id="@(type + "SortControls")" class="flex justify-between px-4">
 	<div class="flex gap-4">
-		<Dropdown id="@(type + "-game")" hx_get="RetrieveVideos" hx_vals="@hx_vals">
+		<Dropdown id="@(type + "-game")" hx_get="videos" hx_vals="@hx_vals">
 			<option value="@game" selected disabled hidden>@game</option>
 			<option value="All Games">All Games</option>
 			@foreach (var game in games) {
 				<option value="@game">@game</option>
 			}
 		</Dropdown>
-		<Dropdown id="@(type + "-sortBy")" hx_get="RetrieveVideos" hx_vals="@hx_vals">
+		<Dropdown id="@(type + "-sortBy")" hx_get="videos" hx_vals="@hx_vals">
 			<option value="@sortBy" selected disabled hidden>@sortBy</option>
 			<option value="Latest">Latest</option>
 			<option value="Oldest">Oldest</option>
