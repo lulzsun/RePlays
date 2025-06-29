@@ -24,8 +24,7 @@
 }
 
 <div class="flex flex-col h-full">
-	<Dropdown name="generalSettings[language]" label="settings.general.language">
-		<option value="@settings.language" selected disabled hidden>@languages[settings.language]</option>
+	<Dropdown name="generalSettings[language]" label="settings.general.language" value="@settings.language" text="@languages[settings.language]">
 		@foreach (var lang in languages) {
 			<option value="@lang.Key">@lang.Value</option>
 		}
@@ -33,20 +32,17 @@
 	<Toggle name="generalSettings[launchStartup]" label="settings.general.launchStartup" value="@settings.launchStartup" />
 	<Toggle name="generalSettings[startMinimized]" label="settings.general.startMinimized" value="@settings.startMinimized" />
 	<Toggle name="generalSettings[closeToTray]" label="settings.general.closeToTray" value="@settings.closeToTray" />
-	<Dropdown name="generalSettings[theme]" label="settings.general.theme">
-		<option value="@settings.theme" hx-t="@selectedThemeText" hx-ext="i18n" selected disabled hidden />
+	<Dropdown name="generalSettings[theme]" label="settings.general.theme" value="@settings.theme" text="@selectedThemeText">
 		<option value="system" hx-t="settings.general.theme.system" hx-ext="i18n" />
 		<option value="light" hx-t="settings.general.theme.light" hx-ext="i18n" />
 		<option value="dark" hx-t="settings.general.theme.dark" hx-ext="i18n" />
 	</Dropdown>
-	<Dropdown name="generalSettings[update]" label="settings.general.update">
-		<option value="@settings.update" hx-t="@selectedUpdateText" hx-ext="i18n" selected disabled hidden />
+	<Dropdown name="generalSettings[update]" label="settings.general.update" value="@settings.update" text="@selectedUpdateText">
 		<option value="automatic" hx-t="settings.general.update.auto" hx-ext="i18n" />
 		<option value="manual" hx-t="settings.general.update.manual" hx-ext="i18n" />
 		<option value="none" hx-t="settings.general.update.disable" hx-ext="i18n" />
 	</Dropdown>
-	<Dropdown name="generalSettings[updateChannel]" label="settings.general.update.channel">
-		<option value="@settings.updateChannel" hx-t="@selectedUpdateChannelText" hx-ext="i18n" selected disabled hidden />
+	<Dropdown name="generalSettings[updateChannel]" label="settings.general.update.channel" value="@settings.updateChannel" text="@selectedUpdateChannelText">
 		<option value="stable" hx-t="settings.general.update.channel.stable" hx-ext="i18n" />
 		<option value="nightly" hx-t="settings.general.update.channel.nightly" hx-ext="i18n" />
 	</Dropdown>

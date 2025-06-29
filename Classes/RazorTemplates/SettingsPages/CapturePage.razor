@@ -15,8 +15,7 @@
 
 <div class="flex flex-col h-full">
 	@* Capture Mode *@
-	<Dropdown name="captureSettings[recordingMode]" label="settings.capture.captureMode">
-		<option value="@settings.recordingMode" hx-t="@selectedCaptureModeText" hx-ext="i18n" selected disabled hidden />
+	<Dropdown name="captureSettings[recordingMode]" label="settings.capture.captureMode" value="@settings.recordingMode" text="@selectedCaptureModeText">
 		<option value="automatic" hx-t="settings.capture.captureMode.automatic" hx-ext="i18n" />
 		<option value="whitelist" hx-t="settings.capture.captureMode.whitelist" hx-ext="i18n" />
 		<option value="manual" hx-t="settings.capture.captureMode.manual" hx-ext="i18n" />
@@ -24,7 +23,7 @@
 	</Dropdown>
 	@* Replay Buffer *@
 	<div>
-		<Toggle name="captureSettings[replayBuffer]" label="settings.capture.replayBuffer" hint="settings.capture.replayBuffer.hint" value="@settings.useReplayBuffer"
+		<Toggle name="captureSettings[useReplayBuffer]" label="settings.capture.replayBuffer" hint="settings.capture.replayBuffer.hint" value="@settings.useReplayBuffer"
 				onchange="document.querySelector('#replayBufferSettings').classList.toggle('hidden')" />
 		<div id="replayBufferSettings" class="ml-8">
 			<Input label="Duration"/>
@@ -32,8 +31,7 @@
 	</div>
 	@* Video Quality *@
 	<div>
-		<Dropdown label="settings.capture.video.preset">
-			<option value="" hx-t="@selectedVideoPreset" hx-ext="i18n" selected disabled hidden />
+		<Dropdown label="settings.capture.video.preset" text="@selectedVideoPreset">
 			<option value="low" hx-t="settings.capture.video.preset.low" hx-ext="i18n" />
 			<option value="medium" hx-t="settings.capture.video.preset.medium" hx-ext="i18n" />
 			<option value="high" hx-t="settings.capture.video.preset.high" hx-ext="i18n" />
@@ -42,16 +40,14 @@
 		</Dropdown>
 		<div class="ml-8">
 			@* Resolution *@
-			<Dropdown name="captureSettings[resolution]" label="settings.capture.video.resolution">
-				<option value="@settings.resolution" hx-t="@(settings.resolution + "p")" hx-ext="i18n" selected disabled hidden />
+			<Dropdown name="captureSettings[resolution]" label="settings.capture.video.resolution" value="@settings.resolution.ToString()" text="@(settings.resolution + "p")">
 				<option value="480" hx-t="480p" hx-ext="i18n" />
 				<option value="720" hx-t="720p" hx-ext="i18n" />
 				<option value="1080" hx-t="1080p" hx-ext="i18n" />
 				<option value="1440" hx-t="1440p" hx-ext="i18n" />
 			</Dropdown>
 			@* Framerate *@
-			<Dropdown name="captureSettings[frameRate]" label="settings.capture.video.framerate">
-				<option value="@settings.frameRate" hx-t="@(settings.frameRate + " fps")" hx-ext="i18n" selected disabled hidden />
+			<Dropdown name="captureSettings[frameRate]" label="settings.capture.video.framerate" value="@settings.frameRate.ToString()" text="@(settings.frameRate + " fps")">
 				<option value="15" hx-t="15 fps" hx-ext="i18n" />
 				<option value="30" hx-t="30 fps" hx-ext="i18n" />
 				<option value="60" hx-t="60 fps" hx-ext="i18n" />
