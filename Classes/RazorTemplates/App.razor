@@ -1,6 +1,6 @@
 ﻿<div hx-swap-oob="innerHTML:body">
     <div id="modal-container"/>
-    <div hx-get="RetrieveVideos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
+    <div hx-get="videos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"></div>
     <div class="flex flex-row h-screen">
         <nav id="sidebar" class="z-20 flex flex-col h-screen justify-between bg-base-200 w-auto absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out">
             <ul class="menu text-base-content w-48 p-4">
@@ -42,4 +42,12 @@
             </div>
         </div>
     </div>
+</div>
+
+<div hx-swap-oob="innerHTML:#player-page">
+    <PlayerPage />
+</div>
+
+<div hx-swap-oob="innerHTML:#settings-page">
+    <SettingsPage />
 </div>

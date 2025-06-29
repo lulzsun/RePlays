@@ -70,6 +70,7 @@ namespace RePlays.Utils {
 
         public static string GetRePlaysURI() {
 #if DEBUG 
+            return "http://localhost:3001/";
             return "file://" + GetSolutionPath() + "/wwwroot/index.html";
 #else
             return "file://" + GetStartupPath() + "/wwwroot/index.html";
@@ -214,16 +215,7 @@ namespace RePlays.Utils {
         }
 
         public static string GetAllVideos(string game, string sortBy, bool isRePlaysWebView = false) {
-            var parameters = new Dictionary<string, object?> {
-                [nameof(game)] = game,
-                [nameof(sortBy)] = sortBy
-            };
-            var html = HtmlRendererFactory.RenderHtmlAsync<VideosPage>(ParameterView.FromDictionary(parameters)).Result;
-            WebMessage webMessage = new() {
-                message = "RetrieveVideos",
-                data = html
-            };
-            return JsonSerializer.Serialize(webMessage);
+            return "";
         }
 
         public static VideoList GetAllVideos(string game, string sortBy, bool isVideoList, bool isRePlaysWebView = false) {
@@ -286,14 +278,17 @@ namespace RePlays.Utils {
                     game = Path.GetFileName(Path.GetDirectoryName(file.FullName)),
                 };
 
-#if DEBUG && WINDOWS
+
                 video.folder = "https://videos.replays.app/";
-#else
+
                 if (isRePlaysWebView)
+#if DEBUG && WINDOWS
+                    video.folder = "https://videos.replays.app/";
+#else
                     video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file.FullName), "..")).Replace("\\", "/");
+#endif
                 else
                     video.folder = "http://localhost:3001/";
-#endif
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 
