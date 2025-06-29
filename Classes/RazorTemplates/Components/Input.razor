@@ -1,0 +1,35 @@
+﻿@code {
+	[Parameter]
+	public string id { get; set; }
+	[Parameter]
+	public string onchange { get; set; }
+	/// <summary>
+	///  If using this component for settings, this must be set as json object that references the corresponding setting.
+	///  <br/><br/>
+	///  Example: captureSettings[resolution]
+	/// </summary>
+	[Parameter]
+	public string name { get; set; }
+	[Parameter]
+	public bool value { get; set; }
+	/// <summary> This label supports i18n. </summary>
+	[Parameter]
+	public string label { get; set; }
+	/// <summary> This hint supports i18n. </summary>
+	[Parameter]
+	public string hint { get; set; }
+	[Parameter]
+	public string hx_get { get; set; }
+	[Parameter]
+	public string hx_vals { get; set; }
+	[Parameter]
+	public RenderFragment ChildContent { get; set; }
+}
+
+<label class="label cursor-pointer">
+	<span class="label-text font-semibold" hx-t="@label" hx-ext="i18n" />
+	<label class="input input-xs input-bordered flex items-center gap-2">
+		<input type="text" class="grow w-10" placeholder="" value="test" />
+		<span class="">secs</span>
+	</label>
+</label>
