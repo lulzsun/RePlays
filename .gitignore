@@ -7,6 +7,10 @@
 *.userosscache
 *.sln.docstates
 
+# Debug OBS runtime artifacts
+rtmp-services/
+win-capture/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
