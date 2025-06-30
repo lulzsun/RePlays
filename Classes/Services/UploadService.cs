@@ -15,7 +15,7 @@ namespace RePlays.Services {
                 if (SettingsService.Settings.uploadSettings.recentLinks.Count > 10)
                     SettingsService.Settings.uploadSettings.recentLinks.RemoveAt(0);
                 SettingsService.SaveSettings();
-                //WebInterface.SendMessage(GetUserSettings());
+                WebInterface.UpdateSettings();
                 Logger.WriteLine($"Successfully uploaded \"{file}\" to \"{url}\"");
             }
             catch (Exception exception) {
