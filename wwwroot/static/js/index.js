@@ -60,7 +60,7 @@ function initialize() {
   htmx.process(newDiv);
 
   if (window.chrome !== undefined) {
-    window.chrome.webview.postMessage({ message: "Initialize", data: null });
+    window.chrome.webview.postMessage("Initialize");
     return;
   }
   //if (window.external.sendMessage !== undefined) {

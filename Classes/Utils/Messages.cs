@@ -89,6 +89,7 @@ namespace RePlays.Utils {
 
         public static string ReceiveMessage(string message) {
             if (message == null) return null;
+            message = message.TrimStart('\"').TrimEnd('\"');
             Logger.WriteLine($"{message}");
 
             switch (message) {

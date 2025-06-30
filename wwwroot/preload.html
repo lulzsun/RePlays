@@ -2,11 +2,11 @@
   <script>
     function ready() {
       if(window.chrome !== undefined) {
-        window.chrome.webview.postMessage({message: "BrowserReady", data: null});
+        window.chrome.webview.postMessage("BrowserReady");
         return;
       }
       if(window.external.sendMessage !== undefined) {
-        window.external.sendMessage(JSON.stringify({message: "BrowserReady", data: null}));
+        window.external.sendMessage("BrowserReady");
         return;
       }
     }
