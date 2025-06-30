@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using static RePlays.Utils.Functions;
+using static RePlays.Utils.WebInterface;
 
 namespace RePlays.Services {
     public static class SettingsService {
@@ -93,14 +94,10 @@ namespace RePlays.Services {
             }
         }
 
-        public static void SaveSetting(WebMessage webMessage) {
-            var unsanitizeJsonString = JsonSerializer.Deserialize<string>(webMessage.data);
-            string mergedJson = MergeJsonStrings(JsonSerializer.Serialize(Settings), unsanitizeJsonString);
-            SaveSettings(new WebMessage() { data = mergedJson });
-        }
+        public static void SaveSetting(string json) {
+            string mergedJson = MergeJsonStrings(JsonSerializer.Serialize(Settings), json);
 
-        public static void SaveSettings(WebMessage webMessage) {
-            SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(webMessage.data, jsonOptions);
+            SettingsJson data = JsonSerializer.Deserialize<SettingsJson>(mergedJson, jsonOptions);
             data.uploadSettings.streamableSettings.password =
                 data.uploadSettings.streamableSettings.password != Settings.uploadSettings.streamableSettings.password
                 ? EncryptString(data.uploadSettings.streamableSettings.password)

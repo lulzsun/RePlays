@@ -160,7 +160,7 @@ namespace RePlays.Recorders {
                         signalGCHookAttempt++;
                     }
                     else if (formattedMsg.Contains("No space left on device")) {
-                        WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
+                        WebInterface.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
                         RecordingService.StopRecording();
                     }
                 }
@@ -242,10 +242,10 @@ namespace RePlays.Recorders {
                 string error = obs_output_get_last_error(output).Trim();
                 Logger.WriteLine("LibObs output recording error: '" + error + "'");
                 if (error.Length <= 0) {
-                    WebMessage.DisplayModal("An unexpected error occured. Detailed information written in logs.", "Recording Error", "warning");
+                    WebInterface.DisplayModal("An unexpected error occured. Detailed information written in logs.", "Recording Error", "warning");
                 }
                 else {
-                    WebMessage.DisplayModal(error, "Recording Error", "warning");
+                    WebInterface.DisplayModal(error, "Recording Error", "warning");
                 }
                 ReleaseAll();
                 return false;
@@ -277,7 +277,7 @@ namespace RePlays.Recorders {
             // another null check just incase
             if (output == IntPtr.Zero) {
                 Logger.WriteLine("LibObs output returned null, something really went wrong (this isn't suppose to happen)...");
-                WebMessage.DisplayModal("An unexpected error occured. Detailed information written in logs.", "Recording Error", "warning");
+                WebInterface.DisplayModal("An unexpected error occured. Detailed information written in logs.", "Recording Error", "warning");
                 ReleaseAll();
                 return false;
             }
@@ -595,15 +595,7 @@ namespace RePlays.Recorders {
                 BookmarkService.ApplyBookmarkToSavedVideo("/" + fileName);
 
                 StorageService.ManageStorage();
-
-
-#if RELEASE && WINDOWS
-                var t = Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
-#else
-                var t = Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
-#endif
-
-                t.ContinueWith(h => WebMessage.SendMessage(h.Result));
+                WebInterface.UpdateVideos();
                 return true;
             }
 
@@ -688,7 +680,7 @@ namespace RePlays.Recorders {
             captureSettings.encodersCache = availableEncoders;
             if (!availableEncoders.Contains(captureSettings.encoder)) {
                 if (!string.IsNullOrWhiteSpace(captureSettings.encoder))
-                    WebMessage.DisplayModal($"The previously selected encoder is no longer available. The encoder has been reset to the default option: {availableEncoders[0]}.", "Encoder warning", "warning");
+                    WebInterface.DisplayModal($"The previously selected encoder is no longer available. The encoder has been reset to the default option: {availableEncoders[0]}.", "Encoder warning", "warning");
 
                 captureSettings.encoder = availableEncoders[0];
             }
@@ -770,19 +762,7 @@ namespace RePlays.Recorders {
                 lol.UpdateMetadataWithStats(session.VideoSavePath);
             }
 
-#if RELEASE && WINDOWS
-            var t = Task.Run(() => {
-                var v = GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true);
-                WebMessage.SendMessage(v);
-                return Task.CompletedTask;
-            });
-#else
-            var t = Task.Run(() => {
-                var v = GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy);
-                WebMessage.SendMessage(v);
-                return Task.CompletedTask;
-            });
-#endif
+            WebInterface.UpdateVideos();
             IntegrationService.Shutdown();
             if (!isReplayBuffer)
                 BookmarkService.ApplyBookmarkToSavedVideo("/" + Path.GetFileName(session.VideoSavePath));

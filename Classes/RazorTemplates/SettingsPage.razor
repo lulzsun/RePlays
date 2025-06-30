@@ -18,49 +18,51 @@
     };
 }
 
-<script>
-    $sn.add('settingsPage', {
-        id: 'settingsPage',
-        selector: '#settings-dialog .focusable',
-        restrict: 'self-only',
-        defaultElement: '#sett-general-nav'
-    });
+<div hx-swap-oob="innerHTML:#settings-page">
+    <script>
+        $sn.add('settingsPage', {
+            id: 'settingsPage',
+            selector: '#settings-dialog .focusable',
+            restrict: 'self-only',
+            defaultElement: '#sett-general-nav'
+        });
 
-    document.querySelector('#settings-dialog').addEventListener('transitionend', function () {
-        if (document.querySelector('#settings-nav').checked == false) {
-            document.querySelector('#settings-dialog').classList.add("hidden");
-            // document.querySelector('#settings-form').requestSubmit();
-        }
-    });
+        document.querySelector('#settings-dialog').addEventListener('transitionend', function () {
+            if (document.querySelector('#settings-nav').checked == false) {
+                document.querySelector('#settings-dialog').classList.add("hidden");
+                // document.querySelector('#settings-form').requestSubmit();
+            }
+        });
 
-    document.addEventListener('keydown', function (e) {
-        if (document.querySelector('#settings-nav').checked == true) {
-            if (e.keyCode == 27) document.getElementById('settings-nav').checked = false;
-        }
-    });
-</script>
-<div class="flex w-full h-full">
-    <nav id="sett-sidebar" class="flex flex-col h-full justify-between bg-base-100 w-auto">
-        <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
-            @{foreach (var page in pageComponents.Keys) {
-                <li>
-                    <button class="btn focusable"
-                            onclick="document.getElementById('@($"sett-{page.ToLower()}-nav")').checked = true;"
-                            hx-t="@($"settings.{page.ToLower()}.title")"
-                            hx-ext="i18n" />
-                </li>
-            }}
-        </ul>
-    </nav>
-    <div class="flex-1 overflow-y-auto">
-        <div id="settings-form" class="flex flex-col h-full px-5" hx-ext='json-enc-custom'>
-            @{foreach (var page in pageComponents.Keys) {
-                var isActive = page == pageComponents.Keys.First();
-                <input id="@($"sett-{page.ToLower()}-nav")" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked="@isActive" disabled />
-                <div id="@($"sett-{page.ToLower()}-page")" role="tabpanel" class="tab-content flex-1 overflow-y-auto">
-                    @pageComponents[page]
-                </div>
-            }}
+        document.addEventListener('keydown', function (e) {
+            if (document.querySelector('#settings-nav').checked == true) {
+                if (e.keyCode == 27) document.getElementById('settings-nav').checked = false;
+            }
+        });
+    </script>
+    <div class="flex w-full h-full">
+        <nav id="sett-sidebar" class="flex flex-col h-full justify-between bg-base-100 w-auto">
+            <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
+                @{foreach (var page in pageComponents.Keys) {
+                    <li>
+                        <button class="btn focusable"
+                                onclick="document.getElementById('@($"sett-{page.ToLower()}-nav")').checked = true;"
+                                hx-t="@($"settings.{page.ToLower()}.title")"
+                                hx-ext="i18n" />
+                    </li>
+                }}
+            </ul>
+        </nav>
+        <div class="flex-1 overflow-y-auto">
+            <div id="settings-form" class="flex flex-col h-full px-5" hx-ext='json-enc-custom'>
+                @{foreach (var page in pageComponents.Keys) {
+                    var isActive = page == pageComponents.Keys.First();
+                    <input id="@($"sett-{page.ToLower()}-nav")" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked="@isActive" disabled />
+                    <div id="@($"sett-{page.ToLower()}-page")" role="tabpanel" class="tab-content flex-1 overflow-y-auto">
+                        @pageComponents[page]
+                    </div>
+                }}
+            </div>
         </div>
     </div>
 </div>

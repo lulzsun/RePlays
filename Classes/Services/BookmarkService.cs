@@ -33,7 +33,7 @@ namespace RePlays.Services {
             if (bookmarks.Count == 0) return;
 
             try {
-                WebMessage.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
+                WebInterface.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
                 bookmarks.Clear();
             }
             catch (Exception e) {

@@ -92,13 +92,7 @@ namespace RePlays.Recorders {
             };
 
             ltc.SaveFinished += async (sender, msg) => {
-                try {
-                    var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
-                    WebMessage.SendMessage(t);
-                }
-                catch (System.Exception e) {
-                    Logger.WriteLine(e.Message);
-                }
+                WebInterface.UpdateVideos();
             };
 
             Task.Run(() => ltc.Connect(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe")));

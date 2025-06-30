@@ -15,14 +15,14 @@ namespace RePlays.Services {
                 if (SettingsService.Settings.uploadSettings.recentLinks.Count > 10)
                     SettingsService.Settings.uploadSettings.recentLinks.RemoveAt(0);
                 SettingsService.SaveSettings();
-                WebMessage.SendMessage(GetUserSettings());
+                //WebInterface.SendMessage(GetUserSettings());
                 Logger.WriteLine($"Successfully uploaded \"{file}\" to \"{url}\"");
             }
             catch (Exception exception) {
                 Logger.WriteLine("Failed to upload clip: " + exception.ToString());
-                WebMessage.DisplayModal("Failed to upload clip. More information written to logs.", "Error", "warning");
+                WebInterface.DisplayModal("Failed to upload clip. More information written to logs.", "Error", "warning");
             }
-            WebMessage.DestroyToast(uploadId);
+            WebInterface.DestroyToast(uploadId);
         }
     }
 }

@@ -30,7 +30,7 @@ namespace RePlays.Uploaders {
                     httpClient.Timeout = Timeout.InfiniteTimeSpan; // sometimes, uploading can take long
                     var rePlaysSettings = SettingsService.Settings.uploadSettings.rePlaysSettings;
                     if (String.IsNullOrEmpty(rePlaysSettings.email) || String.IsNullOrEmpty(rePlaysSettings.password)) {
-                        WebMessage.DisplayModal("Enter your account credentials: Settings -> Upload -> Replays", "Wrong Credentials", "warning");
+                        WebInterface.DisplayModal("Enter your account credentials: Settings -> Upload -> Replays", "Wrong Credentials", "warning");
                         return null;
                     }
 
@@ -43,7 +43,7 @@ namespace RePlays.Uploaders {
 
                     int localFileSize = (int)(new FileInfo(file).Length / (1024.0 * 1024.0));
                     if (localFileSize > uploadFileLimit) {
-                        WebMessage.DisplayModal("Max file size is " + uploadFileLimit + " MB. Your file is " + localFileSize + " MB", "Warning", "warning");
+                        WebInterface.DisplayModal("Max file size is " + uploadFileLimit + " MB. Your file is " + localFileSize + " MB", "Warning", "warning");
                         return null;
                     }
 
@@ -53,7 +53,7 @@ namespace RePlays.Uploaders {
                         var makePublicContent = new StringContent(makePublic.ToString());
                         var fileContent = new ProgressableStreamContent(new StreamContent(File.OpenRead(file)), 4096,
                             (sent, total) => {
-                                WebMessage.DisplayToast(id, title, "Upload", "none", (long)((float)sent / total * 100), 100);
+                                WebInterface.DisplayToast(id, title, "Upload", "none", (long)((float)sent / total * 100), 100);
                             }
                         );
                         formDataContent.Add(fileContent, "uploaded", "video.mp4");
@@ -76,8 +76,8 @@ namespace RePlays.Uploaders {
                             return "https://replays.app/Video/" + result.shortcode;
                         }
 
-                        WebMessage.DisplayModal(result.status == 401 ? "Invalid login credentials. Please double-check and try again. " : "An unexpected error occured.", result.status == 401 ? "Wrong Credentials" : "Warning", "warning");
-                        WebMessage.DestroyToast(id);
+                        WebInterface.DisplayModal(result.status == 401 ? "Invalid login credentials. Please double-check and try again. " : "An unexpected error occured.", result.status == 401 ? "Wrong Credentials" : "Warning", "warning");
+                        WebInterface.DestroyToast(id);
                         return null;
                     }
                 }
@@ -90,18 +90,18 @@ namespace RePlays.Uploaders {
                         string statusContent = await uploadLimitResponse.Content.ReadAsStringAsync();
                         var result = JsonSerializer.Deserialize<RePlaysStatus>(statusContent);
                         if (result.title != "OK") {
-                            WebMessage.DisplayModal(result.content, result.title, "warning");
+                            WebInterface.DisplayModal(result.content, result.title, "warning");
                         }
                         else {
-                            WebMessage.DisplayModal("An unexpected error occured.", "Warning", "warning");
+                            WebInterface.DisplayModal("An unexpected error occured.", "Warning", "warning");
                         }
                     }
-                    WebMessage.DestroyToast(id);
+                    WebInterface.DestroyToast(id);
                     return null;
                 }
                 catch {
-                    WebMessage.DisplayModal("An unexpected error occured.", "Warning", "warning");
-                    WebMessage.DestroyToast(id);
+                    WebInterface.DisplayModal("An unexpected error occured.", "Warning", "warning");
+                    WebInterface.DestroyToast(id);
                     return null;
                 }
             }

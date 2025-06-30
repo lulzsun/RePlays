@@ -31,7 +31,7 @@ namespace RePlays.Classes.Services.Keybinds {
                 };
                 SettingsService.SaveSettings();
                 Logger.WriteLine($"Set new keybind: Action={Id}, Keys={string.Join(",", Keys)}");
-                WebMessage.SendMessage(Functions.GetUserSettings());
+                WebInterface.UpdateSettings();
             }
             this.Keys = Keys;
         }

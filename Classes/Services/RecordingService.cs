@@ -51,8 +51,7 @@ namespace RePlays.Services {
             ActiveRecorder = new LibObsRecorder();
             Logger.WriteLine("Creating a new ActiveRecorder");
             await Task.Run(() => ActiveRecorder.Start());
-            //Update user settings
-            WebMessage.SendMessage(GetUserSettings());
+            WebInterface.UpdateSettings();
             await Task.Run(() => DetectionService.CheckTopLevelWindows());
         }
 
@@ -101,7 +100,7 @@ namespace RePlays.Services {
                 Directory.CreateDirectory(dir);
             }
             catch (Exception e) {
-                WebMessage.DisplayModal(string.Format("Unable to create folder {0}. Do you have permission to create it?", dir), "Recording Error", "warning");
+                WebInterface.DisplayModal(string.Format("Unable to create folder {0}. Do you have permission to create it?", dir), "Recording Error", "warning");
                 Logger.WriteLine(e.ToString());
                 return false;
             }
@@ -154,7 +153,7 @@ namespace RePlays.Services {
 
         private static void OnTimedEvent(object source, ElapsedEventArgs e) {
             if (!IsStopping) {
-                WebMessage.DisplayToast("Recording", currentSession.GameTitle, "", "none", GetTotalRecordingTimeInSeconds());
+                WebInterface.DisplayToast("Recording", currentSession.GameTitle, "", "none", GetTotalRecordingTimeInSeconds());
             }
         }
 
@@ -180,7 +179,7 @@ namespace RePlays.Services {
                 recordingTimer.Stop();
                 Logger.WriteLine($"Stop Recording: {currentSession.Pid}, {currentSession.GameTitle}");
                 currentSession.Pid = 0;
-                WebMessage.DestroyToast("Recording");
+                WebInterface.DestroyToast("Recording");
                 IsRecording = false;
                 IsStopping = false;
                 StorageService.ManageStorage();

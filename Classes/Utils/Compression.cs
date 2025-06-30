@@ -6,6 +6,20 @@ using System.Threading.Tasks;
 using static RePlays.Utils.Functions;
 
 namespace RePlays.Utils {
+    public class CompressClip {
+        private string _filePath;
+        public string filePath {
+            get {
+                return _filePath.Replace("/", "\\");
+            }
+            set {
+                _filePath = value;
+            }
+        }
+
+        public string game { get; set; }
+        public string quality { get; set; }
+    }
     public static class Compression {
         static Dictionary<int, double> fileTime = new Dictionary<int, double>();
         public static void CompressFile(string filePath, CompressClip data) {
@@ -32,7 +46,7 @@ namespace RePlays.Utils {
 
             fileTime.Add(process.Id, 0);
 
-            WebMessage.DisplayToast(process.Id.ToString(), data.game, "Compressing", "none", (long)0, 100);
+            WebInterface.DisplayToast(process.Id.ToString(), data.game, "Compressing", "none", (long)0, 100);
         }
 
         static void ffmpeg_input(string e, Process process, string game) {
@@ -46,7 +60,7 @@ namespace RePlays.Utils {
             if (e.Contains("frame=") && e.Contains("speed=") && !e.Contains("Lsize=")) {
                 Logger.WriteLine(e);
                 try {
-                    WebMessage.DisplayToast(process.Id.ToString(), game, "Compressing", "none", Convert.ToInt32(TimeSpan.Parse(e.Trim().Substring(48, 11)).TotalSeconds), Convert.ToInt32(fileTime[process.Id]));
+                    WebInterface.DisplayToast(process.Id.ToString(), game, "Compressing", "none", Convert.ToInt32(TimeSpan.Parse(e.Trim().Substring(48, 11)).TotalSeconds), Convert.ToInt32(fileTime[process.Id]));
                 }
                 catch (Exception ex) {
                     Logger.WriteLine("Error: {}", ex.Message);
@@ -55,7 +69,7 @@ namespace RePlays.Utils {
         }
 
         static async Task p_ExitedAsync(object sender, EventArgs e, string filePathOriginal, Process process) {
-            WebMessage.DestroyToast(process.Id.ToString());
+            WebInterface.DestroyToast(process.Id.ToString());
             process.Kill();
 
             string filePathCompressed = filePathOriginal.Replace(".mp4", "-compressed.mp4");
@@ -78,8 +92,8 @@ namespace RePlays.Utils {
             verifyProcess.WaitForExit();
 
             if (compressedFileSize > originalFileSize || compressedFileSize == 0 || !string.IsNullOrWhiteSpace(output)) {
-                if (compressedFileSize == 0 || !string.IsNullOrWhiteSpace(output)) WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
-                if (compressedFileSize > originalFileSize) WebMessage.DisplayModal("The compressed file turned out to be larger than the original file. We will keep the original file.", "Compression size", "warning");
+                if (compressedFileSize == 0 || !string.IsNullOrWhiteSpace(output)) WebInterface.DisplayModal("Failed to compress the file", "Error", "warning");
+                if (compressedFileSize > originalFileSize) WebInterface.DisplayModal("The compressed file turned out to be larger than the original file. We will keep the original file.", "Compression size", "warning");
                 File.Delete(filePathCompressed);
                 return;
             }
@@ -90,20 +104,12 @@ namespace RePlays.Utils {
             }
             catch (Exception ex) {
                 Logger.WriteLine($"Error: {ex.Message}");
-                WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
+                WebInterface.DisplayModal("Failed to compress the file", "Error", "warning");
                 return;
             }
 
-#if RELEASE && WINDOWS
-            var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy, true));
-#else
-            var t = await Task.Run(() => GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
-#endif
-
-            Logger.WriteLine(t);
-            WebMessage.SendMessage(t);
-
-            WebMessage.DisplayModal("Successfully compressed the file from " + GetReadableFileSize(originalFileSize) + " to " + GetReadableFileSize(compressedFileSize), "Success", "success");
+            WebInterface.UpdateVideos();
+            WebInterface.DisplayModal("Successfully compressed the file from " + GetReadableFileSize(originalFileSize) + " to " + GetReadableFileSize(compressedFileSize), "Success", "success");
 
         }
     }

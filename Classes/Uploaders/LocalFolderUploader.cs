@@ -24,7 +24,7 @@ namespace RePlays.Uploaders {
                             dest.Write(buffer, 0, currentBlockSize);
 
                             cancelFlag = false;
-                            WebMessage.DisplayToast(id, title, "Upload", "none", (long)percentage, 100);
+                            WebInterface.DisplayToast(id, title, "Upload", "none", (long)percentage, 100);
 
                             if (cancelFlag == true) {
                                 File.Delete(destFile);

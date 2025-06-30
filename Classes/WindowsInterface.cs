@@ -40,9 +40,9 @@ namespace RePlays {
             // INIT RECORDER API
             if (!File.Exists(Path.Join(Application.StartupPath, "obs.dll"))) {
 #if DEBUG
-                WebMessage.DisplayModal("Missing obs.dll, make sure to check to wiki to learn how to build libobs", "Warning", "warning");
+                WebInterface.DisplayModal("Missing obs.dll, make sure to check to wiki to learn how to build libobs", "Warning", "warning");
 #else
-                WebMessage.DisplayModal("Missing obs.dll, recording may not be functional", "Warning", "warning");
+                WebInterface.DisplayModal("Missing obs.dll, recording may not be functional", "Warning", "warning");
 #endif
                 if (File.Exists(Path.Join(GetPlaysLtcFolder(), "PlaysTVComm.exe"))) {
                     RecordingService.Start(typeof(PlaysLTCRecorder));
@@ -106,7 +106,7 @@ namespace RePlays {
                 webView2 = new Microsoft.Web.WebView2.WinForms.WebView2();
                 webView2.Dock = DockStyle.Fill;
                 webView2.CoreWebView2InitializationCompleted += CoreWebView2InitializationCompleted;
-                webView2.WebMessageReceived += WebMessageReceivedAsync;
+                webView2.WebMessageReceived += WebMessageReceived;
                 CoreWebView2EnvironmentOptions environmentOptions = new CoreWebView2EnvironmentOptions() {
                     AdditionalBrowserArguments = "--unlimited-storage --disable-web-security --allow-file-access-from-files --allow-file-access",
                     Language = CultureInfo.InstalledUICulture.TwoLetterISOLanguageName
@@ -120,7 +120,7 @@ namespace RePlays {
             if (webView2 != null && !webView2.IsDisposed) {
                 webView2.CoreWebView2.PermissionRequested -= CoreWebView2PermissionRequested;
                 webView2.CoreWebView2InitializationCompleted -= CoreWebView2InitializationCompleted;
-                webView2.WebMessageReceived -= WebMessageReceivedAsync;
+                webView2.WebMessageReceived -= WebMessageReceived;
                 webView2.Dispose();
                 webView2 = null;
             }
@@ -150,9 +150,9 @@ namespace RePlays {
         }
 
         bool firstTime = true;
-        private async void WebMessageReceivedAsync(object sender, CoreWebView2WebMessageReceivedEventArgs e) {
-            var webMessage = await WebMessage.ReceiveMessage(e.WebMessageAsJson);
-            if (!this.Controls.Contains(webView2) && webMessage.message == "Initialize") {
+        private void WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e) {
+            var webMessage = WebInterface.ReceiveMessage(e.WebMessageAsJson);
+            if (!this.Controls.Contains(webView2) && webMessage == "Initialize") {
                 this.Controls.Add(webView2);
                 webView2.BringToFront();
                 if (firstTime) {

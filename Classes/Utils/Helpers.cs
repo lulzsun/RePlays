@@ -18,7 +18,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
-using static RePlays.Utils.WebMessage;
+using static RePlays.Utils.WebInterface;
 using Process = System.Diagnostics.Process;
 using Timer = System.Timers.Timer;
 
@@ -89,7 +89,7 @@ namespace RePlays.Utils {
                 SettingsService.Settings.storageSettings.videoSaveDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Plays");
                 SettingsService.SaveSettings();
 
-                WebMessage.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
+                WebInterface.DisplayModal("The program was unable to access the drive. As a result, the storage location has been reverted to the default location.", "Drive Disconnected", "info");
                 return SettingsService.Settings.storageSettings.videoSaveDir.Replace('\\', '/');
             }
 
@@ -201,21 +201,6 @@ namespace RePlays.Utils {
                 SettingsService.Settings.captureSettings.outputDevices.Add(outputCache[0]);
             }
             SettingsService.SaveSettings();
-        }
-
-        public static string GetUserSettings() {
-            SettingsService.LoadSettings();
-
-            var html = HtmlRendererFactory.RenderHtmlAsync<SettingsPage>().Result;
-            WebMessage webMessage = new() {
-                message = "UserSettings",
-                data = html
-            };
-            return JsonSerializer.Serialize(webMessage);
-        }
-
-        public static string GetAllVideos(string game, string sortBy, bool isRePlaysWebView = false) {
-            return "";
         }
 
         public static VideoList GetAllVideos(string game, string sortBy, bool isVideoList, bool isRePlaysWebView = false) {
@@ -462,11 +447,11 @@ namespace RePlays.Utils {
                 foreach (string bookmarkBackupFile in bookmarkBackupFiles) {
                     Logger.WriteLine($"Loading {bookmarkBackupFile}");
                     string json = File.ReadAllText(bookmarkBackupFile);
-                    WebMessage webMessage = new() {
-                        message = "SetBookmarks",
-                        data = json
-                    };
-                    WebMessage.SendMessage(JsonSerializer.Serialize(webMessage));
+                    //WebMessage webMessage = new() {
+                    //    message = "SetBookmarks",
+                    //    data = json
+                    //};
+                    //WebMessage.SendMessage(JsonSerializer.Serialize(webMessage));
                     File.Delete(bookmarkBackupFile);
                     Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
                 }
@@ -545,7 +530,7 @@ namespace RePlays.Utils {
             });
             process.ErrorDataReceived += new DataReceivedEventHandler((s, e) => {
                 if (e.Data != null && e.Data.Contains("frame=") && e.Data.Contains("speed=") && !e.Data.Contains("Lsize=")) {
-                    WebMessage.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(TimeSpan.Parse(e.Data.Trim().Substring(48, 11)).TotalSeconds) + progress, totalRenderTime);
+                    WebInterface.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(TimeSpan.Parse(e.Data.Trim().Substring(48, 11)).TotalSeconds) + progress, totalRenderTime);
                 }
                 Logger.WriteLine("E: " + e.Data);
             });
@@ -571,7 +556,7 @@ namespace RePlays.Utils {
             verifyClipProcess.WaitForExit();
 
             if (!File.Exists(outputFile) || !string.IsNullOrWhiteSpace(output)) {
-                WebMessage.DestroyToast(uuid);
+                WebInterface.DestroyToast(uuid);
                 Logger.WriteLine(string.Format("FFMPEG error. Failed to create clip: {0}", outputFile));
                 File.Delete(outputFile);
                 return null;
@@ -579,11 +564,11 @@ namespace RePlays.Utils {
 
             if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(game, videoPath, clipSegments, index + 1, (int)(progress + clipSegments[index].duration), uuid);
             else if (clipSegments.Length > 1 && index == clipSegments.Length) {
-                WebMessage.DestroyToast(uuid);
+                WebInterface.DestroyToast(uuid);
                 Logger.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
             }
             else {
-                WebMessage.DestroyToast(uuid);
+                WebInterface.DestroyToast(uuid);
                 Logger.WriteLine(string.Format("Created new clip: {0}", outputFile));
             }
 
@@ -819,7 +804,7 @@ namespace RePlays.Utils {
             }
 
             if (gpuRTX == null) {
-                WebMessage.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
+                WebInterface.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
                 return;
             }
 
@@ -837,7 +822,7 @@ namespace RePlays.Utils {
                     url = "https://international.download.nvidia.com/Windows/broadcast/sdk/AFX/2022-12-22_nvidia_afx_sdk_win_v1.3.0.21_ada.exe";
                     break;
                 default:
-                    WebMessage.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
+                    WebInterface.DisplayModal("You must have an RTX graphics card to use NVIDIA Noise Removal", "Warning", "warning");
                     return;
             }
 
@@ -855,7 +840,7 @@ namespace RePlays.Utils {
                 }
             }
 
-            WebMessage.DestroyToast("Nvidia");
+            WebInterface.DestroyToast("Nvidia");
             Logger.WriteLine("Download completed!");
 
             ProcessStartInfo startInfo = new ProcessStartInfo(savePath) {
@@ -877,7 +862,7 @@ namespace RePlays.Utils {
             LibObsRecorder activeRecorder = (LibObsRecorder)RecordingService.ActiveRecorder;
             if (activeRecorder.HasNvidiaAudioSDK()) {
                 checkForNvidiaUpdateTimer.Stop();
-                WebMessage.SendMessage(GetUserSettings());
+                WebInterface.UpdateSettings();
             }
 
             const int maxSeconds = 600;
@@ -920,7 +905,7 @@ namespace RePlays.Utils {
 
                     if (totalBytes.HasValue) {
                         int progressPercentage = (int)((totalDownloaded * 100) / totalBytes.Value);
-                        WebMessage.DisplayToast("Nvidia", "Nvidia Audio SDK", "Downloading", "none", progressPercentage, 100);
+                        WebInterface.DisplayToast("Nvidia", "Nvidia Audio SDK", "Downloading", "none", progressPercentage, 100);
                     }
                 }
             }

@@ -51,7 +51,7 @@ namespace RePlays.Uploaders {
                     var titleContent = new StringContent(title);
                     var fileContent = new ProgressableStreamContent(new StreamContent(File.OpenRead(file)), 4096,
                         (sent, total) => {
-                            WebMessage.DisplayToast(id, title, "Upload", "none", (long)((float)sent / total * 100),
+                            WebInterface.DisplayToast(id, title, "Upload", "none", (long)((float)sent / total * 100),
                                 100);
                         }
                     );

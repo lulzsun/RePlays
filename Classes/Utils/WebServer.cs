@@ -15,7 +15,8 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static RePlays.Utils.WebMessage;
+using static RePlays.Utils.WebInterface;
+using RePlays.Services;
 
 namespace RePlays.Classes.Utils {
     public static class WebServer {
@@ -72,12 +73,13 @@ namespace RePlays.Classes.Utils {
                     });
 
                     app.UseRouter(routes => {
-                        // Map a simple GET route
+                        // Prepares index.html app
                         routes.MapGet("initialize", async context => {
                             var html = HtmlRendererFactory.RenderHtmlAsync<App>().Result;
                             await context.Response.WriteAsync(html);
                         });
 
+                        // Retrieve videos
                         routes.MapGet("videos", async context => {
                             var userAgent = context.Request.Headers["User-Agent"].ToString();
                             var game = context.Request.Query["game"].ToString();
@@ -89,6 +91,21 @@ namespace RePlays.Classes.Utils {
                             };
                             var html = HtmlRendererFactory.RenderHtmlAsync<VideosPage>(ParameterView.FromDictionary(parameters)).Result;
                             await context.Response.WriteAsync(html);
+                        });
+
+                        // Save user settings
+                        routes.MapPut("settings", async context => {
+                            context.Request.EnableBuffering(); // Important for potentially reading the body multiple times
+
+                            string requestBody = "";
+                            using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8)) {
+                                requestBody = await reader.ReadToEndAsync();
+                            }
+                            Logger.WriteLine(requestBody);
+                            SettingsService.SaveSetting(requestBody);
+
+                            context.Response.StatusCode = StatusCodes.Status200OK;
+                            await context.Response.WriteAsync("Ok");
                         });
 
 
@@ -179,9 +196,7 @@ namespace RePlays.Classes.Utils {
 
                 if (result.MessageType == WebSocketMessageType.Text) {
                     var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-#if !WINDOWS
-                    await WebMessage.ReceiveMessage(receivedMessage);
-#endif
+                    Logger.WriteLine($"Websocket message received: {receivedMessage}");
                 }
                 else if (result.MessageType == WebSocketMessageType.Close) {
                     await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
