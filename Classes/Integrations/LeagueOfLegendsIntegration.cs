@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static RePlays.Utils.Functions;
+using static RePlays.Services.RecordingService;
 using Timer = System.Timers.Timer;
 
 
@@ -125,29 +127,27 @@ namespace RePlays.Integrations {
         }
 
         public override Task Shutdown() {
-            if (timer.Enabled) {
-                timer.Stop();
-                timer.Dispose();
-                Logger.WriteLine("Shutting down League Of Legends integration");
-            }
-            else {
+            if (!timer.Enabled) {
                 Logger.WriteLine("Already shutdown League Of Legends integration!");
+                return Task.CompletedTask;
             }
+            timer.Stop();
+            timer.Dispose();
+            Logger.WriteLine("Shutting down League Of Legends integration");
+
+            UpdateMetadataWithStats(GetCurrentSession().VideoSavePath);
             return Task.CompletedTask;
         }
 
-        public void UpdateMetadataWithStats(string videoPath) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
-            if (File.Exists(metadataPath)) {
-                VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
-                metadata.kills = stats.Kills;
-                metadata.assists = stats.Assists;
-                metadata.deaths = stats.Deaths;
-                metadata.champion = stats.Champion;
-                metadata.win = stats.Win;
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
-            }
+        private void UpdateMetadataWithStats(string videoPath) {
+            VideoMetadata metadata = GetOrCreateMetadata(videoPath);
+            metadata.gameHistory.kills = stats.Kills;
+            metadata.gameHistory.assists = stats.Assists;
+            metadata.gameHistory.deaths = stats.Deaths;
+            metadata.gameHistory.champion = stats.Champion;
+            metadata.gameHistory.win = stats.Win;
+
+            File.WriteAllText(metadata.filePath, JsonSerializer.Serialize(metadata));
         }
     }
 

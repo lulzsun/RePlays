@@ -175,23 +175,5 @@ namespace RePlays.Utils {
             var html = HtmlRendererFactory.RenderHtmlAsync<Toast>(ParameterView.FromDictionary(parameters)).Result;
             SendWebSocketMessage(html);
         }
-
-        public static void SetBookmarks(string videoName, List<Bookmark> bookmarks, double elapsed) {
-            string json = "{" +
-                    "\"videoname\": \"" + videoName + "\", " +
-                    "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
-                    "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
-
-            //if (WindowsInterface.webView2 != null) {
-            //    WebMessage webMessage = new();
-            //    webMessage.message = "SetBookmarks";
-            //    webMessage.data = json;
-            //    SendMessage(JsonSerializer.Serialize(webMessage));
-            //    Logger.WriteLine("Successfully sent bookmarks to frontend");
-            //}
-            //else {
-            //    BackupBookmarks(videoName, json);
-            //}
-        }
     }
 }

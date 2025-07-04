@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
+using static RePlays.Services.RecordingService;
 using static RePlays.Utils.Functions;
 using Timer = System.Timers.Timer;
 
@@ -182,6 +183,10 @@ namespace RePlays.Services {
                 WebInterface.DestroyToast("Recording");
                 IsRecording = false;
                 IsStopping = false;
+
+                IntegrationService.Shutdown();
+                BookmarkService.SaveBookmarks();
+                WebInterface.UpdateVideos();
                 StorageService.ManageStorage();
             }
         }

@@ -1,6 +1,8 @@
 ﻿using RePlays.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 
 namespace RePlays.Services {
     internal static class BookmarkService {
@@ -28,17 +30,14 @@ namespace RePlays.Services {
             }
         }
 
-        public static void ApplyBookmarkToSavedVideo(string videoName) {
-            Logger.WriteLine($"Applying {bookmarks.Count} bookmarks");
+        public static void SaveBookmarks() {
             if (bookmarks.Count == 0) return;
+            Logger.WriteLine($"Saving {bookmarks.Count} bookmarks to metadata file");
 
-            try {
-                WebInterface.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
-                bookmarks.Clear();
-            }
-            catch (Exception e) {
-                Logger.WriteLine($"Bookmark status: Failed with exception {e.Message}");
-            }
+            VideoMetadata metadata = Functions.GetOrCreateMetadata(RecordingService.GetCurrentSession().VideoSavePath);
+            metadata.bookmarks.AddRange(bookmarks);
+            File.WriteAllText(metadata.filePath, JsonSerializer.Serialize(metadata));
+            bookmarks.Clear();
         }
     }
 

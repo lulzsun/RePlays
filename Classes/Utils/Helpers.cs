@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using RePlays.Classes.RazorTemplates;
 using RePlays.Recorders;
 using RePlays.Services;
 using System;
@@ -11,14 +9,12 @@ using System.Linq;
 using System.Management;
 using System.Net.Http;
 using System.Numerics;
-using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
-using static RePlays.Utils.WebInterface;
 using Process = System.Diagnostics.Process;
 using Timer = System.Timers.Timer;
 
@@ -392,7 +388,9 @@ namespace RePlays.Utils {
 
             if (File.Exists(metadataPath)) {
                 try {
-                    return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                    var metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                    metadata.filePath = metadataPath;
+                    return metadata;
                 }
                 catch (Exception ex) {
                     Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
@@ -407,9 +405,10 @@ namespace RePlays.Utils {
 
                 var duration = GetVideoDuration(videoPath);
                 metadata.duration = duration;
+                metadata.filePath = metadataPath;
 
                 Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata));
                 return metadata;
             }
         }

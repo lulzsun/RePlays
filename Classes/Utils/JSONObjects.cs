@@ -1,3 +1,4 @@
+using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,13 +25,24 @@ namespace RePlays.Utils {
         public VideoMetadata metadata { get; set; }
     }
 
-    public class VideoMetadata {
-        public double duration { get; set; }
+    public class GameHistory {
         public int kills { get; set; }
         public int assists { get; set; }
         public int deaths { get; set; }
         public string champion { get; set; }
         public bool? win { get; set; }
+    }
+
+    public class VideoMetadata {
+        public string filePath { get; set; }
+        public double duration { get; set; }
+        public GameHistory gameHistory { get; set; }
+        public List<Bookmark> bookmarks { get; set; }
+
+        public VideoMetadata() {
+            gameHistory = new GameHistory();
+            bookmarks = [];
+        }
     }
 
     public class VideoSortSettings {
