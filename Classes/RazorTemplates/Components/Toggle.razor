@@ -28,7 +28,7 @@
 
 <label class="label cursor-pointer">
 	<span class="label-text font-semibold" hx-t="@label" hx-ext="i18n" />
-	<input type="hidden" role="checkbox" name="@name" value="@value.ToString().ToLower()" hx-put="settings" hx-trigger="change" hx-swap="none" />
+	<input type="hidden" role="checkbox" name="@name" value="@value.ToString().ToLower()" hx-put="/settings" hx-trigger="change" hx-swap="none" />
 	@if(value) {
 		<input type="checkbox" class="toggle" onchange="const el = this.previousElementSibling;el.value = this.checked;htmx.trigger(el,'change');" checked />
 	} else {

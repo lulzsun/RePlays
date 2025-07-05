@@ -3,7 +3,7 @@ var resources = {};
 
 window.addEventListener('load', async function () {
   for (var i = 0; i < supportedLngs.length; i++) {
-    const response = await fetch(`static/locales/${supportedLngs[i]}.json`);
+    const response = await fetch(`/static/locales/${supportedLngs[i]}.json`);
     const data = await response.json();
     resources[supportedLngs[i]] = { translation: data };
   }
@@ -16,8 +16,6 @@ window.addEventListener('load', async function () {
     resources
   }, function (err, t) {
     if (err) return console.error(err, t);
-
-    
 
     window.$t = t;
     window.$sn = SpatialNavigation;
@@ -49,11 +47,58 @@ window.addEventListener('load', async function () {
   });
 });
 
+const handlePopState = function (e) {
+  let url = window.location.pathname;
+  if (e !== undefined && e.state !== undefined) url = e.state;
+  switch (url) {
+    case "/clips":
+      showClips(false);
+      break;
+    case "/sessions":
+    default:
+      if (url.startsWith("/player/")) {
+        playPauseVideo(url.replace('/player/', ''))
+      } else {
+        showSessions(false);
+      }
+      break;
+  }
+}
+
+window.addEventListener('popstate', handlePopState);
+
+function showSessions(e) {
+  if (document.getElementById('sessions-nav').checked) {
+    return;
+  }
+  document.getElementById('sessions-nav').checked = true;
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
+  playPauseVideo();
+  if (e === undefined || e !== false) window.history.pushState('/sessions', '/sessions', '/sessions');
+}
+
+function showClips(e) {
+  if (document.getElementById('clips-nav').checked) {
+    return;
+  }
+  document.getElementById('clips-nav').checked = true;
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
+  playPauseVideo();
+  if (e === undefined || e !== false) window.history.pushState('/clips', '/clips', '/clips');
+}
+
+function showSettings() {
+  document.getElementById('settings-nav').checked = true;
+  document.getElementById('settings-dialog').classList.remove('hidden');
+  $sn.focus('settingsPage');
+}
 
 function initialize() {
   const newDiv = document.createElement('div');
 
-  newDiv.setAttribute('hx-get', 'initialize');
+  newDiv.setAttribute('hx-get', '/initialize');
+  if (window.location.pathname === '/')
+    newDiv.setAttribute('hx-replace-url', '/sessions');
   newDiv.setAttribute('hx-trigger', 'load');
 
   document.body.appendChild(newDiv);

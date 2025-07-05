@@ -24,6 +24,11 @@ const playPauseVideo = function (src) {
   }
 
   videoElement.src = src;
+  let path = src.match(/^(.*:\/\/[^\/]+\/)(.*)/);
+  path = path ? path[2] : '';
+  if (path !== "") window.history.pushState('/player' + path, '/player' + path, '/player' + path);
+  else videoElement.src = '/' + src;
+
   init();
   document.getElementById('player-nav').checked = true;
 }
@@ -120,3 +125,5 @@ const findBookmarkAncestorOrSelf = function (e) {
   const bookmarkElement = e.closest('.bookmark');
   return bookmarkElement || e;
 }
+
+handlePopState();

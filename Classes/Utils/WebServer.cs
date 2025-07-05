@@ -79,6 +79,17 @@ namespace RePlays.Classes.Utils {
                             await context.Response.WriteAsync(html);
                         });
 
+                        async Task RenderIndexHtml(HttpContext context) {
+                            using FileStream fs = new(webRootDir + "/index.html", FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.Asynchronous);
+                            using StreamReader reader = new(fs, Encoding.UTF8);
+                            await context.Response.WriteAsync(await reader.ReadToEndAsync());
+                        }
+
+                        routes.MapGet("/", RenderIndexHtml);
+                        routes.MapGet("sessions", RenderIndexHtml);
+                        routes.MapGet("clips", RenderIndexHtml);
+                        routes.MapGet("player/{*path}", RenderIndexHtml);
+
                         // Retrieve videos
                         routes.MapGet("videos", async context => {
                             var userAgent = context.Request.Headers["User-Agent"].ToString();

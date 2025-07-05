@@ -124,7 +124,7 @@ namespace RePlays.Utils {
 
         public static void UpdateVideos() {
             var html = """
-                <div hx-swap-oob="outerHTML:#update-videos" id="update-videos" hx-get="videos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"/>
+                <div hx-swap-oob="outerHTML:#update-videos" id="update-videos" hx-get="/videos" hx-vals='{"game": "All Games", "sortBy": "Latest"}' hx-trigger="load"/>
                 """;
             SendWebSocketMessage(html);
         }
