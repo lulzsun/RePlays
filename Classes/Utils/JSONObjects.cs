@@ -26,6 +26,7 @@ namespace RePlays.Utils {
     }
 
     public class GameHistory {
+        public string version { get; set; }
         public int kills { get; set; }
         public int assists { get; set; }
         public int deaths { get; set; }
