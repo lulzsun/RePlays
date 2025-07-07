@@ -18,7 +18,7 @@ namespace RePlays.Services {
             if ((secondsSinceEpoch - latestBookmarkKeyPress >= 2) || !bookmark.type.Equals(Bookmark.BookmarkType.Manual)) {
                 latestBookmarkKeyPress = secondsSinceEpoch;
                 double bookmarkTimestamp = RecordingService.GetTotalRecordingTimeInSecondsWithDecimals(dateTime);
-                Logger.WriteLine("Adding bookmark: " + bookmarkTimestamp);
+                Logger.WriteLine($"Adding bookmark @ {bookmarkTimestamp}, type: {bookmark.type}");
                 bookmark.time = bookmarkTimestamp;
                 bookmarks.Add(bookmark);
 

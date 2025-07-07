@@ -83,19 +83,16 @@ namespace RePlays.Integrations {
                     int currentKills = currentPlayer.GetProperty("scores").GetProperty("kills").GetInt32();
                     if (currentKills != stats.Kills) {
                         BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
-                        Console.WriteLine("Kills changed to: " + currentKills);
                     }
 
                     int currentDeaths = currentPlayer.GetProperty("scores").GetProperty("deaths").GetInt32();
                     if (currentDeaths != stats.Deaths) {
                         BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Death });
-                        Console.WriteLine("Deaths changed to: " + currentDeaths);
                     }
 
                     int currentAssists = currentPlayer.GetProperty("scores").GetProperty("assists").GetInt32();
                     if (currentAssists != stats.Assists) {
                         BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Assist });
-                        Console.WriteLine("Assists changed to: " + currentAssists);
                     }
 
                     stats.Kills = currentKills;
