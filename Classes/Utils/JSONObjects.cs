@@ -37,6 +37,7 @@ namespace RePlays.Utils {
     public class VideoMetadata {
         public string filePath { get; set; }
         public double duration { get; set; }
+        public double fps { get; set; }
         public GameHistory gameHistory { get; set; }
         public List<Bookmark> bookmarks { get; set; }
 

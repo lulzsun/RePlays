@@ -100,10 +100,10 @@ const handleOnKeyDown = function (e) {
     videoElement.paused ? videoElement.play() : videoElement.pause();
   if (e.key === 'ArrowLeft') videoElement.currentTime -= 5;
   if (e.key === 'ArrowRight') videoElement.currentTime += 5;
-  if (videoElement.paused) {
-    // frame-by-frame seeking: assumes 60fps video, later use video metadata
-    if (e.key === ',') videoElement.currentTime -= 1 / 60;
-    if (e.key === '.') videoElement.currentTime += 1 / 60;
+  // frame-by-frame seeking
+  if (videoMetadata.fps && (e.key === ',' || e.key === '.')) {
+    videoElement.pause();
+    videoElement.currentTime += (e.key === ',' ? -1 : 1) / videoMetadata.fps;
   }
 }
 

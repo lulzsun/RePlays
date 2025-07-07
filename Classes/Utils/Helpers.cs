@@ -333,6 +333,63 @@ namespace RePlays.Utils {
             return duration;
         }
 
+        public static double GetVideoFps(string videoPath) {
+            var startInfo = new ProcessStartInfo {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
+                Arguments = string.Format("-v 0 -select_streams v:0 -show_entries stream=avg_frame_rate -of csv=\"p=0\" \"{0}\"", videoPath),
+            };
+
+            var process = new Process {
+                StartInfo = startInfo
+            };
+            process.Start();
+            string stdout = "", stderr = "";
+            double fps = 0;
+            try {
+                stdout = process.StandardOutput.ReadToEnd().Trim(); // .Trim() to remove any whitespace/newline
+                stderr = process.StandardError.ReadToEnd(); // Read stderr for debugging if needed
+
+                // ffprobe typically returns FPS as a fraction (e.g., "30000/1001" for 29.97 FPS)
+                // We need to parse this fraction.
+                if (!string.IsNullOrEmpty(stdout)) {
+                    if (stdout.Contains('/')) {
+                        string[] parts = stdout.Split('/');
+                        if (parts.Length == 2 && double.TryParse(parts[0], CultureInfo.InvariantCulture, out double numerator) &&
+                            double.TryParse(parts[1], CultureInfo.InvariantCulture, out double denominator) && denominator != 0) {
+                            fps = numerator / denominator;
+                        }
+                        else {
+                            Logger.WriteLine($"Could not parse FPS fraction '{stdout}' for video '{Path.GetFileName(videoPath)}'.");
+                        }
+                    }
+                    else if (double.TryParse(stdout, CultureInfo.InvariantCulture, out fps)) {
+                        // It might occasionally return a direct float if the rate is exact (e.g., "30.0")
+                    }
+                    else {
+                        Logger.WriteLine($"Could not parse FPS output '{stdout}' as a number or fraction for video '{Path.GetFileName(videoPath)}'.");
+                    }
+                }
+                else {
+                    Logger.WriteLine($"No FPS output from ffprobe for video '{Path.GetFileName(videoPath)}'. This might indicate no video stream or an issue with the file.");
+                }
+            }
+            catch (Exception e) {
+                Logger.WriteLine($"Issue retrieving FPS of video '{Path.GetFileName(videoPath)}'. Exception: '{e.Message}'");
+                Logger.WriteLine($"Arguments: {startInfo.Arguments}");
+                Logger.WriteLine($"ffprobe output (stdout): {stdout}");
+                Logger.WriteLine($"ffprobe output (stderr): {stderr}");
+                fps = 0;
+            }
+            process.WaitForExit();
+            process.Close();
+
+            return fps;
+        }
+
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
             string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string[] thumbnailExtensions = [".jpg", ".webp", ".png"];
@@ -419,7 +476,10 @@ namespace RePlays.Utils {
                 if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
                 var duration = GetVideoDuration(videoPath);
-                metadata.duration = duration;
+                if (duration != 0) {
+                    metadata.duration = duration;
+                    metadata.fps = GetVideoFps(videoPath);
+                }
                 metadata.filePath = metadataPath;
 
                 Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");
