@@ -34,9 +34,9 @@ namespace RePlays.Services {
             if (bookmarks.Count == 0) return;
             Logger.WriteLine($"Saving {bookmarks.Count} bookmarks to metadata file");
 
-            VideoMetadata metadata = Functions.GetOrCreateMetadata(RecordingService.GetCurrentSession().VideoSavePath);
-            metadata.bookmarks.AddRange(bookmarks);
-            File.WriteAllText(metadata.filePath, JsonSerializer.Serialize(metadata));
+            Functions.UpdateMetadata(RecordingService.GetCurrentSession().VideoSavePath, metadata => {
+                metadata.bookmarks.AddRange(bookmarks);
+            });
             bookmarks.Clear();
         }
     }

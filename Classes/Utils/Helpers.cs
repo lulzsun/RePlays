@@ -382,24 +382,39 @@ namespace RePlays.Utils {
             return thumbnailPath;
         }
 
-        public static VideoMetadata GetOrCreateMetadata(string videoPath) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+        private static readonly Object _metafileLock = new();
+        public static VideoMetadata GetMetadata(string videoPath) {
+            lock (_metafileLock) {
+                string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+                string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
 
-            if (File.Exists(metadataPath)) {
-                try {
-                    var metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
-                    metadata.filePath = metadataPath;
+                if (File.Exists(metadataPath)) {
+                    try {
+                        var metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                        metadata.filePath = metadataPath;
+                        return metadata;
+                    }
+                    catch (Exception ex) {
+                        Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
+                        File.Delete(metadataPath);
+                        return null;
+                    }
+                }
+                return null;
+            }
+        }
+
+        public static VideoMetadata GetOrCreateMetadata(string videoPath) {
+            lock (_metafileLock) {
+                string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+                string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+                var metadata = GetMetadata(videoPath);
+
+                if (metadata != null) {
                     return metadata;
                 }
-                catch (Exception ex) {
-                    Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
-                    File.Delete(metadataPath);
-                    return GetOrCreateMetadata(videoPath);
-                }
-            }
-            else {
-                var metadata = new VideoMetadata();
+
+                metadata = new VideoMetadata();
 
                 if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
@@ -410,6 +425,24 @@ namespace RePlays.Utils {
                 Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");
                 File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata));
                 return metadata;
+            }
+        }
+
+        public static VideoMetadata UpdateMetadata(string videoPath, VideoMetadata metadata) {
+            lock (_metafileLock) {
+                string json = JsonSerializer.Serialize(metadata);
+                File.WriteAllText(metadata.filePath, json);
+                return metadata;
+            }
+        }
+
+        public static VideoMetadata UpdateMetadata(string videoPath, Action<VideoMetadata> metadata) {
+            lock (_metafileLock) {
+                var meta = GetOrCreateMetadata(videoPath);
+                metadata(meta);
+                string json = JsonSerializer.Serialize(meta);
+                File.WriteAllText(meta.filePath, json);
+                return meta;
             }
         }
 

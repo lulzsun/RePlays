@@ -140,26 +140,26 @@ namespace RePlays.Integrations {
         }
 
         private async void UpdateMetadataWithStats(string videoPath) {
-            VideoMetadata metadata = GetOrCreateMetadata(videoPath);
-
-            metadata.gameHistory.kills = stats.Kills;
-            metadata.gameHistory.assists = stats.Assists;
-            metadata.gameHistory.deaths = stats.Deaths;
-            metadata.gameHistory.champion = stats.Champion;
-            metadata.gameHistory.win = stats.Win;
+            UpdateMetadata(videoPath, metadata => {
+                metadata.gameHistory.kills = stats.Kills;
+                metadata.gameHistory.assists = stats.Assists;
+                metadata.gameHistory.deaths = stats.Deaths;
+                metadata.gameHistory.champion = stats.Champion;
+                metadata.gameHistory.win = stats.Win;
+            });
 
             using HttpClient client = new();
             try {
                 var result = await client.GetStringAsync("https://ddragon.leagueoflegends.com/api/versions.json");
                 JsonDocument doc = JsonDocument.Parse(result);
                 JsonElement root = doc.RootElement;
-                metadata.gameHistory.version = root[0].GetString();
+                UpdateMetadata(videoPath, metadata => {
+                    metadata.gameHistory.version = root[0].GetString();
+                });
             }
             catch (Exception ex) {
                 Logger.WriteLine($"Unable to retrieve LOL version: {ex.Message}");
             }
-
-            File.WriteAllText(metadata.filePath, JsonSerializer.Serialize(metadata));
         }
     }
 
