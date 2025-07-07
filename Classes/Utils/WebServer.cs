@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static RePlays.Utils.WebInterface;
 using RePlays.Services;
+using System.Text.Json;
 
 namespace RePlays.Classes.Utils {
     public static class WebServer {
@@ -89,6 +90,19 @@ namespace RePlays.Classes.Utils {
                         routes.MapGet("sessions", RenderIndexHtml);
                         routes.MapGet("clips", RenderIndexHtml);
                         routes.MapGet("player/{*path}", RenderIndexHtml);
+
+                        // Retrieve video metadata (returns json)
+                        routes.MapGet("metadata/{*path}", async context => {
+                            var videoPath = "/" + context.GetRouteValue("path") ?? "";
+                            var metadata = Functions.GetMetadata(Path.Join(Functions.GetPlaysFolder(), videoPath));
+                            if (metadata == null) {
+                                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                                return;
+                            }
+                            var json = JsonSerializer.Serialize(metadata);
+                            context.Response.ContentType = "application/json";
+                            await context.Response.WriteAsync($"{json}");
+                        });
 
                         // Retrieve videos
                         routes.MapGet("videos", async context => {

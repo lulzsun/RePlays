@@ -3,6 +3,7 @@ const timelineElement = document.getElementById("timelineElement");
 const seekWindowElement = document.getElementById("seekWindowElement");
 const seekBarElement = document.getElementById("seekBarElement");
 
+let videoMetadata = {};
 let currentZoom = 0;
 const ZOOMS = [
   100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000,
@@ -27,15 +28,33 @@ const playPauseVideo = function (src) {
   let path = src.match(/^(.*:\/\/[^\/]+\/)(.*)/);
   path = path ? path[2] : '';
   if (path !== "") window.history.pushState('/player' + path, '/player' + path, '/player' + path);
-  else videoElement.src = '/' + src;
+  else {
+    videoElement.src = '/' + src;
+    path = '/' + src;
+  }
 
-  init();
+  init(path);
   document.getElementById('player-nav').checked = true;
 }
 
-const init = function () {
+const init = function (video) {
   videoElement.load();
   videoElement.play();
+
+  fetch(`/metadata${video}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      videoMetadata = data;
+      console.log("Video Metadata loaded:", videoMetadata);
+    })
+    .catch(error => {
+      console.error("Error fetching video metadata:", error);
+    });
 
   document.addEventListener('keydown', handleOnKeyDown);
   document.addEventListener('mousedown', handleOnMouseDown);
@@ -55,6 +74,8 @@ const cleanUp = function () {
   //document.removeEventListener('wheel', handleWheelScroll);
 
   videoElement.currentTime = 0;
+
+  videoMetadata = {};
 }
 
 const handleVideoPlaying = function () {
