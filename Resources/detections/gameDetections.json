@@ -53447,6 +53447,16 @@
 	},
 	{
 		"region": null,
+		"title": "World of Warcraft Classic",
+		"game_detection": [
+			{
+				"gameexe": "/World of Warcraft/.*/WowClassic\\.exe",
+				"longname": "World of Warcraft Classic"
+			}
+		]
+	},
+	{
+		"region": null,
 		"title": "Marvel's Guardians of the Galaxy: The Telltale Series",
 		"game_detection": [
 			{
