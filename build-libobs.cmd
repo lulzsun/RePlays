@@ -76,6 +76,8 @@ robocopy "%OBS_INSTALL_PREFIX%\rundir\Release\obs-plugins " "%OBS_INSTALL_PREFIX
 robocopy "%OBS_INSTALL_PREFIX%\rundir\Release\data " "%OBS_INSTALL_PREFIX%\rundir\Release\bin\64bit\data\ " /E /IS /IT /R:0 /W:0 /XF *.ini *.pdb || IF %ERRORLEVEL% GEQ 8 goto:copy_error
 :: copy win-capture from official release to our build (because we need signed files for better compatibility)
 robocopy "%OBS_STUDIO_RELEASE_DIR%\data\obs-plugins\win-capture " "%OBS_INSTALL_PREFIX%\rundir\Release\bin\64bit\data\obs-plugins\win-capture\ " /E /IS /IT /R:0 /W:0 /XF *.ini *.pdb || IF %ERRORLEVEL% GEQ 8 goto:copy_error
+:: (HOTFIX, remove this later when we figure out issue #287) copy encoder test executables
+robocopy "%OBS_STUDIO_RELEASE_DIR%\bin\64bit " "%OBS_INSTALL_PREFIX%\rundir\Release\bin\64bit\ " "obs-*-mux.exe" "obs-ffmpeg-mux.exe" /IS /IT /R:0 /W:0 || IF %ERRORLEVEL% GEQ 8 goto:copy_error
 
 echo "OBS build completed successfully"
 exit /b 0
