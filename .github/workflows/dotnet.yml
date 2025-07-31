@@ -34,8 +34,13 @@ jobs:
         run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
 
       - name: "if not, do not build"
-        if: ${{ steps.check_commit.outputs.should_run == 'false' }}
-        run: exit 1
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "This workflow was triggered manually! Forcing a build."
+          elif [[ "${{ steps.check_commit.outputs.should_run }}" == "false" ]]; then
+            exit 1
+          fi
+          exit 0
 
       - name: "Check if nightly exists"
         id: nightly
