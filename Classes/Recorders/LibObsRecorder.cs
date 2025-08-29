@@ -188,11 +188,6 @@ namespace RePlays.Recorders {
                         WebMessage.DisplayModal("No space left on " + SettingsService.Settings.storageSettings.videoSaveDir[..1] + ": drive. Please free up some space by deleting unnecessary files.", "Unable to save video", "warning");
                         RecordingService.StopRecording();
                     }
-                    /*if (pendingResolutionChange && signalGCHookSuccess && RecordingService.IsRecording) {
-                        Logger.WriteLine("Restarting recording due to resolution change");
-                        pendingResolutionChange = false;
-                        //RestartRecording();
-                    }*/
                 }
                 catch (Exception e) {
                     // something went wrong, most likely an issue with our sprintf implementation?
