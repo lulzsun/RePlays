@@ -23,6 +23,8 @@ namespace RePlays.Services {
         private static bool IsRestarting { get; set; }
         public static bool GameInFocus { get; set; }
 
+        public static bool RestartPending { get; set; } = false;
+
         const int retryInterval = 2000; // 2 second
         const int maxRetryAttempts = 20; // 30 retries
 
@@ -144,6 +146,10 @@ namespace RePlays.Services {
                 if (SettingsService.Settings.captureSettings.useRecordingStartSound) {
                     Functions.PlaySound(Functions.GetResourcesFolder() + "start_recording.wav");
                 }
+                if (RestartPending) {
+                    RestartPending = false;
+                    RestartRecording();
+                }
             }
             if (!result) {
                 // recorder failed to start properly so lets restart the currentSession Pid
@@ -159,6 +165,7 @@ namespace RePlays.Services {
         }
 
         public static async void StopRecording(bool user = false) {
+            RestartPending = false;
             if (!IsRecording) {
                 Logger.WriteLine($"Cannot stop recording, no recording in progress");
                 return;
@@ -193,6 +200,7 @@ namespace RePlays.Services {
                 return;
             }
             IsRestarting = true;
+            RestartPending = false;
 
             bool stopResultError = await ActiveRecorder.StopRecording();
             bool newSession = SetSessionDetails();
