@@ -1,6 +1,6 @@
 @echo off
 
-set "OBS_STUDIO_VERSION=30.1.1"
+set "OBS_STUDIO_VERSION=32.0.2"
 
 set "BASE_DIR=%CD%"
 set "OBS_STUDIO_BUILD_DIR=%BASE_DIR%\obs-studio-build"
@@ -16,10 +16,10 @@ if not exist "%OBS_STUDIO_DIR%" (
 )
 :: download the official release of obs studio (to copy signed win-capture)
 if not exist "%OBS_STUDIO_RELEASE_DIR%" (
-	if not exist "OBS-Studio-%OBS_STUDIO_VERSION%.zip" (
-		curl -kLO "https://github.com/obsproject/obs-studio/releases/download/%OBS_STUDIO_VERSION%/OBS-Studio-%OBS_STUDIO_VERSION%.zip" -f --retry 5 -C -
+	if not exist "OBS-Studio-%OBS_STUDIO_VERSION%-Windows-x64.zip" (
+		curl -kLO "https://github.com/obsproject/obs-studio/releases/download/%OBS_STUDIO_VERSION%/OBS-Studio-%OBS_STUDIO_VERSION%-Windows-x64.zip" -f --retry 5 -C -
 	)
-	7z x "OBS-Studio-%OBS_STUDIO_VERSION%.zip" -o"%OBS_STUDIO_RELEASE_DIR%"
+	7z x "OBS-Studio-%OBS_STUDIO_VERSION%-Windows-x64.zip" -o"%OBS_STUDIO_RELEASE_DIR%"
 )
 
 :: clean build folder if it exists from previous attempt
@@ -35,7 +35,7 @@ cmake -S . -B "%OBS_INSTALL_PREFIX%" --preset windows-x64 ^
 	-DENABLE_VST:BOOL=OFF ^
 	-DENABLE_SCRIPTING:BOOL=OFF ^
 	-DCOPIED_DEPENDENCIES:BOOL=OFF ^
-    -DCOPY_DEPENDENCIES:BOOL=ON ^
+	-DCOPY_DEPENDENCIES:BOOL=ON ^
 	-DBUILD_FOR_DISTRIBUTION:BOOL=ON
 
 cmake --build "%OBS_INSTALL_PREFIX%" --config Release
