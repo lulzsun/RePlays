@@ -72,7 +72,7 @@ jobs:
 
   build:
     needs: prep
-    runs-on: windows-latest
+    runs-on: windows-2022
     name: Build RePlays
 
     permissions:
