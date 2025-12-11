@@ -1,6 +1,6 @@
 @echo off
 
-set "OBS_STUDIO_VERSION=30.1.1"
+set "OBS_STUDIO_VERSION=32.0.2"
 
 set "BASE_DIR=%CD%"
 set "OBS_STUDIO_BUILD_DIR=%BASE_DIR%\obs-studio-build"
@@ -16,10 +16,10 @@ if not exist "%OBS_STUDIO_DIR%" (
 )
 :: download the official release of obs studio (to copy signed win-capture)
 if not exist "%OBS_STUDIO_RELEASE_DIR%" (
-	if not exist "OBS-Studio-%OBS_STUDIO_VERSION%.zip" (
-		curl -kLO "https://github.com/obsproject/obs-studio/releases/download/%OBS_STUDIO_VERSION%/OBS-Studio-%OBS_STUDIO_VERSION%.zip" -f --retry 5 -C -
+	if not exist "OBS-Studio-%OBS_STUDIO_VERSION%-Windows-x64.zip" (
+		curl -kLO "https://github.com/obsproject/obs-studio/releases/download/%OBS_STUDIO_VERSION%/OBS-Studio-%OBS_STUDIO_VERSION%-Windows-x64.zip" -f --retry 5 -C -
 	)
-	7z x "OBS-Studio-%OBS_STUDIO_VERSION%.zip" -o"%OBS_STUDIO_RELEASE_DIR%"
+	7z x "OBS-Studio-%OBS_STUDIO_VERSION%-Windows-x64.zip" -o"%OBS_STUDIO_RELEASE_DIR%"
 )
 
 :: clean build folder if it exists from previous attempt
@@ -31,11 +31,12 @@ cd "%OBS_STUDIO_DIR%"
 cmake -S . -B "%OBS_INSTALL_PREFIX%" --preset windows-x64 ^
 	-DENABLE_BROWSER:BOOL=OFF ^
 	-DENABLE_VLC:BOOL=OFF ^
+	-DENABLE_FRONTEND:BOOL=OFF ^
 	-DENABLE_UI:BOOL=OFF ^
 	-DENABLE_VST:BOOL=OFF ^
 	-DENABLE_SCRIPTING:BOOL=OFF ^
 	-DCOPIED_DEPENDENCIES:BOOL=OFF ^
-    -DCOPY_DEPENDENCIES:BOOL=ON ^
+	-DCOPY_DEPENDENCIES:BOOL=ON ^
 	-DBUILD_FOR_DISTRIBUTION:BOOL=ON
 
 cmake --build "%OBS_INSTALL_PREFIX%" --config Release
@@ -76,6 +77,8 @@ robocopy "%OBS_INSTALL_PREFIX%\rundir\Release\obs-plugins " "%OBS_INSTALL_PREFIX
 robocopy "%OBS_INSTALL_PREFIX%\rundir\Release\data " "%OBS_INSTALL_PREFIX%\rundir\Release\bin\64bit\data\ " /E /IS /IT /R:0 /W:0 /XF *.ini *.pdb || IF %ERRORLEVEL% GEQ 8 goto:copy_error
 :: copy win-capture from official release to our build (because we need signed files for better compatibility)
 robocopy "%OBS_STUDIO_RELEASE_DIR%\data\obs-plugins\win-capture " "%OBS_INSTALL_PREFIX%\rundir\Release\bin\64bit\data\obs-plugins\win-capture\ " /E /IS /IT /R:0 /W:0 /XF *.ini *.pdb || IF %ERRORLEVEL% GEQ 8 goto:copy_error
+:: (HOTFIX, remove this later when we figure out issue #287) copy encoder test executables
+robocopy "%OBS_STUDIO_RELEASE_DIR%\bin\64bit " "%OBS_INSTALL_PREFIX%\rundir\Release\bin\64bit\ " "obs-*-test.exe" "obs-ffmpeg-mux.exe" /IS /IT /R:0 /W:0 || IF %ERRORLEVEL% GEQ 8 goto:copy_error
 
 echo "OBS build completed successfully"
 exit /b 0

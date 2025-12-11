@@ -259,10 +259,25 @@ namespace RePlays.Services {
                     if (!isWhitelistedClass && !isUserWhitelisted) return false;
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
-                //Set game title to executable. Better than Game Unknown
+                // Set game title to executable. Better than Game Unknown
                 if (gameDetection.gameTitle == "Game Unknown" && !string.IsNullOrWhiteSpace(fileName)) {
                     gameTitle = fileName;
                     Logger.WriteLine($"Game title set to executable name: {gameTitle}");
+                }
+                // If game title is still unknown, that means filename could not be retrieved.
+                // The issue is mostly due to anti-cheat not allowing us to retrieve the filename.
+                // We can try to get the name of the game window title as another fallback, but
+                // it could prove not 100% reliable if the anticheat also blocks access to window handle.
+                // ...
+                // A future approach (for Steam games) could be to access the registry key:
+                //      HKEY_CURRENT_USER\SOFTWARE\Valve\Steam
+                // and read the 'RunningAppID', then do a lookup for a name.
+                if (gameDetection.gameTitle == "Game Unknown") {
+                    string windowTitle = WindowService.GetWindowTitle(windowHandle).Trim();
+                    if (!string.IsNullOrWhiteSpace(windowTitle)) {
+                        gameTitle = windowTitle;
+                        Logger.WriteLine($"Game title set to window title: {gameTitle}");
+                    }
                 }
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, gameDetection.forceDisplayCapture);

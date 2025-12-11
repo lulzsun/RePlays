@@ -34,8 +34,13 @@ jobs:
         run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
 
       - name: "if not, do not build"
-        if: ${{ steps.check_commit.outputs.should_run == 'false' }}
-        run: exit 1
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "This workflow was triggered manually! Forcing a build."
+          elif [[ "${{ steps.check_commit.outputs.should_run }}" == "false" ]]; then
+            exit 1
+          fi
+          exit 0
 
       - name: "Check if nightly exists"
         id: nightly
@@ -67,7 +72,7 @@ jobs:
 
   build:
     needs: prep
-    runs-on: windows-latest
+    runs-on: windows-2022
     name: Build RePlays
 
     permissions:
@@ -108,7 +113,7 @@ jobs:
       - name: Build RePlays
         env:
           CI: false
-        run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile
+        run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile -v d
 
       - name: Append version to setup file
         run: ren ./bin/Deployment/Releases/RePlaysSetup.exe RePlaysSetup-${{needs.prep.outputs.version}}.exe

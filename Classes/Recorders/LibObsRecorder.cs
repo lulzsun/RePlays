@@ -151,6 +151,31 @@ namespace RePlays.Recorders {
                         Logger.WriteLine("Successful game capture hook!");
                         signalGCHookSuccess = true;
                     }
+                    // handle resolution changes on D3D
+                    else if (formattedMsg.StartsWith("[game-capture: 'gameplay'] DXGI_SWAP_CHAIN_DESC:")) {
+                        string[] lines = formattedMsg.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        int width = 0, height = 0;
+                        foreach (var line in lines) {
+                            if (line.Trim().StartsWith("BufferDesc.Width:")) {
+                                int.TryParse(line.Split(':')[1].Trim(), out width);
+                            }
+                            else if (line.Trim().StartsWith("BufferDesc.Height:")) {
+                                int.TryParse(line.Split(':')[1].Trim(), out height);
+                            }
+                        }
+
+                        if (width > 1 && height > 1) {
+                            Rect currentSize = new Rect(0, 0, width, height);
+                            if ((IsValidAspectRatio(currentSize.GetWidth(), currentSize.GetHeight())) ||
+                                DetectionService.UserWhitelisted) { // if it is (assumed) valid game aspect ratio or user whitelisted for recording
+                                if (currentSize.GetWidth() != windowSize.GetWidth() || currentSize.GetHeight() != windowSize.GetHeight()) {
+                                    Logger.WriteLine($"Detected resolution change to {width}x{height}. Queueing recording restart...");
+                                    RecordingService.RestartPending = true;
+                                }
+                                else RecordingService.RestartPending = false;
+                            }
+                        }
+                    }
                     else if (formattedMsg == "[game-capture: 'gameplay'] capture stopped") {
                         signalGCHookSuccess = false;
                     }

@@ -622,7 +622,14 @@ namespace RePlays.Utils {
             });
             process.ErrorDataReceived += new DataReceivedEventHandler((s, e) => {
                 if (e.Data != null && e.Data.Contains("frame=") && e.Data.Contains("speed=") && !e.Data.Contains("Lsize=")) {
-                    WebInterface.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(TimeSpan.Parse(e.Data.Trim().Substring(48, 11)).TotalSeconds) + progress, totalRenderTime);
+                    var match = Regex.Match(e.Data, @"time=(\d{2}:\d{2}:\d{2}(?:\.\d+)?)");
+                    if (!match.Success) {
+                        return;
+                    }
+                    string timeString = match.Groups[1].Value;
+                    if (TimeSpan.TryParse(timeString, out TimeSpan parsedTime)) {
+                        WebMessage.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(parsedTime.TotalSeconds) + progress, totalRenderTime);
+                    }
                 }
                 Logger.WriteLine("E: " + e.Data);
             });
