@@ -628,7 +628,7 @@ namespace RePlays.Utils {
                     }
                     string timeString = match.Groups[1].Value;
                     if (TimeSpan.TryParse(timeString, out TimeSpan parsedTime)) {
-                        WebMessage.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(parsedTime.TotalSeconds) + progress, totalRenderTime);
+                        WebInterface.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(parsedTime.TotalSeconds) + progress, totalRenderTime);
                     }
                 }
                 Logger.WriteLine("E: " + e.Data);
