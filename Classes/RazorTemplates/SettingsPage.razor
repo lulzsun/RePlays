@@ -58,7 +58,7 @@
                 @{foreach (var page in pageComponents.Keys) {
                     var isActive = page == pageComponents.Keys.First();
                     <input id="@($"sett-{page.ToLower()}-nav")" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked="@isActive" disabled />
-                    <div id="@($"sett-{page.ToLower()}-page")" role="tabpanel" class="tab-content flex-1 overflow-y-auto">
+                    <div id="@($"sett-{page.ToLower()}-page")" role="tabpanel" class="tab-content flex-1 overflow-y-auto p-2">
                         @pageComponents[page]
                     </div>
                 }}

@@ -60,10 +60,9 @@ const init = function (video) {
   document.addEventListener('mousedown', handleOnMouseDown);
   //document.addEventListener('mousemove', handleOnMouseMove);
   //document.addEventListener('mouseup', handleOnMouseUp);
-  //document.addEventListener('wheel', handleWheelScroll);
+  document.addEventListener('wheel', handleWheelScroll);
 
-  seekWindowElement.previousElementSibling.style.width = `calc(${ZOOMS[currentZoom]}% - 12px`;
-  seekWindowElement.style.width = `calc(${ZOOMS[currentZoom]}% - 12px`;
+  handleWheelScroll();
 }
 
 const cleanUp = function () {
@@ -71,11 +70,12 @@ const cleanUp = function () {
   document.removeEventListener('mousedown', handleOnMouseDown);
   //document.removeEventListener('mousemove', handleOnMouseMove);
   //document.removeEventListener('mouseup', handleOnMouseUp);
-  //document.removeEventListener('wheel', handleWheelScroll);
+  document.removeEventListener('wheel', handleWheelScroll);
 
   videoElement.currentTime = 0;
 
   videoMetadata = {};
+  currentZoom = 0;
 }
 
 const handleVideoPlaying = function () {
@@ -123,6 +123,18 @@ const handleOnMouseDown = function (e) {
       }
     }
   }
+}
+
+const handleWheelScroll = function (e) {
+  if (e !== undefined) {
+    if (e.deltaY < 0) {
+      if (currentZoom + 1 < ZOOMS.length) currentZoom += 1;
+    } else if (e.deltaY > 0) {
+      if (currentZoom - 1 > -1) currentZoom -= 1;
+    }
+  }
+  seekWindowElement.previousElementSibling.style.width = `calc(${ZOOMS[currentZoom]}% - 12px`;
+  seekWindowElement.style.width = `calc(${ZOOMS[currentZoom]}% - 12px`;
 }
 
 function handleOnMouseUp(e) {
