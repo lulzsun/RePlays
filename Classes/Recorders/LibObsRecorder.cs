@@ -207,7 +207,30 @@ namespace RePlays.Recorders {
             ResetAudio();
             ResetVideo();
 
-            obs_load_all_modules();
+            // some of these modules can prevent program startup in different environments for some odd reason
+            // because this modules have callbacks to the obs frontend which we are not using because we are headless
+            // best case is we should make changes to the libobs build script to exclude these modules
+            // but for now this is fine...
+            var blockedModules = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+                "frontend-tools",
+                "decklink-output-ui",
+                "decklink-captions",
+                "obs-websocket",
+            };
+
+            obs_find_modules((IntPtr param, ref obs_module_info info) => {
+                string binPath = Marshal.PtrToStringAnsi(info.bin_path);
+                string dataPath = Marshal.PtrToStringAnsi(info.data_path);
+                string moduleName = Path.GetFileNameWithoutExtension(binPath);
+
+                if (blockedModules.Contains(moduleName))
+                    return;
+
+                if (obs_open_module(out IntPtr module, binPath, dataPath) == 0)
+                    obs_init_module(module);
+            }, IntPtr.Zero);
+
+            //obs_load_all_modules();
             obs_log_loaded_modules();
             obs_post_load_modules();
 
