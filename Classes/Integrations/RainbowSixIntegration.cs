@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using Newtonsoft.Json;
 using RePlays.Services;
 using RePlays.Utils;
 using System;
@@ -10,6 +9,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -27,56 +28,76 @@ namespace RePlays.Integrations {
         private static readonly string R6DissectExecutable = Path.Combine(R6DissectExtractionPath, "r6-dissect.exe");
         private static readonly string MD5FilePath = Path.Combine(Functions.GetTempFolder(), "r6-dissect", "md5.txt");
 
+        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions {
+            PropertyNameCaseInsensitive = true
+        };
+
         internal class Player {
-            [JsonProperty("profileID")]
+            [JsonInclude]
+            [JsonPropertyName("profileID")]
             internal string ProfileID { get; set; }
 
-            [JsonProperty("username")]
+            [JsonInclude]
+            [JsonPropertyName("username")]
             internal string Username { get; set; }
         }
 
         internal class EventType {
-            [JsonProperty("name")]
+            [JsonInclude]
+            [JsonPropertyName("name")]
             internal string Name { get; set; }
         }
 
         internal class MatchFeedback {
-            [JsonProperty("username")]
+            [JsonInclude]
+            [JsonPropertyName("username")]
             internal string Username { get; set; }
 
-            [JsonProperty("target")]
+            [JsonInclude]
+            [JsonPropertyName("target")]
             internal string Target { get; set; }
 
-            [JsonProperty("timeInSeconds")]
+            [JsonInclude]
+            [JsonPropertyName("timeInSeconds")]
             internal int TimeInSeconds { get; set; }
 
-            [JsonProperty("type")]
+            [JsonInclude]
+            [JsonPropertyName("type")]
             internal EventType Type { get; set; }
         }
 
         internal class Round {
-            [JsonProperty("timestamp")]
+            [JsonInclude]
+            [JsonPropertyName("timestamp")]
             internal DateTime Timestamp { get; set; }
 
-            [JsonProperty("recordingProfileID")]
+            [JsonInclude]
+            [JsonPropertyName("recordingProfileID")]
             internal string RecordingProfileID { get; set; }
 
-            [JsonProperty("players")]
+            [JsonInclude]
+            [JsonPropertyName("players")]
             internal List<Player> Players { get; set; }
 
-            [JsonProperty("matchFeedback")]
+            [JsonInclude]
+            [JsonPropertyName("matchFeedback")]
             internal List<MatchFeedback> MatchFeedback { get; set; }
 
-            [JsonProperty("matchType")]
+            [JsonInclude]
+            [JsonPropertyName("matchType")]
             internal MatchType MatchType { get; set; }
         }
 
         internal class MatchType {
-            [JsonProperty("name")]
+            [JsonInclude]
+            [JsonPropertyName("name")]
             internal string Name { get; set; }
 
-            [JsonProperty("id")]
+            [JsonInclude]
+            [JsonPropertyName("id")]
             internal int Id { get; set; }
+
+            [JsonIgnore]
             internal MatchTypeEnum MatchTypeEnum {
                 get {
                     return (MatchTypeEnum)Id;
@@ -92,7 +113,8 @@ namespace RePlays.Integrations {
         }
 
         internal class ReleaseInfo {
-            [JsonProperty("tag_name")]
+            [JsonInclude]
+            [JsonPropertyName("tag_name")]
             internal string TagName { get; set; }
         }
 
@@ -239,7 +261,7 @@ namespace RePlays.Integrations {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("RePlays");
                 Logger.WriteLine("Getting r6-dissect latest release");
                 var releaseResponse = await client.GetStringAsync("https://api.github.com/repos/redraskal/r6-dissect/releases");
-                var releaseInfoList = JsonConvert.DeserializeObject<List<ReleaseInfo>>(releaseResponse);
+                var releaseInfoList = JsonSerializer.Deserialize<List<ReleaseInfo>>(releaseResponse, JsonOptions);
                 R6DissectVersion = releaseInfoList?.FirstOrDefault()?.TagName;
                 Logger.WriteLine($"r6-dissect latest release is {R6DissectVersion}");
 
@@ -325,7 +347,7 @@ namespace RePlays.Integrations {
                 try {
                     Logger.WriteLine($"Processing match file: {fileName}");
                     string jsonData = File.ReadAllText(jsonFile.Replace('\\', '/'));
-                    MatchData matchData = JsonConvert.DeserializeObject<MatchData>(jsonData);
+                    MatchData matchData = JsonSerializer.Deserialize<MatchData>(jsonData, JsonOptions);
                     allMatchData.Add(matchData);
 
                     Logger.WriteLine($"{matchData.Rounds.Count} rounds in current match");
