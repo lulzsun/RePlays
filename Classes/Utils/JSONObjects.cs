@@ -177,13 +177,13 @@ namespace RePlays.Utils {
         public int frameRate { get { return _frameRate; } set { _frameRate = value; } }
 
         private int _bitRate = 50;
-        public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
+        public int bitRate { get { return _bitRate; } set { _bitRate = Math.Max(1, value); } }
 
         private int _maxBitRate = 50;
-        public int maxBitRate { get { return _maxBitRate; } set { _maxBitRate = value; } }
+        public int maxBitRate { get { return _maxBitRate; } set { _maxBitRate = Math.Max(1, value); } }
 
         private int _cqLevel = 20;
-        public int cqLevel { get { return _cqLevel; } set { _cqLevel = value; } }
+        public int cqLevel { get { return _cqLevel; } set { _cqLevel = Math.Clamp(value, 1, 51); } }
 
         private List<AudioDevice> _inputDevicesCache = new();
         /// <summary>
@@ -223,11 +223,11 @@ namespace RePlays.Utils {
         // In seconds
 
         private uint _replayBufferDuration = 30;
-        public uint replayBufferDuration { get { return _replayBufferDuration; } set { _replayBufferDuration = value; } }
+        public uint replayBufferDuration { get { return _replayBufferDuration; } set { _replayBufferDuration = Math.Max(10u, value); } }
 
         // In MB
         private uint _replayBufferSize = 500;
-        public uint replayBufferSize { get { return _replayBufferSize; } set { _replayBufferSize = value; } }
+        public uint replayBufferSize { get { return _replayBufferSize; } set { _replayBufferSize = Math.Max(10u, value); } }
 
         private bool _captureGameAudio = false;
         public bool captureGameAudio { get { return _captureGameAudio; } set { _captureGameAudio = value; } }

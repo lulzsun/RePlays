@@ -1,35 +1,49 @@
-﻿@code {
+@code {
 	[Parameter]
 	public string id { get; set; }
-	[Parameter]
-	public string onchange { get; set; }
 	/// <summary>
 	///  If using this component for settings, this must be set as json object that references the corresponding setting.
 	///  <br/><br/>
-	///  Example: captureSettings[resolution]
+	///  Example: captureSettings[replayBufferDuration]
 	/// </summary>
 	[Parameter]
 	public string name { get; set; }
 	[Parameter]
-	public bool value { get; set; }
+	public string value { get; set; }
 	/// <summary> This label supports i18n. </summary>
 	[Parameter]
 	public string label { get; set; }
 	/// <summary> This hint supports i18n. </summary>
 	[Parameter]
 	public string hint { get; set; }
+	/// <summary> Unit displayed to the right of the field (i.e. secs, MB). This field supports i18n. </summary>
 	[Parameter]
-	public string hx_get { get; set; }
+	public string suffix { get; set; }
 	[Parameter]
-	public string hx_vals { get; set; }
+	public string type { get; set; } = "number";
 	[Parameter]
-	public RenderFragment ChildContent { get; set; }
+	public string min { get; set; }
+	[Parameter]
+	public string max { get; set; }
+	[Parameter]
+	public string hx_put { get; set; } = "/settings";
 }
 
 <label class="label cursor-pointer">
 	<span class="label-text font-semibold" hx-t="@label" hx-ext="i18n" />
 	<label class="input input-xs input-bordered flex items-center gap-2">
-		<input type="text" class="grow w-10" placeholder="" value="test" />
-		<span class="">secs</span>
+		@* an empty field would fail to deserialize server side, so restore the last known good value *@
+		<input id="@id" name="@name" type="@type" min="@min" max="@max" value="@value"
+			   class="grow w-14 focusable bg-transparent"
+			   hx-put="@hx_put" hx-trigger="change" hx-swap="none"
+			   onchange="if (this.value.trim() === '') this.value = this.defaultValue;" />
+		@if (suffix != null) {
+			<span class="text-xs" hx-t="@suffix" hx-ext="i18n" />
+		}
 	</label>
 </label>
+@if (hint != null) {
+	<label class="px-1 pb-1 -mt-4" style="z-index: -1;">
+		<span class="label-text text-xs" hx-t="@hint" hx-ext="i18n" />
+	</label>
+}

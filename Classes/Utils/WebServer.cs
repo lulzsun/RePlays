@@ -7,10 +7,12 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using RePlays.Classes.RazorTemplates;
+using RePlays.Classes.RazorTemplates.SettingsPages;
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -18,6 +20,7 @@ using System.Threading.Tasks;
 using static RePlays.Utils.WebInterface;
 using RePlays.Services;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace RePlays.Classes.Utils {
     public static class WebServer {
@@ -127,7 +130,137 @@ namespace RePlays.Classes.Utils {
                                 requestBody = await reader.ReadToEndAsync();
                             }
                             Logger.WriteLine(requestBody);
-                            SettingsService.SaveSetting(requestBody);
+                            try {
+                                SettingsService.SaveSetting(requestBody);
+                            }
+                            catch (JsonException ex) {
+                                // an out of range or non numeric field should not take down the request pipeline
+                                Logger.WriteLine($"Could not save setting '{requestBody}': {ex.Message}");
+                                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                                await context.Response.WriteAsync("Invalid setting");
+                                return;
+                            }
+
+                            context.Response.StatusCode = StatusCodes.Status200OK;
+                            await context.Response.WriteAsync("Ok");
+                        });
+
+                        // Renders the capture settings tab as an out-of-band swap. Settings that change
+                        // which controls are visible (or what their options are) respond with this so the
+                        // markup never drifts from the model.
+                        async Task RenderCapturePage(HttpContext context) {
+                            var html = HtmlRendererFactory.RenderHtmlAsync<CapturePage>().Result;
+                            context.Response.ContentType = "text/html";
+                            await context.Response.WriteAsync($"<div hx-swap-oob=\"innerHTML:#sett-capture-page\">{html}</div>");
+                        }
+
+                        static async Task<JsonObject> ReadJsonBody(HttpContext context) {
+                            using StreamReader reader = new(context.Request.Body, Encoding.UTF8);
+                            var body = await reader.ReadToEndAsync();
+                            if (string.IsNullOrWhiteSpace(body)) return [];
+                            return JsonNode.Parse(body)?.AsObject() ?? [];
+                        }
+
+                        routes.MapGet("settings/capture", RenderCapturePage);
+
+                        // Video quality presets set several fields at once
+                        routes.MapPut("settings/capture/preset", async context => {
+                            var captureSettings = SettingsService.Settings.captureSettings;
+                            var preset = (await ReadJsonBody(context))["preset"]?.ToString();
+                            switch (preset) {
+                                case "low":
+                                    (captureSettings.resolution, captureSettings.frameRate, captureSettings.bitRate) = (480, 15, 5);
+                                    break;
+                                case "medium":
+                                    (captureSettings.resolution, captureSettings.frameRate, captureSettings.bitRate) = (720, 30, 25);
+                                    break;
+                                case "high":
+                                    (captureSettings.resolution, captureSettings.frameRate, captureSettings.bitRate) = (1080, 60, 35);
+                                    break;
+                                case "ultra":
+                                    captureSettings.resolution = captureSettings.maxScreenResolution >= 1440 ? 1440 : 1080;
+                                    (captureSettings.frameRate, captureSettings.bitRate) = (60, 50);
+                                    break;
+                                default:
+                                    Logger.WriteLine($"Ignoring unknown video quality preset '{preset}'");
+                                    await RenderCapturePage(context);
+                                    return;
+                            }
+                            SettingsService.SaveSettings();
+                            await RenderCapturePage(context);
+                        });
+
+                        // FileFormat is immutable, so it is picked out of the cache rather than merged field by field
+                        routes.MapPut("settings/capture/fileformat", async context => {
+                            var captureSettings = SettingsService.Settings.captureSettings;
+                            var format = (await ReadJsonBody(context))["format"]?.ToString();
+                            var fileFormat = captureSettings.fileFormatsCache.Find(f => f.format == format);
+                            if (fileFormat == null) {
+                                Logger.WriteLine($"Ignoring unknown file format '{format}'");
+                            }
+                            else {
+                                captureSettings.fileFormat = fileFormat;
+                                SettingsService.SaveSettings();
+                            }
+                            await RenderCapturePage(context);
+                        });
+
+                        // Audio devices are a list, which the settings json merge cannot patch in place,
+                        // so each mutation gets its own route
+                        static List<AudioDevice> GetAudioDeviceList(HttpContext context, bool cached = false) {
+                            var captureSettings = SettingsService.Settings.captureSettings;
+                            var isInput = context.Request.Query["isInput"].ToString() == "true";
+                            if (cached) return isInput ? captureSettings.inputDevicesCache : captureSettings.outputDevicesCache;
+                            return isInput ? captureSettings.inputDevices : captureSettings.outputDevices;
+                        }
+
+                        routes.MapPost("settings/capture/audiodevice", async context => {
+                            var captureSettings = SettingsService.Settings.captureSettings;
+                            // encoded as "input:<deviceId>" or "output:<deviceId>" by the dropdown
+                            var device = (await ReadJsonBody(context))["device"]?.ToString() ?? "";
+                            var isInput = device.StartsWith("input:");
+                            var deviceId = device[(device.IndexOf(':') + 1)..];
+                            var cache = isInput ? captureSettings.inputDevicesCache : captureSettings.outputDevicesCache;
+                            var devices = isInput ? captureSettings.inputDevices : captureSettings.outputDevices;
+                            var cached = cache.Find(d => d.deviceId == deviceId);
+
+                            if (cached == null || devices.Exists(d => d.deviceId == deviceId)) {
+                                Logger.WriteLine($"Ignoring add of unknown or duplicate audio device '{device}'");
+                            }
+                            else {
+                                devices.Add(new AudioDevice(cached.deviceId, cached.deviceLabel, isInput));
+                                SettingsService.SaveSettings();
+                            }
+                            await RenderCapturePage(context);
+                        });
+
+                        routes.MapDelete("settings/capture/audiodevice", async context => {
+                            var deviceId = context.Request.Query["deviceId"].ToString();
+                            if (GetAudioDeviceList(context).RemoveAll(d => d.deviceId == deviceId) > 0) {
+                                SettingsService.SaveSettings();
+                            }
+                            await RenderCapturePage(context);
+                        });
+
+                        // Volume/denoiser do not change the shape of the page, so they respond with nothing
+                        // to avoid yanking the slider out from under the user mid-drag
+                        routes.MapPut("settings/capture/audiodevice", async context => {
+                            var deviceId = context.Request.Query["deviceId"].ToString();
+                            var device = GetAudioDeviceList(context).Find(d => d.deviceId == deviceId);
+                            var body = await ReadJsonBody(context);
+
+                            if (device == null) {
+                                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                                await context.Response.WriteAsync("Unknown audio device");
+                                return;
+                            }
+                            if (int.TryParse(body["volume"]?.ToString(), out var volume)) {
+                                device.deviceVolume = Math.Clamp(volume, 0, 100);
+                            }
+                            if (bool.TryParse(body["denoiser"]?.ToString(), out var denoiser)) {
+                                device.denoiser = denoiser;
+                            }
+                            SettingsService.SaveSettings();
 
                             context.Response.StatusCode = StatusCodes.Status200OK;
                             await context.Response.WriteAsync("Ok");

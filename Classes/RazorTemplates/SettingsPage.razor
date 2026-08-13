@@ -55,6 +55,10 @@
         </nav>
         <div class="flex-1 overflow-y-auto">
             <div id="settings-form" class="flex flex-col h-full px-5" hx-ext='json-enc-custom'>
+                @* Capture has conditional sections, so re-render it server side whenever a setting is saved.
+                   Lives outside #sett-capture-page so the swap does not tear down its own trigger. *@
+                <div id="sett-capture-refresh" hx-get="/settings/capture" hx-swap="none"
+                     hx-trigger="htmx:afterRequest[shouldRefreshSettingsTab(event)] from:#sett-capture-page" />
                 @{foreach (var page in pageComponents.Keys) {
                     var isActive = page == pageComponents.Keys.First();
                     <input id="@($"sett-{page.ToLower()}-nav")" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked="@isActive" disabled />

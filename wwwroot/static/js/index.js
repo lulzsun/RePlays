@@ -47,6 +47,15 @@ window.addEventListener('load', async function () {
   });
 });
 
+// Settings tabs with conditional sections are re-rendered by the server after a save, so that
+// the markup always matches the model. Only the generic 'PUT /settings' needs this; the dedicated
+// settings routes already respond with the re-rendered tab.
+function shouldRefreshSettingsTab(event) {
+  const config = event.detail && event.detail.requestConfig;
+  if (config === undefined || event.detail.successful !== true) return false;
+  return config.verb === 'put' && config.path === '/settings';
+}
+
 const handlePopState = function (e) {
   let url = window.location.pathname;
   if (e !== undefined && e.state !== undefined) url = e.state;

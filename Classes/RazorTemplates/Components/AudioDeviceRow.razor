@@ -1,0 +1,44 @@
+@using RePlays.Utils;
+
+@code {
+	[Parameter]
+	public AudioDevice device { get; set; }
+	/// <summary> The last remaining default device cannot be removed. </summary>
+	[Parameter]
+	public bool removable { get; set; } = true;
+	[Parameter]
+	public bool hasNvidiaAudioSDK { get; set; }
+}
+
+@{
+	// deviceId/isInput identify the row, the changed field is sent as the request body
+	var route = $"/settings/capture/audiodevice?deviceId={Uri.EscapeDataString(device.deviceId)}&isInput={device.isInput.ToString().ToLower()}";
+}
+
+<div class="flex items-center gap-3 px-1 py-1">
+	<span class="label-text w-48 shrink-0 truncate" title="@device.deviceLabel">@device.deviceLabel</span>
+	<input type="range" name="volume" min="0" max="100" step="1" value="@device.deviceVolume"
+		   class="range range-xs focusable flex-1"
+		   hx-put="@route" hx-trigger="change" hx-swap="none"
+		   oninput="this.nextElementSibling.innerText = this.value + '%';" />
+	<span class="label-text w-10 shrink-0 text-right">@(device.deviceVolume)%</span>
+	@if (device.isInput && hasNvidiaAudioSDK) {
+		<label class="label cursor-pointer gap-2 shrink-0">
+			<span class="label-text text-xs" hx-t="settings.capture.audio.denoiser" hx-ext="i18n" />
+			<input type="hidden" role="checkbox" name="denoiser" value="@device.denoiser.ToString().ToLower()"
+				   hx-put="@route" hx-trigger="change" hx-swap="none" />
+			@if (device.denoiser) {
+				<input type="checkbox" class="checkbox checkbox-xs focusable" checked
+					   onchange="const el = this.previousElementSibling;el.value = this.checked;htmx.trigger(el,'change');" />
+			}
+			else {
+				<input type="checkbox" class="checkbox checkbox-xs focusable"
+					   onchange="const el = this.previousElementSibling;el.value = this.checked;htmx.trigger(el,'change');" />
+			}
+		</label>
+	}
+	@if (removable) {
+		<button class="btn btn-xs btn-ghost shrink-0 focusable" hx-delete="@route" hx-swap="none"
+				hx-t="settings.capture.audio.remove" hx-ext="i18n" />
+	}
+</div>
