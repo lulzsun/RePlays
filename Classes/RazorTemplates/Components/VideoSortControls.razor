@@ -19,9 +19,10 @@
 
 <div id="@(type + "SortControls")" class="flex justify-between px-4">
 	<div class="flex gap-4">
-		<Dropdown id="@(type + "-game")" hx_get="/videos" hx_vals="@hx_vals" value="@game" text="@game"
+		@* these sit against the left edge of the page, so an end-aligned menu would open under the sidebar *@
+		<Dropdown id="@(type + "-game")" align="start" hx_get="/videos" hx_vals="@hx_vals" value="@game" text="@game"
 				  items="@(new[] { "All Games" }.Concat(games).Select(g => DropdownItem.Literal(g, g)).ToList())" />
-		<Dropdown id="@(type + "-sortBy")" hx_get="/videos" hx_vals="@hx_vals" value="@sortBy" text="@sortBy"
+		<Dropdown id="@(type + "-sortBy")" align="start" hx_get="/videos" hx_vals="@hx_vals" value="@sortBy" text="@sortBy"
 				  items="@(new List<DropdownItem> {
 					  DropdownItem.Literal("Latest", "Latest"),
 					  DropdownItem.Literal("Oldest", "Oldest"),

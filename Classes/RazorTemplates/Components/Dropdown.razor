@@ -25,6 +25,9 @@
 	/// <summary> The selectable entries. Build them with DropdownItem.Literal / DropdownItem.Translated. </summary>
 	[Parameter]
 	public List<DropdownItem> items { get; set; } = new();
+	/// <summary> Which edge of the button the menu lines up with: "end" (default) or "start". </summary>
+	[Parameter]
+	public string align { get; set; } = "end";
 	[Parameter]
 	public string hx_get { get; set; }
 	[Parameter]
@@ -50,7 +53,7 @@
 	   is for clicking away, which native <details> does not treat as a dismissal. The check is
 	   deferred because spatial navigation blurs before it focuses, and that intermediate state
 	   (relatedTarget null, activeElement body) is not the user leaving the dropdown. *@
-	<details class="dropdown dropdown-end dropdown-bottom"
+	<details class="dropdown @(align == "start" ? "" : "dropdown-end") dropdown-bottom"
 			 onfocusout="setTimeout(() => { if (!this.contains(document.activeElement)) this.open = false; });">
 		@* The select is the value store and the htmx sender in both modes. Below lg it is also the
 		   visible control: it covers the summary so a tap opens the platform's own picker, which is
@@ -68,7 +71,9 @@
 		</summary>
 		@* lg and up: a daisyUI menu, so the list can be anchored to the button (dropdown-end) and sized
 		   to its widest entry (w-max) instead of inheriting the native popup's geometry. *@
-		<ul class="dropdown-content menu flex-nowrap hidden lg:flex z-[1] w-max mt-1 p-2 shadow bg-base-200 rounded-box">
+			@* A list as long as the game filter's would otherwise run off the window, so it scrolls;
+		   the entries keep their own height rather than being squashed to fit. *@
+		<ul class="dropdown-content menu flex-nowrap [&>li]:shrink-0 hidden lg:flex z-[1] w-max max-h-[60vh] overflow-y-auto mt-1 p-2 shadow bg-base-200 rounded-box">
 			@foreach (var group in groups) {
 				@if (group.Key != null) {
 					<li class="menu-title">@group.Key</li>
