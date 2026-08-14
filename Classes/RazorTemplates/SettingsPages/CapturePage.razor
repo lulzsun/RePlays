@@ -15,6 +15,7 @@
 	var ultraResolution = settings.maxScreenResolution >= 1440 ? 1440 : 1080;
 	var resolutions = new List<int> { 480, 720, 1080 };
 	if (settings.maxScreenResolution >= 1440) resolutions.Add(1440);
+	var frameRates = new List<int> { 15, 30, 60, 120, 144 };
 
 	// the preset is derived from the individual values rather than stored, so hand edits stay honest
 	var preset =
@@ -50,12 +51,13 @@
 
 <div class="flex flex-col h-full">
 	@* Capture Mode *@
-	<Dropdown name="captureSettings[recordingMode]" label="settings.capture.captureMode" value="@settings.recordingMode" text="@selectedCaptureModeText">
-		<option value="automatic" hx-t="settings.capture.captureMode.automatic" hx-ext="i18n" />
-		<option value="whitelist" hx-t="settings.capture.captureMode.whitelist" hx-ext="i18n" />
-		<option value="manual" hx-t="settings.capture.captureMode.manual" hx-ext="i18n" />
-		<option value="none" hx-t="settings.capture.captureMode.disable" hx-ext="i18n" />
-	</Dropdown>
+	<Dropdown name="captureSettings[recordingMode]" label="settings.capture.captureMode" value="@settings.recordingMode" text="@selectedCaptureModeText"
+			  items="@(new List<DropdownItem> {
+				  DropdownItem.Translated("automatic", "settings.capture.captureMode.automatic"),
+				  DropdownItem.Translated("whitelist", "settings.capture.captureMode.whitelist"),
+				  DropdownItem.Translated("manual", "settings.capture.captureMode.manual"),
+				  DropdownItem.Translated("none", "settings.capture.captureMode.disable")
+			  })" />
 
 	@* Replay Buffer *@
 	<Toggle name="captureSettings[useReplayBuffer]" label="settings.capture.replayBuffer" hint="settings.capture.replayBuffer.hint" value="@settings.useReplayBuffer" />
@@ -70,39 +72,26 @@
 
 	@* Video Quality *@
 	<h2 class="label-text font-bold pt-4 pb-1" hx-t="settings.capture.video" hx-ext="i18n" />
-	<Dropdown name="preset" hx_put="/settings/capture/preset" label="settings.capture.video.preset" value="@preset" text="@selectedVideoPreset">
-		<option value="low" hx-t="settings.capture.video.preset.low" hx-ext="i18n" />
-		<option value="medium" hx-t="settings.capture.video.preset.medium" hx-ext="i18n" />
-		<option value="high" hx-t="settings.capture.video.preset.high" hx-ext="i18n" />
-		<option value="ultra" hx-t="settings.capture.video.preset.ultra" hx-ext="i18n" />
-	</Dropdown>
+	<Dropdown name="preset" hx_put="/settings/capture/preset" label="settings.capture.video.preset" value="@preset" text="@selectedVideoPreset"
+			  items="@(new List<DropdownItem> {
+				  DropdownItem.Translated("low", "settings.capture.video.preset.low"),
+				  DropdownItem.Translated("medium", "settings.capture.video.preset.medium"),
+				  DropdownItem.Translated("high", "settings.capture.video.preset.high"),
+				  DropdownItem.Translated("ultra", "settings.capture.video.preset.ultra")
+			  })" />
 	<div class="ml-8">
 		@* Resolution *@
-		<Dropdown name="captureSettings[resolution]" label="settings.capture.video.resolution" value="@settings.resolution.ToString()" text="@(settings.resolution + "p")">
-			@foreach (var resolution in resolutions) {
-				<option value="@resolution">@(resolution + "p")</option>
-			}
-		</Dropdown>
+		<Dropdown name="captureSettings[resolution]" label="settings.capture.video.resolution" value="@settings.resolution.ToString()" text="@(settings.resolution + "p")"
+				  items="@(resolutions.Select(r => DropdownItem.Literal(r.ToString(), r + "p")).ToList())" />
 		@* Framerate *@
-		<Dropdown name="captureSettings[frameRate]" label="settings.capture.video.framerate" value="@settings.frameRate.ToString()" text="@(settings.frameRate + " fps")">
-			<option value="15">15 fps</option>
-			<option value="30">30 fps</option>
-			<option value="60">60 fps</option>
-			<option value="120">120 fps</option>
-			<option value="144">144 fps</option>
-		</Dropdown>
+		<Dropdown name="captureSettings[frameRate]" label="settings.capture.video.framerate" value="@settings.frameRate.ToString()" text="@(settings.frameRate + " fps")"
+				  items="@(frameRates.Select(f => DropdownItem.Literal(f.ToString(), f + " fps")).ToList())" />
 		@* Encoder *@
-		<Dropdown name="captureSettings[encoder]" label="settings.capture.video.encoder" value="@settings.encoder" text="@settings.encoder">
-			@foreach (var encoder in settings.encodersCache) {
-				<option value="@encoder">@encoder</option>
-			}
-		</Dropdown>
+		<Dropdown name="captureSettings[encoder]" label="settings.capture.video.encoder" value="@settings.encoder" text="@settings.encoder"
+				  items="@(settings.encodersCache.Select(e => DropdownItem.Literal(e, e)).ToList())" />
 		@* Rate control *@
-		<Dropdown name="captureSettings[rateControl]" label="settings.capture.video.rate" value="@settings.rateControl" text="@settings.rateControl">
-			@foreach (var rateControl in settings.rateControlCache) {
-				<option value="@rateControl">@rateControl</option>
-			}
-		</Dropdown>
+		<Dropdown name="captureSettings[rateControl]" label="settings.capture.video.rate" value="@settings.rateControl" text="@settings.rateControl"
+				  items="@(settings.rateControlCache.Select(r => DropdownItem.Literal(r, r)).ToList())" />
 		@if (showBitRate) {
 			<Input name="captureSettings[bitRate]" label="settings.capture.video.bitrate"
 				   value="@settings.bitRate.ToString()" min="1" suffix="settings.capture.unit.bitrate" />
@@ -116,11 +105,8 @@
 				   value="@settings.cqLevel.ToString()" min="1" max="51" suffix="settings.capture.unit.cqp" />
 		}
 		@* File format *@
-		<Dropdown name="format" hx_put="/settings/capture/fileformat" label="settings.capture.video.format" value="@settings.fileFormat.format" text="@settings.fileFormat.title">
-			@foreach (var fileFormat in fileFormats) {
-				<option value="@fileFormat.format">@fileFormat.title</option>
-			}
-		</Dropdown>
+		<Dropdown name="format" hx_put="/settings/capture/fileformat" label="settings.capture.video.format" value="@settings.fileFormat.format" text="@settings.fileFormat.title"
+				  items="@(fileFormats.Select(f => DropdownItem.Literal(f.format, f.title)).ToList())" />
 		@if (!isRecoverable) {
 			<div role="alert" class="alert alert-info my-2">
 				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,22 +140,10 @@
 								hasNvidiaAudioSDK="@settings.hasNvidiaAudioSDK" />
 			}
 			@if (unusedOutputs.Count > 0 || unusedInputs.Count > 0) {
-				<Dropdown name="device" hx_post="/settings/capture/audiodevice" label="settings.capture.audio.add" value="" text="settings.capture.audio.add.select">
-					@if (unusedOutputs.Count > 0) {
-						<optgroup label="Output">
-							@foreach (var device in unusedOutputs) {
-								<option value="@("output:" + device.deviceId)">@device.deviceLabel</option>
-							}
-						</optgroup>
-					}
-					@if (unusedInputs.Count > 0) {
-						<optgroup label="Input">
-							@foreach (var device in unusedInputs) {
-								<option value="@("input:" + device.deviceId)">@device.deviceLabel</option>
-							}
-						</optgroup>
-					}
-				</Dropdown>
+				<Dropdown name="device" hx_post="/settings/capture/audiodevice" label="settings.capture.audio.add" value="" text="settings.capture.audio.add.select"
+						  items="@(unusedOutputs.Select(d => DropdownItem.Literal("output:" + d.deviceId, d.deviceLabel, "Output"))
+								   .Concat(unusedInputs.Select(d => DropdownItem.Literal("input:" + d.deviceId, d.deviceLabel, "Input")))
+								   .ToList())" />
 			}
 		</div>
 	}

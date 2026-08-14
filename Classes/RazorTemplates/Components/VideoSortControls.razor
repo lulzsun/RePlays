@@ -1,3 +1,5 @@
+@using System.Linq;
+
 @code {
 	[Parameter]
 	public string type { get; set; }
@@ -17,19 +19,15 @@
 
 <div id="@(type + "SortControls")" class="flex justify-between px-4">
 	<div class="flex gap-4">
-		<Dropdown id="@(type + "-game")" hx_get="/videos" hx_vals="@hx_vals" value="@game" text="@game">
-			<option value="All Games">All Games</option>
-			@foreach (var game in games) {
-				<option value="@game">@game</option>
-			}
-		</Dropdown>
-		<Dropdown id="@(type + "-sortBy")" hx_get="/videos" hx_vals="@hx_vals" value="@sortBy" text="@sortBy">
-			<option value="@sortBy" selected disabled hidden>@sortBy</option>
-			<option value="Latest">Latest</option>
-			<option value="Oldest">Oldest</option>
-			<option value="Largest">Largest</option>
-			<option value="Smallest">Smallest</option>
-		</Dropdown>
+		<Dropdown id="@(type + "-game")" hx_get="/videos" hx_vals="@hx_vals" value="@game" text="@game"
+				  items="@(new[] { "All Games" }.Concat(games).Select(g => DropdownItem.Literal(g, g)).ToList())" />
+		<Dropdown id="@(type + "-sortBy")" hx_get="/videos" hx_vals="@hx_vals" value="@sortBy" text="@sortBy"
+				  items="@(new List<DropdownItem> {
+					  DropdownItem.Literal("Latest", "Latest"),
+					  DropdownItem.Literal("Oldest", "Oldest"),
+					  DropdownItem.Literal("Largest", "Largest"),
+					  DropdownItem.Literal("Smallest", "Smallest")
+				  })" />
 	</div>
 	<!-- 
 	<div class="flex gap-4">

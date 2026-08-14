@@ -38,12 +38,13 @@
 
                 <input id="settings-nav" type="checkbox" class="modal-toggle" />
                 <div id="settings-dialog" class="modal hidden" role="dialog">
-                    <div class="modal-box w-11/12 max-w-5xl">
+                    @* definite height + no scrolling here, so the settings pane scrolls instead of the whole box *@
+                    <div class="modal-box w-11/12 max-w-5xl h-[80vh] flex flex-col overflow-hidden">
                         <form method="dialog">
                             <button class="focusable btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick="document.getElementById('settings-nav').checked = false;">✕</button>
                         </form>
                         @* <h3 class="text-lg font-bold" hx-ext="i18n" hx-t="navbar.settings"/> *@
-                        <div id="settings-page" role="tabpanel" class="flex-1 overflow-y-auto"/>
+                        <div id="settings-page" role="tabpanel" class="flex-1 min-h-0 overflow-hidden"/>
                     </div>
                     <label class="modal-backdrop" for="settings-nav">Close</label>
                 </div>

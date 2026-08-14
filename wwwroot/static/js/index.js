@@ -1,6 +1,16 @@
 var supportedLngs = ["en"];
 var resources = {};
 
+// Which device the user last acted with, so the focus ring can be shown only when it is doing
+// some work. Gamepad.js clears the flag too, since a pad reports through neither of these.
+document.addEventListener('pointerdown', function () {
+  document.documentElement.classList.add('using-pointer');
+}, true);
+
+document.addEventListener('keydown', function () {
+  document.documentElement.classList.remove('using-pointer');
+}, true);
+
 window.addEventListener('load', async function () {
   for (var i = 0; i < supportedLngs.length; i++) {
     const response = await fetch(`/static/locales/${supportedLngs[i]}.json`);
@@ -37,6 +47,33 @@ window.addEventListener('load', async function () {
       });
     });
 
+    $sn.set({
+      navigableFilter: function (elem) {
+        // An open menu floats over the rest of the page, and spatial navigation only compares
+        // geometry, so a control painted underneath it can be the nearest candidate. While a
+        // dropdown is open its own entries are the only thing to move between.
+        const openDropdown = document.querySelector('details.dropdown[open]');
+        if (openDropdown !== null && !openDropdown.contains(elem)) return false;
+
+        // A closed daisyUI dropdown keeps its menu in the layout (visibility: hidden), which the
+        // size check in isNavigable() does not catch, so filter those items out explicitly.
+        if (typeof elem.checkVisibility !== 'function') return true;
+        return elem.checkVisibility({ visibilityProperty: true });
+      }
+    });
+
+    // Nothing native dismisses an open <details>, so give the keyboard the usual way out; the
+    // summary keeps focus, which is where the user was before opening it.
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      const openDropdown = document.querySelector('details.dropdown[open]');
+      if (openDropdown === null) return;
+
+      openDropdown.open = false;
+      openDropdown.querySelector('summary').focus();
+      e.stopPropagation();
+    });
+
     // Make the *currently existing* navigable elements focusable.
     $sn.makeFocusable();
 
@@ -54,6 +91,21 @@ function shouldRefreshSettingsTab(event) {
   const config = event.detail && event.detail.requestConfig;
   if (config === undefined || event.detail.successful !== true) return false;
   return config.verb === 'put' && config.path === '/settings';
+}
+
+// The daisyUI menu is only the desktop face of a Dropdown's <select>: picking an entry writes the value
+// through and lets the select raise the request, so both faces go down the same htmx path.
+function dropdownItemPicked(item) {
+  const dropdown = item.closest('.dropdown');
+  const select = dropdown.querySelector('select');
+
+  select.value = item.value;
+  select.nextElementSibling.innerText = item.innerText;
+  htmx.trigger(select, 'change');
+
+  // collapsing the <details> hides the item that was focused, so hand focus back to the button
+  dropdown.open = false;
+  dropdown.querySelector('summary').focus();
 }
 
 const handlePopState = function (e) {

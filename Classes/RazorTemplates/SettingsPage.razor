@@ -41,8 +41,9 @@
         });
     </script>
     <div class="flex w-full h-full">
-        <nav id="sett-sidebar" class="flex flex-col h-full justify-between bg-base-100 w-auto">
-            <ul class="menu bg-base-200 text-base-content min-h-full w-48 p-4">
+        <nav id="sett-sidebar" class="flex flex-col h-full shrink-0 justify-between bg-base-100 w-auto overflow-y-auto">
+            @* daisyUI's .menu is flex-wrap: wrap, so a tab list taller than the box would spill into a second column *@
+            <ul class="menu flex-nowrap bg-base-200 text-base-content min-h-full w-48 p-4">
                 @{foreach (var page in pageComponents.Keys) {
                     <li>
                         <button class="btn focusable"
@@ -53,8 +54,9 @@
                 }}
             </ul>
         </nav>
-        <div class="flex-1 overflow-y-auto">
-            <div id="settings-form" class="flex flex-col h-full px-5" hx-ext='json-enc-custom'>
+        @* the only scroll container: the sidebar is a sibling, so it stays put *@
+        <div class="flex-1 min-w-0 min-h-0 overflow-y-auto">
+            <div id="settings-form" class="flex flex-col min-h-full px-5" hx-ext='json-enc-custom'>
                 @* Capture has conditional sections, so re-render it server side whenever a setting is saved.
                    Lives outside #sett-capture-page so the swap does not tear down its own trigger. *@
                 <div id="sett-capture-refresh" hx-get="/settings/capture" hx-swap="none"
@@ -62,7 +64,7 @@
                 @{foreach (var page in pageComponents.Keys) {
                     var isActive = page == pageComponents.Keys.First();
                     <input id="@($"sett-{page.ToLower()}-nav")" type="radio" name="sett-page-tabs" role="tab" class="tab !hidden" checked="@isActive" disabled />
-                    <div id="@($"sett-{page.ToLower()}-page")" role="tabpanel" class="tab-content flex-1 overflow-y-auto p-2">
+                    <div id="@($"sett-{page.ToLower()}-page")" role="tabpanel" class="tab-content flex-1 p-2">
                         @pageComponents[page]
                     </div>
                 }}

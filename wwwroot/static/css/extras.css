@@ -2,16 +2,21 @@
     outline: none !important;
 }
 
+/*
+    A .focus-ring row draws the outline around itself, label included, on behalf of the control it
+    holds; that control opts out of its own outline by being marked .focus-ring-source. Anything
+    else inside the row (a dropdown's menu items) still highlights individually.
+*/
 :focus,
 :focus-visible,
-.dropdown:focus-within {
+.focus-ring:has(.focus-ring-source:focus) {
     outline: none;
     position: relative;
     z-index: 10;
 }
 
 :focus-visible::before,
-.dropdown:focus-within::before {
+.focus-ring:has(.focus-ring-source:focus)::before {
     content: "";
     position: absolute;
     top: 0;
@@ -21,6 +26,37 @@
     outline: 3px solid #51a7e8;
     animation: focus-animation 0.2s;
     z-index: 1000;
+    /*
+        The ring is painted above the control it belongs to, and a pseudo-element is hit-tested as
+        part of its originating element. Without this, mousedown focuses the control, the ring
+        appears, and mouseup lands on the row instead - so no click event is ever delivered.
+    */
+    pointer-events: none;
+}
+
+/*
+    The ring stands in for a cursor, so it is only useful to someone navigating without one.
+    :focus-visible handles this for the keyboard on its own, but a gamepad moves focus through
+    script, which the browser cannot tell apart from any other programmatic focus.
+*/
+html.using-pointer :focus::before,
+html.using-pointer :focus-visible::before,
+html.using-pointer .focus-ring:has(.focus-ring-source:focus)::before {
+    content: none;
+}
+
+/* the row already draws this control's ring, so it must not draw a second one */
+.focus-ring-source:focus::before {
+    content: none;
+}
+
+/* a dropdown's <summary> is styled as a button, so it has no use for the disclosure triangle */
+summary {
+    list-style: none;
+}
+
+summary::-webkit-details-marker {
+    display: none;
 }
 
 @keyframes focus-animation {

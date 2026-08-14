@@ -54,6 +54,12 @@ const Gamepad = {
     });
   },
 
+  // A pad is a cursorless input, so it takes the page out of pointer mode and brings the focus
+  // ring back; see the .using-pointer rules in extras.css.
+  noteInput: function () {
+    document.documentElement.classList.remove('using-pointer');
+  },
+
   buttonPressed: function (buttonIndex) {
     if (this.buttons[buttonIndex] === true) {
       switch (buttonIndex) {
@@ -89,9 +95,20 @@ const Gamepad = {
       return;
     }
     this.buttons[buttonIndex] = true;
+    this.noteInput();
     if (!document.hasFocus() || document.activeElement === document.body) SpatialNavigation.focus();
 
     switch (buttonIndex) {
+      case 0:
+        // confirm: activate whatever is focused, the same way Enter/Space does on a keyboard
+        console.log(`Button A pressed`);
+        if (document.activeElement !== null) document.activeElement.click();
+        break;
+      case 1:
+        // cancel: the pad's counterpart to Escape
+        console.log(`Button B pressed`);
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        break;
       case 12:
         console.log(`Button DPAD UP pressed`);
         SpatialNavigation.move('up');
@@ -143,6 +160,7 @@ const Gamepad = {
 
   axisChanged: function (axisIndex, value) {
     let isDeadzone = value === 0 || Math.abs(value).toString().startsWith("0.000");
+    if (!isDeadzone) this.noteInput();
 		switch (axisIndex) {
       case 0:
         if (!isDeadzone) {

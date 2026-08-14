@@ -1,3 +1,6 @@
+@using System.Linq;
+@using RePlays.Classes.RazorTemplates.Components;
+
 @code {
 	[Parameter]
 	public string id { get; set; }
@@ -19,6 +22,9 @@
 	public string text { get; set; }
 	[Parameter]
 	public string value { get; set; }
+	/// <summary> The selectable entries. Build them with DropdownItem.Literal / DropdownItem.Translated. </summary>
+	[Parameter]
+	public List<DropdownItem> items { get; set; } = new();
 	[Parameter]
 	public string hx_get { get; set; }
 	[Parameter]
@@ -28,27 +34,54 @@
 	public string hx_put { get; set; } = "/settings";
 	[Parameter]
 	public string hx_vals { get; set; }
-	[Parameter]
-	public RenderFragment ChildContent { get; set; }
 }
 
 @{
 	var smallBtn = label == null ? "" : "btn-xs";
 	// htmx only issues one request per element, so don't emit a verb we aren't going to use
 	var put = (hx_get == null && hx_post == null) ? hx_put : null;
+	var groups = items.GroupBy(i => i.group).ToList();
 }
 
-<div class="label dropdown">
+<div class="label focus-ring">
 	<span class="label-text font-semibold" hx-t="@label" hx-ext="i18n"></span>
-	<div class="btn @smallBtn px-0 overflow-hidden">
-		<select id="@id" name="@name" hx-get="@hx_get" hx-post="@hx_post" hx-put="@put" hx-vals="@hx_vals" hx-trigger="change" hx-swap="none"
-			class="!absolute left-0 right-0 opacity-0 focusable appearance-none bg-inherit h-full px-4"
-				oninput="const dummyEl = this.nextElementSibling;dummyEl.innerText = this.options[this.selectedIndex].innerText;">
-			<option value="@value" selected disabled hidden />
-			@ChildContent
-		</select>
-		<span class="px-4" aria-hidden="true" hx-t="@text" hx-ext="i18n"></span>
-	</div>
+	@* <details> is what keeps the menu shut until the user confirms: the browser toggles it on
+	   click/Enter/Space over the summary, so nothing scripted opens or closes it. The one handler
+	   is for clicking away, which native <details> does not treat as a dismissal. The check is
+	   deferred because spatial navigation blurs before it focuses, and that intermediate state
+	   (relatedTarget null, activeElement body) is not the user leaving the dropdown. *@
+	<details class="dropdown dropdown-end dropdown-bottom"
+			 onfocusout="setTimeout(() => { if (!this.contains(document.activeElement)) this.open = false; });">
+		@* The select is the value store and the htmx sender in both modes. Below lg it is also the
+		   visible control: it covers the summary so a tap opens the platform's own picker, which is
+		   what a phone or tablet user expects. Above lg it is display:none and the menu writes to it. *@
+		<summary class="btn @smallBtn px-0 relative overflow-hidden focusable focus-ring-source">
+			<select id="@id" name="@name" hx-get="@hx_get" hx-post="@hx_post" hx-put="@put" hx-vals="@hx_vals" hx-trigger="change" hx-swap="none"
+					class="absolute inset-0 h-full w-full opacity-0 appearance-none bg-inherit px-4 lg:hidden focus-ring-source"
+					oninput="const dummyEl = this.nextElementSibling;dummyEl.innerText = this.options[this.selectedIndex].innerText;">
+				<option value="@value" selected disabled hidden />
+				@foreach (var item in items) {
+					<option value="@item.value" hx-t="@item.i18nKey" hx-ext="@(item.i18nKey == null ? null : "i18n")">@item.text</option>
+				}
+			</select>
+			<span class="px-4 whitespace-nowrap pointer-events-none" aria-hidden="true" hx-t="@text" hx-ext="i18n"></span>
+		</summary>
+		@* lg and up: a daisyUI menu, so the list can be anchored to the button (dropdown-end) and sized
+		   to its widest entry (w-max) instead of inheriting the native popup's geometry. *@
+		<ul class="dropdown-content menu flex-nowrap hidden lg:flex z-[1] w-max mt-1 p-2 shadow bg-base-200 rounded-box">
+			@foreach (var group in groups) {
+				@if (group.Key != null) {
+					<li class="menu-title">@group.Key</li>
+				}
+				@foreach (var item in group) {
+					<li>
+						<button class="focusable whitespace-nowrap" value="@item.value" onclick="dropdownItemPicked(this);"
+								hx-t="@item.i18nKey" hx-ext="@(item.i18nKey == null ? null : "i18n")">@item.text</button>
+					</li>
+				}
+			}
+		</ul>
+	</details>
 </div>
 @if(hint != null) {
 	<label class="px-1 pb-1 -mt-4" style="z-index: -1;">
