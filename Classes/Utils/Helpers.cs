@@ -702,7 +702,14 @@ namespace RePlays.Utils {
         }
 
         public static bool IsValidAspectRatio(int width, int height) {
-            return new[] { "64:27", "43:18", "21:9", "16:10", "16:9", "4:3", "32:9", "3:2" }.Contains(GetAspectRatio(width, height));
+            if (width <= 0 || height <= 0)
+                return false;
+
+            // standard gaming aspect ratios: 5:4, 4:3, 3:2, 16:10, 16:9, 21:9 variants (64:27, 43:18, 12:5), 32:9
+            double[] validRatios = { 5 / 4d, 4 / 3d, 3 / 2d, 16 / 10d, 16 / 9d, 64 / 27d, 43 / 18d, 12 / 5d, 32 / 9d };
+            double ratio = width / (double)height;
+            // tolerance catches near-standard resolutions (e.g. 1366x768, 1360x768) that don't reduce to an exact ratio
+            return validRatios.Any(valid => Math.Abs(ratio - valid) < 0.01);
         }
 
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {
