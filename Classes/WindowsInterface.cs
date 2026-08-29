@@ -61,7 +61,7 @@ namespace RePlays {
             recentLinksMenu.Items.Add("Left click to copy to clipboard. Right click to open URL.").Enabled = false;
 
             if (SettingsService.Settings.generalSettings.startMinimized) {
-                this.Size = new Size(1080, 600);
+                this.Size = GetScaledWindowSize();
                 this._PreviousSize = this.Size;
                 CenterToScreen();
                 this.WindowState = FormWindowState.Minimized;
@@ -74,6 +74,14 @@ namespace RePlays {
             else {
                 InitializeWebView2();
             }
+        }
+
+        private Size GetScaledWindowSize() {
+            // base window size is tuned for a 1080p display; scale it up proportionally
+            // on higher resolution displays so it keeps the same apparent size
+            var screenBounds = (Screen.FromControl(this) ?? Screen.PrimaryScreen).Bounds;
+            double scale = Math.Max(1.0, Math.Min(screenBounds.Width / 1920.0, screenBounds.Height / 1080.0));
+            return new Size((int)Math.Round(1080 * scale), (int)Math.Round(600 * scale));
         }
 
         private void RefreshLoader() {
@@ -156,7 +164,7 @@ namespace RePlays {
                 this.Controls.Add(webView2);
                 webView2.BringToFront();
                 if (firstTime) {
-                    this.Size = new Size(1080, 600);
+                    this.Size = GetScaledWindowSize();
                     this._PreviousSize = this.Size;
                     this.FormBorderStyle = FormBorderStyle.Sizable;
                     CenterToScreen();
