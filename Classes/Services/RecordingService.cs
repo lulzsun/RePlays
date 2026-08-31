@@ -208,6 +208,9 @@ namespace RePlays.Services {
             if (newSession) startResult = await ActiveRecorder.StartRecording();
 
             if (!stopResultError && startResult) {
+                // The restart writes to a new video file, so timestamps (bookmarks, toast
+                // timer) must be measured from now - not from the original session start.
+                startTime = DateTime.Now;
                 Logger.WriteLine("Recording restart successful");
             }
             else {

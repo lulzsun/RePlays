@@ -812,6 +812,10 @@ namespace RePlays.Recorders {
                 GetOrCreateMetadata(session.VideoSavePath);
                 lol.UpdateMetadataWithStats(session.VideoSavePath);
             }
+            else if (IntegrationService.ActiveGameIntegration is DeadlockIntegration deadlock) {
+                GetOrCreateMetadata(session.VideoSavePath);
+                deadlock.UpdateMetadataWithStats(session.VideoSavePath);
+            }
 
 #if RELEASE && WINDOWS
             var t = Task.Run(() => {

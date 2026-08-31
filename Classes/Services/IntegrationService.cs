@@ -8,6 +8,7 @@ namespace RePlays.Services {
         private const string CS2 = "Counter-Strike 2";
         private const string CSGO = "Counter-Strike Global Offensive";
         private const string RAINBOW_SIX = "Tom Clancy's Rainbow Six Siege";
+        private const string DEADLOCK = "Deadlock";
         private static Integration activeGameIntegration;
         public static Integration ActiveGameIntegration { get { return activeGameIntegration; } }
         public static async void Start(string gameName) {
@@ -28,6 +29,9 @@ namespace RePlays.Services {
                 case CSGO:
                 case CS2:
                     activeGameIntegration = new CS2Integration();
+                    break;
+                case DEADLOCK:
+                    activeGameIntegration = new DeadlockIntegration();
                     break;
                 default:
                     activeGameIntegration = null;
