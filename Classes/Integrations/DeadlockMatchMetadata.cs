@@ -294,7 +294,8 @@ namespace RePlays.Integrations {
         }
 
         // message MatchInfo { uint32 duration_s = 1; ECitadelLobbyTeam winning_team = 3;
-        //                     repeated Players players = 4; uint64 match_id = 6; ... }
+        //                     repeated Players players = 4; uint64 match_id = 6;
+        //                     repeated Pause match_pauses = 14; ... }
         private static DeadlockMatchInfo ParseMatchInfo(byte[] buf, int offset, int length) {
             var reader = new ProtoReader(buf, offset, length);
             var result = new DeadlockMatchInfo();
@@ -315,12 +316,42 @@ namespace RePlays.Integrations {
                     case 6 when wire == 0:
                         result.MatchId = (long)reader.ReadVarint();
                         break;
+                    case 14 when wire == 2: {
+                            var (pauseOffset, pauseLength) = reader.ReadBytes();
+                            result.Pauses.Add(ParsePause(buf, pauseOffset, pauseLength));
+                            break;
+                        }
                     default:
                         reader.SkipField(wire);
                         break;
                 }
             }
+            result.Pauses.Sort((a, b) => a.GameTimeS.CompareTo(b.GameTimeS));
             return result;
+        }
+
+        // message Pause { uint32 game_time_s = 1; uint32 pause_duration_s = 2;
+        //                 uint32 player_slot = 3; }
+        // The game clock freezes during a pause, so wall time at game time t is
+        // t plus every pause that happened at or before t.
+        private static DeadlockMatchPause ParsePause(byte[] buf, int offset, int length) {
+            var reader = new ProtoReader(buf, offset, length);
+            var pause = new DeadlockMatchPause();
+
+            while (reader.TryReadTag(out int field, out int wire)) {
+                switch (field) {
+                    case 1 when wire == 0:
+                        pause.GameTimeS = (int)reader.ReadVarint();
+                        break;
+                    case 2 when wire == 0:
+                        pause.PauseDurationS = (int)reader.ReadVarint();
+                        break;
+                    default:
+                        reader.SkipField(wire);
+                        break;
+                }
+            }
+            return pause;
         }
 
         // message Players { uint32 account_id = 1; uint32 player_slot = 2;
@@ -452,6 +483,32 @@ namespace RePlays.Integrations {
         public int DurationS;
         public int? WinningTeam;
         public List<DeadlockMatchPlayer> Players = new List<DeadlockMatchPlayer>();
+        // sorted by GameTimeS
+        public List<DeadlockMatchPause> Pauses = new List<DeadlockMatchPause>();
+
+        // Wall-clock seconds since the match clock's zero for an event at game time
+        // gameTimeS: the game clock freezes while paused, so add every pause that
+        // started at or before that moment.
+        public double GameTimeToWallSeconds(int gameTimeS) {
+            double wall = gameTimeS;
+            foreach (var pause in Pauses) {
+                if (pause.GameTimeS <= gameTimeS) wall += pause.PauseDurationS;
+            }
+            return wall;
+        }
+
+        public int TotalPauseSeconds {
+            get {
+                int total = 0;
+                foreach (var pause in Pauses) total += pause.PauseDurationS;
+                return total;
+            }
+        }
+    }
+
+    internal class DeadlockMatchPause {
+        public int GameTimeS;
+        public int PauseDurationS;
     }
 
     internal class DeadlockMatchPlayer {

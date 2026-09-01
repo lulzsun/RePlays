@@ -922,7 +922,7 @@ namespace RePlays.Integrations {
             Logger.WriteLine($"Deadlock stats from match {info.MatchId} metadata: " +
                 $"{killCount}/{deathCount}/{assistCount}, hero_id {player.HeroId}, win: {matchWin?.ToString() ?? "unknown"}");
 
-            DateTime? anchor = ResolveClockAnchor(anchorStart, anchorEnd, info.DurationS);
+            DateTime? anchor = ResolveClockAnchor(anchorStart, anchorEnd, info);
             if (anchor == null) {
                 Logger.WriteLine("Deadlock: no game-clock anchor available, skipping kill/death bookmarks (stats still recorded)");
                 return;
@@ -931,7 +931,7 @@ namespace RePlays.Integrations {
             int added = 0;
             var kdaEvents = BuildKdaEvents(info, player);
             foreach (var (gameTimeS, type) in kdaEvents) {
-                DateTime timestamp = anchor.Value.AddSeconds(gameTimeS);
+                DateTime timestamp = anchor.Value.AddSeconds(info.GameTimeToWallSeconds(gameTimeS));
                 // Attached mid-match: events from before this recording started have
                 // no place in the video
                 if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSecondsWithDecimals(timestamp) < 0) {
@@ -961,15 +961,20 @@ namespace RePlays.Integrations {
 
         // game_time_s counts from the in-game clock's zero, so anchor that to the wall
         // clock: preferably the GameInProgress log line (verified to match duration_s
-        // exactly), otherwise reconstructed backwards from match end. When both anchors
-        // exist, log their disagreement as a sanity check.
-        private static DateTime? ResolveClockAnchor(DateTime? anchorStart, DateTime? anchorEnd, int durationS) {
-            if (anchorStart != null && anchorEnd != null && durationS > 0) {
-                double drift = (anchorEnd.Value - anchorStart.Value).TotalSeconds - durationS;
-                Logger.WriteLine($"Deadlock metadata clock anchor drift: {drift:F1}s (wall match length vs reported duration_s)");
+        // exactly), otherwise reconstructed backwards from match end. The game clock
+        // freezes during match pauses, so the wall match length is duration_s plus all
+        // pauses. When both anchors exist, log their disagreement as a sanity check.
+        private static DateTime? ResolveClockAnchor(DateTime? anchorStart, DateTime? anchorEnd, DeadlockMatchInfo info) {
+            int wallLengthS = info.DurationS + info.TotalPauseSeconds;
+            if (info.Pauses.Count > 0) {
+                Logger.WriteLine($"Deadlock: match had {info.Pauses.Count} pause(s) totalling {info.TotalPauseSeconds}s");
+            }
+            if (anchorStart != null && anchorEnd != null && info.DurationS > 0) {
+                double drift = (anchorEnd.Value - anchorStart.Value).TotalSeconds - wallLengthS;
+                Logger.WriteLine($"Deadlock metadata clock anchor drift: {drift:F1}s (wall match length vs duration_s + pauses)");
             }
             if (anchorStart != null) return anchorStart;
-            if (anchorEnd != null && durationS > 0) return anchorEnd.Value.AddSeconds(-durationS);
+            if (anchorEnd != null && info.DurationS > 0) return anchorEnd.Value.AddSeconds(-wallLengthS);
             return null;
         }
 
@@ -1036,7 +1041,7 @@ namespace RePlays.Integrations {
             var player = FindLocalPlayer(info);
             if (player == null) return;
 
-            DateTime? anchor = ResolveClockAnchor(entry.AnchorStart, entry.AnchorEnd, info.DurationS);
+            DateTime? anchor = ResolveClockAnchor(entry.AnchorStart, entry.AnchorEnd, info);
             if (anchor == null) {
                 Logger.WriteLine("Deadlock: no usable clock anchor, backfilling stats without bookmarks");
             }
@@ -1057,7 +1062,7 @@ namespace RePlays.Integrations {
                 }
                 // append, don't replace - the video may already have manual bookmarks
                 foreach (var (gameTimeS, type) in BuildKdaEvents(info, player)) {
-                    double videoTime = (anchor.Value.AddSeconds(gameTimeS) - videoStart.Value).TotalSeconds;
+                    double videoTime = (anchor.Value.AddSeconds(info.GameTimeToWallSeconds(gameTimeS)) - videoStart.Value).TotalSeconds;
                     if (videoTime < 0 || (m.duration > 0 && videoTime > m.duration)) continue;
                     m.bookmarks.Add(new Bookmark { type = type, time = videoTime });
                     addedBookmarks++;
