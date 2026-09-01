@@ -50,8 +50,9 @@ export const Card: React.FC<Props> = ({
   const deadlockHeroIcon = useDeadlockHeroIcon(game, champion);
 
   const modalCtx = useContext(ModalContext);
-  const resultText = win === null ? null : (win ? 'Win' : 'Loss');
-  const resultColor = win === null ? null : `text-${win ? 'green' : 'red'}-500`;
+  // loose equality: win is null in metadata without a result, undefined when absent
+  const resultText = win == null ? null : (win ? 'Win' : 'Loss');
+  const resultColor = win == null ? null : `text-${win ? 'green' : 'red'}-500`;
 
   function handleUpload() {
     console.log(`${game} ${video} ${videoType} to upload`);
@@ -191,24 +192,24 @@ export const Card: React.FC<Props> = ({
                 </p>
               </span>
             )}
-          {game === 'Deadlock' && videoType === 'Sessions' && champion && deadlockHeroIcon && (
+          {game === 'Deadlock' && videoType === 'Sessions' && champion && (
             <span className='absolute z-40 bottom-1 left-1 text-xs font-normal flex items-center'>
-              <img
-                className='border border-black -mr-4 z-40 rounded-full'
-                src={deadlockHeroIcon}
-                style={{ width: '20px' }}
-                alt={champion}
-              />
-              {/* Kill/death counts only exist for local-server modes (sandbox/bots);
-                  matchmade games log no kill feed, so hide the 0/0 pill there. */}
-              {((kills ?? 0) > 0 || (deaths ?? 0) > 0) && (
-                <p
-                  className='py-0.5 pl-5 rounded-full p-2'
-                  style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}
-                >
-                  {`${kills ?? 0}/${deaths ?? 0}`}
-                </p>
+              {deadlockHeroIcon && (
+                <img
+                  className='border border-black -mr-4 z-40 rounded-full'
+                  src={deadlockHeroIcon}
+                  style={{ width: '20px' }}
+                  alt={champion}
+                />
               )}
+              <p
+                className={'py-0.5 rounded-full p-2' + (deadlockHeroIcon ? ' pl-5' : '')}
+                style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}
+              >
+                {`${kills}/${deaths}/${assists}`}
+                {resultText && ' - '}
+                {resultText && <span className={`font-bold ${resultColor}`}>{resultText}</span>}
+              </p>
             </span>
           )}
           <div className='absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50' />

@@ -2,6 +2,7 @@
 using RePlays.Utils;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -144,7 +145,9 @@ namespace RePlays.Integrations {
         // "hideout_lobby_state" were dropped - they only affect match-mode classification
         // and party size, not in-game/not-in-game state or hero.)
         private static readonly Dictionary<string, Regex> Patterns = new Dictionary<string, Regex> {
-            ["change_game_state"] = new Regex(@"ChangeGameState:\s+(\w+)\s+\((\d+)\)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            // Two variants: the hideout/sandbox embedded server logs "ChangeGameState:",
+            // while the client in a dedicated-server match logs "OnGameStateChanged:".
+            ["change_game_state"] = new Regex(@"(?:ChangeGameState|OnGameStateChanged):\s+(\w+)\s+\((\d+)\)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["server_connect"] = new Regex(@"\[Client\] CL:\s+Connected to '([^']+)'", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["loaded_hero"] = new Regex(@"\[Server\] Loaded hero \d+/(hero_\w+)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["client_hero_vmdl"] = new Regex(@"VMDL Camera Pose Success!.*models/heroes(?:_wip|_staging)?/(\w+)/", RegexOptions.IgnoreCase | RegexOptions.Compiled),
@@ -159,7 +162,7 @@ namespace RePlays.Integrations {
             ["source2_shutdown"] = new Regex(@"Source2Shutdown", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["precaching_heroes"] = new Regex(@"Precaching (\d+) heroes in CCitadelGameRules", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["loop_mode_menu"] = new Regex(@"LoopMode:\s*menu", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-            ["lobby_created"] = new Regex(@"Lobby\s+\d+\s+for\s+Match\s+\d+\s+created", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            ["lobby_created"] = new Regex(@"Lobby\s+(\d+)\s+for\s+Match\s+(\d+)\s+created", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["lobby_destroyed"] = new Regex(@"Lobby\s+\d+\s+for\s+Match\s+\d+\s+destroyed", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["spectate_broadcast"] = new Regex(@"Playing Broadcast", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             ["mm_start"] = new Regex(@"\[GCClient\] Send msg 9010 \(k_EMsgClientToGCStartMatchmaking\)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
@@ -168,7 +171,8 @@ namespace RePlays.Integrations {
             // Not from the reference project - found by mining a real console.log. CAVEAT: this
             // line is only written when the game runs its embedded local server (sandbox,
             // tutorial, hideout). A real matchmade game runs on a dedicated server and the
-            // client logs no kill feed at all, so KDA bookmarks only work in local modes.
+            // client logs no kill feed at all - matchmade KDA instead comes from the
+            // post-match metadata backfill (see StartMetadataBackfill / DeadlockMatchMetadata).
             ["death_notice"] = new Regex(@"Killer:\s+(\S+?),\s+Dying:\s+(\S+?),\s+Number of Assisters:\s+(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
         };
 
@@ -225,6 +229,18 @@ namespace RePlays.Integrations {
         private string lastHeroKey;
         private int killCount;
         private int deathCount;
+        private int assistCount;
+        private bool? matchWin;
+
+        // Matchmade-game KDA backfill. The dedicated server logs no kill feed, but once
+        // the post-game screen loads, the client downloads the match's metadata (with
+        // per-death game-clock times) and Steam caches it locally - so after a match
+        // ends we poll the Steam http cache and turn that into bookmarks + stats while
+        // the post-match recording buffer (MatchEndRestartDelayMs) is still running.
+        private long currentMatchId; // from the "Lobby X for Match Y created" line; 0 = unknown
+        private DateTime? matchClockStartWall; // wall time of the transition to InMatch = game clock ~0
+        private DateTime? matchEndWall; // wall time of the transition to PostMatch
+        private CancellationTokenSource metadataCts; // pending metadata backfill poll
 
         private string GetConsoleLogPath() {
             const string searchPath = "\\game\\bin\\win64\\deadlock.exe";
@@ -291,9 +307,17 @@ namespace RePlays.Integrations {
             await Task.CompletedTask;
         }
 
+        private int sweepCounter;
+
         private void WatchLoop(CancellationToken token) {
             while (!token.IsCancellationRequested) {
                 try {
+                    // Check for late-arriving match metadata about once a minute (the
+                    // enumeration only stats files unless one looks like a candidate)
+                    if (sweepCounter++ % 60 == 0) {
+                        SweepPendingStats();
+                    }
+
                     if (!File.Exists(logPath)) {
                         Thread.Sleep(PollIntervalMs * 3);
                         continue;
@@ -437,7 +461,15 @@ namespace RePlays.Integrations {
                     state.LeaveQueue();
                 }
             }
-            else if (MatchPattern("lobby_created", line) != null) {
+            else if ((m = MatchPattern("lobby_created", line)) != null) {
+                if (long.TryParse(m.Groups[2].Value, out long matchId) && matchId != currentMatchId) {
+                    currentMatchId = matchId;
+                    matchClockStartWall = null;
+                    matchEndWall = null;
+                    if (!isResync) {
+                        Logger.WriteLine($"Deadlock match id: {matchId}");
+                    }
+                }
                 state.MatchStartTime = DateTime.Now;
                 state.QueueStartTime = null;
                 PrepareMatchHeroTracking();
@@ -510,18 +542,29 @@ namespace RePlays.Integrations {
             }
             else if ((m = MatchPattern("change_game_state", line)) != null) {
                 if (state.Phase != GamePhase.Spectating && !inHideoutMap) {
+                    // Match on state names only - the numeric ids differ between the two
+                    // log variants (6 is PostGame in the embedded server's numbering but
+                    // PreGameWait in the client's), so ids cannot be trusted.
                     string stateName = m.Groups[1].Value.ToLowerInvariant();
-                    int stateId = int.Parse(m.Groups[2].Value);
-                    state.GameStateId = stateId;
+                    state.GameStateId = int.Parse(m.Groups[2].Value);
 
                     if (!hideoutLoaded) {
-                        if (stateName == "matchintro" || stateId == 4) {
+                        if (stateName == "matchintro") {
                             state.EnterMatchIntro();
                         }
-                        else if (stateName == "gameinprogress" || stateName == "inprogress" || stateId == 7) {
+                        else if (stateName == "gameinprogress" || stateName == "inprogress") {
+                            // This line is the moment the match clock starts, and is the
+                            // authoritative bookmark anchor: for a verified real match, the
+                            // GameInProgress -> PostGame wall-time span equals the metadata's
+                            // duration_s exactly. Overwrites the rougher map-load-derived
+                            // anchor the InMatch phase transition may have set.
                             state.StartMatch();
+                            matchClockStartWall = ParseLineTimestamp(line) ?? (isResync ? matchClockStartWall : DateTime.Now);
                         }
-                        else if (stateName == "postgame" || stateId == 6) {
+                        else if (stateName == "postgame" || stateName == "end") {
+                            if (stateName == "postgame") {
+                                matchEndWall = ParseLineTimestamp(line) ?? (isResync ? matchEndWall : DateTime.Now);
+                            }
                             state.EndMatch();
                         }
                     }
@@ -552,6 +595,16 @@ namespace RePlays.Integrations {
 
             if (state.HeroKey != null) {
                 lastHeroKey = state.HeroKey;
+            }
+
+            // Wall-clock anchors for mapping the match metadata's game-clock times onto
+            // the recording. Line timestamps work for resynced lines too - they carry
+            // the time the line was written, not the time we read it.
+            if (state.Phase == GamePhase.InMatch && oldPhase != GamePhase.InMatch) {
+                matchClockStartWall ??= ParseLineTimestamp(line) ?? (isResync ? (DateTime?)null : DateTime.Now);
+            }
+            if (state.Phase == GamePhase.PostMatch && oldPhase != GamePhase.PostMatch) {
+                matchEndWall = ParseLineTimestamp(line) ?? (isResync ? matchEndWall : DateTime.Now);
             }
 
             bool changed = state.Phase != oldPhase || state.HeroKey != oldHero || state.IsTransformed != oldTransformed;
@@ -734,6 +787,7 @@ namespace RePlays.Integrations {
             bool isInGame = state.IsInGame;
             if (wasInGame && !isInGame && state.Phase == GamePhase.PostMatch && RecordingService.IsRecording) {
                 ScheduleDelayedRestart();
+                StartMetadataBackfill();
             }
             else if (!wasInGame && isInGame && restartDelayCts != null) {
                 // A new match is starting before the post-match buffer elapsed. Split
@@ -779,29 +833,329 @@ namespace RePlays.Integrations {
             restartDelayCts = null;
         }
 
+        // Kicks off KDA recovery for the match that just ended. The Deadlock client only
+        // downloads a match's metadata into the Steam http cache when its details page
+        // is opened from the in-game match history - the post-game screen's data arrives
+        // over the GC connection and is never cached - so this both polls briefly (in
+        // case the user opens the details right away, landing stats before the recording
+        // splits) and records a persistent pending entry that SweepPendingStats uses to
+        // patch the saved video whenever the metadata eventually shows up.
+        private void StartMetadataBackfill() {
+            long matchId = currentMatchId;
+            if (matchId == 0) {
+                Logger.WriteLine("Deadlock match ended but no match id was captured from console.log; skipping stats backfill");
+                return;
+            }
+
+            string videoPath = RecordingService.GetCurrentSession()?.VideoSavePath;
+            DateTime? anchorStart = matchClockStartWall;
+            DateTime? anchorEnd = matchEndWall;
+            AddPendingStat(new DeadlockPendingStat {
+                MatchId = matchId,
+                VideoPath = videoPath,
+                AnchorStart = anchorStart,
+                AnchorEnd = anchorEnd,
+                CreatedAt = DateTime.Now
+            });
+
+            metadataCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            metadataCts = cts;
+
+            // Only entries written after the match ended are considered, so an old
+            // cached copy of some other match (or a stale poll of this one from a
+            // previous session) can't be picked up. Small back-margin for clock skew.
+            DateTime modifiedAfter = DateTime.Now.AddMinutes(-1);
+
+            const int pollDelayMs = 5 * 1000;
+            int attempts = Math.Max(1, (MatchEndRestartDelayMs - 10 * 1000) / pollDelayMs);
+
+            Task.Run(async () => {
+                Logger.WriteLine($"Deadlock: watching the Steam http cache for match {matchId} metadata");
+                for (int attempt = 0; attempt < attempts && !cts.IsCancellationRequested; attempt++) {
+                    try {
+                        var info = DeadlockMatchMetadata.TryLoadFromSteamCache(matchId, modifiedAfter);
+                        // The cache path is effectively free, so try it every 5s. The
+                        // salts-api fallback is precious - lookups that miss their db
+                        // (forcing a Steam fetch on their side) are limited to 3/hour
+                        // per IP - so spend at most two attempts here and leave the
+                        // rest to the sweeper's slow backoff.
+                        if (info == null && (attempt == 12 || attempt == 20)) {
+                            info = DeadlockMatchMetadata.TryLoadFromSaltsApi(matchId);
+                        }
+                        if (info != null) {
+                            ApplyMatchMetadata(info, anchorStart, anchorEnd);
+                            RemovePendingStat(matchId);
+                            return;
+                        }
+                    }
+                    catch (Exception ex) {
+                        Logger.WriteLine($"Deadlock metadata backfill error: {ex.Message}");
+                    }
+
+                    try {
+                        await Task.Delay(pollDelayMs, cts.Token);
+                    }
+                    catch (TaskCanceledException) {
+                        return;
+                    }
+                }
+
+                if (!cts.IsCancellationRequested) {
+                    Logger.WriteLine($"Deadlock: metadata for match {matchId} is not in the Steam http cache yet. " +
+                        "It appears when the match is opened in Deadlock's match history; stats will be backfilled then.");
+                }
+            });
+        }
+
+        // Applies stats/bookmarks to the still-running recording (the live path).
+        private void ApplyMatchMetadata(DeadlockMatchInfo info, DateTime? anchorStart, DateTime? anchorEnd) {
+            var player = FindLocalPlayer(info);
+            if (player == null) return;
+
+            killCount = player.Kills;
+            deathCount = player.Deaths;
+            assistCount = player.Assists;
+            if (player.Team != null && info.WinningTeam != null) {
+                matchWin = player.Team == info.WinningTeam;
+            }
+            Logger.WriteLine($"Deadlock stats from match {info.MatchId} metadata: " +
+                $"{killCount}/{deathCount}/{assistCount}, hero_id {player.HeroId}, win: {matchWin?.ToString() ?? "unknown"}");
+
+            DateTime? anchor = ResolveClockAnchor(anchorStart, anchorEnd, info.DurationS);
+            if (anchor == null) {
+                Logger.WriteLine("Deadlock: no game-clock anchor available, skipping kill/death bookmarks (stats still recorded)");
+                return;
+            }
+
+            int added = 0;
+            var kdaEvents = BuildKdaEvents(info, player);
+            foreach (var (gameTimeS, type) in kdaEvents) {
+                DateTime timestamp = anchor.Value.AddSeconds(gameTimeS);
+                // Attached mid-match: events from before this recording started have
+                // no place in the video
+                if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSecondsWithDecimals(timestamp) < 0) {
+                    continue;
+                }
+                BookmarkService.AddBookmark(new Bookmark { type = type }, timestamp);
+                added++;
+            }
+            Logger.WriteLine($"Deadlock: added {added} kill/death bookmarks from match metadata ({kdaEvents.Count - added} were outside this recording)");
+        }
+
+        private static DeadlockMatchPlayer FindLocalPlayer(DeadlockMatchInfo info) {
+            uint? accountId = DeadlockMatchMetadata.GetLocalAccountId();
+            if (accountId == null) {
+                Logger.WriteLine("Deadlock: could not determine the local Steam account id; cannot identify the player in the match metadata");
+                return null;
+            }
+
+            foreach (var p in info.Players) {
+                if (p.AccountId == accountId.Value) {
+                    return p;
+                }
+            }
+            Logger.WriteLine($"Deadlock: account {accountId} not found among the {info.Players.Count} players of match {info.MatchId}");
+            return null;
+        }
+
+        // game_time_s counts from the in-game clock's zero, so anchor that to the wall
+        // clock: preferably the GameInProgress log line (verified to match duration_s
+        // exactly), otherwise reconstructed backwards from match end. When both anchors
+        // exist, log their disagreement as a sanity check.
+        private static DateTime? ResolveClockAnchor(DateTime? anchorStart, DateTime? anchorEnd, int durationS) {
+            if (anchorStart != null && anchorEnd != null && durationS > 0) {
+                double drift = (anchorEnd.Value - anchorStart.Value).TotalSeconds - durationS;
+                Logger.WriteLine($"Deadlock metadata clock anchor drift: {drift:F1}s (wall match length vs reported duration_s)");
+            }
+            if (anchorStart != null) return anchorStart;
+            if (anchorEnd != null && durationS > 0) return anchorEnd.Value.AddSeconds(-durationS);
+            return null;
+        }
+
+        // The local player's kill/death moments in game-clock seconds, sorted
+        // chronologically: their own death_details are the deaths, and any other
+        // player's death credited to their slot is a kill.
+        private static List<(int gameTimeS, Bookmark.BookmarkType type)> BuildKdaEvents(DeadlockMatchInfo info, DeadlockMatchPlayer player) {
+            var events = new List<(int gameTimeS, Bookmark.BookmarkType type)>();
+            foreach (var death in player.DeathEvents) {
+                events.Add((death.GameTimeS, Bookmark.BookmarkType.Death));
+            }
+            foreach (var other in info.Players) {
+                if (other == player) continue;
+                foreach (var death in other.DeathEvents) {
+                    if (death.KillerPlayerSlot >= 0 && death.KillerPlayerSlot == player.PlayerSlot) {
+                        events.Add((death.GameTimeS, Bookmark.BookmarkType.Kill));
+                    }
+                }
+            }
+            events.Sort((a, b) => a.gameTimeS.CompareTo(b.gameTimeS));
+            return events;
+        }
+
+        // Patches an already-saved video's .metadata and bookmarks (the late path, once
+        // the user has opened the match in Deadlock's match history).
+        private static void ApplyMatchMetadataToSavedVideo(DeadlockPendingStat entry, DeadlockMatchInfo info) {
+            var player = FindLocalPlayer(info);
+            if (player == null) return;
+
+            DateTime? anchor = ResolveClockAnchor(entry.AnchorStart, entry.AnchorEnd, info.DurationS);
+            // The recording's start time is encoded in the video's file name
+            string baseName = Path.GetFileNameWithoutExtension(entry.VideoPath);
+            DateTime videoStart = default;
+            bool haveStart = baseName.Length >= 19 && DateTime.TryParseExact(baseName.Substring(0, 19),
+                "yyyy_MM_dd_HH_mm_ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out videoStart);
+            if (anchor == null || !haveStart) {
+                Logger.WriteLine("Deadlock: no usable clock anchor or video start time, backfilling stats without bookmarks");
+            }
+
+            int addedBookmarks = 0;
+            var metadata = Functions.UpdateMetadata(entry.VideoPath, m => {
+                m.kills = player.Kills;
+                m.deaths = player.Deaths;
+                m.assists = player.Assists;
+                if (player.Team != null && info.WinningTeam != null) {
+                    m.win = player.Team == info.WinningTeam;
+                }
+                if (anchor == null || !haveStart) return;
+                // append, don't replace - the video may already have manual bookmarks
+                foreach (var (gameTimeS, type) in BuildKdaEvents(info, player)) {
+                    double videoTime = (anchor.Value.AddSeconds(gameTimeS) - videoStart).TotalSeconds;
+                    if (videoTime < 0 || (m.duration > 0 && videoTime > m.duration)) continue;
+                    m.bookmarks.Add(new Bookmark { type = type, time = videoTime });
+                    addedBookmarks++;
+                }
+            });
+            Logger.WriteLine($"Deadlock: backfilled '{Path.GetFileName(entry.VideoPath)}' with match {info.MatchId} stats: " +
+                $"{player.Kills}/{player.Deaths}/{player.Assists}, win: {metadata.win?.ToString() ?? "unknown"}, " +
+                $"{addedBookmarks} bookmarks");
+
+            try {
+                WebMessage.SendMessage(Functions.GetAllVideos(WebMessage.videoSortSettings.game, WebMessage.videoSortSettings.sortBy));
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Deadlock: could not refresh the video list: {ex.Message}");
+            }
+        }
+
+        // The persistent queue of matches whose stats are still waiting for the user to
+        // open them in Deadlock's match history. Survives restarts of both the
+        // integration (one instance per recording split) and RePlays itself.
+        private static readonly object pendingStatsLock = new object();
+
+        private static string PendingStatsPath => Path.Combine(Functions.GetCfgFolder(), "deadlockPendingStats.json");
+
+        private static List<DeadlockPendingStat> LoadPendingStats() {
+            lock (pendingStatsLock) {
+                try {
+                    if (File.Exists(PendingStatsPath)) {
+                        return JsonSerializer.Deserialize<List<DeadlockPendingStat>>(File.ReadAllText(PendingStatsPath)) ?? new List<DeadlockPendingStat>();
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Deadlock: could not read pending stats file: {ex.Message}");
+                }
+                return new List<DeadlockPendingStat>();
+            }
+        }
+
+        private static void SavePendingStats(List<DeadlockPendingStat> entries) {
+            lock (pendingStatsLock) {
+                try {
+                    File.WriteAllText(PendingStatsPath, JsonSerializer.Serialize(entries));
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Deadlock: could not write pending stats file: {ex.Message}");
+                }
+            }
+        }
+
+        private static void AddPendingStat(DeadlockPendingStat entry) {
+            var entries = LoadPendingStats();
+            entries.RemoveAll(e => e.MatchId == entry.MatchId);
+            entries.Add(entry);
+            // don't let the queue grow without bound if metadata never shows up
+            while (entries.Count > 20) {
+                entries.RemoveAt(0);
+            }
+            SavePendingStats(entries);
+        }
+
+        private static void RemovePendingStat(long matchId) {
+            var entries = LoadPendingStats();
+            if (entries.RemoveAll(e => e.MatchId == matchId) > 0) {
+                SavePendingStats(entries);
+            }
+        }
+
+        // Runs from the watch loop while Deadlock is open, and once at RePlays startup
+        // (see Program.Main) so stats from earlier sessions land without the game.
+        // Tries the free local cache first, then falls back to the salts-api lookup
+        // with a per-entry backoff so a down api isn't hammered every sweep.
+        internal static void SweepPendingStats() {
+            List<DeadlockPendingStat> entries = LoadPendingStats();
+            if (entries.Count == 0) return;
+
+            string currentVideo = RecordingService.IsRecording ? RecordingService.GetCurrentSession()?.VideoSavePath : null;
+
+            bool dirty = false;
+            foreach (var entry in new List<DeadlockPendingStat>(entries)) {
+                if (entry.VideoPath == null || !File.Exists(entry.VideoPath) || entry.CreatedAt < DateTime.Now.AddDays(-14)) {
+                    entries.Remove(entry);
+                    dirty = true;
+                    continue;
+                }
+                // the live post-match poll owns the video currently being recorded
+                if (currentVideo != null && string.Equals(entry.VideoPath, currentVideo, StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                try {
+                    var info = DeadlockMatchMetadata.TryLoadFromSteamCache(entry.MatchId, entry.CreatedAt.AddMinutes(-5));
+                    // 30 min backoff per entry: salts lookups that miss deadlock-api's
+                    // db are rate limited to 3/hour per IP
+                    if (info == null &&
+                        (entry.ApiAttemptedAt == null || entry.ApiAttemptedAt < DateTime.Now.AddMinutes(-30))) {
+                        entry.ApiAttemptedAt = DateTime.Now;
+                        dirty = true;
+                        info = DeadlockMatchMetadata.TryLoadFromSaltsApi(entry.MatchId);
+                    }
+                    if (info == null) continue;
+                    ApplyMatchMetadataToSavedVideo(entry, info);
+                    entries.Remove(entry);
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Deadlock: pending stats sweep failed for match {entry.MatchId}: {ex.Message}");
+                }
+            }
+            if (dirty) {
+                SavePendingStats(entries);
+            }
+        }
+
         // Called by LibObsRecorder.StopRecording (same hook as LeagueOfLegendsIntegration)
-        // to stamp the finished video's .metadata with the hero played and, for
-        // local-server modes where death notices exist, the kill/death counts. The
-        // "champion" field holds the Deadlock hero codename (e.g. "atlas"); the client
-        // resolves it to an icon via assets.deadlock-api.com.
+        // to stamp the finished video's .metadata with the hero played and the KDA -
+        // from death notices in local-server modes, or from the post-match metadata
+        // backfill in matchmade games. The "champion" field holds the Deadlock hero
+        // codename (e.g. "atlas"); the client resolves it to an icon via
+        // assets.deadlock-api.com.
         public void UpdateMetadataWithStats(string videoPath) {
             if (lastHeroKey == null) return;
 
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
-            if (File.Exists(metadataPath)) {
-                VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+            Functions.UpdateMetadata(videoPath, metadata => {
                 metadata.champion = lastHeroKey;
                 metadata.kills = killCount;
                 metadata.deaths = deathCount;
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
-            }
+                metadata.assists = assistCount;
+                metadata.win = matchWin;
+            });
         }
 
         public override Task Shutdown() {
             Logger.WriteLine("Shutting down Deadlock integration");
             try {
                 CancelDelayedRestart();
+                metadataCts?.Cancel();
                 cts?.Cancel();
                 watchTask?.Wait(2000);
             }

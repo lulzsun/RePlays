@@ -109,6 +109,24 @@ namespace RePlays {
             KeybindService.Start();
             PurgeTempVideos();
             Updater.CheckForUpdates();
+
+            // Deadlock match stats can become available after the game (or RePlays)
+            // closed; sweep shortly after startup and then every half hour. The first
+            // sweep is delayed so the frontend is up to receive backfilled bookmarks
+            // directly instead of via the backup-file path. Sweeps are near-free when
+            // the pending queue is empty.
+            System.Threading.Tasks.Task.Run(async () => {
+                await System.Threading.Tasks.Task.Delay(30 * 1000);
+                while (true) {
+                    try {
+                        Integrations.DeadlockIntegration.SweepPendingStats();
+                    }
+                    catch (Exception ex) {
+                        Logger.WriteLine($"Deadlock stats sweep failed: {ex.Message}");
+                    }
+                    await System.Threading.Tasks.Task.Delay(30 * 60 * 1000);
+                }
+            });
 #if WINDOWS
             ScreenSize.UpdateMaximumScreenResolution();
             // squirrel configuration
