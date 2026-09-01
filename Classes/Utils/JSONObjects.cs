@@ -1,6 +1,8 @@
+using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace RePlays.Utils {
     public class VideoList {
@@ -25,12 +27,18 @@ namespace RePlays.Utils {
     }
 
     public class VideoMetadata {
+        // where this metadata was loaded from; set by GetMetadata/GetOrCreateMetadata,
+        // not persisted into the file itself
+        [JsonIgnore]
+        public string filePath { get; set; }
         public double duration { get; set; }
         public int kills { get; set; }
         public int assists { get; set; }
         public int deaths { get; set; }
         public string champion { get; set; }
         public bool? win { get; set; }
+        // bookmark times are in seconds from the start of the video
+        public List<Bookmark> bookmarks { get; set; } = new();
     }
 
     public class VideoSortSettings {

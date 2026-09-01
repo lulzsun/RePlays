@@ -217,12 +217,6 @@ export const Player: React.FC<Props> = ({ videos }) => {
       localStorage.setItem('videoMetadata', JSON.stringify(videoMetadata));
     }
 
-    if (bookmarks.length !== 0) {
-      let videoMetadata = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
-      videoMetadata[`/${video}`] = { bookmarks };
-      localStorage.setItem('videoMetadataBookmarks', JSON.stringify(videoMetadata));
-    }
-
     return () => {
       document.removeEventListener('keydown', handleOnKeyDown);
       document.removeEventListener('mousedown', handleOnMouseDown);
@@ -324,6 +318,20 @@ export const Player: React.FC<Props> = ({ videos }) => {
     }
   }
 
+  // Bookmark times are percentages of the video's duration while on screen, but
+  // are stored in the video's .metadata file in seconds.
+  function saveBookmarks(newBookmarks: BookmarkInterface[]) {
+    setBookmarks(newBookmarks);
+    postMessage('UpdateBookmarks', {
+      videoPath: `/${game}/${video}`,
+      merge: false,
+      bookmarks: newBookmarks.map((b) => ({
+        type: b.type,
+        time: (b.time / 100) * videoElement.current!.duration,
+      })),
+    });
+  }
+
   function handleAddBookmark() {
     if (seekWindowElement.current && seekBarElement.current) {
       let time = (currentTime / videoElement.current!.duration) * 100;
@@ -336,10 +344,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
           time: time,
         });
 
-      setBookmarks(newBookmarks);
-      let videoMetadata = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
-      videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
-      localStorage.setItem('videoMetadataBookmarks', JSON.stringify(videoMetadata));
+      saveBookmarks(newBookmarks);
     }
   }
 
@@ -352,10 +357,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
           if (videoElement.current) newBookmarks.splice(index, 1);
 
-          setBookmarks(newBookmarks);
-          let videoMetadata = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
-          videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
-          localStorage.setItem('videoMetadataBookmarks', JSON.stringify(videoMetadata));
+          saveBookmarks(newBookmarks);
         },
       },
     ]);
@@ -364,7 +366,6 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
   function handleVideoLoad(e: SyntheticEvent) {
     let videoMetadata = JSON.parse(localStorage.getItem('videoMetadata')!);
-    let videoMetadataBookmarks = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
 
     if (videoElement.current && volumeSliderElement.current) {
       videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
@@ -374,8 +375,17 @@ export const Player: React.FC<Props> = ({ videos }) => {
       setClips(videoMetadata[`/${video}`].clips);
     }
 
-    if (videoMetadataBookmarks[`/${video}`]) {
-      setBookmarks(videoMetadataBookmarks[`/${video}`].bookmarks);
+    // bookmarks come from the video's .metadata file (in seconds); convert to
+    // percentages of the duration for rendering on the timeline
+    const metadataBookmarks = videos.find((v) => v.fileName.includes(video))?.metadata?.bookmarks;
+    if (metadataBookmarks?.length && videoElement.current?.duration) {
+      setBookmarks(
+        metadataBookmarks.map((b, i) => ({
+          id: Date.now() + i,
+          type: b.type,
+          time: (b.time / videoElement.current!.duration) * 100,
+        })),
+      );
     }
   }
 

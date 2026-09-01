@@ -52,6 +52,8 @@ declare global {
       deaths?: number;
       champion?: string;
       win?: boolean;
+      // times are in seconds from the start of the video
+      bookmarks?: { type: BookmarkType; time: number }[];
     };
     folder: string;
   }

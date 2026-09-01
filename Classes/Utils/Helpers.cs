@@ -412,30 +412,58 @@ namespace RePlays.Utils {
             return thumbnailPath;
         }
 
-        public static VideoMetadata GetOrCreateMetadata(string videoPath) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+        private static readonly object _metafileLock = new();
 
-            if (File.Exists(metadataPath)) {
-                try {
-                    return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+        public static VideoMetadata GetMetadata(string videoPath) {
+            lock (_metafileLock) {
+                string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+                string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+
+                if (File.Exists(metadataPath)) {
+                    try {
+                        var metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                        metadata.filePath = metadataPath;
+                        return metadata;
+                    }
+                    catch (Exception ex) {
+                        Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
+                        File.Delete(metadataPath);
+                        return null;
+                    }
                 }
-                catch (Exception ex) {
-                    Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
-                    File.Delete(metadataPath);
-                    return GetOrCreateMetadata(videoPath);
-                }
+                return null;
             }
-            else {
-                var metadata = new VideoMetadata();
+        }
+
+        public static VideoMetadata GetOrCreateMetadata(string videoPath) {
+            lock (_metafileLock) {
+                string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+                string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+                var metadata = GetMetadata(videoPath);
+
+                if (metadata != null) {
+                    return metadata;
+                }
+
+                metadata = new VideoMetadata();
 
                 if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
                 var duration = GetVideoDuration(videoPath);
                 metadata.duration = duration;
+                metadata.filePath = metadataPath;
 
                 Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata));
+                return metadata;
+            }
+        }
+
+        public static VideoMetadata UpdateMetadata(string videoPath, Action<VideoMetadata> update) {
+            lock (_metafileLock) {
+                var metadata = GetOrCreateMetadata(videoPath);
+                update(metadata);
+                File.WriteAllText(metadata.filePath, JsonSerializer.Serialize(metadata));
                 return metadata;
             }
         }
@@ -450,40 +478,6 @@ namespace RePlays.Utils {
             foreach (string metaFile in metaFilesToDelete) {
                 Logger.WriteLine($"Deleting file: {metaFile}");
                 File.Delete(metaFile);
-            }
-        }
-
-        public static void BackupBookmarks(string videoName, string json) {
-            try {
-                Logger.WriteLine($"Backing up bookmarks for video: {videoName}");
-                string BookmarkBackupFilePath = Path.Join(GetTempFolder(), videoName + "_bookmarks.bak");
-                Logger.WriteLine($"Backup file location: {BookmarkBackupFilePath}");
-                File.WriteAllText(BookmarkBackupFilePath, json);
-            }
-            catch (Exception ex) {
-                Logger.WriteLine($"Could not backup {videoName}. Exception: {ex.Message}");
-            }
-        }
-
-        public static void LoadBackupBookmarks() {
-            try {
-                string[] bookmarkBackupFiles = Directory.GetFiles(GetTempFolder(), "*_bookmarks.bak", SearchOption.TopDirectoryOnly);
-                if (bookmarkBackupFiles.Length == 0) return;
-                Logger.WriteLine($"Loading {bookmarkBackupFiles.Length} bookmark backups");
-                foreach (string bookmarkBackupFile in bookmarkBackupFiles) {
-                    Logger.WriteLine($"Loading {bookmarkBackupFile}");
-                    string json = File.ReadAllText(bookmarkBackupFile);
-                    WebMessage webMessage = new() {
-                        message = "SetBookmarks",
-                        data = json
-                    };
-                    WebMessage.SendMessage(JsonSerializer.Serialize(webMessage));
-                    File.Delete(bookmarkBackupFile);
-                    Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
-                }
-            }
-            catch (Exception ex) {
-                Logger.WriteLine($"Could not load backup bookmarks. Exception: {ex.Message}");
             }
         }
 

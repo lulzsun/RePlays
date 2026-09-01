@@ -635,7 +635,7 @@ namespace RePlays.Recorders {
 
                 Logger.WriteLine($"Successfully saved replay buffer to {path}");
                 RecordingService.lastVideoDuration = GetVideoDuration(path);
-                BookmarkService.ApplyBookmarkToSavedVideo("/" + fileName);
+                BookmarkService.SaveBookmarks(path);
 
                 StorageService.ManageStorage();
 
@@ -809,13 +809,16 @@ namespace RePlays.Recorders {
             }
 
             if (IntegrationService.ActiveGameIntegration is LeagueOfLegendsIntegration lol) {
-                GetOrCreateMetadata(session.VideoSavePath);
                 lol.UpdateMetadataWithStats(session.VideoSavePath);
             }
             else if (IntegrationService.ActiveGameIntegration is DeadlockIntegration deadlock) {
-                GetOrCreateMetadata(session.VideoSavePath);
                 deadlock.UpdateMetadataWithStats(session.VideoSavePath);
             }
+
+            // save before the video list refresh below so the refreshed metadata
+            // already carries the bookmarks
+            if (!isReplayBuffer)
+                BookmarkService.SaveBookmarks(session.VideoSavePath);
 
 #if RELEASE && WINDOWS
             var t = Task.Run(() => {
@@ -831,8 +834,6 @@ namespace RePlays.Recorders {
             });
 #endif
             IntegrationService.Shutdown();
-            if (!isReplayBuffer)
-                BookmarkService.ApplyBookmarkToSavedVideo("/" + Path.GetFileName(session.VideoSavePath));
 
             Logger.WriteLine($"LibObs stopped recording {session.Pid} {session.GameTitle} [{bnum_allocs()}]");
             return !signalOutputStop;

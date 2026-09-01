@@ -130,6 +130,22 @@ namespace RePlays.Utils {
         public string exe { get; set; }
     }
 
+    public class UpdateBookmarks {
+        private string _videoPath;
+        public string videoPath {
+            get {
+                return _videoPath;
+            }
+            set {
+                _videoPath = value.Replace("\\", "/");
+            }
+        }
+        // merge appends to the bookmarks already in the metadata (used by the one-time
+        // localStorage migration); otherwise the list is replaced outright
+        public bool merge { get; set; }
+        public List<Bookmark> bookmarks { get; set; }
+    }
+
     public class WebMessage {
         public string message { get; set; }
         public string data { get; set; }
@@ -357,6 +373,20 @@ namespace RePlays.Utils {
                         }
                     }
                     break;
+                case "UpdateBookmarks": {
+                        UpdateBookmarks data = JsonSerializer.Deserialize<UpdateBookmarks>(webMessage.data);
+                        var filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.videoPath));
+                        if (File.Exists(filePath)) {
+                            UpdateMetadata(filePath, metadata => {
+                                if (data.merge) metadata.bookmarks.AddRange(data.bookmarks ?? new List<Bookmark>());
+                                else metadata.bookmarks = data.bookmarks ?? new List<Bookmark>();
+                            });
+                        }
+                        else {
+                            Logger.WriteLine($"UpdateBookmarks: video not found: {filePath}");
+                        }
+                    }
+                    break;
                 case "UploadVideo": {
                         UploadVideo data = JsonSerializer.Deserialize<UploadVideo>(webMessage.data);
                         var filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.file));
@@ -493,23 +523,5 @@ namespace RePlays.Utils {
             SendMessage(JsonSerializer.Serialize(webMessage));
         }
 
-        public static void SetBookmarks(string videoName, List<Bookmark> bookmarks, double elapsed) {
-            string json = "{" +
-                    "\"videoname\": \"" + videoName + "\", " +
-                    "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
-                    "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
-#if WINDOWS
-            if (WindowsInterface.webView2 != null) {
-                WebMessage webMessage = new();
-                webMessage.message = "SetBookmarks";
-                webMessage.data = json;
-                SendMessage(JsonSerializer.Serialize(webMessage));
-                Logger.WriteLine("Successfully sent bookmarks to frontend");
-            }
-            else {
-                BackupBookmarks(videoName, json);
-            }
-#endif
-        }
     }
 }

@@ -137,17 +137,13 @@ namespace RePlays.Integrations {
         }
 
         public void UpdateMetadataWithStats(string videoPath) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
-            if (File.Exists(metadataPath)) {
-                VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+            Functions.UpdateMetadata(videoPath, metadata => {
                 metadata.kills = stats.Kills;
                 metadata.assists = stats.Assists;
                 metadata.deaths = stats.Deaths;
                 metadata.champion = stats.Champion;
                 metadata.win = stats.Win;
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
-            }
+            });
         }
     }
 

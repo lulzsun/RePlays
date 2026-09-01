@@ -70,6 +70,8 @@ function App() {
         setClips(data.clips);
         setSessions(data.sessions);
 
+        migrateLocalStorageBookmarks(data.sessions.concat(data.clips), data.game, data.sortBy);
+
         setClipTotal(data.clipsSize);
         setSessionTotal(data.sessionsSize);
 
@@ -132,31 +134,6 @@ function App() {
           return tl;
         });
         break;
-      case 'SetBookmarks':
-        console.log(data);
-        let videoMetadata = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
-
-        let bookmarks: { id: number; type: BookmarkType; time: number }[] = [];
-        const map = [
-          BookmarkType.Manual,
-          BookmarkType.Kill,
-          BookmarkType.Death,
-          BookmarkType.Assist,
-        ];
-
-        data.bookmarks.forEach(function (bookmark: any) {
-          let timeToSet = (bookmark.time / data.elapsed) * 100;
-          bookmarks.push({
-            id: Date.now(),
-            type: map[bookmark.type],
-            time: timeToSet,
-          });
-        });
-
-        videoMetadata[data.videoname] = { bookmarks };
-
-        localStorage.setItem('videoMetadataBookmarks', JSON.stringify(videoMetadata));
-        break;
       case 'UserSettings':
         //@ts-ignore
         document.activeElement.blur();
@@ -173,6 +150,40 @@ function App() {
     }
   }
 
+  // Bookmarks used to live in localStorage (as a percentage of the video's
+  // duration); they are now stored in each video's .metadata file (in seconds).
+  // This one-time migration pushes any leftover localStorage bookmarks to the
+  // backend, then deletes the localStorage entry.
+  function migrateLocalStorageBookmarks(videos: Video[], game: string, sortBy: string) {
+    const raw = localStorage.getItem('videoMetadataBookmarks');
+    if (raw === null) return;
+    let migrated = false;
+    try {
+      const stored = JSON.parse(raw);
+      Object.keys(stored).forEach((key) => {
+        // keys look like "/2026_08_31_18_52_18-ses.mkv"
+        const fileName = key.replace(/^\//, '');
+        const video = videos.find((v) => v.fileName === fileName);
+        const bookmarks = stored[key]?.bookmarks;
+        if (!video || !video.metadata?.duration || !bookmarks?.length) return;
+        postMessage('UpdateBookmarks', {
+          videoPath: `/${video.game}/${video.fileName}`,
+          merge: true,
+          bookmarks: bookmarks.map((b: any) => ({
+            type: b.type,
+            time: (b.time / 100) * video.metadata.duration,
+          })),
+        });
+        migrated = true;
+      });
+    } catch (e) {
+      console.error('bookmark migration failed', e);
+    }
+    localStorage.removeItem('videoMetadataBookmarks');
+    // refresh so the video list carries the migrated bookmarks
+    if (migrated) postMessage('RetrieveVideos', { game, sortBy });
+  }
+
   function handleMouseDown(e: MouseEvent) {
     if (recentLinksMenuOpen) {
       postMessage('HideRecentLinks');
@@ -185,8 +196,6 @@ function App() {
       var timeout = 1000;
       if (localStorage.getItem('videoMetadata') === null)
         localStorage.setItem('videoMetadata', '{}');
-      if (localStorage.getItem('videoMetadataBookmarks') === null)
-        localStorage.setItem('videoMetadataBookmarks', '{}');
       if (window.chrome?.webview?.postMessage !== undefined) {
         timeout = 0;
       }
