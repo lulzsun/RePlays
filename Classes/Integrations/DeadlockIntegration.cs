@@ -993,6 +993,43 @@ namespace RePlays.Integrations {
             return events;
         }
 
+        // The wall-clock moment of the video's first frame. The file name encodes when
+        // RePlays *began starting* the recording, but game capture can take tens of
+        // seconds to hook, so frames only exist from later than that. The most reliable
+        // anchor is the file's last write (recording stop) minus the video's duration -
+        // it survives file copies, unlike creation time, which is only the fallback.
+        // Candidates outside a sanity window around the file name timestamp are treated
+        // as clobbered by other tools and skipped.
+        private static DateTime? ResolveVideoStart(string videoPath, double durationS) {
+            string baseName = Path.GetFileNameWithoutExtension(videoPath);
+            DateTime nameStart = default;
+            bool haveName = baseName.Length >= 19 && DateTime.TryParseExact(baseName.Substring(0, 19),
+                "yyyy_MM_dd_HH_mm_ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out nameStart);
+            bool Plausible(DateTime t) => !haveName ||
+                (t >= nameStart.AddSeconds(-5) && t < nameStart.AddMinutes(10));
+
+            try {
+                if (durationS > 0) {
+                    DateTime endBased = File.GetLastWriteTime(videoPath).AddSeconds(-durationS);
+                    if (Plausible(endBased)) {
+                        Logger.WriteLine($"Deadlock: video start from last write minus duration" +
+                            (haveName ? $" ({(endBased - nameStart).TotalSeconds:F0}s after the file name timestamp)" : ""));
+                        return endBased;
+                    }
+                }
+                DateTime creation = File.GetCreationTime(videoPath);
+                if (Plausible(creation)) {
+                    Logger.WriteLine($"Deadlock: video start from file creation time" +
+                        (haveName ? $" ({(creation - nameStart).TotalSeconds:F0}s after the file name timestamp)" : ""));
+                    return creation;
+                }
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Deadlock: could not read file times: {ex.Message}");
+            }
+            return haveName ? nameStart : (DateTime?)null;
+        }
+
         // Patches an already-saved video's .metadata and bookmarks (the late path, once
         // the user has opened the match in Deadlock's match history).
         private static void ApplyMatchMetadataToSavedVideo(DeadlockPendingStat entry, DeadlockMatchInfo info) {
@@ -1000,13 +1037,8 @@ namespace RePlays.Integrations {
             if (player == null) return;
 
             DateTime? anchor = ResolveClockAnchor(entry.AnchorStart, entry.AnchorEnd, info.DurationS);
-            // The recording's start time is encoded in the video's file name
-            string baseName = Path.GetFileNameWithoutExtension(entry.VideoPath);
-            DateTime videoStart = default;
-            bool haveStart = baseName.Length >= 19 && DateTime.TryParseExact(baseName.Substring(0, 19),
-                "yyyy_MM_dd_HH_mm_ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out videoStart);
-            if (anchor == null || !haveStart) {
-                Logger.WriteLine("Deadlock: no usable clock anchor or video start time, backfilling stats without bookmarks");
+            if (anchor == null) {
+                Logger.WriteLine("Deadlock: no usable clock anchor, backfilling stats without bookmarks");
             }
 
             int addedBookmarks = 0;
@@ -1017,10 +1049,15 @@ namespace RePlays.Integrations {
                 if (player.Team != null && info.WinningTeam != null) {
                     m.win = player.Team == info.WinningTeam;
                 }
-                if (anchor == null || !haveStart) return;
+                if (anchor == null) return;
+                DateTime? videoStart = ResolveVideoStart(entry.VideoPath, m.duration);
+                if (videoStart == null) {
+                    Logger.WriteLine("Deadlock: no usable video start time, skipping backfilled bookmarks");
+                    return;
+                }
                 // append, don't replace - the video may already have manual bookmarks
                 foreach (var (gameTimeS, type) in BuildKdaEvents(info, player)) {
-                    double videoTime = (anchor.Value.AddSeconds(gameTimeS) - videoStart).TotalSeconds;
+                    double videoTime = (anchor.Value.AddSeconds(gameTimeS) - videoStart.Value).TotalSeconds;
                     if (videoTime < 0 || (m.duration > 0 && videoTime > m.duration)) continue;
                     m.bookmarks.Add(new Bookmark { type = type, time = videoTime });
                     addedBookmarks++;
