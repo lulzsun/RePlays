@@ -850,6 +850,11 @@ namespace RePlays.Integrations {
             string videoPath = RecordingService.GetCurrentSession()?.VideoSavePath;
             DateTime? anchorStart = matchClockStartWall;
             DateTime? anchorEnd = matchEndWall;
+            // Record which match this video holds even before any stats arrive, so
+            // the association survives restarts and a lost pending entry.
+            if (videoPath != null) {
+                Functions.UpdateMetadata(videoPath, m => m.matchId = matchId);
+            }
             AddPendingStat(new DeadlockPendingStat {
                 MatchId = matchId,
                 VideoPath = videoPath,
@@ -975,6 +980,13 @@ namespace RePlays.Integrations {
             }
             if (anchorStart != null) return anchorStart;
             if (anchorEnd != null && info.DurationS > 0) return anchorEnd.Value.AddSeconds(-wallLengthS);
+            // No console.log anchors (e.g. RePlays wasn't running when the match was
+            // played): the metadata's own start_time is the server match start, with
+            // the game clock's zero ~48s of pregame later - accurate to a few seconds.
+            if (info.StartTimeUnix > 0) {
+                Logger.WriteLine("Deadlock: anchoring bookmarks to the metadata start_time (+48s pregame, ±2s)");
+                return DateTimeOffset.FromUnixTimeSeconds(info.StartTimeUnix).ToLocalTime().DateTime.AddSeconds(48);
+            }
             return null;
         }
 
@@ -1048,6 +1060,7 @@ namespace RePlays.Integrations {
 
             int addedBookmarks = 0;
             var metadata = Functions.UpdateMetadata(entry.VideoPath, m => {
+                m.matchId = info.MatchId;
                 m.kills = player.Kills;
                 m.deaths = player.Deaths;
                 m.assists = player.Assists;

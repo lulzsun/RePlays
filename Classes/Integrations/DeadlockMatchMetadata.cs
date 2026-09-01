@@ -294,8 +294,8 @@ namespace RePlays.Integrations {
         }
 
         // message MatchInfo { uint32 duration_s = 1; ECitadelLobbyTeam winning_team = 3;
-        //                     repeated Players players = 4; uint64 match_id = 6;
-        //                     repeated Pause match_pauses = 14; ... }
+        //                     repeated Players players = 4; uint32 start_time = 5;
+        //                     uint64 match_id = 6; repeated Pause match_pauses = 14; ... }
         private static DeadlockMatchInfo ParseMatchInfo(byte[] buf, int offset, int length) {
             var reader = new ProtoReader(buf, offset, length);
             var result = new DeadlockMatchInfo();
@@ -313,6 +313,9 @@ namespace RePlays.Integrations {
                             result.Players.Add(ParsePlayer(buf, playerOffset, playerLength));
                             break;
                         }
+                    case 5 when wire == 0:
+                        result.StartTimeUnix = (long)reader.ReadVarint();
+                        break;
                     case 6 when wire == 0:
                         result.MatchId = (long)reader.ReadVarint();
                         break;
@@ -482,6 +485,9 @@ namespace RePlays.Integrations {
         public long MatchId;
         public int DurationS;
         public int? WinningTeam;
+        // unix time the server started the match; the game clock's zero comes
+        // ~48s of pregame later (measured 47-49s across matches)
+        public long StartTimeUnix;
         public List<DeadlockMatchPlayer> Players = new List<DeadlockMatchPlayer>();
         // sorted by GameTimeS
         public List<DeadlockMatchPause> Pauses = new List<DeadlockMatchPause>();

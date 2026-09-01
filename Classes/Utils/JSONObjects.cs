@@ -37,6 +37,9 @@ namespace RePlays.Utils {
         public int deaths { get; set; }
         public string champion { get; set; }
         public bool? win { get; set; }
+        // the game's own id for the match this video holds (e.g. a Deadlock match id),
+        // so stats can be (re)fetched for the video long after it was recorded
+        public long? matchId { get; set; }
         // bookmark times are in seconds from the start of the video
         public List<Bookmark> bookmarks { get; set; } = new();
     }
