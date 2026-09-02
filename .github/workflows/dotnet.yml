@@ -144,3 +144,19 @@ jobs:
             ./bin/Deployment/Releases/RePlaysSetup-${{needs.prep.outputs.version}}.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
+
+      # the setup executables are the only assets that survive from one nightly
+      # to the next, so keep the three most recent ones and drop the rest
+      - name: Prune old nightly setup executables
+        shell: bash
+        run: |
+          gh release view nightly --json assets --jq '.assets[].name' \
+            | grep -E '^RePlaysSetup-[0-9]+(\.[0-9]+)+\.exe$' \
+            | sort -V \
+            | head -n -3 \
+            | while read -r asset; do
+                echo "Deleting $asset"
+                gh release delete-asset nightly "$asset" --yes
+              done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
