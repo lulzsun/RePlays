@@ -53,11 +53,16 @@ jobs:
       - name: "Get Previous tag"
         id: previoustag
         run: |
-          if [ "${{steps.nightly.outputs.id}}" == "" ]; then
-            echo "tag=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))" >> $GITHUB_OUTPUT
-          else
-            echo "tag=$(echo ${{steps.nightly.outputs.name}} | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')" >> $GITHUB_OUTPUT
+          nightly=""
+          if [ "${{steps.nightly.outputs.id}}" != "" ]; then
+            nightly=$(echo "${{steps.nightly.outputs.name}}" | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')
           fi
+          # a stable release (release.yml) can be published with a higher version
+          # than the running nightly series, so continue from whichever is newer
+          stable=$(git tag --list '[0-9]*' | sort -V | tail -n 1)
+          tag=$(printf '%s\n' "$nightly" "$stable" | grep . | sort -V | tail -n 1)
+          echo "Previous version: $tag (nightly: ${nightly:-none}, stable: ${stable:-none})"
+          echo "tag=$tag" >> $GITHUB_OUTPUT
 
       - name: "Get next version"
         id: semvers
