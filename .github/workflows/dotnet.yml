@@ -19,7 +19,6 @@ jobs:
     name: Prepare for Build
 
     outputs:
-      should_run: ${{ steps.check_commit.outputs.should_run }}
       oldversion: ${{ steps.previoustag.outputs.tag }}
       version: ${{ steps.semvers.outputs.patch }}
 
@@ -30,23 +29,19 @@ jobs:
 
       # the nightly tag is moved to the built commit on every successful release,
       # so building only when HEAD differs from it also picks up commits that a
-      # previously failed run never shipped
+      # previously failed run never shipped. the run is failed on purpose when
+      # there is nothing to build so a "no new nightly" day is visible as red
       - name: "check for new commits since last nightly"
-        id: check_commit
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "This workflow was triggered manually! Forcing a build."
-            echo "should_run=true" >> $GITHUB_OUTPUT
           elif [[ "$(git rev-parse HEAD)" == "$(git rev-parse 'refs/tags/nightly^{commit}' 2>/dev/null)" ]]; then
-            echo "No new commits since last nightly release, skipping build."
-            echo "should_run=false" >> $GITHUB_OUTPUT
-          else
-            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "::error::No new commits since last nightly release, no build created."
+            exit 1
           fi
 
       - name: "Check if nightly exists"
         id: nightly
-        if: steps.check_commit.outputs.should_run == 'true'
         uses: cardinalby/git-get-release-action@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -57,7 +52,6 @@ jobs:
 
       - name: "Get Previous tag"
         id: previoustag
-        if: steps.check_commit.outputs.should_run == 'true'
         run: |
           if [ "${{steps.nightly.outputs.id}}" == "" ]; then
             echo "tag=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))" >> $GITHUB_OUTPUT
@@ -67,18 +61,15 @@ jobs:
 
       - name: "Get next version"
         id: semvers
-        if: steps.check_commit.outputs.should_run == 'true'
         uses: "WyriHaximus/github-action-next-semvers@v1"
         with:
           version: ${{ steps.previoustag.outputs.tag }}
 
       - name: output
-        if: steps.check_commit.outputs.should_run == 'true'
         run: echo ${{steps.previoustag.outputs.tag}} ${{steps.semvers.outputs.patch}}
 
   build:
     needs: prep
-    if: needs.prep.outputs.should_run == 'true'
     runs-on: windows-2022
     name: Build RePlays
 
