@@ -1,4 +1,4 @@
-using RePlays.Classes.Utils;
+﻿using RePlays.Classes.Utils;
 using RePlays.Recorders;
 using RePlays.Services;
 using System;
@@ -167,16 +167,27 @@ namespace RePlays.Utils {
                 }).Wait();
             }
 #if WINDOWS
-            if (WindowsInterface.webView2 == null || WindowsInterface.webView2.IsDisposed == true || WindowsInterface.webView2.Source.AbsolutePath.Contains("preload")) return false;
-            if (WindowsInterface.webView2.InvokeRequired) {
-                // Call this same method but make sure it is on UI thread
-                return WindowsInterface.webView2.Invoke(new Func<bool>(() => {
-                    return SendMessage(message);
-                }));
-            }
-            else {
-                WindowsInterface.webView2.CoreWebView2.PostWebMessageAsJson(message);
+            var webView2 = WindowsInterface.webView2;
+            if (webView2 == null || webView2.IsDisposed) return false;
+            try {
+                if (webView2.InvokeRequired) {
+                    // Call this same method but make sure it is on UI thread
+                    return (bool)webView2.Invoke(new Func<bool>(() => {
+                        return SendMessage(message);
+                    }));
+                }
+                // the control exists for a few seconds before CoreWebView2 finishes initializing,
+                // so both Source and CoreWebView2 can still be null here; that just means the
+                // interface is not ready yet, so the message gets queued by the caller instead
+                if (webView2.CoreWebView2 == null || webView2.Source == null ||
+                    webView2.Source.AbsolutePath.Contains("preload")) return false;
+                webView2.CoreWebView2.PostWebMessageAsJson(message);
                 return true;
+            }
+            catch (Exception exception) {
+                // never let a failed message bring down the caller (i.e. the updater)
+                Logger.WriteLine($"Failed to send message to interface: {exception.Message}");
+                return false;
             }
 #endif
             return true;
@@ -488,7 +499,7 @@ namespace RePlays.Utils {
             bool success = SendMessage(JsonSerializer.Serialize(webMessage));
             if (!success) {
                 // if message was not successful (interface was probably minimized), save to list to show later
-                modalList.Add(context, webMessage);
+                modalList[context] = webMessage;
             }
         }
 

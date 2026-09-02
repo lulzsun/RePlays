@@ -41,7 +41,14 @@ namespace RePlays.Utils {
 
                 if (updateInfo.ReleasesToApply.Count > 0) {
                     Action<int> progressCallback = (progressValue) => {
-                        WebMessage.DisplayToast("UpdateProgress", "Installing update", "Updating", "none", (long)progressValue, (long)100);
+                        try {
+                            WebMessage.DisplayToast("UpdateProgress", "Installing update", "Updating", "none", (long)progressValue, (long)100);
+                        }
+                        catch (Exception exception) {
+                            // reporting progress must never abort the update itself, otherwise the
+                            // release gets applied on disk but the user is never asked to restart
+                            Logger.WriteLine($"Failed to display update progress: {exception.Message}");
+                        }
                     };
                     if (SettingsService.Settings.generalSettings.update == "automatic") {
                         Logger.WriteLine($"New version found! Preparing to automatically update to version {updateInfo.FutureReleaseEntry.Version} from {updateInfo.CurrentlyInstalledVersion.Version}");
@@ -72,6 +79,9 @@ namespace RePlays.Utils {
             }
             catch (System.Exception exception) {
                 Logger.WriteLine("Error: Issue fetching update releases: " + exception.ToString());
+                // otherwise the progress toast is stuck on screen (and replayed on every
+                // interface reload) with no way for the user to dismiss it
+                WebMessage.DestroyToast("UpdateProgress");
                 if (forceUpdate) {
                     WebMessage.DestroyToast("CheckUpdateProgress");
                     WebMessage.DisplayModal("Failed to check for update. More information written to logs.", "Error", "warning");
