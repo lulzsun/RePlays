@@ -65,6 +65,30 @@ namespace RePlays {
                 }
             };
 
+#if WINDOWS
+            // squirrel runs the exe of the version it just staged with a --squirrel-* lifecycle
+            // argument and waits for it to exit. this has to happen before the single instance
+            // check below: the instance being updated still owns the mutex, so the hook would
+            // otherwise bail out without ever creating or removing shortcuts, and would ping the
+            // old instance to the foreground for no reason.
+            if (args.Any(arg => arg.StartsWith("--squirrel-", StringComparison.OrdinalIgnoreCase)) &&
+                !args.Any(arg => arg.Equals("--squirrel-firstrun", StringComparison.OrdinalIgnoreCase))) {
+                try {
+                    SquirrelAwareApp.HandleEvents(
+                        onInitialInstall: (_, tools) => tools.CreateShortcutForThisExe(),
+                        onAppUpdate: (_, tools) => tools.CreateShortcutForThisExe(),
+                        onAppUninstall: (_, tools) => tools.RemoveShortcutForThisExe()
+                    );
+                }
+                catch (Exception exception) {
+                    Logger.WriteLine(exception.ToString());
+                }
+                // HandleEvents exits the process itself, this is just a safety net so a lifecycle
+                // invocation can never fall through into a second running instance
+                return;
+            }
+#endif
+
             // prevent multiple instances
             var mutex = new Mutex(true, @"Global\RePlays", out var createdNew);
             if (!createdNew) {
@@ -129,7 +153,8 @@ namespace RePlays {
             });
 #if WINDOWS
             ScreenSize.UpdateMaximumScreenResolution();
-            // squirrel configuration
+            // squirrel configuration; the lifecycle arguments are handled before the single
+            // instance check above, this only covers a plain (or --squirrel-firstrun) launch
             try {
                 SquirrelAwareApp.HandleEvents(
                     onInitialInstall: (_, tools) => tools.CreateShortcutForThisExe(),
