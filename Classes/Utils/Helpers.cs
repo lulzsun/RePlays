@@ -435,6 +435,13 @@ namespace RePlays.Utils {
             }
         }
 
+        // Probing the file the recorder is still writing yields no duration (mp4 has
+        // no moov atom yet) or a partial one, so it must wait until the recording stops.
+        private static bool IsBeingRecorded(string videoPath) {
+            return RecordingService.IsRecording &&
+                string.Equals(RecordingService.GetCurrentSession()?.VideoSavePath, videoPath, StringComparison.OrdinalIgnoreCase);
+        }
+
         public static VideoMetadata GetOrCreateMetadata(string videoPath) {
             lock (_metafileLock) {
                 string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
@@ -442,6 +449,15 @@ namespace RePlays.Utils {
                 var metadata = GetMetadata(videoPath);
 
                 if (metadata != null) {
+                    // a metadata created while its video was still recording has no
+                    // duration yet - fill it in once the file is finished
+                    if (metadata.duration == 0 && !IsBeingRecorded(videoPath)) {
+                        var probed = GetVideoDuration(videoPath);
+                        if (probed > 0) {
+                            metadata.duration = probed;
+                            File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata));
+                        }
+                    }
                     return metadata;
                 }
 
@@ -449,8 +465,7 @@ namespace RePlays.Utils {
 
                 if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
-                var duration = GetVideoDuration(videoPath);
-                metadata.duration = duration;
+                metadata.duration = IsBeingRecorded(videoPath) ? 0 : GetVideoDuration(videoPath);
                 metadata.filePath = metadataPath;
 
                 Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");
