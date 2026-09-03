@@ -30,7 +30,9 @@ Obj/
 
 # Visual Studio 2015 cache/options directory
 .vs/
-.config/
+.config/*
+# the dotnet tool manifest pins the vpk (velopack) version the release build runs
+!.config/dotnet-tools.json
 /wwwroot/dist/
 
 # JetBrains

@@ -11,13 +11,12 @@ using System.Text;
 using RePlays.Utils;
 using RePlays.Services;
 using static RePlays.Utils.Functions;
-
+using Velopack;
 
 #if !WINDOWS
 using RePlays.Classes.Utils;
 using RePlays.Recorders;
 #else
-using Squirrel;
 using System.Windows.Forms;
 #endif
 
@@ -65,29 +64,17 @@ namespace RePlays {
                 }
             };
 
-#if WINDOWS
-            // squirrel runs the exe of the version it just staged with a --squirrel-* lifecycle
-            // argument and waits for it to exit. this has to happen before the single instance
-            // check below: the instance being updated still owns the mutex, so the hook would
-            // otherwise bail out without ever creating or removing shortcuts, and would ping the
-            // old instance to the foreground for no reason.
-            if (args.Any(arg => arg.StartsWith("--squirrel-", StringComparison.OrdinalIgnoreCase)) &&
-                !args.Any(arg => arg.Equals("--squirrel-firstrun", StringComparison.OrdinalIgnoreCase))) {
-                try {
-                    SquirrelAwareApp.HandleEvents(
-                        onInitialInstall: (_, tools) => tools.CreateShortcutForThisExe(),
-                        onAppUpdate: (_, tools) => tools.CreateShortcutForThisExe(),
-                        onAppUninstall: (_, tools) => tools.RemoveShortcutForThisExe()
-                    );
-                }
-                catch (Exception exception) {
-                    Logger.WriteLine(exception.ToString());
-                }
-                // HandleEvents exits the process itself, this is just a safety net so a lifecycle
-                // invocation can never fall through into a second running instance
-                return;
-            }
-#endif
+            // velopack handles its lifecycle arguments here and exits: --veloapp-* from its own
+            // installer and updater, and the --squirrel-* ones the squirrel updater of an older
+            // RePlays passes while it installs this version. this has to happen before the single
+            // instance check below, the instance being updated still owns the mutex. on a plain
+            // launch this also installs an update that was downloaded but not applied yet, by
+            // restarting into the new version. that is skipped on an install squirrel laid out,
+            // there the migration done by "Update.exe start" (see Updater.Restart) takes care of it
+            VelopackApp.Build()
+                .SetLogger(new VelopackLogger())
+                .SetAutoApplyOnStartup(!Updater.IsSquirrelLayout())
+                .Run();
 
             // prevent multiple instances
             var mutex = new Mutex(true, @"Global\RePlays", out var createdNew);
@@ -132,6 +119,7 @@ namespace RePlays {
             StorageService.ManageStorage();
             KeybindService.Start();
             PurgeTempVideos();
+            Updater.RemoveSquirrelLeftovers();
             Updater.CheckForUpdates();
 
             // Deadlock match stats can become available after the game (or RePlays)
@@ -153,18 +141,6 @@ namespace RePlays {
             });
 #if WINDOWS
             ScreenSize.UpdateMaximumScreenResolution();
-            // squirrel configuration; the lifecycle arguments are handled before the single
-            // instance check above, this only covers a plain (or --squirrel-firstrun) launch
-            try {
-                SquirrelAwareApp.HandleEvents(
-                    onInitialInstall: (_, tools) => tools.CreateShortcutForThisExe(),
-                    onAppUpdate: (_, tools) => tools.CreateShortcutForThisExe(),
-                    onAppUninstall: (_, tools) => tools.RemoveShortcutForThisExe()
-                );
-            }
-            catch (Exception exception) {
-                Logger.WriteLine(exception.ToString());
-            }
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();

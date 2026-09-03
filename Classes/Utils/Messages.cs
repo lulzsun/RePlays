@@ -463,20 +463,8 @@ namespace RePlays.Utils {
                     }
                     break;
 #if WINDOWS
-                case "Restart": {
-                        string path = Path.Join(GetStartupPath(), @"../RePlays.exe");
-                        string cmdCommand = $"/C timeout /t 1 & start \"\" \"{path}\"";
-
-                        ProcessStartInfo processInfo = new ProcessStartInfo {
-                            FileName = "cmd.exe",
-                            Arguments = cmdCommand,
-                            UseShellExecute = true,
-                            WindowStyle = ProcessWindowStyle.Hidden
-                        };
-
-                        Process.Start(processInfo);
-                        Process.GetCurrentProcess().Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
-                    }
+                case "Restart":
+                    Updater.Restart();
                     break;
 #endif
                 default:

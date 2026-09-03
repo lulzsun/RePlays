@@ -97,17 +97,15 @@ jobs:
         with:
           dotnet-version: 8.0.403
 
+      # vpk (velopack) is pinned in .config/dotnet-tools.json and run by the publish
+      - name: Restore dotnet tools
+        run: dotnet tool restore
+
+      # the previous full package is what the delta package is built against. with --pre
+      # the newest version across the stable and nightly releases is taken, the same set
+      # of releases the app itself reads on the nightly channel
       - name: Download previous release to create delta
-        uses: robinraju/release-downloader@v1.3
-        with:
-          token: ${{ secrets.MY_TOKEN }}
-          repository: ${{ github.repository }}
-          latest: true
-          fileName: "*"
-          # Relative path under $GITHUB_WORKSPACE to place the downloaded file(s)
-          # It will create the target directory automatically if not present
-          # eg: out-file-path: "my-downloads" => It will create directory $GITHUB_WORKSPACE/my-downloads
-          out-file-path: "bin/Deployment/Releases"
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --pre --outputDir bin/Deployment/Releases
 
       - name: Build LibObs
         run: .\\build-libobs.cmd
@@ -119,7 +117,7 @@ jobs:
         run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile -v d
 
       - name: Append version to setup file
-        run: ren ./bin/Deployment/Releases/RePlaysSetup.exe RePlaysSetup-${{needs.prep.outputs.version}}.exe
+        run: ren ./bin/Deployment/Releases/RePlays-win-Setup.exe RePlaysSetup-${{needs.prep.outputs.version}}.exe
 
       - name: Update nightly tag
         uses: richardsimko/update-tag@v1
@@ -146,6 +144,7 @@ jobs:
           body: "Nightly release, built with the latest and potentially breaking changes, test at your own risk."
           files: |
             ./bin/Deployment/Releases/RELEASES
+            ./bin/Deployment/Releases/releases.win.json
             ./bin/Deployment/Releases/RePlaysSetup-${{needs.prep.outputs.version}}.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg

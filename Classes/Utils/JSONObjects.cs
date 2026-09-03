@@ -63,11 +63,18 @@ namespace RePlays.Utils {
                 _launchStartup = value;
 #if WINDOWS
                 try {
-                    using (var manager = new Squirrel.UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
+                    // velopack creates and removes the desktop and start menu shortcuts itself, but
+                    // launching at startup is a user setting so that shortcut is still managed here.
+                    // it is refreshed on every launch (settings are loaded at startup), which also
+                    // restores it after the migration from squirrel removed every shortcut of the app
+                    if (Velopack.Locators.VelopackLocator.Current.CurrentlyInstalledVersion != null) {
+#pragma warning disable CS0618 // only the automatic desktop and start menu shortcuts are deprecated
+                        var shortcuts = new Velopack.Windows.Shortcuts();
                         if (_launchStartup == true)
-                            manager.CreateShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup, false);
+                            shortcuts.CreateShortcut("RePlays.exe", Velopack.Windows.ShortcutLocation.Startup, false, null);
                         else
-                            manager.RemoveShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup);
+                            shortcuts.DeleteShortcuts("RePlays.exe", Velopack.Windows.ShortcutLocation.Startup);
+#pragma warning restore CS0618
                     }
                 }
                 catch (Exception exception) {

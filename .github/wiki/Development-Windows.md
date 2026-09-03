@@ -97,11 +97,13 @@ To manually build a release on your machine, run the following command at the ro
 
 `dotnet publish /p:Configuration=Release /p:Version=X.X.X /p:PublishProfile=FolderProfile`
 
-You must specific a version in the numeral format of X.X.X (e.g. 1.69.420). Version numbering does not really matter for local release builds.
+You must specify a version in the numeral format of X.X.X (e.g. 1.69.420). Version numbering does not really matter for local release builds.
 
-The build will make use of Squirrel and create deltas or full packages, including a Setup file. You can find these files in `/bin/Deployment/Releases/`.
+The build will make use of Velopack and create deltas or full packages, including a Setup file. You can find these files in `/bin/Deployment/Releases/`. A delta package is only created when the previous version's full package is present in that folder (the GitHub workflows download it with `dotnet vpk download github`).
 
-You can learn more about the Squirrel deployment process [here](https://github.com/Squirrel/Squirrel.Windows/blob/develop/docs/getting-started/0-overview.md#overview).
+To try the update flow of a local build before publishing it, start an installed RePlays with the environment variable `REPLAYS_UPDATE_FEED` set to the `/bin/Deployment/Releases/` folder. It is then used as the update feed instead of the GitHub releases.
+
+You can learn more about the Velopack deployment process [here](https://docs.velopack.io/).
 
 # 7. (Optional) Using Visual Studio Code
 

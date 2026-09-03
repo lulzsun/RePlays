@@ -50,10 +50,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
-    <SquirrelTools>$(PkgClowd_Squirrel)\tools</SquirrelTools>
     <Version>1.0.0</Version>
-    <NuspecFile>RePlays.nuspec</NuspecFile>
     <Nullable>annotations</Nullable>
     <StartupObject>RePlays.Program</StartupObject>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -93,19 +90,15 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Clowd.Squirrel" Version="2.11.1" />
     <PackageReference Include="JsonPath.Net" Version="1.0.0" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.9" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2420.47" />
-    <PackageReference Include="NuGet.CommandLine" Version="6.9.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="SharpHook" Version="5.3.1" />
     <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
     <!-- Pure-managed Zstandard, for decompressing Deadlock match metadata bodies from
          the Steam http cache. zstd is not in System.IO.Compression on any .NET release. -->
     <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
@@ -180,13 +173,16 @@
   </Target>
 
   <Target Name="Package" AfterTargets="Publish" Condition=" '$(Configuration)' == 'Release' ">
-    <!-- Prepare Squirrel package -->
-    <XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
-      <Output TaskParameter="Result" ItemName="ID" />
-    </XmlPeek>
-
-    <Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets" />
-    <Exec Command="$(SquirrelTools)\Squirrel.exe releasify --package=$(MSBuildProjectDirectory)\bin\Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(MSBuildProjectDirectory)\bin\Deployment\Releases --framework net8" />
+    <!-- velopack (the vpk tool pinned in .config/dotnet-tools.json) turns the publish folder into a
+         setup executable and a full package, plus a delta package when the previous full package is
+         present in the output folder (the workflows download it first). it also writes the
+         releases.win.json feed the app reads for updates and the legacy RELEASES file that lets
+         installs still on squirrel update to this build -->
+    <PropertyGroup>
+      <!-- a full path without the trailing separator, which would otherwise escape the closing quote -->
+      <VelopackPackDir>$([System.IO.Path]::GetFullPath('$(PublishDir)', '$(MSBuildProjectDirectory)').TrimEnd('\'))</VelopackPackDir>
+    </PropertyGroup>
+    <Exec Command="dotnet vpk pack --packId RePlays --packTitle RePlays --packAuthors lulzsun --packVersion $(Version) --packDir &quot;$(VelopackPackDir)&quot; --mainExe RePlays.exe --icon &quot;$(MSBuildProjectDirectory)\Resources\logo.ico&quot; --splashImage &quot;$(MSBuildProjectDirectory)\Resources\loading.gif&quot; --outputDir &quot;$(MSBuildProjectDirectory)\bin\Deployment\Releases&quot; --noPortable" />
   </Target>
 
   <ItemGroup>
