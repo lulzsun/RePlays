@@ -1,9 +1,8 @@
+using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
-#if WINDOWS
-using Velopack.Windows;
-#endif
+using System.Text.Json.Serialization;
 
 namespace RePlays.Utils {
     public class VideoList {
@@ -14,6 +13,7 @@ namespace RePlays.Utils {
         public long sessionsSize { get; set; }
         public List<Video> clips { get; set; }
         public long clipsSize { get; set; }
+        public List<Video> corrupted { get; set; }
     }
 
     public class Video {
@@ -27,12 +27,21 @@ namespace RePlays.Utils {
     }
 
     public class VideoMetadata {
+        // where this metadata was loaded from; set by GetMetadata/GetOrCreateMetadata,
+        // not persisted into the file itself
+        [JsonIgnore]
+        public string filePath { get; set; }
         public double duration { get; set; }
         public int kills { get; set; }
         public int assists { get; set; }
         public int deaths { get; set; }
         public string champion { get; set; }
-        public bool win { get; set; }
+        public bool? win { get; set; }
+        // the game's own id for the match this video holds (e.g. a Deadlock match id),
+        // so stats can be (re)fetched for the video long after it was recorded
+        public long? matchId { get; set; }
+        // bookmark times are in seconds from the start of the video
+        public List<Bookmark> bookmarks { get; set; } = new();
     }
 
     public class VideoSortSettings {
@@ -54,20 +63,23 @@ namespace RePlays.Utils {
                 _launchStartup = value;
 #if WINDOWS
                 try {
-                    var shortcuts = new Shortcuts();
-                    if (_launchStartup == true)
-                        shortcuts.CreateShortcut("RePlays.exe", ShortcutLocation.Startup, false, null);
-                    else
-                        shortcuts.DeleteShortcuts("RePlays.exe", ShortcutLocation.Startup);
+                    using (var manager = new Squirrel.UpdateManager(Environment.GetEnvironmentVariable("LocalAppData") + @"\RePlays\packages")) {
+                        if (_launchStartup == true)
+                            manager.CreateShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup, false);
+                        else
+                            manager.RemoveShortcutsForExecutable("RePlays.exe", Squirrel.ShortcutLocation.Startup);
+                    }
                 }
                 catch (Exception exception) {
                     Logger.WriteLine("Error: Issue editing program startup setting: " + exception.ToString());
                 }
-#endif  
+#endif
             }
         }
-        private bool _startMinimized = false;
+        private bool _startMinimized;
         public bool startMinimized { get { return _startMinimized; } set { _startMinimized = value; } }
+        private bool _closeToTray = true;
+        public bool closeToTray { get { return _closeToTray; } set { _closeToTray = value; } }
         private string _theme = "System";
         public string theme { get { return _theme; } set { _theme = value; } }
         private string _update = "automatic"; // ??? why is there a warning
@@ -76,13 +88,24 @@ namespace RePlays.Utils {
         public string updateChannel { get { return _updateChannel; } set { _updateChannel = value; } }
         public string currentVersion { get { return Updater.currentVersion; } }
         public string latestVersion { get { return Updater.latestVersion; } }
+        private Device _device = new();
+        public Device device { get { return _device; } set { _device = value; } }
+        private string _language = "en";
+        public string language { get { return _language; } set { _language = value; } }
+
+    }
+
+    public class Device {
+        private string? _gpuManufacturer;
+        public string gpuManufacturer { get { return _gpuManufacturer; } set { _gpuManufacturer = value; } }
     }
 
     public class AudioDevice {
         public AudioDevice() { }
-        public AudioDevice(string deviceId, string deviceLabel, bool denoiser = false) {
+        public AudioDevice(string deviceId, string deviceLabel, bool isInput, bool denoiser = false) {
             _deviceId = deviceId;
             _deviceLabel = deviceLabel;
+            _isInput = isInput;
             _denoiser = denoiser;
         }
         private string _deviceId = "";
@@ -91,8 +114,25 @@ namespace RePlays.Utils {
         public string deviceLabel { get { return _deviceLabel; } set { _deviceLabel = value; } }
         private int _deviceVolume = 100;
         public int deviceVolume { get { return _deviceVolume; } set { _deviceVolume = value; } }
+        private bool _isInput;
+        public bool isInput { get { return _isInput; } set { _isInput = value; } }
         private bool _denoiser;
         public bool denoiser { get { return _denoiser; } set { _denoiser = value; } }
+    }
+
+    public class AudioApplication {
+        public AudioApplication() { }
+        public AudioApplication(string name, string recordWindow) {
+            _name = name;
+            _recordWindow = recordWindow;
+        }
+
+        private string _name;
+        public string name { get { return _name; } set { _name = value; } }
+        private string _recordWindow;
+        public string windowClassNameId { get { return _recordWindow; } set { _recordWindow = value; } }
+        private int _applicationVolume = 100;
+        public int applicationVolume { get { return _applicationVolume; } set { _applicationVolume = value; } }
     }
 
     public class CaptureSettings {
@@ -136,6 +176,12 @@ namespace RePlays.Utils {
         private int _bitRate = 50;
         public int bitRate { get { return _bitRate; } set { _bitRate = value; } }
 
+        private int _maxBitRate = 50;
+        public int maxBitRate { get { return _maxBitRate; } set { _maxBitRate = value; } }
+
+        private int _cqLevel = 20;
+        public int cqLevel { get { return _cqLevel; } set { _cqLevel = value; } }
+
         private List<AudioDevice> _inputDevicesCache = new();
         /// <summary>
         /// TODO: Remove cache in user settings, this is not good practice
@@ -154,26 +200,61 @@ namespace RePlays.Utils {
         private List<AudioDevice> _outputDevices = new();
         public List<AudioDevice> outputDevices { get { return _outputDevices; } set { _outputDevices = value; } }
 
+        private List<AudioApplication> _audioApplications = new();
+        public List<AudioApplication> audioApplications { get { return _audioApplications; } set { _audioApplications = value; } }
+
         private bool _hasNvidiaAudioSDK;
         public bool hasNvidiaAudioSDK { get { return _hasNvidiaAudioSDK; } set { _hasNvidiaAudioSDK = value; } }
 
-        private List<FileFormat> _fileFormatCache = new() { new FileFormat("mp4", "MPEG-4 (.mp4)") }; // Initially set to MP4, Updated inside LibOBSRecorder when loaded.
+        private List<FileFormat> _fileFormatCache = new() { new FileFormat("mp4", "MPEG-4 (.mp4)", true) }; // Initially set to MP4, Updated inside LibOBSRecorder when loaded.
         /// <summary>
         /// TODO: Remove cache in user settings, this is not good practice
         /// </summary>
         public List<FileFormat> fileFormatsCache { get { return _fileFormatCache; } set { _fileFormatCache = value; } }
 
-        private FileFormat _fileFormat = new FileFormat("mp4", "MPEG-4 (.mp4)");
+        private FileFormat _fileFormat = new FileFormat("fragmented_mp4", "Fragmented MP4 (.mp4)", true);
         public FileFormat fileFormat { get { return _fileFormat; } set { _fileFormat = value; } }
+
+        private bool _useReplayBuffer = false;
+        public bool useReplayBuffer { get { return _useReplayBuffer; } set { _useReplayBuffer = value; } }
+        // In seconds
+
+        private uint _replayBufferDuration = 30;
+        public uint replayBufferDuration { get { return _replayBufferDuration; } set { _replayBufferDuration = value; } }
+
+        // In MB
+        private uint _replayBufferSize = 500;
+        public uint replayBufferSize { get { return _replayBufferSize; } set { _replayBufferSize = value; } }
+
+        private bool _captureGameAudio = false;
+        public bool captureGameAudio { get { return _captureGameAudio; } set { _captureGameAudio = value; } }
+
+        private bool _captureHdr = false;
+        public bool captureHdr { get { return _captureHdr; } set { _captureHdr = value; } }
+    }
+
+    public class ClipSettings {
+        private bool _reEncode = false;
+        public bool reEncode { get { return _reEncode; } set { _reEncode = value; } }
+        private string _renderHardware = "CPU";
+        public string renderHardware { get { return _renderHardware; } set { _renderHardware = value; } }
+        private uint _renderQuality = 23;
+        public uint renderQuality { get { return _renderQuality; } set { _renderQuality = value; } }
+        private string _renderCodec = "libx264";
+        public string renderCodec { get { return _renderCodec; } set { _renderCodec = value; } }
+        private uint? _renderCustomFps;
+        public uint? renderCustomFps { get { return _renderCustomFps; } set { _renderCustomFps = value; } }
     }
 
     public class FileFormat {
-        public string title { get; }
         public string format { get; }
+        public string title { get; }
+        public bool isReplayBufferCompatible { get; }
 
-        public FileFormat(string format, string title) {
+        public FileFormat(string format, string title, bool isReplayBufferCompatible) {
             this.format = format;
             this.title = title;
+            this.isReplayBufferCompatible = isReplayBufferCompatible;
         }
 
         public override string ToString() {
@@ -204,6 +285,8 @@ namespace RePlays.Utils {
     public class UploadSettings {
         private List<string> _recentLinks = new();
         public List<string> recentLinks { get { return _recentLinks; } set { _recentLinks = value; } }
+        private bool _openAfterUpload = true;
+        public bool openAfterUpload { get { return _openAfterUpload; } set { _openAfterUpload = value; } }
 
         public class StreamableSettings {
             private string _email = "";

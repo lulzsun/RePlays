@@ -1,15 +1,17 @@
-import { useTranslation } from 'react-i18next';
+﻿import { useTranslation } from 'react-i18next';
 
-import { useEffect, useRef, useState } from 'react';
+import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import DropDownMenu from '../../components/DropDownMenu';
 import AudioDevice from '../../components/AudioDevice';
+import HelpSymbol from '../../components/HelpSymbol';
 
 interface Props {
   updateSettings: () => void;
   settings: CaptureSettings | undefined;
+  device: Device | undefined;
 }
 
-export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
+export const Capture: React.FC<Props> = ({ settings, updateSettings, device }) => {
   const { t } = useTranslation();
 
   const customVideoQuality = useRef<HTMLInputElement | null>(null);
@@ -151,6 +153,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
           settings.fileFormat = {
             title: 'MPEG-4 (.mp4)',
             format: 'fragmented_mp4',
+            isReplayBufferCompatible: false
           };
           updateSettings();
         },
@@ -179,6 +182,7 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             settings.fileFormat = fmt;
             updateSettings();
           },
+          isReplayBufferCompatible: fmt.isReplayBufferCompatible
         });
       });
     }
@@ -219,10 +223,68 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
   }
 
   var current_format: any = settings?.fileFormat?.format;
-  var is_interupttable: boolean =
+  var is_interupttable: boolean = (
     current_format === 'mkv' ||
     current_format === 'fragmented_mp4' ||
-    current_format === 'fragmented_mov';
+    current_format === 'fragmented_mov') ||
+    settings?.useReplayBuffer == true;
+
+
+  const validate = (e: ChangeEvent<HTMLInputElement>) => {
+    let value: number | string = parseInt(e.target.value);
+    if (isNaN(value) || value <= 0) {
+      value = -1;
+      e.target.value = '';
+    }
+  }
+
+  const validateAndUpdateSettings = (e: ChangeEvent<HTMLInputElement>, field: keyof CaptureSettings) => {
+    let value: number | string = parseInt(e.target.value);
+    if (field == "replayBufferDuration" || field == "replayBufferSize") {
+      if (isNaN(value) || value <= 10) {
+        value = 10;
+        e.target.value = '10';
+      }
+    }
+
+    if (field == "bitRate" || field == "maxBitRate") {
+      if (isNaN(value) || value <= 1) {
+        value = 1;
+        e.target.value = '1';
+      }
+    }
+
+    if (field == "cqLevel") {
+      if (isNaN(value) || value <= 1) {
+        value = 1;
+        e.target.value = '1';
+      }
+      else if (value >= 51) {
+        value = 51;
+        e.target.value = '51';
+      }
+    }
+
+    if (settings) {
+      (settings[field] as number) = value;
+      updateSettings();
+    }
+  };
+
+  const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+    validate(e);
+  };
+
+  const handleInputBlur = (e: ChangeEvent<HTMLInputElement>, field: keyof CaptureSettings) => {
+    validateAndUpdateSettings(e, field);
+  };
+
+  const handleInputKeyPress = (e: KeyboardEvent<HTMLInputElement>, field: keyof CaptureSettings) => {
+    if (e.key === 'Enter') {
+      validateAndUpdateSettings(e as unknown as ChangeEvent<HTMLInputElement>, field);
+      e.preventDefault();
+    }
+  };
 
   return (
     <div className='flex flex-col gap-2 font-medium text-base pb-7'>
@@ -281,6 +343,67 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             {t('settingsCaptureItem05')}
           </span>
         </label>
+      </div>
+
+      <h1 className='font-semibold text-2xl'>{t('settingsCaptureItem30')}</h1>
+      <div className='flex flex-col gap-2'>
+        <span className='text-gray-700 dark:text-gray-400'>
+          {t('settingsCaptureItem31')}
+        </span>
+        <label className='inline-flex items-center'>
+          <input
+            type='checkbox'
+            name='enableReplayBuffer'
+            className='form-checkbox h-4 w-4 text-gray-600'
+            defaultChecked={settings === undefined ? false : settings.useReplayBuffer}
+            onChange={e => {
+              settings!.useReplayBuffer = (e?.target as HTMLInputElement).checked
+              updateSettings()
+            }}
+          />
+          <span className='px-2 text-gray-700 dark:text-gray-400'>
+            {t('settingsCaptureItem32')}
+          </span>
+        </label>
+
+        {
+          settings?.useReplayBuffer && <div className='flex flex-row items-center gap-4'>
+            <div className='flex flex-col'>
+              {t('settingsCaptureItem33')}
+              <div className='flex flex-row items-center'>
+                <input
+                  className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                  type="number"
+                  min="10"
+                  defaultValue={settings?.replayBufferDuration}
+                  onBlur={(e) => handleInputBlur(e, 'replayBufferDuration')}
+                  onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferDuration')}
+                  onChange={(e) => handleOnChange(e)}
+                />
+                <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                  seconds
+                </span>
+              </div>
+            </div>
+            <div className='flex flex-col'>
+              {t('settingsCaptureItem34')}
+              <div className='flex flex-row items-center'>
+                <input
+                  className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-300 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+                  type="number"
+                  min="10"
+                  defaultValue={settings?.replayBufferSize}
+                  onBlur={(e) => handleInputBlur(e, 'replayBufferSize')}
+                  onKeyPress={(e) => handleInputKeyPress(e, 'replayBufferSize')}
+                  onChange={(e) => handleOnChange(e)}
+                />
+                <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                  MB
+                </span>
+              </div>
+            </div>
+          </div>
+        }
       </div>
 
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem06')}</h1>
@@ -411,14 +534,14 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
               },
               ...(settings && settings.maxScreenResolution && settings.maxScreenResolution >= 1440
                 ? [
-                    {
-                      name: '1440p',
-                      onClick: () => {
-                        settings.resolution = 1440;
-                        updateSettings();
-                      },
+                  {
+                    name: '1440p',
+                    onClick: () => {
+                      settings.resolution = 1440;
+                      updateSettings();
                     },
-                  ]
+                  },
+                ]
                 : []),
             ]}
           />
@@ -472,96 +595,6 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             ]}
           />
         </div>
-        <div className='flex flex-col'>
-          {t('settingsCaptureItem14')}
-          <DropDownMenu
-            text={settings === undefined ? '50 MB/s' : settings.bitRate + ' MB/s'}
-            width={'auto'}
-            zIndex={52}
-            items={[
-              {
-                name: '5 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 5;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '10 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 10;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '15 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 15;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '20 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 20;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '25 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 25;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '30 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 30;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '35 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 35;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '40 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 40;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '45 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 45;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-              {
-                name: '50 MB/s',
-                onClick: () => {
-                  settings!.bitRate = 50;
-                  customVideoQuality.current!.checked = true;
-                  updateSettings();
-                },
-              },
-            ]}
-          />
-        </div>
       </div>
 
       <div className='flex gap-2'>
@@ -574,6 +607,20 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
           />
         </div>
 
+
+        <div className='flex flex-col'>
+          {t('settingsCaptureItem17')}
+          <DropDownMenu
+            text={settings?.fileFormat === undefined ? 'MPEG-4 (.mp4)' : settings!.fileFormat.title}
+            width={'auto'}
+            items={settings?.useReplayBuffer
+              ? availableFileFormats?.filter(format => format.isReplayBufferCompatible)
+              : availableFileFormats}
+          />
+        </div>
+      </div>
+
+      <div className='flex gap-2'>
         <div className='flex flex-col'>
           {t('settingsCaptureItem16')}
           <DropDownMenu
@@ -582,15 +629,66 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
             items={availableRateControls}
           />
         </div>
-
+        {(settings?.rateControl == "CBR" || settings?.rateControl == "VBR") &&
         <div className='flex flex-col'>
-          {t('settingsCaptureItem17')}
-          <DropDownMenu
-            text={settings?.fileFormat === undefined ? 'MPEG-4 (.mp4)' : settings!.fileFormat.title}
-            width={'auto'}
-            items={availableFileFormats}
-          />
+          {t('settingsCaptureItem14')}
+          <div className='flex flex-row items-center'>
+            <input
+              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+              type="number"
+              min="1"
+              defaultValue={settings?.bitRate}
+              onBlur={(e) => handleInputBlur(e, 'bitRate')}
+              onKeyPress={(e) => handleInputKeyPress(e, 'bitRate')}
+              onChange={(e) => handleOnChange(e)}
+            />
+            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+              MB/s
+            </span>
+          </div>
         </div>
+        }
+        {
+          settings?.rateControl == "VBR" &&
+          <div className='flex flex-col'>
+          {t('settingsCaptureItem35')}
+          <div className='flex flex-row items-center'>
+            <input
+              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+              type="number"
+              min="1"
+              defaultValue={settings?.maxBitRate}
+              onBlur={(e) => handleInputBlur(e, 'maxBitRate')}
+              onKeyPress={(e) => handleInputKeyPress(e, 'maxBitRate')}
+              onChange={(e) => handleOnChange(e)}
+            />
+            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+              MB/s
+            </span>
+          </div>
+        </div>
+        }
+        {
+          (settings?.rateControl == "CQP" || settings?.rateControl == "CRF") &&
+          <div className='flex flex-col'>
+          {t('settingsCaptureItem36')}
+          <div className='flex flex-row items-center'>
+            <input
+              className="inline-flex w-24 px-2 py-2 text-sm font-medium leading-5 text-gray-700 dark:text-gray-600 transition duration-150 ease-in-out bg-white border border-gray-500 rounded-l-md hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue"
+              type="number"
+              min="1"
+              max="51"
+              defaultValue={settings?.cqLevel}
+              onBlur={(e) => handleInputBlur(e, 'cqLevel')}
+              onKeyPress={(e) => handleInputKeyPress(e, 'cqLevel')}
+              onChange={(e) => handleOnChange(e)}
+            />
+            <span className="inline-flex items-center py-2 px-3 border border-l-0 border-gray-500 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+              CQP
+            </span>
+          </div>
+        </div>
+        }
       </div>
 
       {is_interupttable == false && (
@@ -617,96 +715,114 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
       )}
 
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem20')}</h1>
-
-      <div className='flex flex-col'>{t('settingsCaptureItem21')}</div>
-      <div className='flex flex-col gap-4'>
-        {settings?.outputDevices &&
-          settings.outputDevices.map((item, i) => {
-            const isRemovable = !(
-              settings.outputDevices.length === 1 && item.deviceId === 'default'
-            );
-
-            return (
-              <AudioDevice
-                key={item.deviceId}
-                item={item}
-                defaultValue={
-                  settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume
-                }
-                hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
-                isRemovable={isRemovable}
-                onChange={(e) => {
-                  let value = parseInt((e.target as HTMLInputElement).value);
-                  settings!.outputDevices[i].deviceVolume = value;
-                }}
-                onCheck={(e) => {
-                  let value = (e.target as HTMLInputElement).checked;
-                  settings!.inputDevices[i].denoiser = value;
-                }}
-                onMouseUpCapture={(e) => {
-                  updateSettings();
-                }}
-                onRemove={() => {
-                  settings!.outputDevices = settings!.outputDevices.filter(
-                    (d) => d.deviceId !== item.deviceId,
-                  );
-                  updateSettings();
-                }}
-              />
-            );
-          })}
-      </div>
-
-      <div className='flex flex-col'>{t('settingsCaptureItem22')}</div>
-      <div className='flex flex-col gap-4'>
-        {settings?.inputDevices &&
-          settings.inputDevices.map((item, i) => {
-            item.isInput = true;
-
-            const isRemovable = !(
-              settings.inputDevices.length === 1 && item.deviceId === 'default'
-            );
-
-            return (
-              <AudioDevice
-                key={item.deviceId}
-                item={item}
-                defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
-                hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
-                isRemovable={isRemovable}
-                onChange={(e) => {
-                  let value = parseInt((e.target as HTMLInputElement).value);
-                  settings!.inputDevices[i].deviceVolume = value;
-                }}
-                onCheck={(e) => {
-                  let value = (e.target as HTMLInputElement).checked;
-                  settings!.inputDevices[i].denoiser = value;
-                  updateSettings();
-                }}
-                onMouseUpCapture={() => {
-                  updateSettings();
-                }}
-                onRemove={() => {
-                  settings!.inputDevices = settings!.inputDevices.filter(
-                    (d) => d.deviceId !== item.deviceId,
-                  );
-                  updateSettings();
-                }}
-              />
-            );
-          })}
-      </div>
-
-      <div className='flex flex-col'>
-        {t('settingsCaptureItem23')}
-        <DropDownMenu
-          text={t('settingsCaptureItem24')}
-          width={'auto'}
-          items={audioDevices}
-          groups={[t('settingsCaptureItem25'), t('settingsCaptureItem26')]}
+      <label className='inline-flex items-center'>
+        <input
+          type='checkbox'
+          className='form-checkbox h-4 w-4 text-gray-600'
+          defaultChecked={settings === undefined ? false : settings.captureGameAudio}
+          onChange={(e) => {
+            settings!.captureGameAudio = e.target.checked;
+            updateSettings();
+          }}
         />
-      </div>
+        <span className='ml-2 text-gray-700 dark:text-gray-400'>
+          {t('settingsCaptureItem37')}
+        </span>
+      </label>
+      {settings?.captureGameAudio == false && (
+        <>
+        <div className='flex flex-col'>{t('settingsCaptureItem21')}</div>
+        <div className='flex flex-col gap-4'>
+          {settings?.outputDevices &&
+            settings.outputDevices.map((item, i) => {
+              const isRemovable = !(
+                settings.outputDevices.length === 1 && item.deviceId === 'default'
+              );
 
+              return (
+                <AudioDevice
+                  key={item.deviceId}
+                  item={item}
+                  defaultValue={
+                    settings === undefined ? 100 : settings!.outputDevices[i].deviceVolume
+                  }
+                  device={device}
+                  hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+                  isRemovable={isRemovable}
+                  onChange={(e) => {
+                    let value = parseInt((e.target as HTMLInputElement).value);
+                    settings!.outputDevices[i].deviceVolume = value;
+                  }}
+                  onCheck={(e) => {
+                    let value = (e.target as HTMLInputElement).checked;
+                    settings!.inputDevices[i].denoiser = value;
+                  }}
+                  onMouseUpCapture={(e) => {
+                    updateSettings();
+                  }}
+                  onRemove={() => {
+                    settings!.outputDevices = settings!.outputDevices.filter(
+                      (d) => d.deviceId !== item.deviceId,
+                    );
+                    updateSettings();
+                  }}
+                />
+              );
+            })}
+        </div>
+
+        <div className='flex flex-col'>{t('settingsCaptureItem22')}</div>
+        <div className='flex flex-col gap-4'>
+          {settings?.inputDevices &&
+            settings.inputDevices.map((item, i) => {
+              item.isInput = true;
+
+              const isRemovable = !(
+                settings.inputDevices.length === 1 && item.deviceId === 'default'
+              );
+
+              return (
+                <AudioDevice
+                  key={item.deviceId}
+                  item={item}
+                  defaultValue={settings === undefined ? 100 : settings!.inputDevices[i].deviceVolume}
+                  device={device}
+                  hasNvidiaAudioSDK={settings === undefined ? false : settings!.hasNvidiaAudioSDK}
+                  isRemovable={isRemovable}
+                  onChange={(e) => {
+                    let value = parseInt((e.target as HTMLInputElement).value);
+                    settings!.inputDevices[i].deviceVolume = value;
+                  }}
+                  onCheck={(e) => {
+                    let value = (e.target as HTMLInputElement).checked;
+                    settings!.inputDevices[i].denoiser = value;
+                    updateSettings();
+                  }}
+                  onMouseUpCapture={() => {
+                    updateSettings();
+                  }}
+                  onRemove={() => {
+                    settings!.inputDevices = settings!.inputDevices.filter(
+                      (d) => d.deviceId !== item.deviceId,
+                    );
+                    updateSettings();
+                  }}
+                />
+              );
+            })}
+        </div>
+
+        <div className='flex flex-col'>
+          {t('settingsCaptureItem23')}
+          <DropDownMenu
+            text={t('settingsCaptureItem24')}
+            width={'auto'}
+            items={audioDevices}
+            groups={[t('settingsCaptureItem25'), t('settingsCaptureItem26')]}
+          />
+        </div>
+        </>
+      )}
       <h1 className='font-semibold text-2xl mt-4'>{t('settingsCaptureItem27')}</h1>
       <div className='flex flex-col gap-1'>
         <label className='inline-flex items-center'>
@@ -735,6 +851,20 @@ export const Capture: React.FC<Props> = ({ settings, updateSettings }) => {
           />
           <span className='ml-2 text-gray-700 dark:text-gray-400'>
             {t('settingsCaptureItem29')}
+          </span>
+        </label>
+        <label className='inline-flex items-center'>
+          <input
+            type='checkbox'
+            className='form-checkbox h-4 w-4 text-gray-600'
+            defaultChecked={settings === undefined ? false : settings.captureHdr}
+            onChange={(e) => {
+              settings!.captureHdr = e.target.checked;
+              updateSettings();
+            }}
+          />
+          <span className='ml-2 text-gray-700 dark:text-gray-400'>
+            {t('settingsCaptureItem38')}
           </span>
         </label>
       </div>

@@ -27,15 +27,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "check latest commit is less than a day"
-        id: check_commit
-        continue-on-error: true
-        if: ${{ github.event_name == 'schedule' }}
-        run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
-
-      - name: "if not, do not build"
-        if: ${{ steps.check_commit.outputs.should_run == 'false' }}
-        run: exit 1
+      # the nightly tag is moved to the built commit on every successful release,
+      # so building only when HEAD differs from it also picks up commits that a
+      # previously failed run never shipped. the run is failed on purpose when
+      # there is nothing to build so a "no new nightly" day is visible as red
+      - name: "check for new commits since last nightly"
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "This workflow was triggered manually! Forcing a build."
+          elif [[ "$(git rev-parse HEAD)" == "$(git rev-parse 'refs/tags/nightly^{commit}' 2>/dev/null)" ]]; then
+            echo "::error::No new commits since last nightly release, no build created."
+            exit 1
+          fi
 
       - name: "Check if nightly exists"
         id: nightly
@@ -50,11 +53,16 @@ jobs:
       - name: "Get Previous tag"
         id: previoustag
         run: |
-          if [ "${{steps.nightly.outputs.id}}" == "" ]; then
-            echo "tag=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))" >> $GITHUB_OUTPUT
-          else
-            echo "tag=$(echo ${{steps.nightly.outputs.name}} | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')" >> $GITHUB_OUTPUT
+          nightly=""
+          if [ "${{steps.nightly.outputs.id}}" != "" ]; then
+            nightly=$(echo "${{steps.nightly.outputs.name}}" | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')
           fi
+          # a stable release (release.yml) can be published with a higher version
+          # than the running nightly series, so continue from whichever is newer
+          stable=$(git tag --list '[0-9]*' | sort -V | tail -n 1)
+          tag=$(printf '%s\n' "$nightly" "$stable" | grep . | sort -V | tail -n 1)
+          echo "Previous version: $tag (nightly: ${nightly:-none}, stable: ${stable:-none})"
+          echo "tag=$tag" >> $GITHUB_OUTPUT
 
       - name: "Get next version"
         id: semvers
@@ -67,13 +75,12 @@ jobs:
 
   build:
     needs: prep
-    runs-on: windows-latest
+    runs-on: windows-2022
     name: Build RePlays
 
     permissions:
       contents: write
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
@@ -88,7 +95,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.100
+          dotnet-version: 8.0.403
 
       - name: Download previous release to create delta
         uses: robinraju/release-downloader@v1.3
@@ -109,21 +116,52 @@ jobs:
       - name: Build RePlays
         env:
           CI: false
-        run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile
+        run: dotnet publish /p:Configuration=Release /p:Version=${{needs.prep.outputs.version}} /p:PublishProfile=FolderProfile -v d
 
-      - name: Generate Prerelease
-        uses: ncipollo/release-action@v1
+      - name: Append version to setup file
+        run: ren ./bin/Deployment/Releases/RePlaysSetup.exe RePlaysSetup-${{needs.prep.outputs.version}}.exe
+
+      - name: Update nightly tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old prerelease deltas
+        run: |
+          gh release delete-asset "nightly" "RePlays-${{needs.prep.outputs.oldversion}}-full.nupkg" &&
+          gh release delete-asset "nightly" "RePlays-${{needs.prep.outputs.oldversion}}-delta.nupkg"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create prerelease
+        uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: "nightly"
+          tag_name: "nightly"
           prerelease: true
-          allowUpdates: true
-          removeArtifacts: true
-          generateReleaseNotes: true
-          artifactErrorsFailBuild: true
+          generate_release_notes: true
           name: ${{ format('Nightly RePlays v{0}', needs.prep.outputs.version )}}
-          artifacts: |
+          body: "Nightly release, built with the latest and potentially breaking changes, test at your own risk."
+          files: |
             ./bin/Deployment/Releases/RELEASES
-            ./bin/Deployment/Releases/RePlaysSetup.exe
+            ./bin/Deployment/Releases/RePlaysSetup-${{needs.prep.outputs.version}}.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
+
+      # the setup executables are the only assets that survive from one nightly
+      # to the next, so keep the three most recent ones and drop the rest
+      - name: Prune old nightly setup executables
+        shell: bash
+        run: |
+          gh release view nightly --json assets --jq '.assets[].name' \
+            | grep -E '^RePlaysSetup-[0-9]+(\.[0-9]+)+\.exe$' \
+            | sort -V \
+            | head -n -3 \
+            | while read -r asset; do
+                echo "Deleting $asset"
+                gh release delete-asset nightly "$asset" --yes
+              done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

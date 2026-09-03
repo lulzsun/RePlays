@@ -1,16 +1,16 @@
-﻿using Newtonsoft.Json;
-using RePlays.Services;
+﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace RePlays.Integrations {
-    internal class CS2 : Integration {
+    internal class CS2Integration : Integration {
 
         private State oldState;
         private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
@@ -46,8 +46,16 @@ namespace RePlays.Integrations {
                 State newState = DeserializeState(body);
 
                 // If there is a new kill and the match is live
-                if (IsValidState(newState, oldState)) {
-                    BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
+                if (hasMatchStarted(newState, oldState)) {
+                    if (newState.Player.MatchStats.Kills > oldState?.Player?.MatchStats?.Kills) {
+                        BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Kill });
+                    }
+                    if (newState.Player.MatchStats.Assists > oldState?.Player?.MatchStats?.Assists) {
+                        BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Assist });
+                    }
+                    if (newState.Player.MatchStats.Deaths > oldState?.Player?.MatchStats?.Deaths) {
+                        BookmarkService.AddBookmark(new Bookmark { type = Bookmark.BookmarkType.Death });
+                    }
                     oldState = newState;
                 }
 
@@ -76,7 +84,7 @@ namespace RePlays.Integrations {
         }
 
         private State DeserializeState(string body) {
-            return JsonConvert.DeserializeObject<State>(body);
+            return JsonSerializer.Deserialize<State>(body);
         }
 
         async Task WriteResponseAsync(HttpListenerResponse response) {
@@ -87,10 +95,9 @@ namespace RePlays.Integrations {
             }
         }
 
-        private bool IsValidState(State newState, State oldState) {
+        private bool hasMatchStarted(State newState, State oldState) {
             return newState?.Player?.MatchStats != null &&
                    newState.Player.SteamId == newState.Provider.SteamId &&
-                   newState.Player.MatchStats.Kills > oldState?.Player?.MatchStats?.Kills &&
                    newState.Map.Phase == "live";
         }
 
@@ -99,35 +106,39 @@ namespace RePlays.Integrations {
         }
 
         private class MatchStats {
-            [JsonProperty("kills")]
+            [JsonPropertyName("kills")]
             public int Kills { get; set; }
+            [JsonPropertyName("assists")]
+            public int Assists { get; set; }
+            [JsonPropertyName("deaths")]
+            public int Deaths { get; set; }
         }
 
         private class Player {
-            [JsonProperty("steamid")]
+            [JsonPropertyName("steamid")]
             public string SteamId { get; set; }
 
-            [JsonProperty("match_stats")]
+            [JsonPropertyName("match_stats")]
             public MatchStats MatchStats { get; set; }
         }
 
         private class Provider {
-            [JsonProperty("steamid")]
+            [JsonPropertyName("steamid")]
             public string SteamId { get; set; }
 
         }
 
         private class Map {
-            [JsonProperty("phase")]
+            [JsonPropertyName("phase")]
             public string Phase { get; set; }
         }
 
         private class State {
-            [JsonProperty("player")]
+            [JsonPropertyName("player")]
             public Player Player { get; set; }
-            [JsonProperty("provider")]
+            [JsonPropertyName("provider")]
             public Provider Provider { get; set; }
-            [JsonProperty("map")]
+            [JsonPropertyName("map")]
             public Map Map { get; set; }
         }
 

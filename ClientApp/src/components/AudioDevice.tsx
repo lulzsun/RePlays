@@ -10,6 +10,7 @@ interface Props {
   defaultValue: number;
   isRemovable: boolean;
   item: AudioDevice;
+  device?: Device
   hasNvidiaAudioSDK: boolean;
 }
 
@@ -21,6 +22,7 @@ export const AudioDevice: React.FC<Props> = ({
   defaultValue,
   isRemovable,
   item,
+  device,
   hasNvidiaAudioSDK,
 }) => {
   const { t } = useTranslation();
@@ -66,7 +68,7 @@ export const AudioDevice: React.FC<Props> = ({
           className='w-96'
           type='range'
           min='0'
-          max='100'
+          max='200'
           step='1'
           defaultValue={defaultValue}
           onChange={onChange}
@@ -75,7 +77,7 @@ export const AudioDevice: React.FC<Props> = ({
         {item.deviceVolume + '%'}
       </div>
 
-      {item.isInput && (
+      {item.isInput && device?.gpuManufacturer === "NVIDIA" && (
         <div className='flex flex-row gap-2'>
           <label className='inline-flex items-center'>
             <input

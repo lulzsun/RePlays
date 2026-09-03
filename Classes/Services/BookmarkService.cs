@@ -22,16 +22,20 @@ namespace RePlays.Services {
 
                 if (bookmark.type.Equals(Bookmark.BookmarkType.Manual)) {
                     Functions.PlaySound(Functions.GetResourcesFolder() + "bookmark.wav");
+                    RecordingService.ActiveRecorder.TrySaveReplayBufferAndBookmarks();
                 }
+
             }
         }
 
-        public static void ApplyBookmarkToSavedVideo(string videoName) {
-            Logger.WriteLine($"Applying {bookmarks.Count} bookmarks");
+        public static void SaveBookmarks(string videoPath) {
             if (bookmarks.Count == 0) return;
+            Logger.WriteLine($"Saving {bookmarks.Count} bookmarks to metadata file");
 
             try {
-                WebMessage.SetBookmarks(videoName, bookmarks, RecordingService.lastVideoDuration);
+                Functions.UpdateMetadata(videoPath, metadata => {
+                    metadata.bookmarks.AddRange(bookmarks);
+                });
                 bookmarks.Clear();
             }
             catch (Exception e) {

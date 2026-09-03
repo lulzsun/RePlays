@@ -137,6 +137,13 @@
 		"title": "Tom Clancy's Rainbow Six Siege",
 		"game_detection": [
 			{
+				"gameexe": "/r6siege/RainbowSix\\.exe",
+				"detectdirkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/Uplay Install 635/InstallLocation",
+				"launchexe": "/Uplay\\.exe",
+				"regkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/Uplay/InstallLocation",
+				"longname": "Tom Clancy's Rainbow Six: Siege - uplay"
+			},
+			{
 				"gameexe": "/Tom Clancy's Rainbow Six Siege/RainbowSix\\.exe",
 				"detectdirkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/Uplay Install 635/InstallLocation",
 				"launchexe": "/Uplay\\.exe",
@@ -53435,6 +53442,16 @@
 				"regkey": "HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/World of Warcraft/InstallLocation",
 				"longname": "World of Warcraft 32 bit",
 				"edition": "32 bit"
+			}
+		]
+	},
+	{
+		"region": null,
+		"title": "World of Warcraft Classic",
+		"game_detection": [
+			{
+				"gameexe": "/World of Warcraft/.*/WowClassic\\.exe",
+				"longname": "World of Warcraft Classic"
 			}
 		]
 	},
@@ -114693,6 +114710,16 @@
 			{
 				"gameexe": "/IRONMACE/Dark and Darker/DungeonCrawler/Binaries/Win64/DungeonCrawler\\.exe",
 				"longname": "Dark and Darker"
+			}
+		]
+	},
+	{
+		"region": null,
+		"title": "XDefiant",
+		"game_detection": [
+			{
+				"gameexe": "/Ubisoft Game Launcher/games/XDefiant/XDefiant\\.exe",
+				"longname": "XDefiant"
 			}
 		]
 	},

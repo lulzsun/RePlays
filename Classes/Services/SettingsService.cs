@@ -1,7 +1,10 @@
 ﻿using RePlays.Recorders;
 using RePlays.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Management;
+using System.Text;
 using System.Text.Json;
 using static RePlays.Utils.Functions;
 
@@ -17,6 +20,8 @@ namespace RePlays.Services {
 
             private CaptureSettings _captureSettings = new();
             public CaptureSettings captureSettings { get { return _captureSettings; } set { _captureSettings = value; } }
+            private ClipSettings _clipSettings = new();
+            public ClipSettings clipSettings { get { return _clipSettings; } set { _clipSettings = value; } }
 
             private StorageSettings _storageSettings = new();
             public StorageSettings storageSettings { get { return _storageSettings; } set { _storageSettings = value; } }
@@ -34,7 +39,15 @@ namespace RePlays.Services {
         public static void LoadSettings() {
             if (File.Exists(settingsFile)) {
                 try {
-                    _Settings = JsonSerializer.Deserialize<SettingsJson>(File.ReadAllText(settingsFile));
+                    var content = File.ReadAllText(settingsFile);
+
+                    // Trim characters after the last closing bracket
+                    // Sometimes a bunch of junk chars gets saved after serializing for unknown reason...
+                    // Maybe because my settings json is located on a winbtrs drive and is corrupting it?
+                    // Not sure, but this fixes it...
+                    if (content.LastIndexOf('}') != -1) content = content[..(content.LastIndexOf('}') + 1)];
+
+                    _Settings = JsonSerializer.Deserialize<SettingsJson>(content);
                     Logger.WriteLine("Loaded userSettings.json");
                 }
                 catch (JsonException ex) {
@@ -58,6 +71,9 @@ namespace RePlays.Services {
                 data.uploadSettings.rePlaysSettings.password != Settings.uploadSettings.rePlaysSettings.password
                 ? EncryptString(data.uploadSettings.rePlaysSettings.password)
                 : Settings.uploadSettings.rePlaysSettings.password;
+            if (data.captureSettings.useReplayBuffer == true && data.captureSettings.fileFormat.isReplayBufferCompatible == false) {
+                data.captureSettings.fileFormat = new FileFormat("mp4", "MP4 (.mp4)", true);
+            }
             SaveSettings(data);
         }
 
@@ -70,6 +86,13 @@ namespace RePlays.Services {
             Logger.WriteLine("Saved userSettings.json");
             if (oldSettings.captureSettings.encoder != Settings.captureSettings.encoder) {
                 ((LibObsRecorder)RecordingService.ActiveRecorder).GetAvailableRateControls();
+            }
+        }
+
+        public static void UpdateGpuManufacturer() {
+            if (_Settings.generalSettings != null) {
+                _Settings.generalSettings.device.gpuManufacturer = GetGpuManufacturer();
+                SaveSettings();
             }
         }
     }

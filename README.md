@@ -1,6 +1,6 @@
 # RePlays [![Downloads][download-badge]][download-link] [![Discord][discord-badge]][discord-link]
 
-[download-badge]: https://img.shields.io/github/downloads-pre/lulzsun/RePlays/latest/RePlaysSetup.exe
+[download-badge]: https://img.shields.io/github/downloads/lulzsun/RePlays/latest/RePlaysSetup.exe
 [download-link]: https://github.com/lulzsun/RePlays/releases/latest
 [discord-badge]: https://img.shields.io/discord/654698116917886986?label=Discord&logo=discord
 [discord-link]: https://discordapp.com/invite/Qj2BmZX
@@ -25,7 +25,7 @@ Note: Depending on your Windows version, you may need to manually download and i
 
 ## Development
 
-Get started with contributing to the project with this quick [getting started guide](./Development-GettingStarted.md)!
+Get started with contributing to the project with this quick [getting started guide](https://github.com/lulzsun/RePlays/wiki/Development-Windows)!
 
 ## Technology Stack
 

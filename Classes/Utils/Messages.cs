@@ -1,16 +1,16 @@
-using RePlays.Classes.Utils;
+﻿using RePlays.Classes.Utils;
 using RePlays.Recorders;
 using RePlays.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Velopack;
 using static RePlays.Services.SettingsService;
 using static RePlays.Utils.Compression;
 using static RePlays.Utils.Functions;
@@ -64,6 +64,7 @@ namespace RePlays.Utils {
     }
 
     public class CreateClips {
+        public string game { get; set; }
         private string _videoPath;
         public string videoPath {
             get {
@@ -129,6 +130,22 @@ namespace RePlays.Utils {
         public string exe { get; set; }
     }
 
+    public class UpdateBookmarks {
+        private string _videoPath;
+        public string videoPath {
+            get {
+                return _videoPath;
+            }
+            set {
+                _videoPath = value.Replace("\\", "/");
+            }
+        }
+        // merge appends to the bookmarks already in the metadata (used by the one-time
+        // localStorage migration); otherwise the list is replaced outright
+        public bool merge { get; set; }
+        public List<Bookmark> bookmarks { get; set; }
+    }
+
     public class WebMessage {
         public string message { get; set; }
         public string data { get; set; }
@@ -150,16 +167,27 @@ namespace RePlays.Utils {
                 }).Wait();
             }
 #if WINDOWS
-            if (WindowsInterface.webView2 == null || WindowsInterface.webView2.IsDisposed == true) return false;
-            if (WindowsInterface.webView2.InvokeRequired) {
-                // Call this same method but make sure it is on UI thread
-                return WindowsInterface.webView2.Invoke(new Func<bool>(() => {
-                    return SendMessage(message);
-                }));
-            }
-            else {
-                WindowsInterface.webView2.CoreWebView2.PostWebMessageAsJson(message);
+            var webView2 = WindowsInterface.webView2;
+            if (webView2 == null || webView2.IsDisposed) return false;
+            try {
+                if (webView2.InvokeRequired) {
+                    // Call this same method but make sure it is on UI thread
+                    return (bool)webView2.Invoke(new Func<bool>(() => {
+                        return SendMessage(message);
+                    }));
+                }
+                // the control exists for a few seconds before CoreWebView2 finishes initializing,
+                // so both Source and CoreWebView2 can still be null here; that just means the
+                // interface is not ready yet, so the message gets queued by the caller instead
+                if (webView2.CoreWebView2 == null || webView2.Source == null ||
+                    webView2.Source.AbsolutePath.Contains("preload")) return false;
+                webView2.CoreWebView2.PostWebMessageAsJson(message);
                 return true;
+            }
+            catch (Exception exception) {
+                // never let a failed message bring down the caller (i.e. the updater)
+                Logger.WriteLine($"Failed to send message to interface: {exception.Message}");
+                return false;
             }
 #endif
             return true;
@@ -277,13 +305,13 @@ namespace RePlays.Utils {
                     break;
                 case "CompressClip": {
                         CompressClip data = JsonSerializer.Deserialize<CompressClip>(webMessage.data);
-                        string filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('/', '\\');
+                        string filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.filePath.Replace('\\', '/')));
                         CompressFile(filePath, data);
                     }
                     break;
                 case "ShowInFolder": {
                         ShowInFolder data = JsonSerializer.Deserialize<ShowInFolder>(webMessage.data);
-                        var filePath = Path.Join(GetPlaysFolder(), data.filePath).Replace('\\', '/');
+                        var filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.filePath.Replace('\\', '/')));
 #if WINDOWS
                         Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath.Replace('/', '\\')));
 #else
@@ -316,7 +344,7 @@ namespace RePlays.Utils {
                 case "Delete": {
                         Delete data = JsonSerializer.Deserialize<Delete>(webMessage.data);
                         foreach (var filePath in data.filePaths) {
-                            var realFilePath = Path.Join(GetPlaysFolder(), filePath.Replace("\\", "/"));
+                            var realFilePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(filePath.Replace("\\", "/")));
                             var successfulDelete = false;
                             var failedLoops = 0;
                             while (!successfulDelete) {
@@ -341,7 +369,11 @@ namespace RePlays.Utils {
                     break;
                 case "CreateClips": {
                         CreateClips data = JsonSerializer.Deserialize<CreateClips>(webMessage.data);
-                        var t = await Task.Run(() => CreateClip(data.videoPath, data.clipSegments));
+                        var t = await Task.Run(() => CreateClip(
+                            WebUtility.UrlDecode(data.game),
+                            WebUtility.UrlDecode(data.videoPath),
+                            data.clipSegments)
+                        );
                         if (t == null) {
                             DisplayModal("Failed to create clip", "Error", "warning");
                         }
@@ -352,14 +384,27 @@ namespace RePlays.Utils {
                         }
                     }
                     break;
+                case "UpdateBookmarks": {
+                        UpdateBookmarks data = JsonSerializer.Deserialize<UpdateBookmarks>(webMessage.data);
+                        var filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.videoPath));
+                        if (File.Exists(filePath)) {
+                            UpdateMetadata(filePath, metadata => {
+                                if (data.merge) metadata.bookmarks.AddRange(data.bookmarks ?? new List<Bookmark>());
+                                else metadata.bookmarks = data.bookmarks ?? new List<Bookmark>();
+                            });
+                        }
+                        else {
+                            Logger.WriteLine($"UpdateBookmarks: video not found: {filePath}");
+                        }
+                    }
+                    break;
                 case "UploadVideo": {
                         UploadVideo data = JsonSerializer.Deserialize<UploadVideo>(webMessage.data);
-                        var filePath = Path.Join(GetPlaysFolder(), data.file);
+                        var filePath = Path.Join(GetPlaysFolder(), WebUtility.UrlDecode(data.file));
                         if (File.Exists(filePath)) {
                             Logger.WriteLine($"Preparing to upload {filePath} to {data.destination}");
                             UploadService.Upload(data.destination, data.title, filePath, data.game, data.makePublic);
                         }
-                        //DisplayModal($"{data.title} {data.destination}", "Error", "warning"));
                     }
                     break;
                 case "DownloadNvidiaAudioSDK": {
@@ -419,10 +464,6 @@ namespace RePlays.Utils {
                     break;
 #if WINDOWS
                 case "Restart": {
-                        if (Updater.manager?.IsUpdatePendingRestart ?? false) {
-                            Updater.manager.ApplyUpdatesAndRestart((VelopackAsset)null);
-                        }
-
                         string path = Path.Join(GetStartupPath(), @"../RePlays.exe");
                         string cmdCommand = $"/C timeout /t 1 & start \"\" \"{path}\"";
 
@@ -458,7 +499,7 @@ namespace RePlays.Utils {
             bool success = SendMessage(JsonSerializer.Serialize(webMessage));
             if (!success) {
                 // if message was not successful (interface was probably minimized), save to list to show later
-                modalList.Add(context, webMessage);
+                modalList[context] = webMessage;
             }
         }
 
@@ -493,23 +534,5 @@ namespace RePlays.Utils {
             SendMessage(JsonSerializer.Serialize(webMessage));
         }
 
-        public static void SetBookmarks(string videoName, List<Bookmark> bookmarks, double elapsed) {
-            string json = "{" +
-                    "\"videoname\": \"" + videoName + "\", " +
-                    "\"elapsed\": " + elapsed.ToString().Replace(",", ".") + ", " +
-                    "\"bookmarks\": " + JsonSerializer.Serialize(bookmarks) + "}";
-#if WINDOWS
-            if (WindowsInterface.webView2 != null) {
-                WebMessage webMessage = new();
-                webMessage.message = "SetBookmarks";
-                webMessage.data = json;
-                SendMessage(JsonSerializer.Serialize(webMessage));
-                Logger.WriteLine("Successfully sent bookmarks to frontend");
-            }
-            else {
-                BackupBookmarks(videoName, json);
-            }
-#endif
-        }
     }
 }

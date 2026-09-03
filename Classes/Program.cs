@@ -11,11 +11,13 @@ using System.Text;
 using RePlays.Utils;
 using RePlays.Services;
 using static RePlays.Utils.Functions;
-using Velopack;
+
+
 #if !WINDOWS
 using RePlays.Classes.Utils;
 using RePlays.Recorders;
 #else
+using Squirrel;
 using System.Windows.Forms;
 #endif
 
@@ -23,7 +25,6 @@ namespace RePlays {
     static class Program {
         [DllImport("kernel32.dll")]
         static extern bool AttachConsole(int dwProcessId);
-
         const int ATTACH_PARENT_PROCESS = -1;
         static readonly ManualResetEventSlim ApplicationExitEvent = new(false);
 
@@ -50,19 +51,48 @@ namespace RePlays {
             // log all exceptions
             AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) => {
                 var st = new StackTrace((Exception)eventArgs.ExceptionObject, true);
-                Logger.WriteLine(
-                    eventArgs.ExceptionObject.ToString(),
-                    st.GetFrames().Last().GetFileName() ?? "External Library",
-                    st.GetFrames().Last().GetMethod().Name,
-                    st.GetFrames().Last().GetFileLineNumber()
-                );
+                var frames = st.GetFrames();
+                if (frames.Length != 0) {
+                    Logger.WriteLine(
+                        eventArgs.ExceptionObject.ToString(),
+                        st.GetFrames().Last().GetFileName() ?? "External Library",
+                        st.GetFrames().Last().GetMethod().Name,
+                        st.GetFrames().Last().GetFileLineNumber()
+                    );
+                }
+                else {
+                    Logger.WriteLine(eventArgs.ExceptionObject.ToString());
+                }
             };
+
+#if WINDOWS
+            // squirrel runs the exe of the version it just staged with a --squirrel-* lifecycle
+            // argument and waits for it to exit. this has to happen before the single instance
+            // check below: the instance being updated still owns the mutex, so the hook would
+            // otherwise bail out without ever creating or removing shortcuts, and would ping the
+            // old instance to the foreground for no reason.
+            if (args.Any(arg => arg.StartsWith("--squirrel-", StringComparison.OrdinalIgnoreCase)) &&
+                !args.Any(arg => arg.Equals("--squirrel-firstrun", StringComparison.OrdinalIgnoreCase))) {
+                try {
+                    SquirrelAwareApp.HandleEvents(
+                        onInitialInstall: (_, tools) => tools.CreateShortcutForThisExe(),
+                        onAppUpdate: (_, tools) => tools.CreateShortcutForThisExe(),
+                        onAppUninstall: (_, tools) => tools.RemoveShortcutForThisExe()
+                    );
+                }
+                catch (Exception exception) {
+                    Logger.WriteLine(exception.ToString());
+                }
+                // HandleEvents exits the process itself, this is just a safety net so a lifecycle
+                // invocation can never fall through into a second running instance
+                return;
+            }
+#endif
 
             // prevent multiple instances
             var mutex = new Mutex(true, @"Global\RePlays", out var createdNew);
             if (!createdNew) {
-                Logger.WriteLine(
-                    "RePlays is already running! Exiting the application and bringing the other instance to foreground.");
+                Logger.WriteLine("RePlays is already running! Exiting the application and bringing the other instance to foreground.");
                 try {
                     using (var sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)) {
                         sender.Connect(new IPEndPoint(IPAddress.Loopback, 3333));
@@ -73,11 +103,10 @@ namespace RePlays {
                 catch (Exception ex) {
                     Logger.WriteLine($"Socket client exception: {ex.Message}");
                 }
-
                 return;
             }
 
-#if DEBUG && WINDOWS
+#if DEBUG && WINDOWS && !NO_SERVER
             // this will run our react app if its not already running
             var startInfo = new ProcessStartInfo {
                 FileName = "cmd.exe",
@@ -98,35 +127,50 @@ namespace RePlays {
             }
 #endif
             SettingsService.LoadSettings();
+            SettingsService.UpdateGpuManufacturer();
             SettingsService.SaveSettings();
             StorageService.ManageStorage();
             KeybindService.Start();
             PurgeTempVideos();
             Updater.CheckForUpdates();
 
-            // Velopack configuration
-            try {
-                VelopackApp.Build()
-                /* Add this line if updating should create a shortcut as well
+            // Deadlock match stats can become available after the game (or RePlays)
+            // closed; sweep shortly after startup and then every half hour. The first
+            // sweep is delayed so the frontend is up to receive backfilled bookmarks
+            // directly instead of via the backup-file path. Sweeps are near-free when
+            // the pending queue is empty.
+            System.Threading.Tasks.Task.Run(async () => {
+                await System.Threading.Tasks.Task.Delay(30 * 1000);
+                while (true) {
+                    try {
+                        Integrations.DeadlockIntegration.SweepPendingStats();
+                    }
+                    catch (Exception ex) {
+                        Logger.WriteLine($"Deadlock stats sweep failed: {ex.Message}");
+                    }
+                    await System.Threading.Tasks.Task.Delay(30 * 60 * 1000);
+                }
+            });
 #if WINDOWS
-                    .WithAfterUpdateFastCallback(v => new Shortcuts().CreateShortcutForThisExe())
-#endif
-                */
-                    .Run();
+            ScreenSize.UpdateMaximumScreenResolution();
+            // squirrel configuration; the lifecycle arguments are handled before the single
+            // instance check above, this only covers a plain (or --squirrel-firstrun) launch
+            try {
+                SquirrelAwareApp.HandleEvents(
+                    onInitialInstall: (_, tools) => tools.CreateShortcutForThisExe(),
+                    onAppUpdate: (_, tools) => tools.CreateShortcutForThisExe(),
+                    onAppUninstall: (_, tools) => tools.RemoveShortcutForThisExe()
+                );
             }
             catch (Exception exception) {
                 Logger.WriteLine(exception.ToString());
             }
 
-#if WINDOWS
-            ScreenSize.UpdateMaximumScreenResolution();
-
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new WindowsInterface());
-            (Process.GetCurrentProcess())
-                .Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
+            (Process.GetCurrentProcess()).Kill(); // this is not a clean exit, need to look into why we can't cleanly exit
 #else
             Directory.SetCurrentDirectory(AppContext.BaseDirectory); //Necessary for libobs in debug(?)
             SettingsService.LoadSettings();

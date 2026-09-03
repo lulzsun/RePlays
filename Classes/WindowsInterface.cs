@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -21,6 +22,15 @@ namespace RePlays {
         public ContextMenuStrip recentLinksMenu;
         public static WindowsInterface Instance;
         private static Socket listener;
+
+        [DllImport("DwmApi")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
+
+        // https://stackoverflow.com/a/64927217
+        protected override void OnHandleCreated(EventArgs e) {
+            if (DwmSetWindowAttribute(Handle, 19, new[] { 1 }, 4) != 0)
+                DwmSetWindowAttribute(Handle, 20, new[] { 1 }, 4);
+        }
 
         public WindowsInterface() {
             Instance = this;
@@ -51,7 +61,7 @@ namespace RePlays {
             recentLinksMenu.Items.Add("Left click to copy to clipboard. Right click to open URL.").Enabled = false;
 
             if (SettingsService.Settings.generalSettings.startMinimized) {
-                this.Size = new Size(1080, 600);
+                this.Size = GetScaledWindowSize();
                 this._PreviousSize = this.Size;
                 CenterToScreen();
                 this.WindowState = FormWindowState.Minimized;
@@ -64,6 +74,14 @@ namespace RePlays {
             else {
                 InitializeWebView2();
             }
+        }
+
+        private Size GetScaledWindowSize() {
+            // base window size is tuned for a 1080p display; scale it up proportionally
+            // on higher resolution displays so it keeps the same apparent size
+            var screenBounds = (Screen.FromControl(this) ?? Screen.PrimaryScreen).Bounds;
+            double scale = Math.Max(1.0, Math.Min(screenBounds.Width / 1920.0, screenBounds.Height / 1080.0));
+            return new Size((int)Math.Round(1080 * scale), (int)Math.Round(600 * scale));
         }
 
         private void RefreshLoader() {
@@ -146,26 +164,28 @@ namespace RePlays {
                 this.Controls.Add(webView2);
                 webView2.BringToFront();
                 if (firstTime) {
-                    this.Size = new Size(1080, 600);
+                    this.Size = GetScaledWindowSize();
                     this._PreviousSize = this.Size;
                     this.FormBorderStyle = FormBorderStyle.Sizable;
                     CenterToScreen();
                     firstTime = false;
                 }
-                LoadBackupBookmarks();
             }
         }
 
         private void WindowsInterface_FormClosing(object sender, FormClosingEventArgs e) {
-            if (e.CloseReason == CloseReason.UserClosing) {
-                e.Cancel = true;
-                this.WindowState = FormWindowState.Minimized;
-                this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
-                this.Opacity = 0;
-                this.ShowInTaskbar = false;
-                label1.Visible = false;
-                DisposeWebView2();
+            if (e.CloseReason != CloseReason.UserClosing) {
+                return;
             }
+            if (SettingsService.Settings.generalSettings.closeToTray) {
+                e.Cancel = true;
+            }
+            this.WindowState = FormWindowState.Minimized;
+            this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+            this.Opacity = 0;
+            this.ShowInTaskbar = false;
+            label1.Visible = false;
+            DisposeWebView2();
         }
 
         FormWindowState _PreviousWindowState;

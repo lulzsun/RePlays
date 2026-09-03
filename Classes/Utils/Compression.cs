@@ -63,8 +63,22 @@ namespace RePlays.Utils {
             long originalFileSize = new FileInfo(filePathOriginal).Length;
             long compressedFileSize = new FileInfo(filePathCompressed).Length;
 
-            if (compressedFileSize > originalFileSize || compressedFileSize == 0) {
-                if (compressedFileSize == 0) WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
+            var startInfo = new ProcessStartInfo {
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
+                Arguments = $"-v error -i \"{compressedFileSize}\""
+            };
+
+            using var verifyProcess = Process.Start(startInfo);
+            string output = verifyProcess.StandardOutput.ReadToEnd();
+            Logger.WriteLine("Output: " + output);
+            verifyProcess.WaitForExit();
+
+            if (compressedFileSize > originalFileSize || compressedFileSize == 0 || !string.IsNullOrWhiteSpace(output)) {
+                if (compressedFileSize == 0 || !string.IsNullOrWhiteSpace(output)) WebMessage.DisplayModal("Failed to compress the file", "Error", "warning");
                 if (compressedFileSize > originalFileSize) WebMessage.DisplayModal("The compressed file turned out to be larger than the original file. We will keep the original file.", "Compression size", "warning");
                 File.Delete(filePathCompressed);
                 return;

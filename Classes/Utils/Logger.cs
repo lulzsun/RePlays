@@ -7,11 +7,14 @@ namespace RePlays.Utils {
     public static class Logger {
         public static bool IsConsole = false;
         private static Object thisLock = new Object();
+
+        public static string Version = "";
+
         public static void WriteLine(string message,
                 [CallerFilePath] string file = null,
                 [CallerMemberName] string memberName = "",
                 [CallerLineNumber] int line = 0) {
-            string logLine = $"[{DateTime.Now}][{Path.GetFileName(file)}::{memberName}({line})]: {message}";
+            string logLine = $"[{DateTime.Now}]{Version}[{Path.GetFileName(file)}::{memberName}({line})]: {message}";
             if (IsConsole) {
                 Console.WriteLine(logLine);
                 System.Diagnostics.Debug.WriteLine(logLine);

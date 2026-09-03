@@ -1,5 +1,4 @@
-﻿using RePlays.Recorders;
-using RePlays.Utils;
+﻿using RePlays.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,18 +6,17 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Xml.Linq;
 
-#if WINDOWS
-using System.Security;
-using System.Security.Cryptography;
-using System.Runtime.ConstrainedExecution;
-using System.Management;
-using System.Windows.Forms;
+
+
+#if !WINDOWS
+using RePlays.Recorders;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
 #endif
 using static RePlays.Utils.Functions;
 
@@ -29,8 +27,11 @@ namespace RePlays.Services {
         static readonly HashSet<string> nonGameDetectionsCache = [];
         static readonly string gameDetectionsFile = Path.Join(GetCfgFolder(), "gameDetections.json");
         static readonly string nonGameDetectionsFile = Path.Join(GetCfgFolder(), "nonGameDetections.json");
-        private static List<string> classBlacklist = ["plasmashell", "splashscreen", "launcher", "cheat", "console"];
+        private static List<string> classBlacklist = ["plasmashell", "splashscreen", "splashwindow", "launcher", "cheat", "console", "amddvroverlaywindowclass",
+        "splashclass"];
         private static List<string> classWhitelist = ["steam_app_", "unitywndclass", "unrealwindow", "riotwindowclass"];
+
+        public static bool UserWhitelisted { get; private set; }
 
         public static void Start() {
             Logger.WriteLine("DetectionService starting...");
@@ -44,6 +45,9 @@ namespace RePlays.Services {
         }
 
         public static void WindowCreation(IntPtr hwnd, int processId = 0, [CallerMemberName] string memberName = "") {
+            if (RecordingService.IsRecording)
+                return;
+
             if (processId == 0 && hwnd != 0)
                 WindowService.GetWindowThreadProcessId(hwnd, out processId);
             else if (processId == 0 && hwnd == 0)
@@ -52,7 +56,7 @@ namespace RePlays.Services {
             WindowService.GetExecutablePathFromProcessId(processId, out string executablePath);
 
             if (executablePath != null) {
-                if (executablePath.ToString().ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
+                if (executablePath.ToLower().StartsWith(@"c:\windows\")) {   // if this program is starting from here,
                     return;                                                             // we can assume it is not a game
                 }
             }
@@ -170,6 +174,8 @@ namespace RePlays.Services {
             }
             var gameDetection = IsMatchedGame(executablePath);
 
+            if (!gameDetection.isGame && SettingsService.Settings.captureSettings.recordingMode == "whitelist") { return false; }
+
             // If the windowHandle we captured is problematic, just return nothing
             // Problematic handles are created if the application for example,
             // the game displays a splash screen (SplashScreenClass) before launching
@@ -178,7 +184,7 @@ namespace RePlays.Services {
             if (windowHandle <= 0) windowHandle = WindowService.GetWindowHandleByProcessId(processId, true);
             var className = WindowService.GetClassName(windowHandle);
             string gameTitle = gameDetection.gameTitle;
-            string fileName = Path.GetFileName(executablePath);
+            string fileName = Path.GetFileNameWithoutExtension(executablePath);
             var detailedWindowStr = $"[{processId}][{windowHandle}][{className}][{executablePath}]";
             try {
                 if (Path.Exists(executablePath)) {
@@ -211,7 +217,7 @@ namespace RePlays.Services {
             var aspectRatio = GetAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isValidAspectRatio = IsValidAspectRatio(windowSize.GetWidth(), windowSize.GetHeight());
             bool isWhitelistedClass = classWhitelist.Where(c => className.ToLower().Contains(c)).Any() || classWhitelist.Where(c => className.ToLower().Replace(" ", "").Contains(c)).Any();
-            detailedWindowStr += $"[{windowSize.GetWidth()}x{windowSize.GetHeight()}, {aspectRatio}]";
+            detailedWindowStr += $"[{windowSize}, {aspectRatio}]";
 
             // if there is no matched game, lets try to make assumptions from the process given the following information:
             // 1. window size & aspect ratio
@@ -236,6 +242,7 @@ namespace RePlays.Services {
                     bool isUserWhitelisted = SettingsService.Settings.detectionSettings.whitelist.Any(
                         game => string.Equals(game.gameExe.ToLower(), executablePath.ToLower())
                     );
+                    UserWhitelisted = isUserWhitelisted;
 #if !WINDOWS
                     // linux (at least proton-based) games don't have a different classname for their splashscreen.
                     // we need do check other things to see if it is a splashscreen before we record.
@@ -252,9 +259,29 @@ namespace RePlays.Services {
                     if (!isWhitelistedClass && !isUserWhitelisted) return false;
                 }
                 bool allowed = SettingsService.Settings.captureSettings.recordingMode is "automatic" or "whitelist";
+                // Set game title to executable. Better than Game Unknown
+                if (gameDetection.gameTitle == "Game Unknown" && !string.IsNullOrWhiteSpace(fileName)) {
+                    gameTitle = fileName;
+                    Logger.WriteLine($"Game title set to executable name: {gameTitle}");
+                }
+                // If game title is still unknown, that means filename could not be retrieved.
+                // The issue is mostly due to anti-cheat not allowing us to retrieve the filename.
+                // We can try to get the name of the game window title as another fallback, but
+                // it could prove not 100% reliable if the anticheat also blocks access to window handle.
+                // ...
+                // A future approach (for Steam games) could be to access the registry key:
+                //      HKEY_CURRENT_USER\SOFTWARE\Valve\Steam
+                // and read the 'RunningAppID', then do a lookup for a name.
+                if (gameDetection.gameTitle == "Game Unknown") {
+                    string windowTitle = WindowService.GetWindowTitle(windowHandle).Trim();
+                    if (!string.IsNullOrWhiteSpace(windowTitle)) {
+                        gameTitle = windowTitle;
+                        Logger.WriteLine($"Game title set to window title: {gameTitle}");
+                    }
+                }
                 Logger.WriteLine($"{(allowed ? "Starting capture for" : "Ready to capture")} application: {detailedWindowStr}");
                 RecordingService.SetCurrentSession(processId, windowHandle, gameTitle, executablePath, gameDetection.forceDisplayCapture);
-                if (allowed) RecordingService.StartRecording();
+                if (allowed) RecordingService.StartRecording(false);
             }
             return isGame;
         }
@@ -312,8 +339,17 @@ namespace RePlays.Services {
             }
 
             // TODO: also parse Epic games/Origin games
-            if (exeFile.Replace("\\", "/").Contains("/steamapps/common/"))
-                return (true, false, Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0]);
+            if (exeFile.Replace("\\", "/").Contains("/steamapps/common/")) {
+                string gameName = GetNameForSteamGame(exeFile);
+                if (!string.IsNullOrEmpty(gameName))
+                    return (true, false, gameName);
+            }
+
+            if (exeFile.Replace("\\", "/").Contains("/WindowsApps/")) {
+                string gameName = GetNameForXboxGame(exeFile);
+                if (!string.IsNullOrEmpty(gameName))
+                    return (true, false, gameName);
+            }
             return (false, false, "Game Unknown");
         }
 
@@ -344,6 +380,60 @@ namespace RePlays.Services {
             }
 
             return false;
+        }
+
+        private static string GetNameForSteamGame(string exeFile) {
+            try {
+                string normalizedPath = exeFile.Replace("\\", "/");
+                var splitPath = Regex.Split(normalizedPath, "/steamapps/common/", RegexOptions.IgnoreCase);
+
+                string installDir = splitPath[1].Split('/')[0];
+                string steamAppsDir = Path.Combine(Path.GetDirectoryName(splitPath[0]), "Steam/steamapps");
+
+                if (!Directory.Exists(steamAppsDir))
+                    return Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0];
+
+                foreach (string acfFile in Directory.GetFiles(steamAppsDir, "*.acf")) {
+                    string content = File.ReadAllText(acfFile);
+                    string acfInstalldir = ExtractAcfValue(content, "installdir");
+                    string gameName = ExtractAcfValue(content, "name");
+
+                    // If the acfInstalldir matches installDir, then we know that it's the correct file and we can return the value in gameName
+                    if (string.Equals(acfInstalldir, installDir, StringComparison.OrdinalIgnoreCase)) {
+                        return gameName;
+                    }
+                }
+                return Regex.Split(exeFile.Replace("\\", "/"), "/steamapps/common/", RegexOptions.IgnoreCase)[1].Split('/')[0];
+            }
+            catch {
+                return null;
+            }
+        }
+
+        private static string ExtractAcfValue(string content, string key) {
+            var match = Regex.Match(content, $"\"{key}\"\\s+\"([^\"]+)\"", RegexOptions.IgnoreCase);
+            return match.Success ? match.Groups[1].Value : string.Empty;
+        }
+
+        private static string GetNameForXboxGame(string exeFile) {
+            try {
+                string normalizedPath = exeFile.Replace("\\", "/");
+                var splitPath = Regex.Split(normalizedPath, "/WindowsApps/", RegexOptions.IgnoreCase);
+                string installDir = splitPath[1].Split('/')[0];
+                string packageDir = Path.Combine(splitPath[0], "WindowsApps", installDir);
+                string configFile = Path.Combine(packageDir, "MicrosoftGame.config");
+                if (File.Exists(configFile)) {
+                    XDocument config = XDocument.Load(configFile);
+                    var displayNameAttribute = config.Root
+                        ?.Element(XName.Get("ShellVisuals", config.Root.GetDefaultNamespace().NamespaceName))
+                        ?.Attribute(XName.Get("DefaultDisplayName", config.Root.GetDefaultNamespace().NamespaceName));
+                    if (displayNameAttribute != null) return displayNameAttribute.Value;
+                }
+                return null;
+            }
+            catch {
+                return null;
+            }
         }
 
         private static void LoadNonGameCache() {

@@ -1021,21 +1021,6 @@
 		]
 	},
 	{
-		"title": "Java",
-		"detections": [
-			{
-				"detect_exe": "java.exe",
-				"nongame_type": "blacklist",
-				"title": "Java.exe"
-			},
-			{
-				"detect_exe": "javaw.exe",
-				"nongame_type": "blacklist",
-				"title": "Javaw.exe"
-			}
-		]
-	},
-	{
 		"title": "Wansview",
 		"detections": [
 			{
@@ -5970,6 +5955,16 @@
 		"detections": [
 			{
 				"detect_exe": "EasyAntiCheat_launcher.exe",
+				"nongame_type": "blacklist",
+				"title": "EAC"
+			}
+		]
+	},
+	{
+		"title": "Easy Anti Cheat",
+		"detections": [
+			{
+				"detect_exe": "start_protected_game.exe",
 				"nongame_type": "blacklist",
 				"title": "EAC"
 			}
@@ -15586,16 +15581,6 @@
 		]
 	},
 	{
-		"title": "javaw",
-		"detections": [
-			{
-				"detect_exe": "javaw.exe",
-				"nongame_type": "blacklist",
-				"title": "javaw.exe"
-			}
-		]
-	},
-	{
 		"title": "Movie Studio Platinum",
 		"detections": [
 			{
@@ -15825,16 +15810,6 @@
 				"detect_exe": ".1\\ietabhelper.exe",
 				"nongame_type": "blacklist",
 				"title": "IE Tab Helper"
-			}
-		]
-	},
-	{
-		"title": "Javaw",
-		"detections": [
-			{
-				"detect_exe": "javaw.exe",
-				"nongame_type": "blacklist",
-				"title": "javaw.exe"
 			}
 		]
 	},

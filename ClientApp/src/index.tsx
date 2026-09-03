@@ -52,6 +52,9 @@ declare global {
       deaths?: number;
       champion?: string;
       win?: boolean;
+      matchId?: number;
+      // times are in seconds from the start of the video
+      bookmarks?: { type: BookmarkType; time: number }[];
     };
     folder: string;
   }
@@ -102,6 +105,7 @@ declare global {
   interface UserSettings {
     generalSettings: GeneralSettings;
     captureSettings: CaptureSettings;
+    clipSettings: ClipSettings;
     detectionSettings: DetectionSettings;
     uploadSettings: UploadSettings;
     storageSettings: StorageSettings;
@@ -110,22 +114,31 @@ declare global {
   interface GeneralSettings {
     launchStartup: boolean;
     startMinimized: boolean;
+    closeToTray: boolean;
     theme: string;
     update: string;
     updateChannel: string;
     currentVersion: string;
     latestVersion: string;
+    device: Device;
+    language: 'de' | 'en' | 'es' | 'fr' | 'it' | 'pt' | 'ru';
   }
+
+  interface Device {
+    gpuManufacturer?: 'NVIDIA' | 'AMD' | 'Intel';
+  }
+
   interface AudioDevice {
     deviceId: string;
     deviceLabel: string;
     deviceVolume: number;
+    isInput: boolean;
     denoiser?: boolean;
-    isInput?: boolean;
   }
   interface FileFormat {
     title: string;
     format: string;
+    isReplayBufferCompatible: boolean;
   }
   interface CaptureSettings {
     recordingMode: string;
@@ -135,6 +148,8 @@ declare global {
     resolution: number;
     frameRate: number;
     bitRate: number;
+    maxBitRate: number,
+    cqLevel: number,
     encodersCache: string[];
     encoder: string;
     rateControlCache: string[];
@@ -146,9 +161,23 @@ declare global {
     hasNvidiaAudioSDK: boolean;
     fileFormatsCache: FileFormat[];
     fileFormat: FileFormat;
+    useReplayBuffer: boolean;
+    replayBufferDuration: number;
+    replayBufferSize: number;
+    captureGameAudio: boolean;
+    captureHdr: boolean;
+  }
+
+  interface ClipSettings {
+    reEncode: boolean;
+    renderHardware: 'CPU' | 'GPU';
+    renderQuality: number;
+    renderCodec: string;
+    renderCustomFps: number | undefined
   }
   interface UploadSettings {
     recentLinks: string[];
+    openAfterUpload: boolean;
     streamableSettings: {
       email: string;
       password: string;

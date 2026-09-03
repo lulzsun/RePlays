@@ -1,6 +1,7 @@
 ﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -41,6 +42,13 @@ namespace RePlays.Uploaders {
                     Logger.WriteLine(response.StatusCode.ToString() + " " + content);
                     var result = JsonSerializer.Deserialize<StreamableResult>(content);
                     if (result.shortcode != null) {
+                        if (SettingsService.Settings.uploadSettings.openAfterUpload) {
+                            Process browserProcess = new Process();
+                            browserProcess.StartInfo.UseShellExecute = true;
+                            browserProcess.StartInfo.FileName = "https://streamable.com/" + result.shortcode;
+                            browserProcess.Start();
+                        }
+
                         return "https://streamable.com/" + result.shortcode;
                     }
                     else {

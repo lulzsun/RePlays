@@ -217,12 +217,6 @@ export const Player: React.FC<Props> = ({ videos }) => {
       localStorage.setItem('videoMetadata', JSON.stringify(videoMetadata));
     }
 
-    if (bookmarks.length !== 0) {
-      let videoMetadata = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
-      videoMetadata[`/${video}`] = { bookmarks };
-      localStorage.setItem('videoMetadataBookmarks', JSON.stringify(videoMetadata));
-    }
-
     return () => {
       document.removeEventListener('keydown', handleOnKeyDown);
       document.removeEventListener('mousedown', handleOnMouseDown);
@@ -249,7 +243,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
   function handleUpload() {
     console.log(`${game} ${video} ${videoType} to upload`);
     var thumb = `${folder}/${game}/.thumbs/${video}`;
-    thumb = thumb.substr(0, thumb.lastIndexOf('.')) + '.webp' || thumb + '.webp';
+    thumb = thumb.substr(0, thumb.lastIndexOf('.')) + '.jpg' || thumb + '.jpg';
 
     modalCtx?.setData({
       title: 'Upload',
@@ -302,6 +296,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
       });
     });
     postMessage('CreateClips', {
+      game: game,
       videoPath: `/${game}/${video}`,
       clipSegments: convertedClips,
     });
@@ -323,6 +318,20 @@ export const Player: React.FC<Props> = ({ videos }) => {
     }
   }
 
+  // Bookmark times are percentages of the video's duration while on screen, but
+  // are stored in the video's .metadata file in seconds.
+  function saveBookmarks(newBookmarks: BookmarkInterface[]) {
+    setBookmarks(newBookmarks);
+    postMessage('UpdateBookmarks', {
+      videoPath: `/${game}/${video}`,
+      merge: false,
+      bookmarks: newBookmarks.map((b) => ({
+        type: b.type,
+        time: (b.time / 100) * videoElement.current!.duration,
+      })),
+    });
+  }
+
   function handleAddBookmark() {
     if (seekWindowElement.current && seekBarElement.current) {
       let time = (currentTime / videoElement.current!.duration) * 100;
@@ -335,10 +344,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
           time: time,
         });
 
-      setBookmarks(newBookmarks);
-      let videoMetadata = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
-      videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
-      localStorage.setItem('videoMetadataBookmarks', JSON.stringify(videoMetadata));
+      saveBookmarks(newBookmarks);
     }
   }
 
@@ -351,10 +357,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
           if (videoElement.current) newBookmarks.splice(index, 1);
 
-          setBookmarks(newBookmarks);
-          let videoMetadata = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
-          videoMetadata[`/${video}`] = { bookmarks: newBookmarks };
-          localStorage.setItem('videoMetadataBookmarks', JSON.stringify(videoMetadata));
+          saveBookmarks(newBookmarks);
         },
       },
     ]);
@@ -363,7 +366,6 @@ export const Player: React.FC<Props> = ({ videos }) => {
 
   function handleVideoLoad(e: SyntheticEvent) {
     let videoMetadata = JSON.parse(localStorage.getItem('videoMetadata')!);
-    let videoMetadataBookmarks = JSON.parse(localStorage.getItem('videoMetadataBookmarks')!);
 
     if (videoElement.current && volumeSliderElement.current) {
       videoElement.current.volume = parseInt(volumeSliderElement.current.value) / 100;
@@ -373,8 +375,17 @@ export const Player: React.FC<Props> = ({ videos }) => {
       setClips(videoMetadata[`/${video}`].clips);
     }
 
-    if (videoMetadataBookmarks[`/${video}`]) {
-      setBookmarks(videoMetadataBookmarks[`/${video}`].bookmarks);
+    // bookmarks come from the video's .metadata file (in seconds); convert to
+    // percentages of the duration for rendering on the timeline
+    const metadataBookmarks = videos.find((v) => v.fileName.includes(video))?.metadata?.bookmarks;
+    if (metadataBookmarks?.length && videoElement.current?.duration) {
+      setBookmarks(
+        metadataBookmarks.map((b, i) => ({
+          id: Date.now() + i,
+          type: b.type,
+          time: (b.time / videoElement.current!.duration) * 100,
+        })),
+      );
     }
   }
 
@@ -779,7 +790,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
         </div>
 
         <div className='flex justify-end'>
-          <div className='border-2 rounded-b-lg'>
+          <div className='border-2 rounded-b-lg bg-white overflow-hidden flex items-center'>
             <button
               title={t('playerItem09')}
               className='justify-center w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800'
@@ -852,7 +863,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
             >
               -
             </span>
-            <span className='text-center -mt-0.5 mb-0.5 inline-block align-middle w-auto h-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 active:bg-gray-50 active:text-gray-800'>
+            <span className='text-center w-auto h-full flex justify-center items-center px-4 py-2 text-sm font-medium leading-5 text-gray-700 transition duration-150 ease-in-out bg-white hover:bg-gray-200 hover:text-gray-700 active:bg-gray-50 active:text-gray-800'>
               {`${ZOOMS[currentZoom]}%`}
             </span>
             <span

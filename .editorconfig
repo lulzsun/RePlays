@@ -249,6 +249,7 @@ dotnet_diagnostic.CA1311.severity = none
 
 # CA1309: Use ordinal string comparison
 dotnet_diagnostic.CA1309.severity = none
+csharp_style_prefer_primary_constructors = true:suggestion
 
 [*.{cs,vb}]
 dotnet_style_coalesce_expression = true:suggestion
@@ -263,3 +264,7 @@ dotnet_style_object_initializer = true:suggestion
 dotnet_style_collection_initializer = true:suggestion
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
 dotnet_style_prefer_conditional_expression_over_assignment = true:silent
+dotnet_diagnostic.CA1416.severity = none
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1862.severity = none
+dotnet_diagnostic.CA1310.severity = none

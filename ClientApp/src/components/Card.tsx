@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next';
-
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { formatBytes } from '../helpers/utils';
 import { postMessage } from '../helpers/messenger';
 import UploadModal from './UploadModal';
 import { ModalContext } from '../Contexts';
-import { CompressModal } from './CompressModal';
+import {CompressModal} from './CompressModal';
+import { useLatestLeagueVersion } from '../integrations/league';
+import { useDeadlockHeroIcon } from '../integrations/deadlock';
 
 interface Props {
   game?: string;
@@ -45,9 +46,13 @@ export const Card: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
 
+  const latestLeagueVersion = useLatestLeagueVersion(game);
+  const deadlockHeroIcon = useDeadlockHeroIcon(game, champion);
+
   const modalCtx = useContext(ModalContext);
-  const resultText = win === undefined ? undefined : win ? 'Win' : 'Loss';
-  const resultColor = win === undefined ? undefined : win ? 'text-green-500' : 'text-red-500';
+  // loose equality: win is null in metadata without a result, undefined when absent
+  const resultText = win == null ? null : (win ? 'Win' : 'Loss');
+  const resultColor = win == null ? null : `text-${win ? 'green' : 'red'}-500`;
 
   function handleUpload() {
     console.log(`${game} ${video} ${videoType} to upload`);
@@ -152,7 +157,7 @@ export const Card: React.FC<Props> = ({
       </div>
       <Link
         className='rounded-lg'
-        to={`/player/${game}/${video}/${videoType}`}
+        to={`/player/${encodeURIComponent(game)}/${video}/${videoType}`}
         onClick={() => {
           console.log(folder);
         }}
@@ -171,12 +176,12 @@ export const Card: React.FC<Props> = ({
             champion &&
             champion !== 'TFTChampion' && (
               <span className='absolute z-40 bottom-1 left-1 text-xs font-normal flex items-center'>
-                <img
-                  className='border border-black -mr-4 z-40 rounded-full'
-                  src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champion}.png`}
-                  style={{ width: '20px' }}
-                  alt={champion}
-                />
+                  <img
+                    className='border border-black -mr-4 z-40 rounded-full'
+                    src={`https://ddragon.leagueoflegends.com/cdn/${latestLeagueVersion}/img/champion/${champion}.png`}
+                    style={{ width: '20px' }}
+                    alt={champion}
+                  />
                 <p
                   className='py-0.5 pl-5 rounded-full p-2'
                   style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}
@@ -187,8 +192,28 @@ export const Card: React.FC<Props> = ({
                 </p>
               </span>
             )}
+          {game === 'Deadlock' && videoType === 'Sessions' && champion && (
+            <span className='absolute z-40 bottom-1 left-1 text-xs font-normal flex items-center'>
+              {deadlockHeroIcon && (
+                <img
+                  className='border border-black -mr-4 z-40 rounded-full'
+                  src={deadlockHeroIcon}
+                  style={{ width: '20px' }}
+                  alt={champion}
+                />
+              )}
+              <p
+                className={'py-0.5 rounded-full p-2' + (deadlockHeroIcon ? ' pl-5' : '')}
+                style={{ backgroundColor: `rgba(0, 0, 0, 0.5)` }}
+              >
+                {`${kills}/${deaths}/${assists}`}
+                {resultText && ' - '}
+                {resultText && <span className={`font-bold ${resultColor}`}>{resultText}</span>}
+              </p>
+            </span>
+          )}
           <div className='absolute z-30 w-full h-full bg-black opacity-0 group-hover:opacity-50' />
-          <img className='absolute z-20 w-full' alt='' src={`${folder}/${game}/.thumbs/${thumb}`} />
+          <img className='absolute z-20 w-full' alt='' src={`${folder}/${encodeURIComponent(game)}/.thumbs/${thumb}`} />
           <img className='relative z-10 w-full' alt='' src={'video_thumbnail_placeholder.png'} />
         </div>
         <div className='bg-white dark:bg-gray-900 text-gray-800 dark:text-white w-full rounded-b-lg p-4 text-xs font-medium'>

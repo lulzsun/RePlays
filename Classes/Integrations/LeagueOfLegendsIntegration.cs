@@ -1,33 +1,36 @@
 ﻿using RePlays.Services;
 using RePlays.Utils;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Timers;
 using Timer = System.Timers.Timer;
 
 
 namespace RePlays.Integrations {
     internal class LeagueOfLegendsIntegration : Integration {
-        Timer timer = new() {
-            Interval = 250,
-        };
+        static Timer timer;
 
-        public static PlayerStats stats;
+        public PlayerStats stats;
 
         public override Task Start() {
             Logger.WriteLine("Starting League Of Legends integration");
             stats = new PlayerStats();
+            timer = new() {
+                Interval = 250,
+            };
 
             timer.Elapsed += async (sender, e) => {
                 using var handler = new HttpClientHandler {
                     ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
                 };
+                string result = "";
                 using HttpClient client = new(handler);
                 try {
-                    string result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/allgamedata");
+                    result = await client.GetStringAsync("https://127.0.0.1:2999/liveclientdata/allgamedata");
                     JsonDocument doc = JsonDocument.Parse(result);
                     JsonElement root = doc.RootElement;
 
@@ -47,13 +50,33 @@ namespace RePlays.Integrations {
                         }
                     }
 
-                    string username = root.GetProperty("activePlayer").GetProperty("summonerName").GetString();
+                    string username = "";
+
+                    // lulzsun: now, i no longer play LOL so i am not exactly sure of this,
+                    // but how come api documentation sample does not use 'riotId'? is it wrong or 
+                    // is it not updated?
+                    // https://static.developer.riotgames.com/docs/lol/liveclientdata_sample.json
+                    // just incase, we will fallback to using the 'summonerName' property if it fails
+                    if (root.TryGetProperty("activePlayer", out JsonElement activePlayer) &&
+                        activePlayer.TryGetProperty("riotId", out JsonElement id)) {
+                        username = id.GetString();
+                    }
+                    else if (root.TryGetProperty("activePlayer", out activePlayer) &&
+                        activePlayer.TryGetProperty("summonerName", out id)) {
+                        username = id.GetString();
+                    }
 
                     // Parsing all players
                     JsonElement allPlayers = root.GetProperty("allPlayers");
                     JsonElement currentPlayer = allPlayers
                         .EnumerateArray()
-                        .FirstOrDefault(playerElement => playerElement.GetProperty("summonerName").GetString() == username.Split('#')[0]);
+                        .FirstOrDefault(playerElement => {
+                            // lulzsun: same issue from above applies here...
+                            if (playerElement.TryGetProperty("riotId", out JsonElement id)) {
+                                return id.GetString() == username;
+                            }
+                            return playerElement.GetProperty("summonerName").GetString() == username;
+                        });
 
                     int currentKills = currentPlayer.GetProperty("scores").GetProperty("kills").GetInt32();
                     if (currentKills != stats.Kills) {
@@ -80,18 +103,20 @@ namespace RePlays.Integrations {
                     stats.Win = root.GetProperty("events").GetProperty("Events")
                         .EnumerateArray()
                         .Where(eventElement => eventElement.GetProperty("EventName").GetString() == "GameEnd")
-                        .Any(eventElement => eventElement.GetProperty("Result").GetString() == "Win");
-
+                        .Select(eventElement => eventElement.GetProperty("Result").GetString() switch {
+                            "Win" => true,
+                            "Lose" => false,
+                            _ => (bool?)null
+                        })
+                        .FirstOrDefault();
                 }
                 catch (Exception ex) {
                     if (ex.GetType() != typeof(HttpRequestException)) {
                         Logger.WriteLine(ex.ToString());
-                    }
-                    if (!RecordingService.IsRecording || RecordingService.GetTotalRecordingTimeInSeconds() > 180) {
-                        timer.Stop();
+                        Logger.WriteLine("Provided json: " + Regex.Replace(result, @"\n|\r\n", ""));
+                        // just shutdown at this point, its probably broken
                         await Shutdown();
                     }
-
                 }
             };
             timer.Start();
@@ -101,19 +126,32 @@ namespace RePlays.Integrations {
 
         public override Task Shutdown() {
             if (timer.Enabled) {
-                Logger.WriteLine("Shutting down League Of Legends integration");
                 timer.Stop();
+                timer.Dispose();
+                Logger.WriteLine("Shutting down League Of Legends integration");
             }
-
+            else {
+                Logger.WriteLine("Already shutdown League Of Legends integration!");
+            }
             return Task.CompletedTask;
         }
-    }
-}
 
-public class PlayerStats {
-    public int Kills { get; set; }
-    public int Assists { get; set; }
-    public int Deaths { get; set; }
-    public string Champion { get; set; }
-    public bool Win { get; set; }
+        public void UpdateMetadataWithStats(string videoPath) {
+            Functions.UpdateMetadata(videoPath, metadata => {
+                metadata.kills = stats.Kills;
+                metadata.assists = stats.Assists;
+                metadata.deaths = stats.Deaths;
+                metadata.champion = stats.Champion;
+                metadata.win = stats.Win;
+            });
+        }
+    }
+
+    public class PlayerStats {
+        public int Kills { get; set; }
+        public int Assists { get; set; }
+        public int Deaths { get; set; }
+        public string Champion { get; set; }
+        public bool? Win { get; set; }
+    }
 }

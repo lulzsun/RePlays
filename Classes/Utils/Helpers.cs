@@ -32,7 +32,7 @@ namespace RePlays.Utils {
 
 #if DEBUG
         public static string GetSolutionPath() {
-            DirectoryInfo? directory = new(Directory.GetCurrentDirectory());
+            DirectoryInfo? directory = new(AppContext.BaseDirectory);
             while (directory != null && !directory.GetFiles("*.sln").Any()) {
                 directory = directory.Parent;
             }
@@ -175,11 +175,11 @@ namespace RePlays.Utils {
             var inputCache = SettingsService.Settings.captureSettings.inputDevicesCache;
             outputCache.Clear();
             inputCache.Clear();
-            outputCache.Add(new("default", "Default Device"));
-            inputCache.Add(new("default", "Default Device", false));
+            outputCache.Add(new("default", "Default Device", false));
+            inputCache.Add(new("default", "Default Device", true, false));
 #if WINDOWS
-            outputCache.Add(new("communications", "Default Communication Device"));
-            inputCache.Add(new("communications", "Default Communication Device", false));
+            outputCache.Add(new("communications", "Default Communication Device", false));
+            inputCache.Add(new("communications", "Default Communication Device", true, false));
             ManagementObjectSearcher searcher = new("Select * From Win32_PnPEntity");
             ManagementObjectCollection deviceCollection = searcher.Get();
             foreach (ManagementObject obj in deviceCollection) {
@@ -188,12 +188,13 @@ namespace RePlays.Utils {
 
                 if (obj.Properties["PNPClass"].Value.ToString() == "AudioEndpoint") {
                     string id = obj.Properties["PNPDeviceID"].Value.ToString().Split('\\').Last();
-                    AudioDevice dev = new(id, obj.Properties["Name"].Value.ToString()) {
+                    bool isOutput = id.StartsWith("{0.0.0.00000000}");
+                    AudioDevice dev = new(id, obj.Properties["Name"].Value.ToString(), !isOutput) {
                         deviceId = id.ToLower(),
                         deviceLabel = obj.Properties["Name"].Value.ToString(),
                         deviceVolume = 100
                     };
-                    if (id.StartsWith("{0.0.0.00000000}")) outputCache.Add(dev);
+                    if (isOutput) outputCache.Add(dev);
                     else inputCache.Add(dev);
                     Logger.WriteLine(dev.deviceId + " | " + dev.deviceLabel);
 
@@ -233,30 +234,34 @@ namespace RePlays.Utils {
 
         public static VideoList GetAllVideos(string game, string sortBy, bool isVideoList, bool isRePlaysWebView = false) {
             var videoExtensions = new[] { ".mp4", ".mkv", ".mov", ".flv" };
-            List<string> allfiles = [];
+            List<FileInfo> allfiles = [];
             switch (sortBy) {
                 case "Latest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderByDescending(d => new FileInfo(d).CreationTime)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderByDescending(file => file.CreationTime)
                         .ToList();
                     break;
                 case "Oldest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderBy(d => new FileInfo(d).CreationTime)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderBy(file => file.CreationTime)
                         .ToList();
                     break;
                 case "Smallest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderBy(d => new FileInfo(d).Length)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderBy(file => file.Length)
                         .ToList();
                     break;
                 case "Largest":
-                    allfiles = Directory.GetFiles(GetPlaysFolder(), "*.*", SearchOption.AllDirectories)
-                        .Where(file => videoExtensions.Any(file.ToLower().EndsWith))
-                        .OrderByDescending(d => new FileInfo(d).Length)
+                    allfiles = new DirectoryInfo(GetPlaysFolder())
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(file => videoExtensions.Any(file.Extension.Equals))
+                        .OrderByDescending(file => file.Length)
                         .ToList();
                     break;
                 default:
@@ -268,37 +273,39 @@ namespace RePlays.Utils {
                 games = [],
                 sortBy = sortBy,
                 sessions = [],
-                clips = []
+                clips = [],
+                corrupted = []
             };
 
             Logger.WriteLine($"Found '{allfiles.Count}' video files in {GetPlaysFolder()}");
 
-            foreach (string file in allfiles) {
-                var fileWithoutExt = Path.GetFileNameWithoutExtension(file);
-                if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !File.Exists(file)) continue;
+            foreach (FileInfo file in allfiles) {
+                var fileWithoutExt = Path.GetFileNameWithoutExtension(file.FullName);
+                if (!(fileWithoutExt.EndsWith("-ses") || fileWithoutExt.EndsWith("-man") || fileWithoutExt.EndsWith("-clp")) || !file.Exists) continue;
+                if (RecordingService.IsRecording && RecordingService.GetCurrentSession().VideoSavePath.Equals(file.FullName)) continue;
 
                 Video video = new() {
-                    size = new FileInfo(file).Length,
-                    metadata = GetOrCreateMetadata(file),
-                    date = new FileInfo(file).CreationTime,
-                    fileName = Path.GetFileName(file),
-                    game = Path.GetFileName(Path.GetDirectoryName(file)),
+                    size = file.Length,
+                    metadata = GetOrCreateMetadata(file.FullName),
+                    date = file.CreationTime,
+                    fileName = Path.GetFileName(file.FullName),
+                    game = Path.GetFileName(Path.GetDirectoryName(file.FullName)),
                 };
 
 #if DEBUG && WINDOWS
                 video.folder = "http://localhost:3001/"; // if not using web server: https://videos.replays.app/
 #else
                 if (isRePlaysWebView)
-                    video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "..")).Replace("\\", "/");
+                    video.folder = "file://" + Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file.FullName), "..")).Replace("\\", "/");
                 else
                     video.folder = "http://localhost:3001/";
 #endif
 
                 if (!videoList.games.Contains(video.game)) videoList.games.Add(video.game);
 
-                if (!game.Equals(Path.GetFileName(Path.GetDirectoryName(file))) && !game.Equals("All Games")) continue;
+                if (!game.Equals(Path.GetFileName(Path.GetDirectoryName(file.FullName))) && !game.Equals("All Games")) continue;
 
-                var thumb = GetOrCreateThumbnail(file, video.metadata.duration);
+                var thumb = GetOrCreateThumbnail(file.FullName, video.metadata.duration);
                 if (!File.Exists(thumb)) continue;
                 video.thumbnail = Path.GetFileName(thumb);
 
@@ -310,8 +317,12 @@ namespace RePlays.Utils {
                     videoList.clips.Add(video);
                     videoList.clipsSize += video.size;
                 }
+
+                if (video.metadata.duration == 0) {
+                    videoList.corrupted.Add(video);
+                }
             }
-            Logger.WriteLine($"Parsed '{videoList.sessions.Count + videoList.clips.Count}' video files. Sessions: {videoList.sessions.Count}, Clips: {videoList.clips.Count}.");
+            Logger.WriteLine($"Parsed '{videoList.sessions.Count + videoList.clips.Count}' video files. Sessions: {videoList.sessions.Count}, Clips: {videoList.clips.Count}, Corrupted: {videoList.corrupted.Count}.");
 
             videoList.games.Sort();
 
@@ -357,16 +368,19 @@ namespace RePlays.Utils {
             string[] thumbnailExtensions = [".jpg", ".webp", ".png"];
             string thumbnailPath = thumbnailExtensions.Select(ext => Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ext))
                 .FirstOrDefault(File.Exists);
+            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
 
             if (thumbnailPath != null) return thumbnailPath;
             else thumbnailPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".jpg");
             if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
             if (duration == 0) {
-                duration = GetVideoDuration(videoPath);
-                if (duration == 0) {
-                    Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: duration of video is 0, corrupted video?");
-                    return thumbnailPath;
+                if (!File.Exists(metadataPath)) {
+                    duration = GetVideoDuration(videoPath);
+                    if (duration == 0) {
+                        Logger.WriteLine($"Failed to create thumbnail {thumbnailPath}, details: duration of video is 0, corrupted video?");
+                        return thumbnailPath;
+                    }
                 }
             }
 
@@ -398,54 +412,80 @@ namespace RePlays.Utils {
             return thumbnailPath;
         }
 
-        public static VideoMetadata GetOrCreateMetadata(string videoPath) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+        private static readonly object _metafileLock = new();
 
-            if (File.Exists(metadataPath)) {
-                try {
-                    return JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+        public static VideoMetadata GetMetadata(string videoPath) {
+            lock (_metafileLock) {
+                string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+                string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+
+                if (File.Exists(metadataPath)) {
+                    try {
+                        var metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
+                        metadata.filePath = metadataPath;
+                        return metadata;
+                    }
+                    catch (Exception ex) {
+                        Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
+                        File.Delete(metadataPath);
+                        return null;
+                    }
                 }
-                catch (Exception ex) {
-                    Logger.WriteLine($"Error deserializing video metadata for '{Path.GetFileName(videoPath)}': {ex.Message}");
-                    File.Delete(metadataPath);
-                    return GetOrCreateMetadata(videoPath);
-                }
+                return null;
             }
-            else {
-                var metadata = new VideoMetadata();
+        }
+
+        // Probing the file the recorder is still writing yields no duration (mp4 has
+        // no moov atom yet) or a partial one, so it must wait until the recording stops.
+        private static bool IsBeingRecorded(string videoPath) {
+            return RecordingService.IsRecording &&
+                string.Equals(RecordingService.GetCurrentSession()?.VideoSavePath, videoPath, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static VideoMetadata GetOrCreateMetadata(string videoPath) {
+            lock (_metafileLock) {
+                string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
+                string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
+                var metadata = GetMetadata(videoPath);
+
+                if (metadata != null) {
+                    // a metadata created while its video was still recording has no
+                    // duration yet - fill it in once the file is finished
+                    if (metadata.duration == 0 && !IsBeingRecorded(videoPath)) {
+                        var probed = GetVideoDuration(videoPath);
+                        if (probed > 0) {
+                            metadata.duration = probed;
+                            File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata));
+                        }
+                    }
+                    return metadata;
+                }
+
+                metadata = new VideoMetadata();
 
                 if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
-                var duration = GetVideoDuration(videoPath);
-                if (duration == 0) {
-                    Logger.WriteLine($"Failed to create metadata {metadataPath}, details: duration of video is 0, corrupted video?");
-                    return metadata;
-                }
-                metadata.duration = duration;
+                metadata.duration = IsBeingRecorded(videoPath) ? 0 : GetVideoDuration(videoPath);
+                metadata.filePath = metadataPath;
 
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
+                Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata));
                 return metadata;
             }
         }
 
-        public static void UpdateMetadataWithStats(string videoPath, PlayerStats playerStats) {
-            string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
-            string metadataPath = Path.Combine(thumbsDir, Path.GetFileNameWithoutExtension(videoPath) + ".metadata");
-            if (File.Exists(metadataPath)) {
-                VideoMetadata metadata = JsonSerializer.Deserialize<VideoMetadata>(File.ReadAllText(metadataPath));
-                metadata.kills = playerStats.Kills;
-                metadata.assists = playerStats.Assists;
-                metadata.deaths = playerStats.Deaths;
-                metadata.champion = playerStats.Champion;
-                metadata.win = playerStats.Win;
-                File.WriteAllText(metadataPath, JsonSerializer.Serialize<VideoMetadata>(metadata));
+        public static VideoMetadata UpdateMetadata(string videoPath, Action<VideoMetadata> update) {
+            lock (_metafileLock) {
+                var metadata = GetOrCreateMetadata(videoPath);
+                update(metadata);
+                File.WriteAllText(metadata.filePath, JsonSerializer.Serialize(metadata));
+                return metadata;
             }
         }
 
         public static void DeleteVideo(string filePath) {
             var metaPath = Path.Join(Path.GetDirectoryName(filePath), ".thumbs/");
-            string[] metaFileExtensions = new string[] { ".png", ".webp", ".metadata" };
+            string[] metaFileExtensions = new string[] { ".png", ".jpg", ".webp", ".metadata" };
             IEnumerable<string> metaFilesToDelete = metaFileExtensions.SelectMany(ext => Directory.GetFiles(metaPath, Path.GetFileNameWithoutExtension(filePath) + ext));
 
             Logger.WriteLine($"Deleting file: {filePath}");
@@ -456,41 +496,7 @@ namespace RePlays.Utils {
             }
         }
 
-        public static void BackupBookmarks(string videoName, string json) {
-            try {
-                Logger.WriteLine($"Backing up bookmarks for video: {videoName}");
-                string BookmarkBackupFilePath = Path.Join(GetTempFolder(), videoName + "_bookmarks.bak");
-                Logger.WriteLine($"Backup file location: {BookmarkBackupFilePath}");
-                File.WriteAllText(BookmarkBackupFilePath, json);
-            }
-            catch (Exception ex) {
-                Logger.WriteLine($"Could not backup {videoName}. Exception: {ex.Message}");
-            }
-        }
-
-        public static void LoadBackupBookmarks() {
-            try {
-                string[] bookmarkBackupFiles = Directory.GetFiles(GetTempFolder(), "*_bookmarks.bak", SearchOption.TopDirectoryOnly);
-                if (bookmarkBackupFiles.Length == 0) return;
-                Logger.WriteLine($"Loading {bookmarkBackupFiles.Length} bookmark backups");
-                foreach (string bookmarkBackupFile in bookmarkBackupFiles) {
-                    Logger.WriteLine($"Loading {bookmarkBackupFile}");
-                    string json = File.ReadAllText(bookmarkBackupFile);
-                    WebMessage webMessage = new() {
-                        message = "SetBookmarks",
-                        data = json
-                    };
-                    WebMessage.SendMessage(JsonSerializer.Serialize(webMessage));
-                    File.Delete(bookmarkBackupFile);
-                    Logger.WriteLine($"Successfully applied backups for {bookmarkBackupFile}");
-                }
-            }
-            catch (Exception ex) {
-                Logger.WriteLine($"Could not load backup bookmarks. Exception: {ex.Message}");
-            }
-        }
-
-        public static string CreateClip(string videoPath, ClipSegment[] clipSegments, int index = 0) {
+        public static string CreateClip(string game, string videoPath, ClipSegment[] clipSegments, int index = 0, int progress = 0, string uuid = null) {
             string inputFile = Path.Join(GetPlaysFolder(), videoPath).Replace("\\", "/");
             string outputFile = Path.Combine(Path.GetDirectoryName(inputFile), DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + "-clp.mp4");
 
@@ -507,18 +513,43 @@ namespace RePlays.Utils {
                 outputFile = Path.Join(GetTempFolder(), "temp" + index + ".mp4").Replace("\\", "/");
                 File.AppendAllLines(Path.Join(GetTempFolder(), "list.txt"), new[] { "file 'temp" + index + ".mp4'" });
             }
+
+            string codecArgs = "";
+            if (SettingsService.Settings.clipSettings.reEncode) {
+                codecArgs = $"-c:v {SettingsService.Settings.clipSettings.renderCodec}";
+                if (SettingsService.Settings.clipSettings.renderHardware == "GPU") {
+                    codecArgs += $" -cq:v {SettingsService.Settings.clipSettings.renderQuality}";
+                }
+                else {
+                    codecArgs += $" -crf {SettingsService.Settings.clipSettings.renderQuality}";
+                }
+
+                if (SettingsService.Settings.clipSettings.renderCustomFps.HasValue) {
+                    codecArgs += $" -r {SettingsService.Settings.clipSettings.renderCustomFps.Value}";
+                }
+            }
+            else {
+                codecArgs = "-c:v copy -c:a copy";
+            }
+
             if (clipSegments.Length > 1 && index == clipSegments.Length) {
                 startInfo.Arguments =
-                    "-f concat -safe 0 -i \"" + Path.Join(GetTempFolder(), "list.txt").Replace("\\", "/") + "\" -codec copy \"" + outputFile + "\"";
+                "-v warning -hide_banner -stats " +
+                "-f concat -safe 0 " +
+                $"-i \"{Path.Join(GetTempFolder(), "list.txt").Replace("\\", "/")}\" " +
+                $"{codecArgs} " +
+                $"\"{outputFile}\"";
                 Logger.WriteLine(startInfo.Arguments);
             }
             else {
                 startInfo.Arguments =
-                    "-ss " + clipSegments[index].start.ToString(CultureInfo.InvariantCulture) + " " +
-                    "-i \"" + inputFile + "\" " +
-                    "-t " + clipSegments[index].duration.ToString(CultureInfo.InvariantCulture) + " -codec copy " +
-                    "-avoid_negative_ts make_zero -fflags +genpts " +
-                    "-y \"" + outputFile + "\"";
+                "-v warning -hide_banner -stats " +
+                "-ss " + clipSegments[index].start.ToString(CultureInfo.InvariantCulture) + " " +
+                "-i \"" + inputFile + "\" " +
+                "-t " + clipSegments[index].duration.ToString(CultureInfo.InvariantCulture) + " " +
+                $"{codecArgs} " +
+                "-avoid_negative_ts make_zero -fflags +genpts -y " +
+                $"\"{outputFile}\"";
                 Logger.WriteLine(startInfo.Arguments);
             }
 
@@ -526,10 +557,23 @@ namespace RePlays.Utils {
                 StartInfo = startInfo
             };
 
+            uuid ??= Guid.NewGuid().ToString();
+
+            long totalRenderTime = (long)(clipSegments.Sum(segment => segment.duration) * (clipSegments.Length > 1 ? 2 : 1));
             process.OutputDataReceived += new DataReceivedEventHandler((s, e) => {
                 Logger.WriteLine("O: " + e.Data);
             });
             process.ErrorDataReceived += new DataReceivedEventHandler((s, e) => {
+                if (e.Data != null && e.Data.Contains("frame=") && e.Data.Contains("speed=") && !e.Data.Contains("Lsize=")) {
+                    var match = Regex.Match(e.Data, @"time=(\d{2}:\d{2}:\d{2}(?:\.\d+)?)");
+                    if (!match.Success) {
+                        return;
+                    }
+                    string timeString = match.Groups[1].Value;
+                    if (TimeSpan.TryParse(timeString, out TimeSpan parsedTime)) {
+                        WebMessage.DisplayToast(uuid, game, "Creating clip", "none", Convert.ToInt32(parsedTime.TotalSeconds) + progress, totalRenderTime);
+                    }
+                }
                 Logger.WriteLine("E: " + e.Data);
             });
 
@@ -539,11 +583,36 @@ namespace RePlays.Utils {
             process.WaitForExit();
             process.Close();
 
-            if (!File.Exists(outputFile)) return null;
+            var verifyClip = new ProcessStartInfo {
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
+                Arguments = $"-v error -i \"{outputFile}\""
+            };
 
-            if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(videoPath, clipSegments, index + 1);
-            else if (clipSegments.Length > 1 && index == clipSegments.Length) Logger.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
-            else Logger.WriteLine(string.Format("Created new clip: {0}", outputFile));
+            using var verifyClipProcess = Process.Start(verifyClip);
+            string output = verifyClipProcess.StandardOutput.ReadToEnd();
+            Logger.WriteLine("Output: " + output);
+            verifyClipProcess.WaitForExit();
+
+            if (!File.Exists(outputFile) || !string.IsNullOrWhiteSpace(output)) {
+                WebMessage.DestroyToast(uuid);
+                Logger.WriteLine(string.Format("FFMPEG error. Failed to create clip: {0}", outputFile));
+                File.Delete(outputFile);
+                return null;
+            }
+
+            if (clipSegments.Length > 1 && index != clipSegments.Length) return CreateClip(game, videoPath, clipSegments, index + 1, (int)(progress + clipSegments[index].duration), uuid);
+            else if (clipSegments.Length > 1 && index == clipSegments.Length) {
+                WebMessage.DestroyToast(uuid);
+                Logger.WriteLine(string.Format("Created new multiclip: {0}", outputFile));
+            }
+            else {
+                WebMessage.DestroyToast(uuid);
+                Logger.WriteLine(string.Format("Created new clip: {0}", outputFile));
+            }
 
             return outputFile;
         }
@@ -642,7 +711,14 @@ namespace RePlays.Utils {
         }
 
         public static bool IsValidAspectRatio(int width, int height) {
-            return new[] { "64:27", "43:18", "21:9", "16:10", "16:9", "4:3", "32:9" }.Contains(GetAspectRatio(width, height));
+            if (width <= 0 || height <= 0)
+                return false;
+
+            // standard gaming aspect ratios: 5:4, 4:3, 3:2, 16:10, 16:9, 21:9 variants (64:27, 43:18, 12:5), 32:9
+            double[] validRatios = { 5 / 4d, 4 / 3d, 3 / 2d, 16 / 10d, 16 / 9d, 64 / 27d, 43 / 18d, 12 / 5d, 32 / 9d };
+            double ratio = width / (double)height;
+            // tolerance catches near-standard resolutions (e.g. 1366x768, 1360x768) that don't reduce to an exact ratio
+            return validRatios.Any(valid => Math.Abs(ratio - valid) < 0.01);
         }
 
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {
@@ -699,6 +775,59 @@ namespace RePlays.Utils {
             // our last action in the above loop was to switch d and p, so p now 
             // actually has the most recent cost counts
             return p[n];
+        }
+
+        public static string? GetGpuManufacturer() {
+#if !WINDOWS
+                try {
+                    ProcessStartInfo psi = new ProcessStartInfo {
+                        FileName = "lspci",
+                        Arguments = "-nn | grep VGA",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (Process proc = new Process { StartInfo = psi }) {
+                        proc.Start();
+                        string output = proc.StandardOutput.ReadToEnd();
+                        proc.WaitForExit();
+                        if (output.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)) {
+                            return "NVIDIA";
+                        }
+                        else if (output.Contains("AMD", StringComparison.OrdinalIgnoreCase) || output.Contains("ATI", StringComparison.OrdinalIgnoreCase)) {
+                            return "AMD";
+                        }
+                        else if (output.Contains("Intel", StringComparison.OrdinalIgnoreCase)) {
+                            return "Intel";
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.WriteLine($"Error detecting GPU type on Linux: {ex.Message}");
+                }
+                return null;
+#else
+            try {
+                using (var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController")) {
+                    foreach (var obj in searcher.Get()) {
+                        string name = obj["Name"]?.ToString() ?? string.Empty;
+                        if (name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)) {
+                            return "NVIDIA";
+                        }
+                        else if (name.Contains("AMD", StringComparison.OrdinalIgnoreCase) || name.Contains("ATI", StringComparison.OrdinalIgnoreCase)) {
+                            return "AMD";
+                        }
+                        else if (name.Contains("Intel", StringComparison.OrdinalIgnoreCase)) {
+                            return "Intel";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.WriteLine($"Error detecting GPU type: {ex.Message}");
+            }
+            return null;
+#endif
         }
 
         private static int elapsedSeconds;
