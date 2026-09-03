@@ -73,16 +73,13 @@ jobs:
         with:
           dotnet-version: 8.0.403
 
-      # squirrel appends to the previous RELEASES file and builds the delta
-      # package against the previous full package, so both are needed locally
+      # vpk (velopack) is pinned in .config/dotnet-tools.json and run by the publish
+      - name: Restore dotnet tools
+        run: dotnet tool restore
+
+      # the previous stable full package is what the delta package is built against
       - name: Download previous release to create delta
-        uses: robinraju/release-downloader@v1.3
-        with:
-          token: ${{ secrets.MY_TOKEN }}
-          repository: ${{ github.repository }}
-          latest: true
-          fileName: "*"
-          out-file-path: "bin/Deployment/Releases"
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --outputDir bin/Deployment/Releases
 
       - name: Build LibObs
         run: .\\build-libobs.cmd
@@ -95,6 +92,9 @@ jobs:
 
       # the setup executable keeps its plain name so the README download badge
       # and "releases/latest" links keep working
+      - name: Rename setup file
+        run: ren ./bin/Deployment/Releases/RePlays-win-Setup.exe RePlaysSetup.exe
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -107,6 +107,7 @@ jobs:
           generate_release_notes: true
           files: |
             ./bin/Deployment/Releases/RELEASES
+            ./bin/Deployment/Releases/releases.win.json
             ./bin/Deployment/Releases/RePlaysSetup.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
