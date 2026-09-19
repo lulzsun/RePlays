@@ -241,3 +241,6 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 Classes/WindowsInterface.resx
+win-capture/compatibility.json
+win-capture/meta.json
+win-capture/package.json

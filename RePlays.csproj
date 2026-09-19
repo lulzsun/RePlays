@@ -104,7 +104,7 @@
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2420.47" />
-    <PackageReference Include="SharpHook" Version="5.3.1" />
+    <PackageReference Include="SharpHook" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="Velopack" Version="1.2.0" />
     <!-- Pure-managed Zstandard, for decompressing Deadlock match metadata bodies from

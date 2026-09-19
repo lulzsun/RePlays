@@ -1,6 +1,8 @@
-﻿using RePlays.Classes.Services.Keybinds;
+using RePlays.Classes.Services.Keybinds;
 using RePlays.Utils;
 using SharpHook;
+using SharpHook.Data;
+using SharpHook.Providers;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +11,7 @@ namespace RePlays.Services {
         private static readonly List<Keybind> keybinds = [];
         private static readonly HashSet<string> pressedKeys = [];
         private static readonly HashSet<string> cachePressedKeys = [];
-        static SimpleGlobalHook keyboardHook;
+        static SimpleGlobalHook globalHook;
 
         public static string EditId { get; internal set; }
 
@@ -21,14 +23,49 @@ namespace RePlays.Services {
             keybinds.Add(new RecordingKeybind());
 
             //Create hook
-            keyboardHook = new SimpleGlobalHook(GlobalHookType.Keyboard);
-            keyboardHook.KeyPressed += OnKeyPressed;
-            keyboardHook.KeyReleased += OnKeyReleased;
-            keyboardHook.RunAsync();
+            UioHookProvider.Instance.KeyTypedEnabled = false;
+            globalHook = new SimpleGlobalHook(UioHookProvider.Instance);
+            globalHook.KeyPressed += OnKeyPressed;
+            globalHook.KeyReleased += OnKeyReleased;
+            globalHook.MousePressed += OnMousePressed;
+            globalHook.MouseReleased += OnMouseReleased;
+            globalHook.RunAsync(GlobalHookType.All, true);
         }
 
         private static void OnKeyPressed(object? sender, KeyboardHookEventArgs e) {
-            string keyCode = e.RawEvent.Keyboard.KeyCode.ToString()[2..];
+            OnInputPressed(GetKeyName(e.Data.KeyCode));
+        }
+
+        private static void OnKeyReleased(object? sender, KeyboardHookEventArgs e) {
+            OnInputReleased(GetKeyName(e.Data.KeyCode));
+        }
+
+        private static void OnMousePressed(object? sender, MouseHookEventArgs e) {
+            string name = GetMouseButtonName(e.Data.Button);
+            if (name != null) OnInputPressed(name);
+        }
+
+        private static void OnMouseReleased(object? sender, MouseHookEventArgs e) {
+            string name = GetMouseButtonName(e.Data.Button);
+            if (name != null) OnInputReleased(name);
+        }
+
+        private static string GetKeyName(KeyCode keyCode) {
+            // Strip the "Vc" prefix; this is the format stored in user settings.
+            return keyCode.ToString()[2..];
+        }
+
+        private static string GetMouseButtonName(MouseButton button) {
+            return button switch {
+                MouseButton.Button2 => "MouseRight",
+                MouseButton.Button3 => "MouseMiddle",
+                MouseButton.Button4 => "Mouse4",
+                MouseButton.Button5 => "Mouse5",
+                _ => null,
+            };
+        }
+
+        private static void OnInputPressed(string keyCode) {
             pressedKeys.Add(keyCode);
             if (EditId == null) {
                 foreach (Keybind h in keybinds) {
@@ -47,8 +84,7 @@ namespace RePlays.Services {
             cachePressedKeys.Add(keyCode);
         }
 
-        private static void OnKeyReleased(object? sender, KeyboardHookEventArgs e) {
-            string keyCode = e.RawEvent.Keyboard.KeyCode.ToString()[2..];
+        private static void OnInputReleased(string keyCode) {
             if (EditId != null) {
                 int hkIndex = keybinds.FindIndex(h => h.Id == EditId);
                 if (hkIndex == -1) {
@@ -68,9 +104,11 @@ namespace RePlays.Services {
             Logger.WriteLine("Stopping KeybindService...");
 
             keybinds.Clear();
-            keyboardHook.KeyPressed -= OnKeyPressed;
-            keyboardHook.KeyReleased -= OnKeyReleased;
-            keyboardHook.Dispose();
+            globalHook.KeyPressed -= OnKeyPressed;
+            globalHook.KeyReleased -= OnKeyReleased;
+            globalHook.MousePressed -= OnMousePressed;
+            globalHook.MouseReleased -= OnMouseReleased;
+            globalHook.Dispose();
         }
     }
 }
