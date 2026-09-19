@@ -405,6 +405,43 @@ namespace RePlays.Utils {
             return duration;
         }
 
+        public static double GetVideoFps(string videoPath) {
+            var startInfo = new ProcessStartInfo {
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                FileName = Path.Join(GetFFmpegFolder(), "ffprobe"),
+                Arguments = string.Format("-i \"{0}\" -select_streams v:0 -show_entries stream=avg_frame_rate -v quiet -of csv=\"p = 0\"", videoPath),
+            };
+
+            var process = new Process {
+                StartInfo = startInfo
+            };
+            process.Start();
+            string stdout = "", stderr = "";
+            double fps;
+            try {
+                stdout = process.StandardOutput.ReadToEnd().Trim();
+                stderr = process.StandardError.ReadToEnd();
+                // ffprobe reports the frame rate as a fraction, e.g. "60/1" or "30000/1001"
+                string[] fraction = stdout.Split('/');
+                fps = double.Parse(fraction[0], CultureInfo.InvariantCulture);
+                if (fraction.Length == 2) fps /= double.Parse(fraction[1], CultureInfo.InvariantCulture);
+                if (double.IsNaN(fps) || double.IsInfinity(fps)) fps = 0;
+            }
+            catch (Exception e) {
+                Logger.WriteLine($"Issue retrieving fps of video? exception: '{e.Message}'");
+                Logger.WriteLine($"arguments: {startInfo.Arguments}");
+                Logger.WriteLine($"reason: {stdout + stderr}");
+                fps = 0;
+            }
+            process.WaitForExit();
+            process.Close();
+
+            return fps;
+        }
+
         public static string GetOrCreateThumbnail(string videoPath, double duration = 0) {
             string thumbsDir = Path.Combine(Path.GetDirectoryName(videoPath), ".thumbs/");
             string[] thumbnailExtensions = [".jpg", ".webp", ".png"];
@@ -492,11 +529,14 @@ namespace RePlays.Utils {
 
                 if (metadata != null) {
                     // a metadata created while its video was still recording has no
-                    // duration yet - fill it in once the file is finished
-                    if (metadata.duration == 0 && !IsBeingRecorded(videoPath)) {
-                        var probed = GetVideoDuration(videoPath);
-                        if (probed > 0) {
-                            metadata.duration = probed;
+                    // duration yet, and one created before fps was tracked has no fps -
+                    // fill them in once the file is finished
+                    if ((metadata.duration == 0 || metadata.fps == 0) && !IsBeingRecorded(videoPath)) {
+                        var probedDuration = metadata.duration > 0 ? metadata.duration : GetVideoDuration(videoPath);
+                        var probedFps = probedDuration > 0 ? GetVideoFps(videoPath) : 0;
+                        if (probedDuration != metadata.duration || probedFps != metadata.fps) {
+                            metadata.duration = probedDuration;
+                            metadata.fps = probedFps;
                             File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata));
                         }
                     }
@@ -508,6 +548,7 @@ namespace RePlays.Utils {
                 if (!Directory.Exists(thumbsDir)) Directory.CreateDirectory(thumbsDir);
 
                 metadata.duration = IsBeingRecorded(videoPath) ? 0 : GetVideoDuration(videoPath);
+                metadata.fps = metadata.duration > 0 ? GetVideoFps(videoPath) : 0;
                 metadata.filePath = metadataPath;
 
                 Logger.WriteLine($"Created video metadata for '{Path.GetFileName(videoPath)}'");

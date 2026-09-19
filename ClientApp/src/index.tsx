@@ -47,6 +47,7 @@ declare global {
     thumbnail: string;
     metadata: {
       duration: number;
+      fps?: number;
       kills?: number;
       assists?: number;
       deaths?: number;

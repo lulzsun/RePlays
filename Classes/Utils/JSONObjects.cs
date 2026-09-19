@@ -32,6 +32,7 @@ namespace RePlays.Utils {
         [JsonIgnore]
         public string filePath { get; set; }
         public double duration { get; set; }
+        public double fps { get; set; }
         public int kills { get; set; }
         public int assists { get; set; }
         public int deaths { get; set; }

@@ -23,11 +23,19 @@ const ZOOMS = [
   100, 110, 125, 150, 175, 200, 250, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000,
 ];
 
+// Chromium refuses rates below 0.0625x, so that is what the ".05x" option really plays at
+const PLAYBACK_RATES = [0.0625, 0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 4];
+
+function formatPlaybackRate(rate: number) {
+  return (rate === 0.0625 ? '.05' : (rate + '').replace(/^0+/, '')) + 'x';
+}
+
 export const Player: React.FC<Props> = ({ videos }) => {
   const { t } = useTranslation();
 
   let { game, video, videoType } = useParams<PlayerParams>();
   let folder = videos.find((v) => v.fileName.includes(video))?.folder;
+  let fps = videos.find((v) => v.fileName.includes(video))?.metadata?.fps;
 
   const videoElement = useRef<HTMLVideoElement>(null);
   const volumeSliderElement = useRef<HTMLInputElement>(null);
@@ -61,6 +69,20 @@ export const Player: React.FC<Props> = ({ videos }) => {
         videoElement.current?.paused ? videoElement.current?.play() : videoElement.current?.pause();
       if (e.key === 'ArrowLeft') videoElement.current!.currentTime -= 5;
       if (e.key === 'ArrowRight') videoElement.current!.currentTime += 5;
+      // e.code is used so shift + , / . still matches (e.key would be < / > on most layouts)
+      if (e.code === 'Comma' || e.code === 'Period') {
+        let direction = e.code === 'Comma' ? -1 : 1;
+        if (e.shiftKey) {
+          // shift + , / . steps to the previous / next playback speed
+          let index = PLAYBACK_RATES.indexOf(videoElement.current!.playbackRate) + direction;
+          if (index > -1 && index < PLAYBACK_RATES.length)
+            handlePlaybackRate(PLAYBACK_RATES[index]);
+        } else if (fps) {
+          // , / . steps a single frame back / forward
+          videoElement.current!.pause();
+          videoElement.current!.currentTime += direction / fps;
+        }
+      }
     }
 
     function handleOnMouseDown(e: MouseEvent) {
@@ -364,6 +386,11 @@ export const Player: React.FC<Props> = ({ videos }) => {
     contextMenuCtx?.setPosition({ x: e.pageX, y: e.pageY });
   }
 
+  function handlePlaybackRate(rate: number) {
+    videoElement.current!.playbackRate = rate;
+    setPlaybackRate(videoElement.current!.playbackRate);
+  }
+
   function handleVideoLoad(e: SyntheticEvent) {
     let videoMetadata = JSON.parse(localStorage.getItem('videoMetadata')!);
 
@@ -593,7 +620,7 @@ export const Player: React.FC<Props> = ({ videos }) => {
                 aria-expanded='true'
                 aria-controls='headlessui-menu-items-117'
               >
-                {(currentPlaybackRate + '').replace(/^0+/, '')}x
+                {formatPlaybackRate(currentPlaybackRate)}
               </button>
               <div className='absolute -top-1/3 opacity-0 invisible dropdown-menu transition-all duration-300 transform'>
                 <div
@@ -602,69 +629,15 @@ export const Player: React.FC<Props> = ({ videos }) => {
                   id='headlessui-menu-items-117'
                   role='menu'
                 >
-                  <div
-                    className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
-                    onClick={() => {
-                      videoElement.current!.playbackRate = 0.25;
-                      setPlaybackRate(videoElement.current!.playbackRate);
-                    }}
-                  >
-                    .25x
-                  </div>
-                  <div
-                    className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
-                    onClick={() => {
-                      videoElement.current!.playbackRate = 0.5;
-                      setPlaybackRate(videoElement.current!.playbackRate);
-                    }}
-                  >
-                    .5x
-                  </div>
-                  <div
-                    className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
-                    onClick={() => {
-                      videoElement.current!.playbackRate = 0.75;
-                      setPlaybackRate(videoElement.current!.playbackRate);
-                    }}
-                  >
-                    .75x
-                  </div>
-                  <div
-                    className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
-                    onClick={() => {
-                      videoElement.current!.playbackRate = 1;
-                      setPlaybackRate(videoElement.current!.playbackRate);
-                    }}
-                  >
-                    1x
-                  </div>
-                  <div
-                    className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
-                    onClick={() => {
-                      videoElement.current!.playbackRate = 1.5;
-                      setPlaybackRate(videoElement.current!.playbackRate);
-                    }}
-                  >
-                    1.5x
-                  </div>
-                  <div
-                    className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
-                    onClick={() => {
-                      videoElement.current!.playbackRate = 2;
-                      setPlaybackRate(videoElement.current!.playbackRate);
-                    }}
-                  >
-                    2x
-                  </div>
-                  <div
-                    className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
-                    onClick={() => {
-                      videoElement.current!.playbackRate = 4;
-                      setPlaybackRate(videoElement.current!.playbackRate);
-                    }}
-                  >
-                    4x
-                  </div>
+                  {PLAYBACK_RATES.map((rate) => (
+                    <div
+                      key={rate}
+                      className='cursor-pointer text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left'
+                      onClick={() => handlePlaybackRate(rate)}
+                    >
+                      {formatPlaybackRate(rate)}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
