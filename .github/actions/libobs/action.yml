@@ -36,6 +36,11 @@ runs:
         echo "srcdir=obs-studio-build/obs-studio-$version" >> $GITHUB_OUTPUT
         echo "rundir=obs-studio-build/obs-studio-$version/build/rundir/Release/bin/64bit" >> $GITHUB_OUTPUT
 
+    # the release object that "gh release download/upload/view" work from carries a
+    # cached asset list that keeps lagging for a long time (over half an hour has been
+    # seen) after an asset is replaced, and then names asset ids that no longer exist
+    # (HTTP 404). the release's own asset list is served fresh, so the zip is looked
+    # up there and downloaded, deleted and uploaded by id, here and in the publish step
     - name: Download the published libobs build
       id: download
       shell: bash
@@ -47,31 +52,42 @@ runs:
         REBUILD: ${{ inputs.rebuild }}
       run: |
         mkdir -p obs-studio-build
+        repo="repos/$GITHUB_REPOSITORY"
+        found=false
         if [[ "$REBUILD" == "true" ]]; then
           echo "Rebuild requested, not looking for a published $ASSET"
-          echo "found=false" >> $GITHUB_OUTPUT
-        elif gh release download libobs --pattern "$ASSET" --output "obs-studio-build/$ASSET" --clobber; then
-          rm -rf "$RUNDIR"
-          mkdir -p "$RUNDIR"
-          7z x "obs-studio-build/$ASSET" -o"$RUNDIR" -y > /dev/null
-          # RePlays.csproj publishes this folder as-is next to RePlays.exe, so obs.dll
-          # has to sit at its root. a zip with any other layout would ship an app
-          # without libobs (nightly 1.3.84 did), so it is rebuilt and replaced instead
-          if [[ -f "$RUNDIR/obs.dll" ]]; then
-            echo "Using the published $ASSET"
-            echo "found=true" >> $GITHUB_OUTPUT
-          else
-            # the whole source folder has to go, not just the rundir: build-libobs.cmd
-            # only clones obs when that folder is missing, and would otherwise try to
-            # build the empty tree created for the extraction above
-            echo "::warning::$ASSET does not have obs.dll at its root, rebuilding and replacing it"
-            rm -rf "$SRCDIR"
-            echo "found=false" >> $GITHUB_OUTPUT
-          fi
         else
-          echo "$ASSET is not on the libobs release, building it"
-          echo "found=false" >> $GITHUB_OUTPUT
+          asset_id=""
+          if release_id=$(gh api "$repo/releases/tags/libobs" --jq .id 2>/dev/null); then
+            asset_id=$(gh api --paginate "$repo/releases/$release_id/assets" --jq "first(.[] | select(.name == \"$ASSET\") | .id)")
+          fi
+          if [[ -z "$asset_id" ]]; then
+            echo "$ASSET is not on the libobs release, building it"
+          elif ! gh api -H "Accept: application/octet-stream" "$repo/releases/assets/$asset_id" > "obs-studio-build/$ASSET"; then
+            echo "::warning::$ASSET (asset $asset_id) could not be downloaded, building it"
+          else
+            # RePlays.csproj publishes the rundir as-is next to RePlays.exe, so obs.dll has
+            # to sit at its root and nowhere else. a zip with any other layout would ship
+            # an app without libobs, or with a second copy of it under obs-studio-build
+            # (nightly 1.3.84 had the first, the next zip the second), so it is rebuilt
+            # and replaced instead of used
+            rm -rf "$RUNDIR"
+            mkdir -p "$RUNDIR"
+            if 7z x "obs-studio-build/$ASSET" -o"$RUNDIR" -y > /dev/null \
+                && [[ -f "$RUNDIR/obs.dll" ]] \
+                && [[ "$(find "$RUNDIR" -name obs.dll | wc -l)" -eq 1 ]]; then
+              echo "Using the published $ASSET"
+              found=true
+            else
+              # the whole source folder has to go, not just the rundir: build-libobs.cmd
+              # only clones obs when that folder is missing, and would otherwise try to
+              # build the empty tree created for the extraction above
+              echo "::warning::$ASSET does not hold exactly one obs.dll at its root, rebuilding and replacing it"
+              rm -rf "$SRCDIR"
+            fi
+          fi
         fi
+        echo "found=$found" >> $GITHUB_OUTPUT
 
     - name: Build LibObs
       if: steps.download.outputs.found != 'true'
@@ -89,12 +105,19 @@ runs:
         ASSET: ${{ steps.key.outputs.asset }}
         RUNDIR: ${{ steps.key.outputs.rundir }}
       run: |
+        # what is zipped is exactly what RePlays.csproj publishes next to RePlays.exe
+        if [[ ! -f "$RUNDIR/obs.dll" ]] || [[ "$(find "$RUNDIR" -name obs.dll | wc -l)" -ne 1 ]]; then
+          echo "::error::$RUNDIR does not hold exactly one obs.dll at its root:"
+          find "$RUNDIR" -name obs.dll
+          exit 1
+        fi
         # 7z keeps the directory named on its command line in the entry paths (so
-        # "dir/*" stores "dir/obs.dll"), which is how the first published zip ended
-        # up nesting a copy of the whole rundir path inside itself. packing from
-        # inside the rundir puts obs.dll at the root, where the download step above
-        # and a developer following the wiki extract it
+        # "dir/*" stores "dir/obs.dll") and adds to an archive that already exists
+        # (the rejected download above sits at the same path). packing from inside
+        # the rundir into a fresh archive puts obs.dll at the root, where the download
+        # step above and a developer following the wiki extract it
         zip="$(pwd -W)/obs-studio-build/$ASSET"
+        rm -f "$zip"
         (cd "$RUNDIR" && 7z a -tzip -mx=5 "$zip" . > /dev/null)
         # the listing is read completely before grepping: with pipefail, a grep -q
         # that stops at the first match ends 7z with a broken pipe and fails the step
@@ -104,9 +127,18 @@ runs:
           grep "^Path = " <<<"$listing" | sed -n '2,8p'
           exit 1
         fi
-        if ! gh release view libobs > /dev/null 2>&1; then
+        repo="repos/$GITHUB_REPOSITORY"
+        if ! release_id=$(gh api "$repo/releases/tags/libobs" --jq .id 2>/dev/null); then
           gh release create libobs --prerelease --latest=false --title "LibObs builds" \
             --notes "Builds of libobs made by build-libobs.cmd, one per version of that script. RePlays builds download the one matching their script from here instead of building libobs themselves. To debug RePlays locally, extract the newest zip into obs-studio-build/obs-studio-<version>/build/rundir/Release/bin/64bit (see the Development wiki page)."
+          release_id=$(gh api "$repo/releases/tags/libobs" --jq .id)
         fi
-        gh release upload libobs "obs-studio-build/$ASSET" --clobber
-        echo "Published $ASSET"
+        # a zip of the same name is replaced by id from the release's own asset list
+        # (see the download step). "gh release upload --clobber" looks it up on the
+        # cached release object instead and fails on the stale id it finds there
+        for old_id in $(gh api --paginate "$repo/releases/$release_id/assets" --jq ".[] | select(.name == \"$ASSET\") | .id"); do
+          echo "Deleting the previous $ASSET (asset $old_id)"
+          gh api --method DELETE "$repo/releases/assets/$old_id"
+        done
+        gh api --method POST -H "Content-Type: application/zip" --input "obs-studio-build/$ASSET" \
+          "https://uploads.github.com/$repo/releases/$release_id/assets?name=$ASSET" --jq '"Published \(.name) as asset \(.id) (\(.size) bytes)"'
