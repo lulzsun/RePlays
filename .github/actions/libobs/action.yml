@@ -49,10 +49,20 @@ runs:
           echo "Rebuild requested, not looking for a published $ASSET"
           echo "found=false" >> $GITHUB_OUTPUT
         elif gh release download libobs --pattern "$ASSET" --output "obs-studio-build/$ASSET" --clobber; then
-          echo "Using the published $ASSET"
+          rm -rf "$RUNDIR"
           mkdir -p "$RUNDIR"
           7z x "obs-studio-build/$ASSET" -o"$RUNDIR" -y > /dev/null
-          echo "found=true" >> $GITHUB_OUTPUT
+          # RePlays.csproj publishes this folder as-is next to RePlays.exe, so obs.dll
+          # has to sit at its root. a zip with any other layout would ship an app
+          # without libobs (nightly 1.3.84 did), so it is rebuilt and replaced instead
+          if [[ -f "$RUNDIR/obs.dll" ]]; then
+            echo "Using the published $ASSET"
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::$ASSET does not have obs.dll at its root, rebuilding and replacing it"
+            rm -rf "$RUNDIR"
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
         else
           echo "$ASSET is not on the libobs release, building it"
           echo "found=false" >> $GITHUB_OUTPUT
@@ -74,7 +84,17 @@ runs:
         ASSET: ${{ steps.key.outputs.asset }}
         RUNDIR: ${{ steps.key.outputs.rundir }}
       run: |
-        7z a -tzip -mx=5 -r "obs-studio-build/$ASSET" "$RUNDIR/*" > /dev/null
+        # 7z keeps the directory named on its command line in the entry paths (so
+        # "dir/*" stores "dir/obs.dll"), which is how the first published zip ended
+        # up nesting a copy of the whole rundir path inside itself. packing from
+        # inside the rundir puts obs.dll at the root, where the download step above
+        # and a developer following the wiki extract it
+        zip="$(pwd -W)/obs-studio-build/$ASSET"
+        (cd "$RUNDIR" && 7z a -tzip -mx=5 "$zip" . > /dev/null)
+        if ! 7z l -slt "$zip" | tr -d '\r' | grep -qx "Path = obs.dll"; then
+          echo "::error::$ASSET was packed without obs.dll at its root"
+          exit 1
+        fi
         if ! gh release view libobs > /dev/null 2>&1; then
           gh release create libobs --prerelease --latest=false --title "LibObs builds" \
             --notes "Builds of libobs made by build-libobs.cmd, one per version of that script. RePlays builds download the one matching their script from here instead of building libobs themselves. To debug RePlays locally, extract the newest zip into obs-studio-build/obs-studio-<version>/build/rundir/Release/bin/64bit (see the Development wiki page)."
