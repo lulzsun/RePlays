@@ -96,8 +96,12 @@ runs:
         # and a developer following the wiki extract it
         zip="$(pwd -W)/obs-studio-build/$ASSET"
         (cd "$RUNDIR" && 7z a -tzip -mx=5 "$zip" . > /dev/null)
-        if ! 7z l -slt "$zip" | tr -d '\r' | grep -qx "Path = obs.dll"; then
-          echo "::error::$ASSET was packed without obs.dll at its root"
+        # the listing is read completely before grepping: with pipefail, a grep -q
+        # that stops at the first match ends 7z with a broken pipe and fails the step
+        listing=$(7z l -slt "$zip" | tr -d '\r')
+        if ! grep -qxF "Path = obs.dll" <<<"$listing"; then
+          echo "::error::$ASSET was packed without obs.dll at its root. First entries:"
+          grep "^Path = " <<<"$listing" | sed -n '2,8p'
           exit 1
         fi
         if ! gh release view libobs > /dev/null 2>&1; then
