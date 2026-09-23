@@ -33,6 +33,7 @@ runs:
         fi
         script=$(git rev-parse --short=12 HEAD:build-libobs.cmd)
         echo "asset=libobs-$version-$script-windows-x64.zip" >> $GITHUB_OUTPUT
+        echo "srcdir=obs-studio-build/obs-studio-$version" >> $GITHUB_OUTPUT
         echo "rundir=obs-studio-build/obs-studio-$version/build/rundir/Release/bin/64bit" >> $GITHUB_OUTPUT
 
     - name: Download the published libobs build
@@ -41,6 +42,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
         ASSET: ${{ steps.key.outputs.asset }}
+        SRCDIR: ${{ steps.key.outputs.srcdir }}
         RUNDIR: ${{ steps.key.outputs.rundir }}
         REBUILD: ${{ inputs.rebuild }}
       run: |
@@ -59,8 +61,11 @@ runs:
             echo "Using the published $ASSET"
             echo "found=true" >> $GITHUB_OUTPUT
           else
+            # the whole source folder has to go, not just the rundir: build-libobs.cmd
+            # only clones obs when that folder is missing, and would otherwise try to
+            # build the empty tree created for the extraction above
             echo "::warning::$ASSET does not have obs.dll at its root, rebuilding and replacing it"
-            rm -rf "$RUNDIR"
+            rm -rf "$SRCDIR"
             echo "found=false" >> $GITHUB_OUTPUT
           fi
         else
