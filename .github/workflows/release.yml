@@ -77,8 +77,12 @@ jobs:
       - name: Restore dotnet tools
         run: dotnet tool restore
 
-      # the previous stable full package is what the delta package is built against
+      # the previous stable full package is what the delta package is built against.
+      # the current stable (1.3.0) is still a squirrel release, so until the first
+      # velopack stable exists this has nothing to fetch and the build goes on
+      # without a delta rather than failing (same as the nightly workflow)
       - name: Download previous release to create delta
+        continue-on-error: true
         run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --outputDir bin/Deployment/Releases
 
       # libobs is built once per version of build-libobs.cmd and kept on the

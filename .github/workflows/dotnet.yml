@@ -19,7 +19,6 @@ jobs:
     name: Prepare for Build
 
     outputs:
-      oldversion: ${{ steps.previoustag.outputs.tag }}
       version: ${{ steps.semvers.outputs.patch }}
 
     steps:
@@ -103,9 +102,23 @@ jobs:
 
       # the previous full package is what the delta package is built against. with --pre
       # the newest version across the stable and nightly releases is taken, the same set
-      # of releases the app itself reads on the nightly channel
+      # of releases the app itself reads on the nightly channel. when it cannot be
+      # fetched (no velopack package yet, or the release lost its package) the build
+      # goes on without a delta rather than failing: vpk pack then writes a fresh
+      # releases.win.json listing only the new full package, which repairs the release
       - name: Download previous release to create delta
+        id: download
+        continue-on-error: true
         run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --pre --outputDir bin/Deployment/Releases
+
+      # a failed download can leave a manifest behind that still lists the package it
+      # could not fetch, and vpk pack would carry that entry into the new release
+      - name: Discard partial download
+        if: steps.download.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::warning::Previous package could not be downloaded, building without a delta"
+          rm -rf bin/Deployment/Releases
 
       # libobs is built once per version of build-libobs.cmd and kept on the
       # "libobs" release, so this normally only downloads it (see libobs.yml)
@@ -122,20 +135,9 @@ jobs:
       - name: Append version to setup file
         run: ren ./bin/Deployment/Releases/RePlays-win-Setup.exe RePlaysSetup-${{needs.prep.outputs.version}}.exe
 
-      - name: Update nightly tag
-        uses: richardsimko/update-tag@v1
-        with:
-          tag_name: nightly
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete old prerelease deltas
-        run: |
-          gh release delete-asset "nightly" "RePlays-${{needs.prep.outputs.oldversion}}-full.nupkg" &&
-          gh release delete-asset "nightly" "RePlays-${{needs.prep.outputs.oldversion}}-delta.nupkg"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      # the new packages are uploaded before anything is deleted or the tag is moved,
+      # so a failure in the steps below leaves the previous nightly intact and
+      # installable instead of a release with no package at all
       - name: Create prerelease
         uses: softprops/action-gh-release@v2
         with:
@@ -151,6 +153,32 @@ jobs:
             ./bin/Deployment/Releases/RePlaysSetup-${{needs.prep.outputs.version}}.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
+
+      # only moved once the release is up, so the "no new commits" check in prep
+      # keeps retrying commits that a failed run never shipped
+      - name: Update nightly tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # releases.win.json now only lists the new version, so every other package is
+      # unreachable and just takes up space. matching on the name rather than the
+      # previous version tolerates a nightly that never got a delta (the first
+      # velopack build) or already lost its packages
+      - name: Delete old nightly packages
+        shell: bash
+        run: |
+          gh release view nightly --json assets --jq '.assets[].name' \
+            | grep -E '^RePlays-.*\.nupkg$' \
+            | { grep -v -F -e "RePlays-${{needs.prep.outputs.version}}-full.nupkg" -e "RePlays-${{needs.prep.outputs.version}}-delta.nupkg" || true; } \
+            | while read -r asset; do
+                echo "Deleting $asset"
+                gh release delete-asset nightly "$asset" --yes
+              done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # the setup executables are the only assets that survive from one nightly
       # to the next, so keep the three most recent ones and drop the rest
