@@ -20,6 +20,7 @@ jobs:
 
     outputs:
       version: ${{ steps.semvers.outputs.patch }}
+      stable: ${{ steps.previoustag.outputs.stable }}
 
     steps:
       - uses: actions/checkout@v3
@@ -62,6 +63,7 @@ jobs:
           tag=$(printf '%s\n' "$nightly" "$stable" | grep . | sort -V | tail -n 1)
           echo "Previous version: $tag (nightly: ${nightly:-none}, stable: ${stable:-none})"
           echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "stable=$stable" >> $GITHUB_OUTPUT
 
       - name: "Get next version"
         id: semvers
@@ -144,7 +146,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: "nightly"
           prerelease: true
-          generate_release_notes: true
+          # the notes are written by the step below, once the tag has moved
+          generate_release_notes: false
           name: ${{ format('Nightly RePlays v{0}', needs.prep.outputs.version )}}
           body: "Nightly release, built with the latest and potentially breaking changes, test at your own risk."
           files: |
@@ -162,6 +165,24 @@ jobs:
           tag_name: nightly
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # the notes list everything since the latest stable release. they are generated
+      # here rather than by the release step because the range ends at the nightly
+      # tag, which only points at this build after the step above, and because the
+      # previous tag is given explicitly: left to pick it, GitHub took the tag of the
+      # "libobs" release and the notes shrank to the few commits since it
+      - name: Write release notes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STABLE: ${{ needs.prep.outputs.stable }}
+        run: |
+          args=(-f tag_name=nightly)
+          if [[ -n "$STABLE" ]]; then args+=(-f "previous_tag_name=$STABLE"); fi
+          echo "Nightly release, built with the latest and potentially breaking changes, test at your own risk." > notes.md
+          echo >> notes.md
+          gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${args[@]}" --jq .body >> notes.md
+          gh release edit nightly --notes-file notes.md
 
       # releases.win.json now only lists the new version, so every other package is
       # unreachable and just takes up space. matching on the name rather than the

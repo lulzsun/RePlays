@@ -22,6 +22,7 @@ jobs:
 
     outputs:
       version: ${{ steps.validate.outputs.version }}
+      previous: ${{ steps.validate.outputs.previous }}
 
     steps:
       - uses: actions/checkout@v3
@@ -49,6 +50,7 @@ jobs:
           fi
           echo "Releasing version $version"
           echo "version=$version" >> $GITHUB_OUTPUT
+          echo "previous=$latest" >> $GITHUB_OUTPUT
 
   build:
     needs: prep
@@ -111,10 +113,27 @@ jobs:
           name: ${{ format('RePlays v{0}', needs.prep.outputs.version) }}
           draft: ${{ inputs.draft }}
           prerelease: false
-          generate_release_notes: true
+          # the notes are written by the step below
+          generate_release_notes: false
           files: |
             ./bin/Deployment/Releases/RELEASES
             ./bin/Deployment/Releases/releases.win.json
             ./bin/Deployment/Releases/RePlaysSetup.exe
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-full.nupkg
             ./bin/Deployment/Releases/RePlays-${{needs.prep.outputs.version}}-delta.nupkg
+
+      # the notes list everything since the previous stable release. the previous tag
+      # is given explicitly because, left to pick it, GitHub takes whichever tag it
+      # considers the previous release, and the nightly and libobs tags are candidates.
+      # target_commitish only matters for a draft, whose tag does not exist yet
+      - name: Write release notes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.prep.outputs.version }}
+          PREVIOUS: ${{ needs.prep.outputs.previous }}
+        run: |
+          args=(-f "tag_name=$VERSION" -f "target_commitish=$GITHUB_SHA")
+          if [[ -n "$PREVIOUS" ]]; then args+=(-f "previous_tag_name=$PREVIOUS"); fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${args[@]}" --jq .body > notes.md
+          gh release edit "$VERSION" --notes-file notes.md
