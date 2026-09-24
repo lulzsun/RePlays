@@ -328,16 +328,13 @@ namespace RePlays.Utils {
                     }
                     break;
                 case "ShowLogs": {
-                        var logsPath = Path.GetFullPath(Path.Join(GetStartupPath(), "../cfg/logs.txt"));
-                        if (!File.Exists(logsPath))
-                            logsPath = Path.GetFullPath(Path.Join(GetStartupPath(), "../../cfg/logs.txt"));
+                        var logsPath = Path.GetFullPath(Path.Join(GetCfgFolder(), "logs.txt"));
                         if (!File.Exists(logsPath))
                             break;
-                        if (File.Exists(logsPath))
 #if WINDOWS
-                            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", logsPath.Replace('/', '\\')));
+                        Process.Start("explorer.exe", string.Format("/select,\"{0}\"", logsPath.Replace('/', '\\')));
 #else
-                            Process.Start("xdg-open", logsPath);
+                        Process.Start("xdg-open", logsPath);
 #endif
                     }
                     break;
